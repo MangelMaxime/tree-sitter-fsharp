@@ -46,3 +46,5 @@ zig-out/
 *.tgz
 *.zip
 *.jar
+
+.sisyphus/
