@@ -14,15 +14,17 @@ tree-sitter build --output "$REPO_DIR/parser.so"
 
 # --- Grammar symlink ---
 echo "Linking grammar..."
+rm -rf "$HELIX_GRAMMARS"
 mkdir -p "$HELIX_GRAMMARS"
-ln -sf "$REPO_DIR/parser.so" "$HELIX_GRAMMARS/fsharp.so"
+cp "$REPO_DIR/parser.so" "$HELIX_GRAMMARS/fsharp.so"
 
 # --- Query symlinks ---
 if [ -d "$REPO_DIR/queries" ] && compgen -G "$REPO_DIR/queries/*.scm" > /dev/null 2>&1; then
     echo "Linking queries..."
+    rm -rf "$HELIX_QUERIES"
     mkdir -p "$HELIX_QUERIES"
     for scm in "$REPO_DIR/queries/"*.scm; do
-        ln -sf "$scm" "$HELIX_QUERIES/$(basename "$scm")"
+        cp "$scm" "$HELIX_QUERIES/$(basename "$scm")"
     done
 fi
 
