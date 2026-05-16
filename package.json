@@ -1,0 +1,9 @@
+{
+  "name": "tree-sitter-fsharp-helix",
+  "license": "APACHE 2",
+  "author": "Mangel Maxime",
+  "type": "module",
+  "devDependencies": {
+    "tree-sitter-cli": "^0.26.8"
+  }
+}
