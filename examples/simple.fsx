@@ -1,5 +1,8 @@
 open System
 open System.Text.RegularExpressions
+open type System.Math
+
+let pi = PI
 
 printfn "Hello"
 

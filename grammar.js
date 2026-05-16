@@ -17,7 +17,7 @@ export default grammar({
   rules: {
     source_file: $ => repeat($._token),
 
-    import_decl: ($) => seq("open", optional("type"), $.identifier),
+    import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
     _token: $ => choice(
       // $.keyword,
@@ -31,6 +31,11 @@ export default grammar({
     // keyword: _ => choice(...KEYWORDS),
 
     identifier: _ => /[a-zA-Z_][a-zA-Z0-9_']*/,
+
+    long_identifier: $ =>
+      prec.right(
+        seq($.identifier, repeat(seq(".", $.identifier))),
+      ),
 
     line_comment: _ => token(seq('//', /.*/)),
   }
