@@ -19,13 +19,25 @@ mkdir -p "$HELIX_GRAMMARS"
 cp "$REPO_DIR/parser.so" "$HELIX_GRAMMARS/fsharp.so"
 
 # --- Query symlinks ---
-if [ -d "$REPO_DIR/queries" ] && compgen -G "$REPO_DIR/queries/*.scm" > /dev/null 2>&1; then
-    echo "Linking queries..."
-    rm -rf "$HELIX_QUERIES"
-    mkdir -p "$HELIX_QUERIES"
+echo "Linking queries..."
+rm -rf "$HELIX_QUERIES"
+mkdir -p "$HELIX_QUERIES"
+
+# Copy repo query files
+if [ -d "$REPO_DIR/queries" ]; then
     for scm in "$REPO_DIR/queries/"*.scm; do
+        [ -e "$scm" ] || continue
         cp "$scm" "$HELIX_QUERIES/$(basename "$scm")"
     done
 fi
+
+# Create empty query files for any types not defined in the repo.
+# This prevents Helix from falling back to built-in system queries
+# which reference node types that don't exist in this minimal grammar.
+for query_type in highlights injections locals textobjects indents tags rainbows; do
+    if [ ! -f "$HELIX_QUERIES/${query_type}.scm" ]; then
+        touch "$HELIX_QUERIES/${query_type}.scm"
+    fi
+done
 
 echo "Done."
