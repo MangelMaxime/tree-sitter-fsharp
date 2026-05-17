@@ -11,6 +11,9 @@
 "." @punctuation
 
 (line_comment) @comment.line
+(xml_doc_comment) @comment.documentation
+(block_comment) @comment.block
+(block_doc_comment) @comment.block.documentation
 
 (int_literal) @constant.numeric.integer
 (float_literal) @constant.numeric.float

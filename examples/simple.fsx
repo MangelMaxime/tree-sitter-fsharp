@@ -3,6 +3,23 @@ open System.Text.RegularExpressions
 open type System.Math
 
 // This is a comment
+(* This is a block comment *)
+(** This is a doc comment that should inject markdown
+
+# Heading
+Some *italic* and **bold** text.
+
+```fsharp
+let x = 42
+```
+
+- Item 1
+- Item 2
+
+[link](https://example.com)
+*)
+
+(** This a **strong** comment *)
 
 let valule_byte = 1uy
 let valule_sbyte = 1y
@@ -34,6 +51,10 @@ printfn "Hello"
 
 let answer = 42
 
+/// <summary>Add 2 number</summary>
+/// <param name="a"></param>
+/// <param name="b"></param>
+/// <returns>Result of the addition of the **2** numbers</returns>
 let add a b = a + b
 
 Environment.CurrentDirectory |> printfn "%A"

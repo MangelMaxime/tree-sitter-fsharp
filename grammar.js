@@ -12,7 +12,7 @@ export default grammar({
 
     word: $ => $.identifier,
 
-    extras: $ => [/\s+/],
+    extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
 
     rules: {
         source_file: $ => repeat($._token),
@@ -25,7 +25,10 @@ export default grammar({
             $.unit,
             $.null_literal,
             $.long_identifier,
+            $.xml_doc_comment,
             $.line_comment,
+            $.block_comment,
+            $.block_doc_comment,
             $.int_literal,
             $.float_literal,
         ),
@@ -71,6 +74,20 @@ export default grammar({
 
         null_literal: _ => token("null"),
 
-        line_comment: _ => token(seq("//", /.*/)),
+        line_comment: _ => token(seq("//", choice(/[^/].*/, ""))),
+
+        xml_doc_comment: _ => token(seq("///", /.*/)),
+
+        block_comment: $ => seq(
+            "(*",
+            repeat(choice(/[^(*]/, /\*[^)]/, /\([^*]/, $.block_comment)),
+            "*)",
+        ),
+
+        block_doc_comment: $ => seq(
+            "(**",
+            repeat(choice(/[^(*]/, /\*[^)]/, /\([^*]/, $.block_comment)),
+            "*)",
+        ),
     }
 });
