@@ -14,10 +14,26 @@ export default grammar({
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
 
+    conflicts: $ => [
+        [$.identifier_pattern, $.long_identifier],
+        [$.pattern, $.long_identifier],
+    ],
+
     rules: {
         source_file: $ => repeat($._token),
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
+
+        _expression: $ => prec(3, choice(
+            $.int_literal,
+            $.float_literal,
+            $.bool_literal,
+            $.unit,
+            $.null_literal,
+            $.identifier,
+            $.long_identifier,
+            $.match_expression,
+        )),
 
         let_binding: ($) => prec.right(1,
             seq(
@@ -27,16 +43,55 @@ export default grammar({
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
-                choice(
-                    $.int_literal,
-                    $.float_literal,
-                    $.bool_literal,
-                    $.unit,
-                    $.null_literal,
-                    $.identifier,
-                    $.long_identifier,
-                ),
+                $._expression,
             ),
+        ),
+
+        match_expression: ($) => prec.right(2,
+            seq(
+                "match",
+                $._expression,
+                "with",
+                repeat1($.match_arm),
+            ),
+        ),
+
+        match_arm: ($) => seq(
+            "|",
+            $.pattern,
+            repeat(seq("|", $.pattern)),
+            "->",
+            $._expression,
+        ),
+
+        pattern: $ => choice(
+            $.wildcard_pattern,
+            $.literal_pattern,
+            $.identifier_pattern,
+            $.tuple_pattern,
+        ),
+
+        wildcard_pattern: _ => "_",
+
+        literal_pattern: $ => choice(
+            $.int_literal,
+            $.float_literal,
+            $.bool_literal,
+            $.unit,
+            $.null_literal,
+        ),
+
+        identifier_pattern: $ => choice(
+            $.identifier,
+            seq($.identifier, $.pattern),
+            $.long_identifier,
+        ),
+
+        tuple_pattern: $ => seq(
+            "(",
+            $.pattern,
+            repeat(seq(",", $.pattern)),
+            ")",
         ),
 
         parameter: $ => choice(
@@ -52,6 +107,7 @@ export default grammar({
         _token: $ => choice(
             $.import_decl,
             $.let_binding,
+            $.match_expression,
             $.bool_literal,
             $.unit,
             $.null_literal,

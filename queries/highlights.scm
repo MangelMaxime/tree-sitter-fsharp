@@ -3,13 +3,18 @@
   "type"
   "let"
   "rec"
+  "match"
+  "with"
 ] @keyword
 
 [
-  "."
-  "="
-  ":"
-] @punctuation
+  "|"
+  "->"
+] @keyword.control
+
+"." @punctuation
+"=" @operator
+":" @punctuation.delimiter
 
 [
   "("

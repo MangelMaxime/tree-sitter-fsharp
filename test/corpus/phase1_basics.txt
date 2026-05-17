@@ -223,3 +223,50 @@ let add (a: int) (b: int) = a
       (type_expression
         (identifier)))
     (identifier)))
+
+================================================================================
+Match expression with wildcard
+================================================================================
+
+match x with
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (identifier)
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Match expression with multiple arms
+================================================================================
+
+match n with
+| 1 -> 1
+| 2 -> 2
+| n -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (identifier)
+    (match_arm
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (identifier)))
+      (int_literal))))
