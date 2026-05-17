@@ -69,6 +69,9 @@ export default grammar({
             $.additive_expression,
             $.multiplicative_expression,
             $.comparison_expression,
+            $.unary_expression,
+            $.cons_expression,
+            $.infix_expression,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -131,6 +134,21 @@ export default grammar({
             choice(">", "<", ">=", "<=", "=", "<>"),
             $._expression,
         )),
+
+        unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
+            choice("not", "~~~"),
+            $._expression,
+        )),
+
+        cons_expression: $ => prec.right(PREC.INFIX_OP, seq(
+            $._expression, "::", $._expression,
+        )),
+
+        infix_expression: $ => prec.left(PREC.INFIX_OP, seq(
+            $._expression, $.symbolic_op, $._expression,
+        )),
+
+        symbolic_op: _ => token(/[!$%&*+\-\/<=>?@^|][!$%&*+\/<=>?@^|~]*/),
 
         if_expression: $ => prec.right(PREC.IF_EXPR,
             seq(

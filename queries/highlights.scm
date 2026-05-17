@@ -12,6 +12,8 @@
   "with"
 ] @keyword
 
+"not" @keyword.operator
+
 [
   "|"
   "->"
@@ -36,7 +38,11 @@
   "<|"
   ">>"
   "<<"
+  "::"
+  "~~~"
 ] @operator
+
+(symbolic_op) @operator
 
 ":" @punctuation.delimiter
 

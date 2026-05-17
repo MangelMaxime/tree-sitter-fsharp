@@ -125,3 +125,21 @@ let bool_short a b c = a || b && c      // a || (b && c)
 let pipe_right = [1; 2; 3] |> List.length
 let pipe_chain x f g = x |> f |> g
 let pipe_left f x = f <| x
+
+// Unary
+let unary_not = not true
+let unary_not2 = not false
+let bitwise_not = ~~~42
+
+// Cons
+let cons_one x xs = x :: xs
+let cons_chain rest = 1 :: 2 :: 3 :: rest
+
+let (>>=) a b = ignore
+let (<|>) a b = ignore
+
+// Custom symbolic operators
+let bind_result result next = result >>= next
+let choice_op parser1 parser2 = parser1 <|> parser2
+let append_list xs ys = xs @ ys
+

@@ -75,6 +75,18 @@
           },
           {
             "type": "SYMBOL",
+            "name": "unary_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "cons_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "infix_expression"
+          },
+          {
+            "type": "SYMBOL",
             "name": "int_literal"
           },
           {
@@ -378,6 +390,81 @@
             "name": "_expression"
           }
         ]
+      }
+    },
+    "unary_expression": {
+      "type": "PREC",
+      "value": 15,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "not"
+              },
+              {
+                "type": "STRING",
+                "value": "~~~"
+              }
+            ]
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
+    "cons_expression": {
+      "type": "PREC_RIGHT",
+      "value": 4,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "STRING",
+            "value": "::"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
+    "infix_expression": {
+      "type": "PREC_LEFT",
+      "value": 4,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "symbolic_op"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
+    "symbolic_op": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[!$%&*+\\-\\/<=>?@^|][!$%&*+\\/<=>?@^|~]*"
       }
     },
     "if_expression": {
