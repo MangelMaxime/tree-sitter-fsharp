@@ -3,6 +3,7 @@
   "type"
   "let"
   "rec"
+  "fun"
   "if"
   "then"
   "else"
@@ -47,6 +48,10 @@
 (let_binding
   name: (identifier) @function
   parameters: (parameter
+    (identifier) @variable.parameter)*)
+
+(lambda_expression
+  (parameter
     (identifier) @variable.parameter)*)
 
 (type_expression

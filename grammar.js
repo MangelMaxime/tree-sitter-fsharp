@@ -35,7 +35,17 @@ export default grammar({
             $.long_identifier,
             $.if_expression,
             $.match_expression,
+            $.lambda_expression,
         )),
+
+        lambda_expression: $ => prec.right(2,
+            seq(
+                "fun",
+                repeat1($.parameter),
+                "->",
+                $._expression,
+            ),
+        ),
 
         comparison_expression: $ => prec.left(4, seq(
             $._expression,
@@ -126,6 +136,7 @@ export default grammar({
         _token: $ => choice(
             $.import_decl,
             $.let_binding,
+            $.lambda_expression,
             $.if_expression,
             $.match_expression,
             $.bool_literal,

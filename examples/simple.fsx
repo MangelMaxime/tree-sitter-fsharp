@@ -83,3 +83,7 @@ let condition a b c =
 Environment.CurrentDirectory |> printfn "%A"
 
 let r = Regex.Escape "dw"
+
+let inc = fun x -> x + 1
+let add_lambda = fun x y -> x + y
+let typed_lambda = fun (x: int) -> x * 2
