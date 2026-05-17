@@ -44,7 +44,7 @@ const PREC = {
     DOTDOT:        22,
     DOTDOT_SLICE:  23,
     NEW_OBJ:       24,
-    LET_EXPR:      60,
+    LET_EXPR:      1,    // low so the in-body $._expression expands greedily
 };
 
 export default grammar({
@@ -88,14 +88,33 @@ export default grammar({
             $.if_expression,
             $.match_expression,
             $.lambda_expression,
+            $.let_expression,
         )),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
+        // Second argument is restricted to simple expressions (no let/if/match/lambda/operators)
+        // so that `let x = 1\nlet y = 2` doesn't try to parse the second `let` as an argument.
         application_expression: $ => prec.left(PREC.APP_EXPR, seq(
             $._expression,
-            $._expression,
+            $._simple_expression,
         )),
+
+        _simple_expression: $ => choice(
+            $.parenthesized_expression,
+            $.list_expression,
+            $.array_expression,
+            $.int_literal,
+            $.float_literal,
+            $.char_literal,
+            $.string_literal,
+            $.verbatim_string,
+            $.triple_quoted_string,
+            $.bool_literal,
+            $.unit,
+            $.null_literal,
+            $.long_identifier,
+        ),
 
         pipe_expression: $ => prec.left(PREC.PIPE_EXPR, seq(
             $._expression,
@@ -193,10 +212,26 @@ export default grammar({
             seq(
                 "let",
                 optional("rec"),
+                optional(choice("inline", "mutable")),
                 field('name', $.identifier),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
+                $._expression,
+            ),
+        ),
+
+        let_expression: ($) => prec.right(PREC.LET_EXPR,
+            seq(
+                "let",
+                optional("rec"),
+                optional("inline"),
+                field('name', $.identifier),
+                field('parameters', repeat($.parameter)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
+                "in",
                 $._expression,
             ),
         ),

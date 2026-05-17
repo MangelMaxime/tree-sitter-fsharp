@@ -143,6 +143,19 @@ let bind_result result next = result >>= next
 let choice_op parser1 parser2 = parser1 <|> parser2
 let append_list xs ys = xs @ ys
 
+// let inline / mutable
+let inline square x = x * x
+let inline add_inline a b = a + b
+let mutable counter = 0
+let mutable message = "hello"
+
+// let rec is already covered above (fib4)
+
+// let ... in ...
+let let_in_result = let x = 10 in x * 2
+let let_in_nested = let x = 1 in let y = 2 in x + y
+let let_in_fn = let double x = x * 2 in double 21
+
 // Lists
 let empty_list = []
 let singleton_list = [42]

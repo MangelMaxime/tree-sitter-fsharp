@@ -836,6 +836,105 @@ a + b :: c
       (identifier))))
 
 ================================================================================
+Let inline binding
+================================================================================
+
+let inline square x = x * x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (multiplicative_expression
+      (long_identifier (identifier))
+      (long_identifier (identifier)))))
+
+================================================================================
+Let mutable binding
+================================================================================
+
+let mutable count = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (int_literal)))
+
+================================================================================
+Let rec already supported
+================================================================================
+
+let rec go n = go n
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (application_expression
+      (long_identifier (identifier))
+      (long_identifier (identifier)))))
+
+================================================================================
+Let expression with in
+================================================================================
+
+let x = 1 in x + 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    (int_literal)
+    (additive_expression
+      (long_identifier (identifier))
+      (int_literal))))
+
+================================================================================
+Let expression with function
+================================================================================
+
+let double x = x * 2 in double 21
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (multiplicative_expression
+      (long_identifier (identifier))
+      (int_literal))
+    (application_expression
+      (long_identifier (identifier))
+      (int_literal))))
+
+================================================================================
+Nested let expression
+================================================================================
+
+let x = 1 in let y = 2 in x + y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    (int_literal)
+    (let_expression
+      name: (identifier)
+      (int_literal)
+      (additive_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))))
+
+================================================================================
 Empty list expression
 ================================================================================
 

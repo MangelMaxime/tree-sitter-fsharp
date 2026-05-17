@@ -50,8 +50,12 @@ identifier: _ => /[a-zA-Z_][a-zA-Z0-9_']*/,
 
 long_identifier: $ =>
   prec.right(
-    seq($.identifier, repeat1(seq('.', $.identifier)))
+    seq($.identifier, repeat(seq('.', $.identifier)))
   ),
+// Note: repeat (not repeat1) — a bare identifier is also a long_identifier with 0 dots.
+// This means _expression only needs long_identifier, never bare identifier.
+// Having both in _expression would create reduce/reduce conflicts in application_expression:
+// "f x" could parse as app(identifier, identifier) or app(long_identifier, long_identifier).
 ```
 
 **Why `word: $ => $.identifier` matters:** tree-sitter uses the `word` token to avoid parsing keywords at identifier positions. But because we declare keywords as literal strings (e.g. `"let"`), tree-sitter will prefer matching the keyword over the identifier regex when the literal matches.

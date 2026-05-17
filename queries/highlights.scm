@@ -12,6 +12,9 @@
   "with"
   "when"
   "as"
+  "in"
+  "inline"
+  "mutable"
 ] @keyword
 
 "not" @keyword.operator
