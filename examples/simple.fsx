@@ -105,3 +105,23 @@ let r = Regex.Escape "dw"
 let inc = fun x -> x + 1
 let add_lambda = fun x y -> x + y
 let typed_lambda = fun (x: int) -> x * 2
+
+// Arithmetic
+let arith_add = 1 + 2
+let arith_sub = 10 - 3
+let arith_mul = 4 * 5
+let arith_div = 10 / 2
+let arith_mod = 10 % 3
+let arith_prec = 1 + 2 * 3        // 1 + (2 * 3) = 7
+let arith_paren = (1 + 2) * 3     // (1 + 2) * 3 = 9
+
+// Boolean
+let bool_and = true && false
+let bool_or = true || false
+let bool_prec a b c d = a > b && c > d    // (a > b) && (c > d)
+let bool_short a b c = a || b && c      // a || (b && c)
+
+// Pipe
+let pipe_right = [1; 2; 3] |> List.length
+let pipe_chain x f g = x |> f |> g
+let pipe_left f x = f <| x

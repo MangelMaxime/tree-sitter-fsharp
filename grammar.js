@@ -9,9 +9,14 @@
 
 const PREC = {
     SEQ_EXPR:      1,
+    PIPE_EXPR:     1,   // |>, <|, >>, <<
     THEN_EXPR:     2,
+    BOOL_OR:       2,   // ||
     RARROW:        3,
-    INFIX_OP:      4,
+    BOOL_AND:      3,   // &&
+    INFIX_OP:      4,   // comparison: = <> < > <= >=
+    ADDITIVE:      5,   // + -
+    MULTIPLICATIVE:6,   // * / %
     LET_DECL:      7,
     DO_EXPR:       8,
     FUN_EXPR:      8,
@@ -56,7 +61,13 @@ export default grammar({
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
         _expression: $ => prec(PREC.RARROW, choice(
+            $.parenthesized_expression,
             $.application_expression,
+            $.pipe_expression,
+            $.or_expression,
+            $.and_expression,
+            $.additive_expression,
+            $.multiplicative_expression,
             $.comparison_expression,
             $.int_literal,
             $.float_literal,
@@ -73,8 +84,36 @@ export default grammar({
             $.lambda_expression,
         )),
 
+        parenthesized_expression: $ => seq("(", $._expression, ")"),
+
         application_expression: $ => prec.left(PREC.APP_EXPR, seq(
             $._expression,
+            $._expression,
+        )),
+
+        pipe_expression: $ => prec.left(PREC.PIPE_EXPR, seq(
+            $._expression,
+            choice("|>", "<|", ">>", "<<"),
+            $._expression,
+        )),
+
+        or_expression: $ => prec.left(PREC.BOOL_OR, seq(
+            $._expression, "||", $._expression,
+        )),
+
+        and_expression: $ => prec.left(PREC.BOOL_AND, seq(
+            $._expression, "&&", $._expression,
+        )),
+
+        additive_expression: $ => prec.left(PREC.ADDITIVE, seq(
+            $._expression,
+            choice("+", "-"),
+            $._expression,
+        )),
+
+        multiplicative_expression: $ => prec.left(PREC.MULTIPLICATIVE, seq(
+            $._expression,
+            choice("*", "/", "%"),
             $._expression,
         )),
 

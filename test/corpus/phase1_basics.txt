@@ -593,3 +593,137 @@ let r = List.length xs
         (identifier))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Parenthesized expression
+================================================================================
+
+(1 + 2)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (parenthesized_expression
+    (additive_expression
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Additive expression
+================================================================================
+
+1 + 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (additive_expression
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Multiplicative binds tighter than additive
+================================================================================
+
+1 + 2 * 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (additive_expression
+    (int_literal)
+    (multiplicative_expression
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Additive binds tighter than comparison
+================================================================================
+
+a + b > c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (comparison_expression
+    (additive_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Comparison binds tighter than boolean and
+================================================================================
+
+a > b && c > d
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (and_expression
+    (comparison_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (comparison_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Boolean and binds tighter than or
+================================================================================
+
+a || b && c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (or_expression
+    (long_identifier
+      (identifier))
+    (and_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Pipe expression
+================================================================================
+
+x |> f
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (pipe_expression
+    (long_identifier
+      (identifier))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Let binding with arithmetic
+================================================================================
+
+let result = a + b * c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (additive_expression
+      (long_identifier
+        (identifier))
+      (multiplicative_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
