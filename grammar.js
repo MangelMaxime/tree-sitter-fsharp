@@ -26,7 +26,7 @@ const PREC = {
     MULTIPLICATIVE:6,   // * / %
     LET_DECL:      7,
     DO_EXPR:       8,
-    FUN_EXPR:      8,
+    FUN_EXPR:      1,   // low so the body $._expression expands greedily
     MATCH_EXPR:    8,
     MATCH_DECL:    9,
     DO_DECL:       10,

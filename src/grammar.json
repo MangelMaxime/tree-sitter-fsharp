@@ -393,7 +393,7 @@
     },
     "lambda_expression": {
       "type": "PREC_RIGHT",
-      "value": 8,
+      "value": 1,
       "content": {
         "type": "SEQ",
         "members": [
