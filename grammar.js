@@ -7,6 +7,41 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+const PREC = {
+    SEQ_EXPR:      1,
+    THEN_EXPR:     2,
+    RARROW:        3,
+    INFIX_OP:      4,
+    LET_DECL:      7,
+    DO_EXPR:       8,
+    FUN_EXPR:      8,
+    MATCH_EXPR:    8,
+    MATCH_DECL:    9,
+    DO_DECL:       10,
+    ELSE_EXPR:     11,
+    INTERFACE:     12,
+    COMMA:         13,
+    INFIX_OR:      13,
+    INFIX_AND:     14,
+    PREFIX_EXPR:   15,
+    APP_EXPR:      16,
+    SPECIAL_INFIX: 16,
+    LARROW:        16,
+    TUPLE_EXPR:    16,
+    CE_EXPR:       15,
+    SPECIAL_PREFIX:17,
+    IF_EXPR:       18,
+    DOT:           19,
+    INDEX_EXPR:    20,
+    PAREN_APP:     21,
+    PAREN_EXPR:    21,
+    TYPED_EXPR:    22,
+    DOTDOT:        22,
+    DOTDOT_SLICE:  23,
+    NEW_OBJ:       24,
+    LET_EXPR:      60,
+};
+
 export default grammar({
     name: "fsharp",
 
@@ -20,7 +55,7 @@ export default grammar({
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
-        _expression: $ => prec(3, choice(
+        _expression: $ => prec(PREC.RARROW, choice(
             $.comparison_expression,
             $.int_literal,
             $.float_literal,
@@ -38,7 +73,7 @@ export default grammar({
             $.lambda_expression,
         )),
 
-        lambda_expression: $ => prec.right(2,
+        lambda_expression: $ => prec.right(PREC.FUN_EXPR,
             seq(
                 "fun",
                 repeat1($.parameter),
@@ -47,13 +82,13 @@ export default grammar({
             ),
         ),
 
-        comparison_expression: $ => prec.left(4, seq(
+        comparison_expression: $ => prec.left(PREC.INFIX_OP, seq(
             $._expression,
             choice(">", "<", ">=", "<=", "=", "<>"),
             $._expression,
         )),
 
-        if_expression: $ => prec.right(2,
+        if_expression: $ => prec.right(PREC.IF_EXPR,
             seq(
                 "if",
                 $._expression,
@@ -64,7 +99,7 @@ export default grammar({
             ),
         ),
 
-        let_binding: ($) => prec.right(1,
+        let_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
                 "let",
                 optional("rec"),
@@ -76,7 +111,7 @@ export default grammar({
             ),
         ),
 
-        match_expression: ($) => prec.right(2,
+        match_expression: ($) => prec.right(PREC.MATCH_EXPR,
             seq(
                 "match",
                 $._expression,

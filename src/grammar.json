@@ -106,7 +106,7 @@
     },
     "lambda_expression": {
       "type": "PREC_RIGHT",
-      "value": 2,
+      "value": 8,
       "content": {
         "type": "SEQ",
         "members": [
@@ -180,7 +180,7 @@
     },
     "if_expression": {
       "type": "PREC_RIGHT",
-      "value": 2,
+      "value": 18,
       "content": {
         "type": "SEQ",
         "members": [
@@ -250,7 +250,7 @@
     },
     "let_binding": {
       "type": "PREC_RIGHT",
-      "value": 1,
+      "value": 7,
       "content": {
         "type": "SEQ",
         "members": [
@@ -327,7 +327,7 @@
     },
     "match_expression": {
       "type": "PREC_RIGHT",
-      "value": 2,
+      "value": 8,
       "content": {
         "type": "SEQ",
         "members": [
