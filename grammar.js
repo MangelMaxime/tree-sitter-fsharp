@@ -25,6 +25,7 @@ export default grammar({
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
         _expression: $ => prec(3, choice(
+            $.comparison_expression,
             $.int_literal,
             $.float_literal,
             $.bool_literal,
@@ -32,8 +33,26 @@ export default grammar({
             $.null_literal,
             $.identifier,
             $.long_identifier,
+            $.if_expression,
             $.match_expression,
         )),
+
+        comparison_expression: $ => prec.left(4, seq(
+            $._expression,
+            choice(">", "<", ">=", "<=", "=", "<>"),
+            $._expression,
+        )),
+
+        if_expression: $ => prec.right(2,
+            seq(
+                "if",
+                $._expression,
+                "then",
+                $._expression,
+                repeat(seq("elif", $._expression, "then", $._expression)),
+                optional(seq("else", $._expression)),
+            ),
+        ),
 
         let_binding: ($) => prec.right(1,
             seq(
@@ -107,6 +126,7 @@ export default grammar({
         _token: $ => choice(
             $.import_decl,
             $.let_binding,
+            $.if_expression,
             $.match_expression,
             $.bool_literal,
             $.unit,

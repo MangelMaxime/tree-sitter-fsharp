@@ -270,3 +270,17 @@ match n with
         (identifier_pattern
           (identifier)))
       (int_literal))))
+
+================================================================================
+If then else expression
+================================================================================
+
+if x then 1 else 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_expression
+    (identifier)
+    (int_literal)
+    (int_literal)))

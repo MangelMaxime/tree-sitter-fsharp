@@ -3,6 +3,10 @@
   "type"
   "let"
   "rec"
+  "if"
+  "then"
+  "else"
+  "elif"
   "match"
   "with"
 ] @keyword
@@ -13,7 +17,15 @@
 ] @keyword.control
 
 "." @punctuation
-"=" @operator
+[
+  "="
+  ">"
+  "<"
+  ">="
+  "<="
+  "<>"
+] @operator
+
 ":" @punctuation.delimiter
 
 [

@@ -56,13 +56,29 @@ let answer = 42
 /// <returns>Result of the addition of the **2** numbers</returns>
 let add a b = a + b
 
-let sub (a : int) b = a - b
+let sub (a: int) b = a - b
 
 let rec fib4 (n: int) : int =
     match n with
     | 1
     | 2 -> n
     | n -> fib4 (n - 1) + fib4 (n - 2)
+
+let max a b =
+    if a > b then
+        a
+    else
+        b
+
+let condition a b c =
+    if a then
+        "a"
+    else if b then
+        "b"
+    elif "c" then
+        "c"
+    else
+        "nothing"
 
 Environment.CurrentDirectory |> printfn "%A"
 
