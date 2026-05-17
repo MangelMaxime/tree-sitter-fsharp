@@ -14,10 +14,6 @@ export default grammar({
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
 
-    conflicts: $ => [
-        [$.identifier_pattern, $.long_identifier],
-        [$.pattern, $.long_identifier],
-    ],
 
     rules: {
         source_file: $ => repeat($._token),
@@ -117,9 +113,8 @@ export default grammar({
         ),
 
         identifier_pattern: $ => choice(
-            $.identifier,
-            seq($.identifier, $.pattern),
             $.long_identifier,
+            seq($.long_identifier, $.pattern),
         ),
 
         tuple_pattern: $ => seq(

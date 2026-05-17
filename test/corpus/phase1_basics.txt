@@ -268,7 +268,8 @@ match n with
     (match_arm
       (pattern
         (identifier_pattern
-          (identifier)))
+          (long_identifier
+            (identifier))))
       (int_literal))))
 
 ================================================================================
