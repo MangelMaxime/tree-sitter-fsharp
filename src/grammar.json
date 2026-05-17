@@ -43,6 +43,10 @@
         "members": [
           {
             "type": "SYMBOL",
+            "name": "application_expression"
+          },
+          {
+            "type": "SYMBOL",
             "name": "comparison_expression"
           },
           {
@@ -83,10 +87,6 @@
           },
           {
             "type": "SYMBOL",
-            "name": "identifier"
-          },
-          {
-            "type": "SYMBOL",
             "name": "long_identifier"
           },
           {
@@ -100,6 +100,23 @@
           {
             "type": "SYMBOL",
             "name": "lambda_expression"
+          }
+        ]
+      }
+    },
+    "application_expression": {
+      "type": "PREC_LEFT",
+      "value": 16,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
           }
         ]
       }
@@ -567,50 +584,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "lambda_expression"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "if_expression"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "match_expression"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "char_literal"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "string_literal"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "verbatim_string"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "triple_quoted_string"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "bool_literal"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "unit"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "null_literal"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "long_identifier"
-        },
-        {
-          "type": "SYMBOL",
           "name": "xml_doc_comment"
         },
         {
@@ -627,11 +600,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "int_literal"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "float_literal"
+          "name": "_expression"
         }
       ]
     },

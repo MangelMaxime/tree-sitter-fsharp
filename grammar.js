@@ -56,6 +56,7 @@ export default grammar({
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
         _expression: $ => prec(PREC.RARROW, choice(
+            $.application_expression,
             $.comparison_expression,
             $.int_literal,
             $.float_literal,
@@ -66,11 +67,15 @@ export default grammar({
             $.bool_literal,
             $.unit,
             $.null_literal,
-            $.identifier,
             $.long_identifier,
             $.if_expression,
             $.match_expression,
             $.lambda_expression,
+        )),
+
+        application_expression: $ => prec.left(PREC.APP_EXPR, seq(
+            $._expression,
+            $._expression,
         )),
 
         lambda_expression: $ => prec.right(PREC.FUN_EXPR,
@@ -172,23 +177,11 @@ export default grammar({
         _token: $ => choice(
             $.import_decl,
             $.let_binding,
-            $.lambda_expression,
-            $.if_expression,
-            $.match_expression,
-            $.char_literal,
-            $.string_literal,
-            $.verbatim_string,
-            $.triple_quoted_string,
-            $.bool_literal,
-            $.unit,
-            $.null_literal,
-            $.long_identifier,
             $.xml_doc_comment,
             $.line_comment,
             $.block_comment,
             $.block_doc_comment,
-            $.int_literal,
-            $.float_literal,
+            $._expression,
         ),
 
         // keyword: _ => choice(...KEYWORDS),

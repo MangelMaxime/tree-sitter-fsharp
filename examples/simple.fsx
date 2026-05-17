@@ -95,6 +95,9 @@ let condition a b c =
     else
         "nothing"
 
+let app_if_arg f a b =
+    f (if a then b else 0)
+
 Environment.CurrentDirectory |> printfn "%A"
 
 let r = Regex.Escape "dw"

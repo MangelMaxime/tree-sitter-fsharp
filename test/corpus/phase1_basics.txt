@@ -201,7 +201,8 @@ let add a b = a
     name: (identifier)
     parameters: (parameter (identifier))
     parameters: (parameter (identifier))
-    (identifier)))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Let binding with typed parameters
@@ -222,7 +223,8 @@ let add (a: int) (b: int) = a
       (identifier)
       (type_expression
         (identifier)))
-    (identifier)))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Match expression with wildcard
@@ -235,7 +237,8 @@ match x with
 
 (source_file
   (match_expression
-    (identifier)
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (wildcard_pattern))
@@ -254,7 +257,8 @@ match n with
 
 (source_file
   (match_expression
-    (identifier)
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (literal_pattern
@@ -282,7 +286,8 @@ if x then 1 else 0
 
 (source_file
   (if_expression
-    (identifier)
+    (long_identifier
+      (identifier))
     (int_literal)
     (int_literal)))
 
@@ -297,7 +302,8 @@ fun x -> x
 (source_file
   (lambda_expression
     (parameter (identifier))
-    (identifier)))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Lambda expression with multiple parameters
@@ -311,7 +317,8 @@ fun x y -> x
   (lambda_expression
     (parameter (identifier))
     (parameter (identifier))
-    (identifier)))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Lambda expression with typed parameter
@@ -326,7 +333,8 @@ fun (x: int) -> x
     (parameter
       (identifier)
       (type_expression (identifier)))
-    (identifier)))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Char literal simple
@@ -509,7 +517,8 @@ match c with
 
 (source_file
   (match_expression
-    (identifier)
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (literal_pattern
@@ -519,3 +528,68 @@ match c with
       (pattern
         (wildcard_pattern))
       (int_literal))))
+
+================================================================================
+Application expression simple
+================================================================================
+
+f x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Application expression multi-arg left associative
+================================================================================
+
+f x y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Application expression with string argument
+================================================================================
+
+printfn "hello"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier))
+    (string_literal)))
+
+================================================================================
+Application expression in let binding
+================================================================================
+
+let r = List.length xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (long_identifier
+        (identifier)))))
