@@ -1,5 +1,15 @@
 [
   {
+    "type": "bool_literal",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "float_literal",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "import_decl",
     "named": true,
     "fields": {},
@@ -13,6 +23,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "int_literal",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "long_identifier",
@@ -39,7 +54,11 @@
       "required": false,
       "types": [
         {
-          "type": "identifier",
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "float_literal",
           "named": true
         },
         {
@@ -47,7 +66,23 @@
           "named": true
         },
         {
+          "type": "int_literal",
+          "named": true
+        },
+        {
           "type": "line_comment",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "unit",
           "named": true
         }
       ]
@@ -55,6 +90,10 @@
   },
   {
     "type": ".",
+    "named": false
+  },
+  {
+    "type": "false",
     "named": false
   },
   {
@@ -66,11 +105,23 @@
     "named": true
   },
   {
+    "type": "null_literal",
+    "named": true
+  },
+  {
     "type": "open",
+    "named": false
+  },
+  {
+    "type": "true",
     "named": false
   },
   {
     "type": "type",
     "named": false
+  },
+  {
+    "type": "unit",
+    "named": true
   }
 ]
