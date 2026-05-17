@@ -53,10 +53,13 @@ let valule_verbatim = @"C:\Users\foo"
 let valule_verbatim_quote = @"say ""hello"""
 let valule_verbatim_bytes = @"raw"B
 let valule_triple = """triple "quoted" string"""
-let valule_triple_multiline = """
+
+let valule_triple_multiline =
+    """
 first line
 second "line"
 """
+
 let valule_unit = ()
 
 let pi = PI
@@ -74,16 +77,16 @@ let add a b = a + b
 let sub (a: int) b = a - b
 
 // Type annotations
-let typed_val : int = 42
-let typed_fn : int -> string = failwith "todo"
-let typed_fn2 : int -> int -> int = failwith "todo"
-let typed_tuple : int * string = failwith "todo"
-let typed_generic : list<int> = []
-let typed_postfix : int list = []
-let typed_array : int[] = [||]
+let typed_val: int = 42
+let typed_fn: int -> string = failwith "todo"
+let typed_fn2: int -> int -> int = failwith "todo"
+let typed_tuple: int * string = failwith "todo"
+let typed_generic: list<int> = []
+let typed_postfix: int list = []
+let typed_array: int[] = [||]
 let typed_param<'a> : 'a -> 'a = failwith "todo"
 let typed_complex<'a> : 'a list -> int = failwith "todo"
-let typed_compound : int * string -> bool = failwith "todo"
+let typed_compound: int * string -> bool = failwith "todo"
 
 let rec fib4 (n: int) : int =
     match n with
@@ -108,7 +111,12 @@ let condition a b c =
         "nothing"
 
 let app_if_arg f a b =
-    f (if a then b else 0)
+    f (
+        if a then
+            b
+        else
+            0
+    )
 
 Environment.CurrentDirectory |> printfn "%A"
 
@@ -124,17 +132,24 @@ let arith_sub = 10 - 3
 let arith_mul = 4 * 5
 let arith_div = 10 / 2
 let arith_mod = 10 % 3
-let arith_prec = 1 + 2 * 3        // 1 + (2 * 3) = 7
-let arith_paren = (1 + 2) * 3     // (1 + 2) * 3 = 9
+let arith_prec = 1 + 2 * 3 // 1 + (2 * 3) = 7
+let arith_paren = (1 + 2) * 3 // (1 + 2) * 3 = 9
 
 // Boolean
 let bool_and = true && false
 let bool_or = true || false
-let bool_prec a b c d = a > b && c > d    // (a > b) && (c > d)
-let bool_short a b c = a || b && c      // a || (b && c)
+let bool_prec a b c d = a > b && c > d // (a > b) && (c > d)
+let bool_short a b c = a || b && c // a || (b && c)
 
 // Pipe
-let pipe_right = [1; 2; 3] |> List.length
+let pipe_right =
+    [
+        1
+        2
+        3
+    ]
+    |> List.length
+
 let pipe_chain x f g = x |> f |> g
 let pipe_left f x = f <| x
 
@@ -165,18 +180,41 @@ let mutable message = "hello"
 
 // let ... in ...
 let let_in_result = let x = 10 in x * 2
-let let_in_nested = let x = 1 in let y = 2 in x + y
+
+let let_in_nested =
+    let x = 1 in
+    let y = 2 in
+    x + y
+
 let let_in_fn = let double x = x * 2 in double 21
 
 // Lists
 let empty_list = []
-let singleton_list = [42]
-let int_list = [1; 2; 3]
-let str_list = ["a"; "b"; "c"]
+let singleton_list = [ 42 ]
+
+let int_list =
+    [
+        1
+        2
+        3
+    ]
+
+let str_list =
+    [
+        "a"
+        "b"
+        "c"
+    ]
 
 // Arrays
 let empty_array = [||]
-let int_array = [| 10; 20; 30 |]
+
+let int_array =
+    [|
+        10
+        20
+        30
+    |]
 
 // Tuples
 let pair = 1, 2
@@ -195,6 +233,91 @@ let classify n =
 let describe_list xs =
     match xs with
     | [] -> "empty"
-    | [x] -> "one element"
-    | [x; y] as pair -> "two elements"
+    | [ x ] -> "one element"
+    | [ x; y ] as pair -> "two elements"
     | _ -> "many"
+
+// Record type definitions
+type Point =
+    {
+        X: int
+        Y: int
+    }
+
+type Person =
+    {
+        Name: string
+        Age: int
+    }
+
+type MutableCounter =
+    {
+        mutable Count: int
+    }
+
+type Rect =
+    {
+        TopLeft: Point
+        BottomRight: Point
+    }
+
+type Wrapper<'A, 'B> =
+    {
+        A : 'A
+        B : 'A
+    }
+
+// Record expressions
+let record_creation =
+    {
+        X = 1
+        Y = 2
+    }
+
+let record_trailing =
+    {
+        X = 10
+        Y = 20
+    }
+
+let record_copy =
+    { record_creation with
+        X = 42
+    }
+
+let record_copy_multi =
+    { record_creation with
+        X = 0
+        Y = 0
+    }
+
+let record_named =
+    {
+        Name = "Alice"
+        Age = 30
+    }
+
+let record_copy_person =
+    { record_named with
+        Age = 31
+    }
+
+let record_expr_val =
+    {
+        X = abs 3
+        Y = max 5 10
+    }
+
+let record_nested =
+    {
+        TopLeft =
+            {
+                X = 0
+                Y = 0
+            }
+        BottomRight =
+            {
+                X = 100
+                Y = 100
+            }
+    }

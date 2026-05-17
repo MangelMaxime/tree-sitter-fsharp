@@ -61,11 +61,55 @@ export default grammar({
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
 
+    // Without these declarations prec.dynamic is silently ignored.
+    // record_type_field vs postfix_type: after `type_expression`, `long_identifier` could
+    //   extend to postfix_type OR be the name of the next field.
+    // record_field vs application_expression: after a value expression, a bare identifier
+    //   could be a function argument OR the name of the next field.
+    conflicts: $ => [
+        [$.record_type_field, $.postfix_type],
+        [$.record_field, $.application_expression],
+    ],
+
 
     rules: {
         source_file: $ => repeat($._token),
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
+
+        // type Point = { X: int; Y: int }
+        // type Wrapper<'A, 'B> = { ... }
+        type_decl: $ => seq(
+            "type",
+            field('name', $.identifier),
+            optional(seq(
+                "<",
+                $.type_parameter,
+                repeat(seq(",", $.type_parameter)),
+                ">",
+            )),
+            "=",
+            $.record_type_defn,
+        ),
+
+        record_type_defn: $ => seq(
+            "{",
+            $.record_type_field,
+            // prec.dynamic > TYPE_PREC.POSTFIX: when the GLR explores both "extend type via
+            // postfix_type" and "start next field", prefer starting the next field.
+            repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(optional(";"), $.record_type_field))),
+            optional(";"),
+            "}",
+        ),
+
+        // prec(TYPE_PREC.POSTFIX) ties the REDUCE precedence with postfix_type's SHIFT precedence,
+        // creating a genuine LR(1) conflict that the conflicts+prec.dynamic machinery can resolve.
+        record_type_field: $ => prec(TYPE_PREC.POSTFIX, seq(
+            optional("mutable"),
+            field('name', $.identifier),
+            ":",
+            field('type', $.type_expression),
+        )),
 
         _expression: $ => prec(PREC.RARROW, choice(
             $.parenthesized_expression,
@@ -81,6 +125,7 @@ export default grammar({
             $.infix_expression,
             $.list_expression,
             $.array_expression,
+            $.record_expression,
             $.tuple_expression,
             $.int_literal,
             $.float_literal,
@@ -111,6 +156,7 @@ export default grammar({
             $.parenthesized_expression,
             $.list_expression,
             $.array_expression,
+            $.record_expression,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -196,6 +242,39 @@ export default grammar({
             )),
             "|]",
         ),
+
+        // { x = 1; y = 2 }  or  { r with x = 1 }  or newline-separated (no semicolons)
+        // Base of copy-update is restricted to _simple_expression to avoid ambiguity with
+        // record_field (which also starts with long_identifier "="). Complex bases need parens.
+        // prec.dynamic(APP_EXPR + 1) on the repeat body resolves the GLR conflict: when `Y`
+        // could either start a new field or be consumed as a function argument to the previous
+        // field's value, prefer starting a new field.
+        record_expression: $ => seq(
+            "{",
+            choice(
+                seq(
+                    field('base', $._simple_expression),
+                    "with",
+                    $.record_field,
+                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
+                    optional(";"),
+                ),
+                seq(
+                    $.record_field,
+                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
+                    optional(";"),
+                ),
+            ),
+            "}",
+        ),
+
+        // prec(APP_EXPR) ties REDUCE precedence with application_expression's SHIFT precedence so
+        // prec.dynamic in the repeat body can prefer a new field over extending the value expression.
+        record_field: $ => prec(PREC.APP_EXPR, seq(
+            field('name', $.long_identifier),
+            "=",
+            field('value', $._expression),
+        )),
 
         tuple_expression: $ => prec.left(PREC.TUPLE_EXPR, seq(
             $._expression,
@@ -381,6 +460,7 @@ export default grammar({
 
         _token: $ => choice(
             $.import_decl,
+            $.type_decl,
             $.let_binding,
             $.xml_doc_comment,
             $.line_comment,

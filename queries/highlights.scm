@@ -58,6 +58,8 @@
   "]"
   "[|"
   "|]"
+  "{"
+  "}"
 ] @punctuation.bracket
 
 [
@@ -99,3 +101,12 @@
   [
     (long_identifier) @namespace
   ])
+
+(type_decl
+  name: (identifier) @type)
+
+(record_type_field
+  name: (identifier) @variable.other.member)
+
+(record_field
+  name: (long_identifier) @variable.other.member)
