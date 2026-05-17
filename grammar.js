@@ -90,7 +90,7 @@ export default grammar({
                 ">",
             )),
             "=",
-            choice($.record_type_defn, $.union_type_defn),
+            choice($.record_type_defn, $.union_type_defn, field('alias', $.type_expression)),
         ),
 
         union_type_defn: $ => repeat1($.union_case),

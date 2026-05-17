@@ -105,6 +105,14 @@
             {
               "type": "SYMBOL",
               "name": "union_type_defn"
+            },
+            {
+              "type": "FIELD",
+              "name": "alias",
+              "content": {
+                "type": "SYMBOL",
+                "name": "type_expression"
+              }
             }
           ]
         }

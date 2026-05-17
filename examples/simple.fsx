@@ -302,6 +302,13 @@ type Wrapper<'A, 'B> =
         B : 'A
     }
 
+// Type aliases
+type MyInt = int
+type StringList = string list
+type Point2D = float * float
+type StringMap<'v> = Map<string, 'v>
+type Predicate<'a> = 'a -> bool
+
 // Record expressions
 let record_creation =
     {

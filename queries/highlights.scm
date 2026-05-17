@@ -106,6 +106,9 @@
 (type_decl
   name: (identifier) @type)
 
+(type_decl
+  alias: (type_expression) @type)
+
 (union_case
   name: (identifier) @constructor)
 
