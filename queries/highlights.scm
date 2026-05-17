@@ -15,6 +15,7 @@
   "in"
   "inline"
   "mutable"
+  "of"
 ] @keyword
 
 "not" @keyword.operator
@@ -104,6 +105,9 @@
 
 (type_decl
   name: (identifier) @type)
+
+(union_case
+  name: (identifier) @constructor)
 
 (record_type_field
   name: (identifier) @variable.other.member)

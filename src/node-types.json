@@ -3289,6 +3289,10 @@
         {
           "type": "type_parameter",
           "named": true
+        },
+        {
+          "type": "union_type_defn",
+          "named": true
         }
       ]
     }
@@ -3458,6 +3462,47 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "union_case",
+    "named": true,
+    "fields": {
+      "fields": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "union_type_defn",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "union_case",
           "named": true
         }
       ]
@@ -3652,6 +3697,10 @@
   {
     "type": "null_literal",
     "named": true
+  },
+  {
+    "type": "of",
+    "named": false
   },
   {
     "type": "open",

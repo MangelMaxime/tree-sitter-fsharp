@@ -96,8 +96,66 @@
           "value": "="
         },
         {
-          "type": "SYMBOL",
-          "name": "record_type_defn"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "record_type_defn"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "union_type_defn"
+            }
+          ]
+        }
+      ]
+    },
+    "union_type_defn": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "SYMBOL",
+        "name": "union_case"
+      }
+    },
+    "union_case": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "|"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "of"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "fields",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "type_expression"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },

@@ -237,6 +237,41 @@ let describe_list xs =
     | [ x; y ] as pair -> "two elements"
     | _ -> "many"
 
+// Discriminated union type definitions
+type Shape =
+    | Circle of float
+    | Rectangle of float * float
+    | Point
+
+type MyOption<'a> =
+    | Some of 'a
+    | None
+
+type MyResult<'ok, 'err> =
+    | Ok of 'ok
+    | Error of 'err
+
+type Tree<'a> =
+    | Leaf
+    | Node of 'a * Tree<'a> * Tree<'a>
+
+type Color =
+    | Red
+    | Green
+    | Blue
+
+// DU match patterns
+let area shape =
+    match shape with
+    | Circle r -> r * r * 3.14159
+    | Rectangle (w, h) -> w * h
+    | Point -> 0.0
+
+let unwrap opt =
+    match opt with
+    | Some x -> x
+    | None -> 0
+
 // Record type definitions
 type Point =
     {

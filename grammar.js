@@ -78,7 +78,8 @@ export default grammar({
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
         // type Point = { X: int; Y: int }
-        // type Wrapper<'A, 'B> = { ... }
+        // type Shape = | Circle of float | Rectangle of float * float
+        // type Option<'a> = | Some of 'a | None
         type_decl: $ => seq(
             "type",
             field('name', $.identifier),
@@ -89,7 +90,15 @@ export default grammar({
                 ">",
             )),
             "=",
-            $.record_type_defn,
+            choice($.record_type_defn, $.union_type_defn),
+        ),
+
+        union_type_defn: $ => repeat1($.union_case),
+
+        union_case: $ => seq(
+            "|",
+            field('name', $.identifier),
+            optional(seq("of", field('fields', $.type_expression))),
         ),
 
         record_type_defn: $ => seq(
