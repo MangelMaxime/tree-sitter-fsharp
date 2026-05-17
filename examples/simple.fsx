@@ -143,3 +143,34 @@ let bind_result result next = result >>= next
 let choice_op parser1 parser2 = parser1 <|> parser2
 let append_list xs ys = xs @ ys
 
+// Lists
+let empty_list = []
+let singleton_list = [42]
+let int_list = [1; 2; 3]
+let str_list = ["a"; "b"; "c"]
+
+// Arrays
+let empty_array = [||]
+let int_array = [| 10; 20; 30 |]
+
+// Tuples
+let pair = 1, 2
+let triple = "hello", 42, true
+let paren_pair = (1, 2)
+
+// When guards
+let classify n =
+    match n with
+    | x when x < 0 -> "negative"
+    | 0 -> "zero"
+    | x when x > 100 -> "large"
+    | _ -> "positive"
+
+// List and as patterns
+let describe_list xs =
+    match xs with
+    | [] -> "empty"
+    | [x] -> "one element"
+    | [x; y] as pair -> "two elements"
+    | _ -> "many"
+

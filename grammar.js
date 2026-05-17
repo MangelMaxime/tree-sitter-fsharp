@@ -32,7 +32,7 @@ const PREC = {
     APP_EXPR:      16,
     SPECIAL_INFIX: 16,
     LARROW:        16,
-    TUPLE_EXPR:    16,
+    TUPLE_EXPR:    1,    // below BOOL_OR so OR binds tighter than comma
     CE_EXPR:       15,
     SPECIAL_PREFIX:17,
     IF_EXPR:       18,
@@ -72,6 +72,9 @@ export default grammar({
             $.unary_expression,
             $.cons_expression,
             $.infix_expression,
+            $.list_expression,
+            $.array_expression,
+            $.tuple_expression,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -150,6 +153,31 @@ export default grammar({
 
         symbolic_op: _ => token(/[!$%&*+\-\/<=>?@^|][!$%&*+\/<=>?@^|~]*/),
 
+        list_expression: $ => seq(
+            "[",
+            optional(seq(
+                $._expression,
+                repeat(seq(";", $._expression)),
+            )),
+            "]",
+        ),
+
+        array_expression: $ => seq(
+            "[|",
+            optional(seq(
+                $._expression,
+                repeat(seq(";", $._expression)),
+            )),
+            "|]",
+        ),
+
+        tuple_expression: $ => prec.left(PREC.TUPLE_EXPR, seq(
+            $._expression,
+            ",",
+            $._expression,
+            repeat(seq(",", $._expression)),
+        )),
+
         if_expression: $ => prec.right(PREC.IF_EXPR,
             seq(
                 "if",
@@ -186,6 +214,7 @@ export default grammar({
             "|",
             $.pattern,
             repeat(seq("|", $.pattern)),
+            optional(seq("when", $._expression)),
             "->",
             $._expression,
         ),
@@ -195,6 +224,9 @@ export default grammar({
             $.literal_pattern,
             $.identifier_pattern,
             $.tuple_pattern,
+            $.as_pattern,
+            $.list_pattern,
+            $.array_pattern,
         ),
 
         wildcard_pattern: _ => "_",
@@ -211,7 +243,7 @@ export default grammar({
 
         identifier_pattern: $ => choice(
             $.long_identifier,
-            seq($.long_identifier, $.pattern),
+            prec.right(1, seq($.long_identifier, $.pattern)),
         ),
 
         tuple_pattern: $ => seq(
@@ -219,6 +251,30 @@ export default grammar({
             $.pattern,
             repeat(seq(",", $.pattern)),
             ")",
+        ),
+
+        as_pattern: $ => prec.right(seq(
+            $.pattern,
+            "as",
+            $.identifier,
+        )),
+
+        list_pattern: $ => seq(
+            "[",
+            optional(seq(
+                $.pattern,
+                repeat(seq(";", $.pattern)),
+            )),
+            "]",
+        ),
+
+        array_pattern: $ => seq(
+            "[|",
+            optional(seq(
+                $.pattern,
+                repeat(seq(";", $.pattern)),
+            )),
+            "|]",
         ),
 
         parameter: $ => choice(

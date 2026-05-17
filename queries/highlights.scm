@@ -10,6 +10,8 @@
   "elif"
   "match"
   "with"
+  "when"
+  "as"
 ] @keyword
 
 "not" @keyword.operator
@@ -49,7 +51,16 @@
 [
   "("
   ")"
+  "["
+  "]"
+  "[|"
+  "|]"
 ] @punctuation.bracket
+
+[
+  ";"
+  ","
+] @punctuation.delimiter
 
 (line_comment) @comment.line
 (xml_doc_comment) @comment.line.documentation

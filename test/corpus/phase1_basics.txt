@@ -834,3 +834,208 @@ a + b :: c
         (identifier)))
     (long_identifier
       (identifier))))
+
+================================================================================
+Empty list expression
+================================================================================
+
+[]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (list_expression))
+
+================================================================================
+List expression with elements
+================================================================================
+
+[1; 2; 3]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (list_expression
+    (int_literal)
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Empty array expression
+================================================================================
+
+[||]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (array_expression))
+
+================================================================================
+Array expression with elements
+================================================================================
+
+[| 1; 2 |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (array_expression
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Tuple expression two elements
+================================================================================
+
+1, 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_expression
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Tuple expression three elements
+================================================================================
+
+1, 2, 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_expression
+    (tuple_expression
+      (int_literal)
+      (int_literal))
+    (int_literal)))
+
+================================================================================
+Or binds tighter than tuple
+================================================================================
+
+a || b, c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_expression
+    (or_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Match arm with when guard
+================================================================================
+
+match x with
+| n when n > 0 -> 1
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (comparison_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Empty list pattern
+================================================================================
+
+match xs with
+| [] -> 0
+| _ -> 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (list_pattern))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+List pattern with elements
+================================================================================
+
+match xs with
+| [x; y] -> x
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (list_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+As pattern
+================================================================================
+
+match xs with
+| [] as empty -> 0
+| _ -> 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (as_pattern
+          (pattern
+            (list_pattern))
+          (identifier)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
