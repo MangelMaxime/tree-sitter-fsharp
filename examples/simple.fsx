@@ -73,6 +73,18 @@ let add a b = a + b
 
 let sub (a: int) b = a - b
 
+// Type annotations
+let typed_val : int = 42
+let typed_fn : int -> string = failwith "todo"
+let typed_fn2 : int -> int -> int = failwith "todo"
+let typed_tuple : int * string = failwith "todo"
+let typed_generic : list<int> = []
+let typed_postfix : int list = []
+let typed_array : int[] = [||]
+let typed_param<'a> : 'a -> 'a = failwith "todo"
+let typed_complex<'a> : 'a list -> int = failwith "todo"
+let typed_compound : int * string -> bool = failwith "todo"
+
 let rec fib4 (n: int) : int =
     match n with
     | 1
@@ -186,4 +198,3 @@ let describe_list xs =
     | [x] -> "one element"
     | [x; y] as pair -> "two elements"
     | _ -> "many"
-

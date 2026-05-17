@@ -7,6 +7,13 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+const TYPE_PREC = {
+    FUNCTION: 1,   // int -> string   (right-assoc, lowest)
+    TUPLE:    2,   // int * string
+    POSTFIX:  3,   // int list, int option  (left-assoc)
+    APP:      4,   // list<int>, int[]  (highest)
+};
+
 const PREC = {
     SEQ_EXPR:      1,
     PIPE_EXPR:     1,   // |>, <|, >>, <<
@@ -317,9 +324,59 @@ export default grammar({
             seq("(", $.identifier, ":", $.type_expression, ")"),
         ),
 
-        type_expression: $ => prec(2, choice(
-            $.identifier,
+        type_expression: $ => choice(
+            $.function_type,
+            $.tuple_type,
+            $.postfix_type,
+            $.generic_type,
+            $.array_type,
+            $.parenthesized_type,
+            $.type_parameter,
             $.long_identifier,
+        ),
+
+        // int -> string  (right-assoc: int -> string -> bool = int -> (string -> bool))
+        function_type: $ => prec.right(TYPE_PREC.FUNCTION, seq(
+            $.type_expression, "->", $.type_expression,
+        )),
+
+        // int * string  (flat: int * string * bool stays flat via repeat)
+        tuple_type: $ => prec.right(TYPE_PREC.TUPLE, seq(
+            $.type_expression,
+            "*",
+            $.type_expression,
+            repeat(seq("*", $.type_expression)),
+        )),
+
+        // int list, int option  (left-assoc: int list option = (int list) option)
+        postfix_type: $ => prec.left(TYPE_PREC.POSTFIX, seq(
+            $.type_expression,
+            $.long_identifier,
+        )),
+
+        // list<int>, Map<string, int>
+        generic_type: $ => prec(TYPE_PREC.APP, seq(
+            $.long_identifier,
+            "<",
+            $.type_expression,
+            repeat(seq(",", $.type_expression)),
+            ">",
+        )),
+
+        // int[]
+        array_type: $ => prec(TYPE_PREC.APP, seq(
+            $.type_expression,
+            "[",
+            "]",
+        )),
+
+        // (int -> string)
+        parenthesized_type: $ => seq("(", $.type_expression, ")"),
+
+        // 'a  ^T
+        type_parameter: _ => token(seq(
+            choice("'", "^"),
+            /[a-zA-Z_][a-zA-Z0-9_']*/,
         )),
 
         _token: $ => choice(

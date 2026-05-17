@@ -89,11 +89,11 @@
   (parameter
     (identifier) @variable.parameter)*)
 
-(type_expression
-  [
-    (identifier) @type
-    (long_identifier) @type
-  ])
+; Named types anywhere in a type expression
+(type_expression (long_identifier) @type)
+(generic_type (long_identifier) @type)
+(postfix_type (long_identifier) @type)
+(type_parameter) @type.parameter
 
 (import_decl
   [
