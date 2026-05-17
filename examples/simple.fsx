@@ -46,7 +46,6 @@ let valule_unit = ()
 
 let pi = PI
 
-
 printfn "Hello"
 
 let answer = 42
@@ -56,6 +55,14 @@ let answer = 42
 /// <param name="b"></param>
 /// <returns>Result of the addition of the **2** numbers</returns>
 let add a b = a + b
+
+let sub (a : int) b = a - b
+
+let rec fib4 (n: int) : int =
+    match n with
+    | 1
+    | 2 -> n
+    | n -> fib4 (n - 1) + fib4 (n - 2)
 
 Environment.CurrentDirectory |> printfn "%A"
 

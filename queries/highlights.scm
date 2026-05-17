@@ -1,14 +1,20 @@
 [
   "open"
   "type"
+  "let"
+  "rec"
 ] @keyword
 
-(import_decl
-  [
-    (long_identifier) @namespace
-  ])
+[
+  "."
+  "="
+  ":"
+] @punctuation
 
-"." @punctuation
+[
+  "("
+  ")"
+] @punctuation.bracket
 
 (line_comment) @comment.line
 (xml_doc_comment) @comment.documentation
@@ -20,3 +26,19 @@
 (bool_literal) @constant.builtin.boolean
 (unit) @constant.builtin
 (null_literal) @constant.builtin
+
+(let_binding
+  name: (identifier) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
+
+(type_expression
+  [
+    (identifier) @type
+    (long_identifier) @type
+  ])
+
+(import_decl
+  [
+    (long_identifier) @namespace
+  ])

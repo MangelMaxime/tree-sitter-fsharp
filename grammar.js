@@ -19,8 +19,39 @@ export default grammar({
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
+        let_binding: ($) => prec.right(1,
+            seq(
+                "let",
+                optional("rec"),
+                field('name', $.identifier),
+                field('parameters', repeat($.parameter)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                choice(
+                    $.int_literal,
+                    $.float_literal,
+                    $.bool_literal,
+                    $.unit,
+                    $.null_literal,
+                    $.identifier,
+                    $.long_identifier,
+                ),
+            ),
+        ),
+
+        parameter: $ => choice(
+            $.identifier,
+            seq("(", $.identifier, ":", $.type_expression, ")"),
+        ),
+
+        type_expression: $ => prec(2, choice(
+            $.identifier,
+            $.long_identifier,
+        )),
+
         _token: $ => choice(
             $.import_decl,
+            $.let_binding,
             $.bool_literal,
             $.unit,
             $.null_literal,

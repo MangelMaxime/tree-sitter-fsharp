@@ -174,3 +174,52 @@ null
 
 (source_file
   (null_literal))
+
+================================================================================
+Let binding simple value
+================================================================================
+
+let x = 42
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (int_literal)))
+
+================================================================================
+Let binding with function parameters
+================================================================================
+
+let add a b = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    parameters: (parameter (identifier))
+    (identifier)))
+
+================================================================================
+Let binding with typed parameters
+================================================================================
+
+let add (a: int) (b: int) = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (identifier)))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (identifier)))
+    (identifier)))
