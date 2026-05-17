@@ -41,7 +41,22 @@ let valule_decimal_1 = 1m
 let valule_float = 3.14
 let valule_float32 = 1.0f
 let valule_char = 'c'
+let valule_char_escape = '\n'
+let valule_char_decimal = '\097'
+let valule_char_hex = '\x41'
+let valule_char_unicode = 'A'
 let valule_string = "str"
+let valule_string_escape = "hello\nworld"
+let valule_string_unicode = "élève"
+let valule_byte_string = "hello"B
+let valule_verbatim = @"C:\Users\foo"
+let valule_verbatim_quote = @"say ""hello"""
+let valule_verbatim_bytes = @"raw"B
+let valule_triple = """triple "quoted" string"""
+let valule_triple_multiline = """
+first line
+second "line"
+"""
 let valule_unit = ()
 
 let pi = PI
@@ -75,7 +90,7 @@ let condition a b c =
         "a"
     else if b then
         "b"
-    elif "c" then
+    elif c then
         "c"
     else
         "nothing"

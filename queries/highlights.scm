@@ -35,12 +35,16 @@
 ] @punctuation.bracket
 
 (line_comment) @comment.line
-(xml_doc_comment) @comment.documentation
+(xml_doc_comment) @comment.line.documentation
 (block_comment) @comment.block
 (block_doc_comment) @comment.block.documentation
 
 (int_literal) @constant.numeric.integer
 (float_literal) @constant.numeric.float
+(char_literal) @constant.character
+(string_literal) @string
+(verbatim_string) @string
+(triple_quoted_string) @string
 (bool_literal) @constant.builtin.boolean
 (unit) @constant.builtin
 (null_literal) @constant.builtin

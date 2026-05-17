@@ -28,6 +28,10 @@ export default grammar({
             $.comparison_expression,
             $.int_literal,
             $.float_literal,
+            $.char_literal,
+            $.string_literal,
+            $.verbatim_string,
+            $.triple_quoted_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -105,6 +109,8 @@ export default grammar({
         literal_pattern: $ => choice(
             $.int_literal,
             $.float_literal,
+            $.char_literal,
+            $.string_literal,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -139,6 +145,10 @@ export default grammar({
             $.lambda_expression,
             $.if_expression,
             $.match_expression,
+            $.char_literal,
+            $.string_literal,
+            $.verbatim_string,
+            $.triple_quoted_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -184,6 +194,65 @@ export default grammar({
                 token(seq(/[0-9]+/, /[eE]/, optional(/[+-]/), /[0-9]+/)),
             ),
             optional($._float_suffix),
+        ),
+
+        char_literal: _ => token(
+            seq(
+                "'",
+                choice(
+                    /[^'\\]/,
+                    seq("\\", choice(
+                        /[\\'"abfnrtv0]/,
+                        /[0-9]{3}/,
+                        /x[0-9a-fA-F]{2}/,
+                        /u[0-9a-fA-F]{4}/,
+                        /U[0-9a-fA-F]{8}/,
+                    )),
+                ),
+                "'",
+            )
+        ),
+
+        _string_content: _ => token(
+            seq(
+                '"',
+                repeat(choice(
+                    /[^"\\]+/,
+                    seq("\\", choice(
+                        /[\\'"abfnrtv0]/,
+                        /[0-9]{3}/,
+                        /x[0-9a-fA-F]{2}/,
+                        /u[0-9a-fA-F]{4}/,
+                        /U[0-9a-fA-F]{8}/,
+                    )),
+                )),
+                '"',
+            )
+        ),
+
+        _verbatim_string_content: _ => token(
+            seq(
+                '@"',
+                repeat(choice(/[^"]+/, '""')),
+                '"',
+            )
+        ),
+
+        _string_byte_suffix: _ => token.immediate("B"),
+
+        // "hello"  or  "hello"B
+        string_literal: $ => seq($._string_content, optional($._string_byte_suffix)),
+
+        // @"hello"  or  @"hello"B
+        verbatim_string: $ => seq($._verbatim_string_content, optional($._string_byte_suffix)),
+
+        // """hello"""  — no byte variant in F#
+        triple_quoted_string: _ => token(
+            seq(
+                '"""',
+                repeat(choice(/[^"]+/, /"[^"]/, /""[^"]/)),
+                '"""',
+            )
         ),
 
         bool_literal: _ => choice("true", "false"),
