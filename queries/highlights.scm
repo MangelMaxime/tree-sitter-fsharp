@@ -9,3 +9,5 @@
   ])
 
 "." @punctuation
+
+(line_comment) @comment
