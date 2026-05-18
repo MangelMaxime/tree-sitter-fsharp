@@ -297,6 +297,23 @@ type Color =
     | Green
     | Blue
 
+// Enum type definitions
+type Direction =
+    | North = 0
+    | South = 1
+    | East = 2
+    | West = 3
+
+type FilePermission =
+    | None = 0
+    | Read = 1
+    | Write = 2
+    | ReadWrite = 3
+
+type Nibble =
+    | Low = 0x0F
+    | High = 0xF0
+
 // DU match patterns
 let area shape =
     match shape with

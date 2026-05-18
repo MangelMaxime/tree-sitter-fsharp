@@ -44,7 +44,7 @@
   "if" "then" "else" "elif"
   "match" "with" "when"
   "try" "finally"
-  "for" "while" "to" "downto" "do"
+  "for" "while" "to" "downto"
   "return" "return!"
   "yield" "yield!"
   "match!"
@@ -194,6 +194,9 @@
   alias: (type_expression) @type)
 
 (union_case
+  name: (identifier) @constructor)
+
+(enum_case
   name: (identifier) @constructor)
 
 (record_type_field

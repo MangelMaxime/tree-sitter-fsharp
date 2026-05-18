@@ -321,6 +321,10 @@
                     "name": "union_type_defn"
                   },
                   {
+                    "type": "SYMBOL",
+                    "name": "enum_type_defn"
+                  },
+                  {
                     "type": "FIELD",
                     "name": "alias",
                     "content": {
@@ -1292,6 +1296,55 @@
               "type": "BLANK"
             }
           ]
+        }
+      ]
+    },
+    "enum_type_defn": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "SYMBOL",
+        "name": "enum_case"
+      }
+    },
+    "enum_case": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "|"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "FIELD",
+          "name": "value",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "int_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "negative_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "char_literal"
+              }
+            ]
+          }
         }
       ]
     },

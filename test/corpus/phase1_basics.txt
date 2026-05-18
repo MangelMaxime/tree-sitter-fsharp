@@ -1791,3 +1791,39 @@ and g x = x
       name: (identifier)
       parameters: (parameter (identifier))
       (long_identifier (identifier)))))
+
+================================================================================
+Enum type definition
+================================================================================
+
+type Color =
+    | Red = 0
+    | Green = 1
+    | Blue = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (enum_type_defn
+      (enum_case name: (identifier) value: (int_literal))
+      (enum_case name: (identifier) value: (int_literal))
+      (enum_case name: (identifier) value: (int_literal)))))
+
+================================================================================
+Enum type definition with hex values
+================================================================================
+
+type Nibble =
+    | Low = 0x0F
+    | High = 0xF0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (enum_type_defn
+      (enum_case name: (identifier) value: (int_literal))
+      (enum_case name: (identifier) value: (int_literal)))))

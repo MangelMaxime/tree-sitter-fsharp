@@ -133,7 +133,7 @@ export default grammar({
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
             // can't start a type_expression, so the parser naturally reduces with empty body and
             // the body tokens appear flat at the source_file level.
-            optional(choice($.record_type_defn, $.union_type_defn, field('alias', $.type_expression))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.type_expression))),
         )),
 
         // (x: int, y: string)  in  type Foo(x: int, y: string) =
@@ -289,6 +289,16 @@ export default grammar({
             "|",
             field('name', $.identifier),
             optional(seq("of", field('fields', $.type_expression))),
+        ),
+
+        // type Color = | Red = 0 | Green = 1 | Blue = 2
+        enum_type_defn: $ => repeat1($.enum_case),
+
+        enum_case: $ => seq(
+            "|",
+            field('name', $.identifier),
+            "=",
+            field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
         ),
 
         record_type_defn: $ => seq(
