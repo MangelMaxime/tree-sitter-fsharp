@@ -69,6 +69,8 @@
   "|]"
   "{"
   "}"
+  "[<"
+  ">]"
 ] @punctuation.bracket
 
 [
@@ -105,6 +107,9 @@
 (generic_type (long_identifier) @type)
 (postfix_type (long_identifier) @type)
 (type_parameter) @type.parameter
+
+(attribute_target
+  name: (long_identifier) @attribute)
 
 (namespace_decl
   name: (long_identifier) @namespace)

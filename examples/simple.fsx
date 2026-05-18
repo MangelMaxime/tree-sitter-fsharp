@@ -302,6 +302,19 @@ type Wrapper<'A, 'B> =
         B : 'A
     }
 
+// Attributes
+[<Obsolete("use newAdd instead")>]
+let oldAdd x y = x + y
+
+[<AutoOpen>]
+[<RequireQualifiedAccess>]
+type AttributedUnion =
+    | X
+    | Y
+
+[<Literal>]
+let MaxCount = 100
+
 // Type aliases
 type MyInt = int
 type StringList = string list

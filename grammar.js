@@ -95,6 +95,24 @@ export default grammar({
 
         access_modifier: _ => choice("private", "internal", "public"),
 
+        // [<EntryPoint>]  [<Obsolete("msg")>]  [<DllImport("lib", EntryPoint="f")>]
+        // [<Attr1; Attr2>] (multiple in one bracket)
+        attribute: $ => seq(
+            "[<",
+            $.attribute_target,
+            repeat(seq(";", $.attribute_target)),
+            ">]",
+        ),
+
+        attribute_target: $ => seq(
+            field('name', $.long_identifier),
+            optional(seq(
+                "(",
+                optional(seq($._expression, repeat(seq(",", $._expression)))),
+                ")",
+            )),
+        ),
+
         // type Point = { X: int; Y: int }
         // type Shape = | Circle of float | Rectangle of float * float
         // type Option<'a> = | Some of 'a | None
@@ -486,6 +504,7 @@ export default grammar({
         )),
 
         _token: $ => choice(
+            $.attribute,
             $.namespace_decl,
             $.module_decl,
             $.import_decl,

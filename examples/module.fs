@@ -1,5 +1,6 @@
 namespace MyProject.Core
 
+[<AutoOpen>]
 module Utils =
     let add a b = a + b
     let sub a b = a - b
