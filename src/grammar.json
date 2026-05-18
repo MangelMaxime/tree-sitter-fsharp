@@ -1104,6 +1104,14 @@
           },
           {
             "type": "SYMBOL",
+            "name": "try_with_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "try_finally_expression"
+          },
+          {
+            "type": "SYMBOL",
             "name": "upcast_expression"
           },
           {
@@ -1474,6 +1482,10 @@
               {
                 "type": "STRING",
                 "value": "~~~"
+              },
+              {
+                "type": "STRING",
+                "value": "-"
               }
             ]
           },
@@ -2341,6 +2353,93 @@
         }
       ]
     },
+    "exception_decl": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "exception"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "of"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "type_expression"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "try_with_expression": {
+      "type": "PREC_RIGHT",
+      "value": 8,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "try"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "STRING",
+            "value": "with"
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SYMBOL",
+              "name": "match_arm"
+            }
+          }
+        ]
+      }
+    },
+    "try_finally_expression": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "try"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_expression"
+        },
+        {
+          "type": "STRING",
+          "value": "finally"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_expression"
+        }
+      ]
+    },
     "for_expression": {
       "type": "PREC_RIGHT",
       "value": 18,
@@ -2789,7 +2888,7 @@
     },
     "type_check_pattern": {
       "type": "PREC_RIGHT",
-      "value": 0,
+      "value": 4,
       "content": {
         "type": "SEQ",
         "members": [
@@ -2798,8 +2897,33 @@
             "value": ":?"
           },
           {
-            "type": "SYMBOL",
-            "name": "type_expression"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "generic_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "postfix_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "array_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "parenthesized_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "type_parameter"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              }
+            ]
           },
           {
             "type": "CHOICE",
@@ -3331,6 +3455,10 @@
         {
           "type": "SYMBOL",
           "name": "type_decl"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "exception_decl"
         },
         {
           "type": "SYMBOL",

@@ -479,6 +479,37 @@ type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
 
+// ── Exceptions ───────────────────────────────────────────────────────────────
+
+exception MyError
+exception MyErrorWithMessage of string
+exception ParseError of string * int
+
+let safe_divide a b =
+    try
+        a / b
+    with
+    | :? System.DivideByZeroException -> 0
+    | _ -> -1
+
+let parse_int (s: string) =
+    try
+        int s
+    with
+    | :? System.FormatException as ex -> 0
+    | :? System.OverflowException -> -1
+
+let with_cleanup () =
+    try
+        printfn "work"
+    finally
+        printfn "cleanup"
+
+let raise_example n =
+    if n < 0 then
+        raise (MyErrorWithMessage "negative")
+    n
+
 // ── Type casts ────────────────────────────────────────────────────────────────
 
 type IAnimalBase =
@@ -489,7 +520,7 @@ let base_as_dog (a: IAnimal) : Dog = a :?> Dog
 
 let is_string (obj: obj) = obj :? string
 
-let upcast_example (d: Dog) = upcast d
+let upcast_example (d: Dog) : IAnimal = upcast d
 let downcast_example (a: IAnimal) : Dog = downcast a
 
 let type_test_match (obj: obj) =

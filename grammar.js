@@ -284,6 +284,8 @@ export default grammar({
             $.while_expression,
             $.set_expression,
             $.range_expression,
+            $.try_with_expression,
+            $.try_finally_expression,
             $.upcast_expression,
             $.downcast_expression,
             $.type_test_expression,
@@ -365,7 +367,7 @@ export default grammar({
         )),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
-            choice("not", "~~~"),
+            choice("not", "~~~", "-"),
             $._expression,
         )),
 
@@ -513,6 +515,25 @@ export default grammar({
         upcast_expr: $ => seq("upcast", $._expression),
         downcast_expr: $ => seq("downcast", $._expression),
 
+        // ── Exceptions ────────────────────────────────────────────────────────
+
+        // exception MyErr  or  exception MyErr of string * int
+        exception_decl: $ => seq(
+            "exception",
+            field('name', $.identifier),
+            optional(seq("of", $.type_expression)),
+        ),
+
+        // try expr with | pat -> expr …
+        try_with_expression: $ => prec.right(PREC.MATCH_EXPR,
+            seq("try", $._expression, "with", repeat1($.match_arm)),
+        ),
+
+        // try expr finally expr
+        try_finally_expression: $ => seq(
+            "try", $._expression, "finally", $._expression,
+        ),
+
         // ── For / While ───────────────────────────────────────────────────────
 
         // for x in xs do body   (imperative loop, returns unit)
@@ -619,9 +640,19 @@ export default grammar({
         ),
 
         // | :? TypeName [as x] ->   (type-test pattern in match arms)
-        type_check_pattern: $ => prec.right(seq(
+        // Uses a restricted type (no function_type) so that "->" is not consumed
+        // as a function-type arrow and remains available as the match-arm separator.
+        // Function types in patterns need explicit parens: :? (int -> string)
+        type_check_pattern: $ => prec.right(TYPE_PREC.POSTFIX + 1, seq(
             ":?",
-            $.type_expression,
+            choice(
+                $.generic_type,
+                $.postfix_type,
+                $.array_type,
+                $.parenthesized_type,
+                $.type_parameter,
+                $.long_identifier,
+            ),
             optional(seq("as", $.identifier)),
         )),
 
@@ -743,6 +774,7 @@ export default grammar({
             $.module_decl,
             $.import_decl,
             $.type_decl,
+            $.exception_decl,
             $.let_binding,
             $.use_binding,
             $.member_defn,

@@ -21,6 +21,7 @@
   "val"
   "do"
   "use"
+  "exception"
   "let!" "do!" "use!"
 ] @keyword
 
@@ -37,6 +38,7 @@
   "->"
   "if" "then" "else" "elif"
   "match" "with" "when"
+  "try" "finally"
   "for" "while"
   "return" "return!"
   "yield" "yield!"
@@ -154,6 +156,9 @@
 (type_decl
   name: (identifier) @type)
 
+(exception_decl
+  name: (identifier) @type)
+
 (type_decl
   alias: (type_expression) @type)
 
@@ -169,6 +174,10 @@
 ; Computation expression builder name (async, task, seq, promise, …)
 (computation_expression
   builder: (long_identifier) @keyword)
+
+; Exception-raising functions — highlighted like throw/raise in other languages
+((long_identifier) @function.builtin
+ (#match? @function.builtin "^(raise|reraise|failwith|failwithf|invalidArg|invalidOp|nullArg)$"))
 
 ; CE bang-binding names
 (ce_let_bang_expr name: (identifier) @variable)
