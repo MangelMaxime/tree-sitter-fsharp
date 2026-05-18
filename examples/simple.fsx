@@ -479,6 +479,12 @@ type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
 
+// ── New object ───────────────────────────────────────────────────────────────
+
+let ex = new System.Exception("test")
+let ex2 = new System.ArgumentException("bad arg", "paramName")
+let dict = new System.Collections.Generic.Dictionary<string, int>()
+
 // ── Exceptions ───────────────────────────────────────────────────────────────
 
 exception MyError

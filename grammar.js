@@ -291,6 +291,7 @@ export default grammar({
             $.type_test_expression,
             $.upcast_expr,
             $.downcast_expr,
+            $.new_expression,
             // CE result forms — also valid in if/match branches inside CEs
             $.ce_return_expr,
             $.ce_return_bang_expr,
@@ -514,6 +515,20 @@ export default grammar({
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         upcast_expr: $ => seq("upcast", $._expression),
         downcast_expr: $ => seq("downcast", $._expression),
+
+        // ── New object ────────────────────────────────────────────────────────
+        // new TypeName(args)  or  new TypeName<T>(args)
+        // Type is restricted to long_identifier/generic_type so that the opening
+        // "(" is never consumed as a parenthesized_type.
+        new_expression: $ => prec(PREC.NEW_OBJ,
+            seq(
+                "new",
+                choice($.generic_type, $.long_identifier),
+                "(",
+                optional(seq($._expression, repeat(seq(",", $._expression)))),
+                ")",
+            ),
+        ),
 
         // ── Exceptions ────────────────────────────────────────────────────────
 

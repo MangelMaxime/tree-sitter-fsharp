@@ -21,6 +21,7 @@
   "val"
   "do"
   "use"
+  "new"
   "exception"
   "let!" "do!" "use!"
 ] @keyword
@@ -170,6 +171,10 @@
 
 (record_field
   name: (long_identifier) @variable.other.member)
+
+; Type name in new expressions (not wrapped in type_expression so needs its own capture)
+(new_expression (long_identifier) @type)
+(new_expression (generic_type (long_identifier) @type))
 
 ; Computation expression builder name (async, task, seq, promise, …)
 (computation_expression
