@@ -116,7 +116,9 @@ export default grammar({
         // type Point = { X: int; Y: int }
         // type Shape = | Circle of float | Rectangle of float * float
         // type Option<'a> = | Some of 'a | None
-        type_decl: $ => seq(
+        // type Foo(x: int) =        (class with primary constructor; body is flat top-level tokens)
+        // type IFoo =               (interface; body is flat abstract_member_defn tokens)
+        type_decl: $ => prec.right(seq(
             "type",
             field('name', $.identifier),
             optional(seq(
@@ -125,8 +127,99 @@ export default grammar({
                 repeat(seq(",", $.type_parameter)),
                 ">",
             )),
+            optional($.primary_constructor),
             "=",
-            choice($.record_type_defn, $.union_type_defn, field('alias', $.type_expression)),
+            // Body is optional: class/interface bodies use keywords (member, abstract, …) that
+            // can't start a type_expression, so the parser naturally reduces with empty body and
+            // the body tokens appear flat at the source_file level.
+            optional(choice($.record_type_defn, $.union_type_defn, field('alias', $.type_expression))),
+        )),
+
+        // (x: int, y: string)  in  type Foo(x: int, y: string) =
+        primary_constructor: $ => seq(
+            "(",
+            optional(seq(
+                $.primary_ctor_param,
+                repeat(seq(",", $.primary_ctor_param)),
+            )),
+            ")",
+        ),
+
+        primary_ctor_param: $ => seq(
+            optional("?"),
+            $.identifier,
+            optional(seq(":", $.type_expression)),
+        ),
+
+        // member this.Name = expr
+        // member this.Method arg : RetType = expr
+        // static member Name args = expr
+        // override this.ToString() = expr
+        member_defn: $ => choice(
+            seq(
+                choice("member", "override", "default"),
+                optional("inline"),
+                field('self', $.member_self_ident),
+                ".",
+                field('name', $.identifier),
+                field('parameters', repeat($.parameter)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
+            ),
+            seq(
+                "static",
+                optional("inline"),
+                "member",
+                field('name', $.identifier),
+                field('parameters', repeat($.parameter)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
+            ),
+        ),
+
+        member_self_ident: $ => $.identifier,
+
+        // abstract member Name: TypeExpr
+        // abstract member Prop: int with get, set
+        abstract_member_defn: $ => seq(
+            optional("static"),
+            "abstract",
+            optional("member"),
+            field('name', $.identifier),
+            ":",
+            $.type_expression,
+        ),
+
+        // inherit BaseClass(arg1, arg2)
+        inherit_decl: $ => prec.right(seq(
+            "inherit",
+            field('base', $.type_expression),
+            optional(seq(
+                "(",
+                optional(seq($._expression, repeat(seq(",", $._expression)))),
+                ")",
+            )),
+        )),
+
+        // interface IFoo with   (member impls follow as flat tokens)
+        interface_impl: $ => seq(
+            "interface",
+            field('type', $.type_expression),
+            optional("with"),
+        ),
+
+        // do expr  (class initializer or module-level side effect)
+        do_stmt: $ => seq("do", $._expression),
+
+        // val mutable field: int  (explicit field in class)
+        val_field: $ => seq(
+            "val",
+            optional("mutable"),
+            field('name', $.identifier),
+            ":",
+            $.type_expression,
         ),
 
         union_type_defn: $ => repeat1($.union_case),
@@ -446,6 +539,7 @@ export default grammar({
         parameter: $ => choice(
             $.identifier,
             seq("(", $.identifier, ":", $.type_expression, ")"),
+            $.unit,  // () — unit parameter in methods like Foo()
         ),
 
         type_expression: $ => choice(
@@ -510,6 +604,12 @@ export default grammar({
             $.import_decl,
             $.type_decl,
             $.let_binding,
+            $.member_defn,
+            $.abstract_member_defn,
+            $.interface_impl,
+            $.inherit_decl,
+            $.do_stmt,
+            $.val_field,
             $.xml_doc_comment,
             $.line_comment,
             $.block_comment,

@@ -18,6 +18,15 @@
   "inline"
   "mutable"
   "of"
+  "member"
+  "override"
+  "default"
+  "abstract"
+  "inherit"
+  "interface"
+  "static"
+  "val"
+  "do"
 ] @keyword
 
 [
@@ -121,6 +130,17 @@
   [
     (long_identifier) @namespace
   ])
+
+(member_self_ident) @variable.builtin
+
+(member_defn
+  name: (identifier) @function)
+
+(abstract_member_defn
+  name: (identifier) @function)
+
+(val_field
+  name: (identifier) @variable.other.member)
 
 (type_decl
   name: (identifier) @type)

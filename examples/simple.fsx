@@ -389,3 +389,62 @@ module private StringUtils =
 module rec Recursive =
     let even n = if n = 0 then true else odd (n - 1)
     let odd n = if n = 0 then false else even (n - 1)
+
+// Modules with attributes and access modifiers (from module.fs)
+[<AutoOpen>]
+module Utils =
+    let addUtil a b = a + b
+    let subUtil a b = a - b
+
+module private Internals =
+    let secret = 42
+
+module rec MutuallyRecursive =
+    let isEven n = if n = 0 then true else isOdd (n - 1)
+    let isOdd n = if n = 0 then false else isEven (n - 1)
+
+type IAnimal =
+    abstract member Name: string
+    abstract member Sound: unit -> string
+
+type IShape =
+    abstract member Area: float
+    abstract member Perimeter: float
+
+type Dog(name: string, breed: string) =
+    member this.Name = name
+    member this.Breed = breed
+    member this.Bark() = "Woof!"
+    member this.Describe() = sprintf "%s is a %s" name breed
+    override this.ToString() = sprintf "Dog(%s)" name
+    interface IAnimal with
+        member this.Name = name
+        member this.Sound() = "Woof!"
+
+type Logger(tag: string) =
+    do printfn "Logger[%s] initialized" tag
+    member this.Tag = tag
+    member this.Log msg = printfn "[%s] %s" tag msg
+
+type Cat(name: string) =
+    inherit Dog(name, "Domestic Cat")
+    member this.Purr() = "Purrrr..."
+    interface IAnimal with
+        member this.Name = name
+        member this.Sound() = "Meow!"
+
+type Wrapper<'T>(value: 'T) =
+    member this.Value = value
+    member this.Map (f: 'T -> 'T) = Wrapper(f value)
+
+type MathHelperClass =
+    static member Square x = x * x
+    static member Cube x = x * x * x
+    static member Pi = 3.14159265358979
+    static member CircleArea (radius: float) =
+        MathHelperClass.Pi * radius * radius
+
+type Holder() =
+    [<DefaultValue>]
+    val mutable data: int
+    member this.Data = this.data
