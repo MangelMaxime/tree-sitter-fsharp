@@ -232,6 +232,14 @@ let classify n =
     | x when x > 100 -> "large"
     | _ -> "positive"
 
+let classify_exact n =
+    match n with
+    | -2 -> "minus two"
+    | -1 -> "minus one"
+    | 0 -> "zero"
+    | 1 -> "one"
+    | _ -> "other"
+
 // List, cons and as patterns
 let describe_list xs =
     match xs with

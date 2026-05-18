@@ -3058,6 +3058,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "negative_literal"
+        },
+        {
+          "type": "SYMBOL",
           "name": "char_literal"
         },
         {
@@ -3075,6 +3079,28 @@
         {
           "type": "SYMBOL",
           "name": "null_literal"
+        }
+      ]
+    },
+    "negative_literal": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "-"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "int_literal"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "float_literal"
+            }
+          ]
         }
       ]
     },

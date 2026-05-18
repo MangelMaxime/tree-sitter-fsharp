@@ -679,12 +679,16 @@ export default grammar({
         literal_pattern: $ => choice(
             $.int_literal,
             $.float_literal,
+            $.negative_literal,
             $.char_literal,
             $.string_literal,
             $.bool_literal,
             $.unit,
             $.null_literal,
         ),
+
+        // -1  -3.14   in pattern position (e.g. match arms)
+        negative_literal: $ => seq("-", choice($.int_literal, $.float_literal)),
 
         identifier_pattern: $ => choice(
             $.long_identifier,
