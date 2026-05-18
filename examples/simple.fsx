@@ -219,6 +219,16 @@ let int_array =
         30
     |]
 
+// Index expressions
+let idx_single = int_array.[0]
+let idx_range = int_array.[0..1]
+let idx_open_end = int_array.[1..]
+let idx_open_start = int_array.[..1]
+let idx_dict = Map.ofList [ ("key", 42) ]
+let idx_str_key = idx_dict.["key"]
+let idx_matrix_src = Array2D.init 2 2 (fun i j -> i + j)
+let idx_matrix = idx_matrix_src.[0, 1]
+
 // Tuples
 let pair = 1, 2
 let triple = "hello", 42, true

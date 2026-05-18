@@ -69,6 +69,7 @@ export default grammar({
     conflicts: $ => [
         [$.record_type_field, $.postfix_type],
         [$.record_field, $.application_expression],
+        [$.index_slice, $.range_expression],
     ],
 
 
@@ -284,6 +285,7 @@ export default grammar({
             $.while_expression,
             $.set_expression,
             $.range_expression,
+            $.index_expression,
             $.try_with_expression,
             $.try_finally_expression,
             $.upcast_expression,
@@ -494,6 +496,36 @@ export default grammar({
         //   0..n-1  →  0..(n-1)   ✓
         range_expression: $ => prec.right(1,
             seq($._expression, "..", $._expression),
+        ),
+
+        // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]
+        // ".[" is a single terminal so the lexer never confuses it with the
+        // "." in long_identifier (which is always followed by an identifier).
+        index_expression: $ => prec(PREC.INDEX_EXPR, seq(
+            field('object', $._expression),
+            ".[",
+            field('index', $._index_args),
+            "]",
+        )),
+
+        _index_args: $ => seq(
+            $._index_arg,
+            repeat(seq(",", $._index_arg)),
+        ),
+
+        // index_slice vs range_expression both start with expr+"..", so we
+        // declare a GLR conflict and let the parser explore both paths:
+        //   1..   → index_slice wins  (range_expression fails: no rhs before ] or ,)
+        //   1..2  → range_expression wins (inside $._expression; index_slice fails: 2 ≠ ] or ,)
+        //   ..2   → index_slice only (unambiguous: range_expression needs lhs first)
+        index_slice: $ => prec.dynamic(PREC.DOTDOT_SLICE, choice(
+            seq($._expression, ".."),
+            seq("..", $._expression),
+        )),
+
+        _index_arg: $ => choice(
+            $.index_slice,
+            $._expression,
         ),
 
         // ── Type casts ────────────────────────────────────────────────────────

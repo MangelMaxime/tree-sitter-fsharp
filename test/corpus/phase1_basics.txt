@@ -1331,3 +1331,99 @@ let f (x: int list) = x
             (long_identifier (identifier)))
           (long_identifier (identifier)))))
     (long_identifier (identifier))))
+
+================================================================================
+Index expression single element
+================================================================================
+
+let x = arr.[0]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (int_literal))))
+
+================================================================================
+Index expression full range
+================================================================================
+
+let x = arr.[1..2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (range_expression
+        (int_literal)
+        (int_literal)))))
+
+================================================================================
+Index expression open-end slice
+================================================================================
+
+let x = arr.[1..]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (index_slice
+        (int_literal)))))
+
+================================================================================
+Index expression open-start slice
+================================================================================
+
+let x = arr.[..2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (index_slice
+        (int_literal)))))
+
+================================================================================
+Index expression string key
+================================================================================
+
+let x = dict.["key"]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (string_literal))))
+
+================================================================================
+Index expression multi-dimensional
+================================================================================
+
+let x = matrix.[0, 1]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (index_expression
+      object: (long_identifier (identifier))
+      index: (tuple_expression
+        (int_literal)
+        (int_literal)))))
