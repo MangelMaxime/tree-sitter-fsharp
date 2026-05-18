@@ -282,6 +282,8 @@ export default grammar({
             $.computation_expression,
             $.for_expression,
             $.while_expression,
+            $.set_expression,
+            $.range_expression,
             // CE result forms — also valid in if/match branches inside CEs
             $.ce_return_expr,
             $.ce_return_bang_expr,
@@ -462,7 +464,7 @@ export default grammar({
             seq(
                 "let",
                 optional("rec"),
-                optional("inline"),
+                optional(choice("inline", "mutable")),
                 field('name', choice($.identifier, $.operator_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
@@ -472,6 +474,18 @@ export default grammar({
                 "in",
                 $._expression,
             ),
+        ),
+
+        // x <- value   (mutable assignment)
+        set_expression: $ => prec.right(PREC.LARROW,
+            seq($._expression, "<-", $._expression),
+        ),
+
+        // 1..10  (simple range — stepped ranges like 1..2..10 nest as range(1, range(2,10)))
+        // prec = 1 (lowest) so arithmetic/comparison binds first:
+        //   0..n-1  →  0..(n-1)   ✓
+        range_expression: $ => prec.right(1,
+            seq($._expression, "..", $._expression),
         ),
 
         // ── For / While ───────────────────────────────────────────────────────
@@ -740,7 +754,9 @@ export default grammar({
 
         float_literal: $ => seq(
             choice(
-                token(seq(/[0-9][0-9_]*/, ".", /[0-9_]*/, optional(seq(/[eE]/, optional(/[+-]/), /[0-9]+/)))),
+                // Require at least one digit after the decimal point so that `1..10`
+                // lexes as int(1) + ".." + int(10) rather than float(1.) + "." + int(10).
+                token(seq(/[0-9][0-9_]*/, ".", /[0-9][0-9_]*/, optional(seq(/[eE]/, optional(/[+-]/), /[0-9]+/)))),
                 token(seq(/[0-9]+/, /[eE]/, optional(/[+-]/), /[0-9]+/)),
             ),
             optional($._float_suffix),

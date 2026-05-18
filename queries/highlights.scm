@@ -64,6 +64,8 @@
   "<<"
   "::"
   "~~~"
+  "<-"
+  ".."
 ] @operator
 
 (symbolic_op) @operator

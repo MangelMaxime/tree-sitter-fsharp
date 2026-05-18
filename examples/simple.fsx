@@ -1,3 +1,6 @@
+// File-level module declaration (no = sign, rest of file is its body)
+module ScriptHelpers
+
 open System
 open System.Text.RegularExpressions
 open type System.Math
@@ -393,9 +396,6 @@ let record_nested =
             }
     }
 
-// File-level module declaration (no = sign, rest of file is its body)
-module ScriptHelpers
-
 // Nested modules (valid in .fsx scripts)
 module MathUtils =
     let square x = x * x
@@ -479,14 +479,32 @@ type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
 
+// ── Mutation (<-) ─────────────────────────────────────────────────────────────
+
+let mutable_counter =
+    let mutable n = 0 in
+    n <- n + 1
+
+let mutable_swap =
+    let mutable a = 1 in
+    let mutable b = 2 in
+    let tmp = a in
+    a <- b
+
 // ── For / While loops ────────────────────────────────────────────────────────
 
 let print_items () =
     for x in [ 1; 2; 3 ] do
         printfn "%d" x
 
+let print_range () =
+    for i in 1..10 do
+        printfn "%d" i
+
 let while_demo =
-    while false do ()
+    let mutable i = 0 in
+    while i < 3 do
+        i <- i + 1
 
 // ── Computation expressions ───────────────────────────────────────────────────
 
