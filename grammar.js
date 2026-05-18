@@ -788,6 +788,7 @@ export default grammar({
         )),
 
         _token: $ => choice(
+            $.preproc_directive,
             $.attribute,
             $.namespace_decl,
             $.module_decl,
@@ -926,5 +927,12 @@ export default grammar({
             repeat(choice(/[^(*]/, /\*[^)]/, /\([^*]/, $.block_comment)),
             "*)",
         ),
+
+        preproc_keyword: _ => token(seq("#", /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
+
+        preproc_directive: $ => prec.right(seq(
+            field('name', $.preproc_keyword),
+            optional(field('argument', choice($.string_literal, $.int_literal, $.long_identifier))),
+        )),
     }
 });

@@ -645,3 +645,23 @@ let async_match_bang =
         | 42 -> return "answer"
         | _ -> return "other"
     }
+
+// ── Preprocessor directives ───────────────────────────────────────────────────
+
+#nowarn "25"
+#nowarn 15
+
+#if DEBUG
+let debug_value = true
+#elif TRACE
+let debug_value = false
+#else
+let debug_value = false
+#endif
+
+#if TRACE
+let complex_condition = true
+#endif
+
+#load "helper.fsx"
+#r "nuget: Newtonsoft.Json"

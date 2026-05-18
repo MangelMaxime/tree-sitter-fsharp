@@ -7730,6 +7730,40 @@
     }
   },
   {
+    "type": "preproc_directive",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "int_literal",
+            "named": true
+          },
+          {
+            "type": "long_identifier",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "preproc_keyword",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "primary_constructor",
     "named": true,
     "fields": {},
@@ -8681,6 +8715,10 @@
         },
         {
           "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "preproc_directive",
           "named": true
         },
         {
@@ -11113,6 +11151,10 @@
   {
     "type": "override",
     "named": false
+  },
+  {
+    "type": "preproc_keyword",
+    "named": true
   },
   {
     "type": "private",

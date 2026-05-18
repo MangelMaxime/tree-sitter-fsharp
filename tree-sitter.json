@@ -1,42 +1,43 @@
 {
-  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
-  "grammars": [
-    {
-      "name": "fsharp",
-      "camelcase": "FSharp",
-      "title": "F#",
-      "scope": "source.fsharp",
-      "file-types": [
-        "fs",
-        "fsx"
-      ],
-      "injection-regex": "^fsharp$",
-      "class-name": "TreeSitterFsharp"
-    }
-  ],
-  "metadata": {
-    "version": "0.0.0",
-    "license": "MIT",
-    "description": "F# tree sitter definition focused on Helix",
-    "authors": [
-      {
-        "name": "Mangel Maxime",
-        "url": ""
-      }
+    "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+    "grammars": [
+        {
+            "name": "fsharp",
+            "camelcase": "FSharp",
+            "title": "F#",
+            "scope": "source.fsharp",
+            "file-types": [
+                "fs",
+                "fsx"
+            ],
+            "highlights": "queries/highlights.scm",
+            "injection-regex": "^fsharp$",
+            "class-name": "TreeSitterFsharp"
+        }
     ],
-    "links": {
-      "repository": "https://github.com/tree-sitter/tree-sitter-fsharp",
-      "funding": ""
+    "metadata": {
+        "version": "0.0.0",
+        "license": "MIT",
+        "description": "F# tree sitter definition focused on Helix",
+        "authors": [
+            {
+                "name": "Mangel Maxime",
+                "url": ""
+            }
+        ],
+        "links": {
+            "repository": "https://github.com/tree-sitter/tree-sitter-fsharp",
+            "funding": ""
+        }
+    },
+    "bindings": {
+        "c": false,
+        "go": false,
+        "java": false,
+        "node": false,
+        "python": false,
+        "rust": false,
+        "swift": false,
+        "zig": false
     }
-  },
-  "bindings": {
-    "c": false,
-    "go": false,
-    "java": false,
-    "node": false,
-    "python": false,
-    "rust": false,
-    "swift": false,
-    "zig": false
-  }
 }

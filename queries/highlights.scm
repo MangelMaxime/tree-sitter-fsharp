@@ -96,6 +96,8 @@
   ","
 ] @punctuation.delimiter
 
+(preproc_keyword) @keyword.directive
+
 (line_comment) @comment.line
 (xml_doc_comment) @comment.line.documentation
 (block_comment) @comment.block
