@@ -492,6 +492,23 @@ type Holder() =
     val mutable data: int
     member this.Data = this.data
 
+// ── Property get/set accessors ────────────────────────────────────────────────
+
+type Counter() =
+    let mutable _count = 0
+    member this.Count with get() = _count
+    member this.Value
+        with get() = _count
+        and set(v) = _count <- v
+    member this.Raw with set v = _count <- v
+    static member Zero with get() = 0
+
+type AutoProps() =
+    member val Name = "" with get, set
+    member val Age = 0 with get, set
+    member val ReadOnly = 42 with get
+    static member val DefaultName = "default" with get, set
+
 // _ as self identifier (no self reference needed)
 type Singleton() =
     static member Instance = Singleton()

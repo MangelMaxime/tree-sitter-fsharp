@@ -1561,3 +1561,117 @@ let x = List.map
   (let_binding
     name: (identifier)
     (long_identifier (identifier) (identifier))))
+
+================================================================================
+Property get accessor
+================================================================================
+
+member this.Count with get() = _count
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    (property_accessor
+      parameters: (parameter (unit))
+      (long_identifier (identifier)))))
+
+================================================================================
+Property get and set accessors
+================================================================================
+
+member this.Value
+    with get() = _x
+    and set(v) = _x <- v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    (property_accessor
+      parameters: (parameter (unit))
+      (long_identifier (identifier)))
+    (property_accessor
+      parameters: (parameter (identifier))
+      (set_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))))
+
+================================================================================
+Property set accessor bare identifier
+================================================================================
+
+member this.Raw with set v = _x <- v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    (property_accessor
+      parameters: (parameter (identifier))
+      (set_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))))
+
+================================================================================
+Static property get accessor
+================================================================================
+
+static member Zero with get() = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    name: (identifier)
+    (property_accessor
+      parameters: (parameter (unit))
+      (int_literal))))
+
+================================================================================
+Auto-implemented property with get and set
+================================================================================
+
+member val Name = "" with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    name: (identifier)
+    (string_literal)
+    (auto_property_accessors)))
+
+================================================================================
+Auto-implemented property with get only
+================================================================================
+
+member val ReadOnly = 42 with get
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    name: (identifier)
+    (int_literal)
+    (auto_property_accessors)))
+
+================================================================================
+Static auto-implemented property
+================================================================================
+
+static member val DefaultName = "default" with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (member_defn
+    name: (identifier)
+    (string_literal)
+    (auto_property_accessors)))

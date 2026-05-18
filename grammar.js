@@ -156,6 +156,9 @@ export default grammar({
         // member this.Method arg : RetType = expr
         // static member Name args = expr
         // override this.ToString() = expr
+        // member this.Prop with get() = expr
+        // member this.Prop with get() = expr and set(v) = expr
+        // member val AutoProp = expr with get, set
         member_defn: $ => choice(
             seq(
                 choice("member", "override", "default"),
@@ -178,6 +181,63 @@ export default grammar({
                 "=",
                 $._expression,
             ),
+            // instance property with get/set accessor
+            seq(
+                choice("member", "override", "default"),
+                optional("inline"),
+                field('self', $.member_self_ident),
+                ".",
+                field('name', choice($.identifier, $.backtick_identifier)),
+                "with",
+                $.property_accessor,
+                optional(seq("and", $.property_accessor)),
+            ),
+            // static property with get/set accessor
+            seq(
+                "static",
+                optional("inline"),
+                "member",
+                field('name', choice($.identifier, $.backtick_identifier)),
+                "with",
+                $.property_accessor,
+                optional(seq("and", $.property_accessor)),
+            ),
+            // auto-property: member val Name [: type] = expr [with get [, set]]
+            seq(
+                "member",
+                "val",
+                field('name', choice($.identifier, $.backtick_identifier)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
+                optional($.auto_property_accessors),
+            ),
+            // static auto-property
+            seq(
+                "static",
+                "member",
+                "val",
+                field('name', choice($.identifier, $.backtick_identifier)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
+                optional($.auto_property_accessors),
+            ),
+        ),
+
+        // get() = expr  or  set(v) = expr  (inside a property definition)
+        property_accessor: $ => seq(
+            choice("get", "set"),
+            field('parameters', repeat($.parameter)),
+            "=",
+            $._expression,
+        ),
+
+        // with get [, set]  (auto-property accessor list)
+        auto_property_accessors: _ => seq(
+            "with",
+            choice("get", "set"),
+            optional(seq(",", choice("get", "set"))),
         ),
 
         member_self_ident: $ => $.identifier,
@@ -793,6 +853,7 @@ export default grammar({
         parameter: $ => choice(
             $.identifier,
             seq("(", $.identifier, ":", $.type_expression, ")"),
+            seq("(", $.identifier, ")"),  // e.g. set(v) in property accessors
             $.unit,  // () — unit parameter in methods like Foo()
         ),
 

@@ -24,6 +24,7 @@
   "new"
   "exception"
   "let!" "do!" "use!"
+  "get" "set" "and"
 ] @keyword
 
 [
@@ -155,6 +156,8 @@
 
 (member_defn
   name: (backtick_identifier) @function)
+
+(property_accessor (parameter (identifier) @variable.parameter))
 
 (abstract_member_defn
   name: (identifier) @function)
