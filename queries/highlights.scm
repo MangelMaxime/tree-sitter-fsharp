@@ -135,6 +135,11 @@
 (postfix_type (long_identifier) @type)
 (type_parameter) @type.parameter
 
+; Type name in :? pattern  (| :? System.Exception as e ->)
+(type_check_pattern (long_identifier) @type)
+(type_check_pattern (generic_type (long_identifier) @type))
+(type_check_pattern (postfix_type (long_identifier) @type))
+
 (attribute_target
   name: (long_identifier) @attribute)
 
