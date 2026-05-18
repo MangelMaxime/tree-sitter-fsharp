@@ -432,12 +432,16 @@ export default grammar({
             ),
         ),
 
+        // let (>>=) a b = ...  — operator definition name in parens
+        operator_name: $ => seq("(", $.symbolic_op, ")"),
+
         let_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', $.identifier),
+                field('name', choice($.identifier, $.operator_name)),
+                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -450,7 +454,8 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional("inline"),
-                field('name', $.identifier),
+                field('name', choice($.identifier, $.operator_name)),
+                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -482,11 +487,15 @@ export default grammar({
             $.wildcard_pattern,
             $.literal_pattern,
             $.identifier_pattern,
+            $.cons_pattern,
             $.tuple_pattern,
             $.as_pattern,
             $.list_pattern,
             $.array_pattern,
         ),
+
+        // x :: rest  or  x :: y :: rest  (right-associative)
+        cons_pattern: $ => prec.right(1, seq($.pattern, "::", $.pattern)),
 
         wildcard_pattern: _ => "_",
 

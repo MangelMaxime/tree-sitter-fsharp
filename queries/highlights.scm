@@ -107,6 +107,9 @@
   parameters: (parameter
     (identifier) @variable.parameter)*)
 
+(let_binding
+  name: (operator_name) @function)
+
 (lambda_expression
   (parameter
     (identifier) @variable.parameter)*)

@@ -229,13 +229,24 @@ let classify n =
     | x when x > 100 -> "large"
     | _ -> "positive"
 
-// List and as patterns
+// List, cons and as patterns
 let describe_list xs =
     match xs with
     | [] -> "empty"
     | [ x ] -> "one element"
     | [ x; y ] as pair -> "two elements"
     | _ -> "many"
+
+let rec sum_list acc xs =
+    match xs with
+    | [] -> acc
+    | x :: rest -> sum_list (acc + x) rest
+
+let chain_cons xs =
+    match xs with
+    | a :: b :: rest -> a + b
+    | x :: [] -> x
+    | [] -> 0
 
 // Discriminated union type definitions
 type Shape =
@@ -315,6 +326,11 @@ type AttributedUnion =
 [<Literal>]
 let MaxCount = 100
 
+// Multiple attributes in a single bracket (semicolon-separated)
+[<AutoOpen; RequireQualifiedAccess>]
+module MultiAttr =
+    let value = 1
+
 // Type aliases
 type MyInt = int
 type StringList = string list
@@ -377,6 +393,9 @@ let record_nested =
             }
     }
 
+// File-level module declaration (no = sign, rest of file is its body)
+module ScriptHelpers
+
 // Nested modules (valid in .fsx scripts)
 module MathUtils =
     let square x = x * x
@@ -403,6 +422,7 @@ module rec MutuallyRecursive =
     let isEven n = if n = 0 then true else isOdd (n - 1)
     let isOdd n = if n = 0 then false else isEven (n - 1)
 
+// OOP: interfaces, classes, inheritance
 type IAnimal =
     abstract member Name: string
     abstract member Sound: unit -> string
@@ -448,3 +468,13 @@ type Holder() =
     [<DefaultValue>]
     val mutable data: int
     member this.Data = this.data
+
+// _ as self identifier (no self reference needed)
+type Singleton() =
+    static member Instance = Singleton()
+    override _.ToString() = "Singleton"
+
+// Optional primary constructor parameter
+type Connection(?host: string, ?port: int) =
+    member _.Host = defaultArg host "localhost"
+    member _.Port = defaultArg port 5432
