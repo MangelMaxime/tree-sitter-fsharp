@@ -11085,6 +11085,10 @@
           "named": true
         },
         {
+          "type": "record_pattern",
+          "named": true
+        },
+        {
           "type": "tuple_pattern",
           "named": true
         },
@@ -12212,6 +12216,47 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "record_field_pattern",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "pattern",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "record_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "record_field_pattern",
+          "named": true
+        }
+      ]
     }
   },
   {

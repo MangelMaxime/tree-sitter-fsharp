@@ -745,6 +745,28 @@ type SpecialThing(name: string) =
     inherit NamedThing(name)
     override this.ToString() = "Special: " + base.ToString()
 
+// ── Record patterns ───────────────────────────────────────────────────────────
+
+let get_x p =
+    match p with
+    | { X = x } -> x
+
+let is_origin p =
+    match p with
+    | { X = 0; Y = 0 } -> true
+    | _ -> false
+
+let describe_person person =
+    match person with
+    | { Name = "Alice"; Age = age } -> sprintf "Alice aged %d" age
+    | { Name = name; Age = a } when a < 18 -> sprintf "%s is a minor" name
+    | { Name = name } -> name
+
+let nested_record_match r =
+    match r with
+    | { TopLeft = { X = 0; Y = 0 } } -> "origin rect"
+    | _ -> "other"
+
 // ── Preprocessor directives ───────────────────────────────────────────────────
 
 #nowarn "25"

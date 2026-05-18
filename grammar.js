@@ -826,6 +826,25 @@ export default grammar({
             $.list_pattern,
             $.array_pattern,
             $.type_check_pattern,
+            $.record_pattern,
+        ),
+
+        // { Field = pat; Field2 = pat2 }  (destructure a record in a match arm)
+        // prec.dynamic(2) in the repeat body: when a bare identifier follows a DU
+        // constructor pattern value, prefer starting a new field (prec=2) over
+        // extending the constructor's argument (identifier_pattern prec.right(1)).
+        record_pattern: $ => seq(
+            "{",
+            $.record_field_pattern,
+            repeat(prec.dynamic(2, seq(optional(";"), $.record_field_pattern))),
+            optional(";"),
+            "}",
+        ),
+
+        record_field_pattern: $ => seq(
+            field('name', $.long_identifier),
+            "=",
+            field('value', $.pattern),
         ),
 
         // | :? TypeName [as x] ->   (type-test pattern in match arms)
