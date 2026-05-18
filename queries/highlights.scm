@@ -119,6 +119,9 @@
     (identifier) @variable.parameter)*)
 
 (let_binding
+  name: (backtick_identifier) @function)
+
+(let_binding
   name: (operator_name) @function)
 
 (lambda_expression
@@ -150,8 +153,14 @@
 (member_defn
   name: (identifier) @function)
 
+(member_defn
+  name: (backtick_identifier) @function)
+
 (abstract_member_defn
   name: (identifier) @function)
+
+(abstract_member_defn
+  name: (backtick_identifier) @function)
 
 (val_field
   name: (identifier) @variable.other.member)

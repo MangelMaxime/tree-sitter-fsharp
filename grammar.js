@@ -42,7 +42,7 @@ const PREC = {
     TUPLE_EXPR:    1,    // below BOOL_OR so OR binds tighter than comma
     CE_EXPR:       15,
     SPECIAL_PREFIX:17,
-    IF_EXPR:       18,
+    IF_EXPR:       14,
     DOT:           19,
     INDEX_EXPR:    20,
     PAREN_APP:     21,
@@ -161,7 +161,7 @@ export default grammar({
                 optional("inline"),
                 field('self', $.member_self_ident),
                 ".",
-                field('name', $.identifier),
+                field('name', choice($.identifier, $.backtick_identifier)),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -171,7 +171,7 @@ export default grammar({
                 "static",
                 optional("inline"),
                 "member",
-                field('name', $.identifier),
+                field('name', choice($.identifier, $.backtick_identifier)),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -187,7 +187,7 @@ export default grammar({
             optional("static"),
             "abstract",
             optional("member"),
-            field('name', $.identifier),
+            field('name', choice($.identifier, $.backtick_identifier)),
             ":",
             $.type_expression,
         ),
@@ -459,7 +459,7 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.operator_name)),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -473,7 +473,7 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.operator_name)),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -814,9 +814,14 @@ export default grammar({
 
         identifier: _ => /[a-zA-Z_][a-zA-Z0-9_']*/,
 
+        backtick_identifier: _ => /``[^`\n\r\t]+``/,
+
         long_identifier: $ =>
             prec.right(
-                seq($.identifier, repeat(seq(".", $.identifier))),
+                seq(
+                    choice($.identifier, $.backtick_identifier),
+                    repeat(seq(".", choice($.identifier, $.backtick_identifier))),
+                ),
             ),
 
         // Base number terminals (used by int_literal and float_literal)

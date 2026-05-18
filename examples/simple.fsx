@@ -665,3 +665,18 @@ let complex_condition = true
 
 #load "helper.fsx"
 #r "nuget: Newtonsoft.Json"
+
+// ── Backtick-quoted identifiers ───────────────────────────────────────────────
+
+type Box() =
+    static member ``box--indented`` = failwith "todo"
+    member _.``to string`` () = "box"
+
+let ``kebab-case-value`` = 42
+let ``value with spaces`` = "hello"
+
+let b =
+    if true then
+        ignore Box.``box--indented``
+    else
+        ()

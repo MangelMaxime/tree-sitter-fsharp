@@ -8,6 +8,10 @@
         "required": true,
         "types": [
           {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           }
@@ -5150,6 +5154,10 @@
         "required": true,
         "types": [
           {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
             "type": "identifier",
             "named": true
           },
@@ -5387,6 +5395,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
           {
             "type": "identifier",
             "named": true
@@ -5883,6 +5895,10 @@
       "required": true,
       "types": [
         {
+          "type": "backtick_identifier",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         }
@@ -6303,6 +6319,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
           {
             "type": "identifier",
             "named": true
@@ -11010,6 +11030,10 @@
   {
     "type": "as",
     "named": false
+  },
+  {
+    "type": "backtick_identifier",
+    "named": true
   },
   {
     "type": "char_literal",
