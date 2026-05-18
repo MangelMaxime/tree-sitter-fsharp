@@ -285,6 +285,7 @@ export default grammar({
             $.while_expression,
             $.set_expression,
             $.range_expression,
+            $.dot_expression,
             $.index_expression,
             $.try_with_expression,
             $.try_finally_expression,
@@ -499,6 +500,17 @@ export default grammar({
         range_expression: $ => prec.right(1,
             seq($._expression, "..", $._expression),
         ),
+
+        // expr.Member  — member access on any expression that can't extend long_identifier.
+        // long_identifier(prec.right DOT=19) wins the shift-reduce conflict at "."
+        // when the LHS is a plain identifier, so A.B.C stays a single long_identifier.
+        // dot_expression only fires when the LHS is already an _expression that cannot
+        // be extended by long_identifier (e.g. index_expression, application_expression).
+        dot_expression: $ => prec(PREC.DOT, seq(
+            field('object', $._expression),
+            ".",
+            field('member', choice($.identifier, $.backtick_identifier)),
+        )),
 
         // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]
         // ".[" is a single terminal so the lexer never confuses it with the
@@ -866,10 +878,20 @@ export default grammar({
 
         identifier: _ => /[a-zA-Z_][a-zA-Z0-9_']*/,
 
+        // backtick_identifier is intentionally a SEPARATE rule from identifier.
+        // Merging them via regex alternation (/.../|/``...``/) would break the
+        // `word: $ => $.identifier` property — tree-sitter's keyword detection
+        // only works when `word` points to a single-pattern regex. A combined
+        // regex silently disables keyword recognition, causing `else`, `then`,
+        // `let`, etc. to be parsed as plain identifiers.
         backtick_identifier: _ => /``[^`\n\r\t]+``/,
 
+        // prec.right(DOT=19) beats the REDUCE of _expression (RARROW=3), so
+        // identifier chains like A.B.C stay as a single long_identifier node
+        // rather than being split into dot_expression(A.B, C) once dot_expression
+        // is in scope.
         long_identifier: $ =>
-            prec.right(
+            prec.right(PREC.DOT,
                 seq(
                     choice($.identifier, $.backtick_identifier),
                     repeat(seq(".", choice($.identifier, $.backtick_identifier))),

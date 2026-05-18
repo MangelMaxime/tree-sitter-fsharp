@@ -1495,3 +1495,69 @@ let x =
         name: (identifier)
         parameters: (parameter (unit))
         (int_literal)))))
+
+================================================================================
+Dot expression after index
+================================================================================
+
+let x = arr.[0].Length
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (dot_expression
+      object: (index_expression
+        object: (long_identifier (identifier))
+        index: (int_literal))
+      member: (identifier))))
+
+================================================================================
+Dot expression after parens
+================================================================================
+
+let x = ("hello").Length
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (dot_expression
+      object: (parenthesized_expression (string_literal))
+      member: (identifier))))
+
+================================================================================
+Dot expression chained
+================================================================================
+
+let x = arr.[0..1].Length.ToString()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (application_expression
+      (dot_expression
+        object: (dot_expression
+          object: (index_expression
+            object: (long_identifier (identifier))
+            index: (range_expression (int_literal) (int_literal)))
+          member: (identifier))
+        member: (identifier))
+      (unit))))
+
+================================================================================
+Two-component qualified name stays long_identifier
+================================================================================
+
+let x = List.map
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (long_identifier (identifier) (identifier))))

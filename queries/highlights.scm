@@ -183,6 +183,10 @@
 (record_field
   name: (long_identifier) @variable.other.member)
 
+; Member access on non-identifier expressions: arr.[0].Length, (f x).Name
+(dot_expression member: (identifier) @variable.other.member)
+(dot_expression member: (backtick_identifier) @variable.other.member)
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))

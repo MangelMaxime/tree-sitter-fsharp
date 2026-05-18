@@ -229,6 +229,11 @@ let idx_str_key = idx_dict.["key"]
 let idx_matrix_src = Array2D.init 2 2 (fun i j -> i + j)
 let idx_matrix = idx_matrix_src.[0, 1]
 
+// Chained member access
+let dot_after_index = int_array.[0..1].Length
+let dot_after_parens = ("hello").Length
+let dot_chained = int_array.[0..1].Length.ToString()
+
 // Tuples
 let pair = 1, 2
 let triple = "hello", 42, true
