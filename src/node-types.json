@@ -10014,6 +10014,58 @@
     }
   },
   {
+    "type": "named_field_pat",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "pattern",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "named_field_pattern",
+    "named": true,
+    "fields": {
+      "constructor": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "named_field_pat",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "namespace_decl",
     "named": true,
     "fields": {
@@ -11082,6 +11134,10 @@
         },
         {
           "type": "literal_pattern",
+          "named": true
+        },
+        {
+          "type": "named_field_pattern",
           "named": true
         },
         {

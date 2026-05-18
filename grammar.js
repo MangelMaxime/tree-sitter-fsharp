@@ -874,6 +874,25 @@ export default grammar({
             $.array_pattern,
             $.type_check_pattern,
             $.record_pattern,
+            $.named_field_pattern,
+        ),
+
+        // Constructor(field = pat; field2 = pat2)  — named DU field pattern
+        // prec.dynamic(2) in repeat body: prefer starting a new field over
+        // extending the previous field's pattern value via identifier_pattern.
+        named_field_pattern: $ => seq(
+            field('constructor', $.long_identifier),
+            "(",
+            $.named_field_pat,
+            repeat(prec.dynamic(2, seq(optional(";"), $.named_field_pat))),
+            optional(";"),
+            ")",
+        ),
+
+        named_field_pat: $ => seq(
+            field('name', $.identifier),
+            "=",
+            field('value', $.pattern),
         ),
 
         // { Field = pat; Field2 = pat2 }  (destructure a record in a match arm)

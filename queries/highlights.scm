@@ -202,6 +202,9 @@
 (union_case_field
   name: (identifier) @variable.other.member)
 
+(named_field_pat
+  name: (identifier) @variable.other.member)
+
 (union_case_field type: (long_identifier) @type)
 
 (enum_case

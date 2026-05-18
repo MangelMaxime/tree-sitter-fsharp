@@ -775,6 +775,14 @@ type SpecialThing(name: string) =
     inherit NamedThing(name)
     override this.ToString() = "Special: " + base.ToString()
 
+// ── Named DU field patterns ───────────────────────────────────────────────────
+
+let contact_label c =
+    match c with
+    | Email(address = addr) -> addr
+    | Phone(number = n; extension = ext) -> sprintf "%d x%A" n ext
+    | Address(street = s; city = city; zip = z) -> sprintf "%s, %s %s" s city z
+
 // ── Record patterns ───────────────────────────────────────────────────────────
 
 let get_x p =

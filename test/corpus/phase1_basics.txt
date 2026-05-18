@@ -2069,3 +2069,104 @@ and JsonArray = JsonValue list
         (postfix_type
           (type_expression (long_identifier (identifier)))
           (long_identifier (identifier)))))))
+
+================================================================================
+Named DU field pattern single field
+================================================================================
+
+match s with
+| Circle(radius = r) -> r
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern (long_identifier (identifier)))))))
+      (long_identifier (identifier)))))
+
+================================================================================
+Named DU field pattern multiple fields
+================================================================================
+
+match s with
+| Rect(width = w; height = h) -> w * h
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern (long_identifier (identifier)))))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern (long_identifier (identifier)))))))
+      (multiplicative_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))))
+
+================================================================================
+Named DU field pattern with wildcard
+================================================================================
+
+match s with
+| Circle(radius = _) -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern (wildcard_pattern)))))
+      (int_literal))))
+
+================================================================================
+Positional DU pattern still works
+================================================================================
+
+match s with
+| Circle r -> r
+| Rect(w, h) -> w
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier (identifier))
+          (pattern
+            (identifier_pattern (long_identifier (identifier))))))
+      (long_identifier (identifier)))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier (identifier))
+          (pattern
+            (tuple_pattern
+              (pattern (identifier_pattern (long_identifier (identifier))))
+              (pattern (identifier_pattern (long_identifier (identifier))))))))
+      (long_identifier (identifier)))))
