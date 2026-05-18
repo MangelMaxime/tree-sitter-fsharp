@@ -294,6 +294,7 @@ export default grammar({
             $.upcast_expr,
             $.downcast_expr,
             $.new_expression,
+            $.object_expression,
             // CE result forms — also valid in if/match branches inside CEs
             $.ce_return_expr,
             $.ce_return_bang_expr,
@@ -326,6 +327,7 @@ export default grammar({
             $.unit,
             $.null_literal,
             $.long_identifier,
+            $.object_expression,
         ),
 
         pipe_expression: $ => prec.left(PREC.PIPE_EXPR, seq(
@@ -560,6 +562,24 @@ export default grammar({
                 optional(seq($._expression, repeat(seq(",", $._expression)))),
                 ")",
             ),
+        ),
+
+        // { new IFoo with member ... }  or  { new BaseClass(arg) with override ... }
+        // "new" is a keyword so this never conflicts with record_expression.
+        // Members are a flat repeat of member_defn / interface_impl, matching
+        // the same flat structure used for type bodies.
+        object_expression: $ => seq(
+            "{",
+            "new",
+            field('type', choice($.generic_type, $.long_identifier)),
+            optional(seq(
+                "(",
+                optional(seq($._expression, repeat(seq(",", $._expression)))),
+                ")",
+            )),
+            "with",
+            repeat(choice($.member_defn, $.interface_impl)),
+            "}",
         ),
 
         // ── Exceptions ────────────────────────────────────────────────────────

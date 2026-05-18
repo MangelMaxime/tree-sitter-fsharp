@@ -1427,3 +1427,71 @@ let x = matrix.[0, 1]
       index: (tuple_expression
         (int_literal)
         (int_literal)))))
+
+================================================================================
+Object expression basic
+================================================================================
+
+let x = { new IFoo with member this.Bar() = 42 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (object_expression
+      type: (long_identifier (identifier))
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        parameters: (parameter (unit))
+        (int_literal)))))
+
+================================================================================
+Object expression with constructor args
+================================================================================
+
+let x = { new Base(42) with override this.Name = "x" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (object_expression
+      type: (long_identifier (identifier))
+      (int_literal)
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        (string_literal)))))
+
+================================================================================
+Object expression with interface implementation
+================================================================================
+
+let x =
+    { new IFoo with
+        member this.Bar() = 1
+      interface IBaz with
+        member this.Qux() = 2 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (object_expression
+      type: (long_identifier (identifier))
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        parameters: (parameter (unit))
+        (int_literal))
+      (interface_impl
+        type: (type_expression (long_identifier (identifier))))
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        parameters: (parameter (unit))
+        (int_literal)))))

@@ -497,6 +497,28 @@ type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
 
+// ── Object expressions ───────────────────────────────────────────────────────
+
+let obj_basic =
+    { new IAnimal with
+        member this.Name = "anonymous"
+        member this.Sound() = "..."
+    }
+
+let obj_base_ctor =
+    { new System.Exception("custom") with
+        override this.Message = "overridden"
+    }
+
+let obj_multi_interface =
+    { new IAnimal with
+        member this.Name = "runner"
+        member this.Sound() = "go"
+      interface IShape with
+        member this.Area = 0.0
+        member this.Perimeter = 0.0
+    }
+
 // ── New object ───────────────────────────────────────────────────────────────
 
 let ex = new System.Exception("test")

@@ -148,7 +148,7 @@
     (long_identifier) @namespace
   ])
 
-(member_self_ident) @variable.builtin
+(member_self_ident) @variable
 
 (member_defn
   name: (identifier) @function)
