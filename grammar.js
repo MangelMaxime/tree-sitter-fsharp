@@ -70,6 +70,9 @@ export default grammar({
         [$.record_type_field, $.postfix_type],
         [$.record_field, $.application_expression],
         [$.index_slice, $.range_expression],
+        // Named union field type vs anonymous union field type: after 'name: 'a' or 'name: T',
+        // '*' could start the next named field OR extend the type into a tuple_type.
+        [$._union_field_type, $.type_expression],
     ],
 
 
@@ -288,7 +291,35 @@ export default grammar({
         union_case: $ => seq(
             "|",
             field('name', $.identifier),
-            optional(seq("of", field('fields', $.type_expression))),
+            optional(seq("of", choice(
+                $.union_case_named_fields,
+                field('fields', $.type_expression),
+            ))),
+        ),
+
+        // | Circle of radius: float  or  | Rect of width: float * height: float
+        union_case_named_fields: $ => seq(
+            $.union_case_field,
+            repeat(seq("*", $.union_case_field)),
+        ),
+
+        union_case_field: $ => seq(
+            field('name', $.identifier),
+            ":",
+            field('type', $._union_field_type),
+        ),
+
+        // Type allowed inside a named union field.
+        // Excludes tuple_type so that '*' between fields is never mistaken for
+        // a tuple-type separator inside the previous field's type annotation.
+        _union_field_type: $ => choice(
+            $.function_type,
+            $.postfix_type,
+            $.generic_type,
+            $.array_type,
+            $.parenthesized_type,
+            $.type_parameter,
+            $.long_identifier,
         ),
 
         // type Color = | Red = 0 | Green = 1 | Blue = 2

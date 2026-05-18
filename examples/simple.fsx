@@ -326,6 +326,16 @@ let unwrap opt =
     | Some x -> x
     | None -> 0
 
+// Named union fields
+type Contact =
+    | Email of address: string
+    | Phone of number: int * extension: int option
+    | Address of street: string * city: string * zip: string
+
+type BinTree<'a> =
+    | Leaf
+    | Node of value: 'a * left: BinTree<'a> * right: BinTree<'a>
+
 // Record type definitions
 type Point =
     {

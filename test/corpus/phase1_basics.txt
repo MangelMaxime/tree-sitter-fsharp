@@ -1922,3 +1922,95 @@ match r with
                   name: (long_identifier (identifier))
                   value: (pattern (literal_pattern (int_literal)))))))))
       (bool_literal))))
+
+================================================================================
+Named union field single
+================================================================================
+
+type Shape =
+    | Circle of radius: float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier (identifier))))))))
+
+================================================================================
+Named union fields multiple
+================================================================================
+
+type Shape =
+    | Rect of width: float * height: float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier (identifier)))
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier (identifier))))))))
+
+================================================================================
+Named union field with postfix type
+================================================================================
+
+type T =
+    | Node of value: int * next: int option
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier (identifier)))
+          (union_case_field
+            name: (identifier)
+            type: (postfix_type
+              (type_expression (long_identifier (identifier)))
+              (long_identifier (identifier)))))))))
+
+================================================================================
+Anonymous union fields still work
+================================================================================
+
+type Shape =
+    | Circle of float
+    | Rect of float * float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        fields: (type_expression (long_identifier (identifier))))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (tuple_type
+            (type_expression (long_identifier (identifier)))
+            (type_expression (long_identifier (identifier)))))))))
