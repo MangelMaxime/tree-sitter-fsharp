@@ -479,6 +479,25 @@ type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
 
+// ── Type casts ────────────────────────────────────────────────────────────────
+
+type IAnimalBase =
+    abstract member Speak: unit -> string
+
+let dog_as_base (d: Dog) : IAnimal = d :> IAnimal
+let base_as_dog (a: IAnimal) : Dog = a :?> Dog
+
+let is_string (obj: obj) = obj :? string
+
+let upcast_example (d: Dog) = upcast d
+let downcast_example (a: IAnimal) : Dog = downcast a
+
+let type_test_match (obj: obj) =
+    match obj with
+    | :? string as s -> s
+    | :? int as n -> string n
+    | _ -> "unknown"
+
 // ── Mutation (<-) ─────────────────────────────────────────────────────────────
 
 let mutable_counter =

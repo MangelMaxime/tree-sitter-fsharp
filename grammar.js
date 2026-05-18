@@ -284,6 +284,11 @@ export default grammar({
             $.while_expression,
             $.set_expression,
             $.range_expression,
+            $.upcast_expression,
+            $.downcast_expression,
+            $.type_test_expression,
+            $.upcast_expr,
+            $.downcast_expr,
             // CE result forms — also valid in if/match branches inside CEs
             $.ce_return_expr,
             $.ce_return_bang_expr,
@@ -488,6 +493,26 @@ export default grammar({
             seq($._expression, "..", $._expression),
         ),
 
+        // ── Type casts ────────────────────────────────────────────────────────
+        // expr :> Type   — upcast (widening, always safe)
+        upcast_expression: $ => prec(PREC.TYPED_EXPR,
+            seq($._expression, ":>", $.type_expression),
+        ),
+
+        // expr :?> Type  — downcast (narrowing, throws InvalidCastException on failure)
+        downcast_expression: $ => prec(PREC.TYPED_EXPR,
+            seq($._expression, ":?>", $.type_expression),
+        ),
+
+        // expr :? Type   — type test, returns bool
+        type_test_expression: $ => prec(PREC.TYPED_EXPR,
+            seq($._expression, ":?", $.type_expression),
+        ),
+
+        // upcast expr / downcast expr — keyword forms (type inferred by compiler)
+        upcast_expr: $ => seq("upcast", $._expression),
+        downcast_expr: $ => seq("downcast", $._expression),
+
         // ── For / While ───────────────────────────────────────────────────────
 
         // for x in xs do body   (imperative loop, returns unit)
@@ -590,7 +615,15 @@ export default grammar({
             $.as_pattern,
             $.list_pattern,
             $.array_pattern,
+            $.type_check_pattern,
         ),
+
+        // | :? TypeName [as x] ->   (type-test pattern in match arms)
+        type_check_pattern: $ => prec.right(seq(
+            ":?",
+            $.type_expression,
+            optional(seq("as", $.identifier)),
+        )),
 
         // x :: rest  or  x :: y :: rest  (right-associative)
         cons_pattern: $ => prec.right(1, seq($.pattern, "::", $.pattern)),

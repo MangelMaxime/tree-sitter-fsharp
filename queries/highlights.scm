@@ -30,7 +30,7 @@
   "public"
 ] @keyword.control.access
 
-"not" @keyword.operator
+["not" "upcast" "downcast"] @keyword.operator
 
 [
   "|"
@@ -66,6 +66,9 @@
   "~~~"
   "<-"
   ".."
+  ":>"
+  ":?>"
+  ":?"
 ] @operator
 
 (symbolic_op) @operator
