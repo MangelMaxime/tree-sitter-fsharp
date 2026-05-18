@@ -1675,3 +1675,119 @@ static member val DefaultName = "default" with get, set
     name: (identifier)
     (string_literal)
     (auto_property_accessors)))
+
+================================================================================
+Lazy expression
+================================================================================
+
+let x = lazy (1 + 2)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (lazy_expression
+      (parenthesized_expression
+        (additive_expression (int_literal) (int_literal))))))
+
+================================================================================
+Assert expression
+================================================================================
+
+let x = assert (n > 0)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (assert_expression
+      (parenthesized_expression
+        (comparison_expression (long_identifier (identifier)) (int_literal))))))
+
+================================================================================
+Function expression
+================================================================================
+
+let f = function | 0 -> "zero" | _ -> "other"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (function_expression
+      (match_arm
+        (pattern (literal_pattern (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern (wildcard_pattern))
+        (string_literal)))))
+
+================================================================================
+For range to expression
+================================================================================
+
+for i = 1 to 5 do printfn "x"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_range_expression
+    (identifier)
+    (int_literal)
+    (int_literal)
+    (application_expression
+      (long_identifier (identifier))
+      (string_literal))))
+
+================================================================================
+For range downto expression
+================================================================================
+
+for i = 5 downto 1 do printfn "x"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_range_expression
+    (identifier)
+    (int_literal)
+    (int_literal)
+    (application_expression
+      (long_identifier (identifier))
+      (string_literal))))
+
+================================================================================
+Begin end expression
+================================================================================
+
+let x = begin 1 + 2 end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (begin_end_expression
+      (additive_expression (int_literal) (int_literal)))))
+
+================================================================================
+Mutual recursion with and
+================================================================================
+
+let rec f x = x
+and g x = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (long_identifier (identifier))
+    (let_and_binding
+      name: (identifier)
+      parameters: (parameter (identifier))
+      (long_identifier (identifier)))))

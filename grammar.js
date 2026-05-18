@@ -342,6 +342,7 @@ export default grammar({
             $.let_expression,
             $.computation_expression,
             $.for_expression,
+            $.for_range_expression,
             $.while_expression,
             $.set_expression,
             $.range_expression,
@@ -349,6 +350,10 @@ export default grammar({
             $.index_expression,
             $.try_with_expression,
             $.try_finally_expression,
+            $.lazy_expression,
+            $.assert_expression,
+            $.begin_end_expression,
+            $.function_expression,
             $.upcast_expression,
             $.downcast_expression,
             $.type_test_expression,
@@ -530,6 +535,21 @@ export default grammar({
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
                 $._expression,
+                repeat($.let_and_binding),
+            ),
+        ),
+
+        // and name params [: type] = expr  (mutual recursion continuation)
+        let_and_binding: ($) => prec.right(PREC.LET_DECL,
+            seq(
+                "and",
+                optional(choice("inline", "mutable")),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
+                field('parameters', repeat($.parameter)),
+                optional(seq(":", field('return_type', $.type_expression))),
+                "=",
+                $._expression,
             ),
         ),
 
@@ -673,11 +693,31 @@ export default grammar({
             "try", $._expression, "finally", $._expression,
         ),
 
+        // lazy expr  — creates a Lazy<'T> thunk
+        lazy_expression: $ => prec(PREC.PREFIX_EXPR, seq("lazy", $._expression)),
+
+        // assert expr  — raises AssertionException if expr is false
+        assert_expression: $ => prec(PREC.PREFIX_EXPR, seq("assert", $._expression)),
+
+        // begin expr end  — sequenced block (equivalent to parenthesized)
+        begin_end_expression: $ => prec(PREC.PAREN_EXPR, seq("begin", $._expression, "end")),
+
+        // function | pat -> expr …  — shorthand for fun x -> match x with
+        function_expression: $ => prec.right(PREC.MATCH_EXPR,
+            seq("function", repeat1($.match_arm)),
+        ),
+
         // ── For / While ───────────────────────────────────────────────────────
 
-        // for x in xs do body   (imperative loop, returns unit)
+        // for x in xs do body   (foreach loop)
         for_expression: $ => prec.right(PREC.IF_EXPR,
             seq("for", $.identifier, "in", $._expression, "do", $._expression),
+        ),
+
+        // for i = start to end do body  (range loop)
+        // for i = start downto end do body  (counting down)
+        for_range_expression: $ => prec.right(PREC.IF_EXPR,
+            seq("for", $.identifier, "=", $._expression, choice("to", "downto"), $._expression, "do", $._expression),
         ),
 
         // while cond do body   (imperative loop, returns unit)

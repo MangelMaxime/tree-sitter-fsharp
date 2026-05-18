@@ -25,6 +25,9 @@
   "exception"
   "let!" "do!" "use!"
   "get" "set" "and"
+  "lazy" "assert"
+  "begin" "end"
+  "function"
 ] @keyword
 
 [
@@ -41,7 +44,7 @@
   "if" "then" "else" "elif"
   "match" "with" "when"
   "try" "finally"
-  "for" "while"
+  "for" "while" "to" "downto" "do"
   "return" "return!"
   "yield" "yield!"
   "match!"
@@ -125,6 +128,14 @@
 (let_binding
   name: (operator_name) @function)
 
+(let_and_binding
+  name: (identifier) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
+
+(let_and_binding
+  name: (backtick_identifier) @function)
+
 (lambda_expression
   (parameter
     (identifier) @variable.parameter)*)
@@ -206,6 +217,9 @@
 ; Exception-raising functions — highlighted like throw/raise in other languages
 ((long_identifier) @function.builtin
  (#match? @function.builtin "^(raise|reraise|failwith|failwithf|invalidArg|invalidOp|nullArg)$"))
+
+; base and fixed are reserved keywords but appear as plain identifiers in the tree
+((identifier) @keyword (#match? @keyword "^(base|fixed)$"))
 
 ; CE bang-binding names
 (ce_let_bang_expr name: (identifier) @variable)

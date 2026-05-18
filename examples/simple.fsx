@@ -700,6 +700,34 @@ let async_match_bang =
         | _ -> return "other"
     }
 
+let lazy_val = lazy (1 + 2)
+
+let safe_assert x = assert (x > 0)
+
+let int_to_string = function
+    | 0 -> "zero"
+    | 1 -> "one"
+    | _ -> "other"
+
+for i = 1 to 5 do
+    printfn "%d" i
+
+for i = 5 downto 1 do
+    printfn "%d" i
+
+let block_result = begin 1 + 2 end
+
+let rec is_even n = n = 0
+and is_odd n = n <> 0
+
+// 'base' keyword — calling a base-class member from an override
+type NamedThing(name: string) =
+    override _.ToString() = name
+
+type SpecialThing(name: string) =
+    inherit NamedThing(name)
+    override this.ToString() = "Special: " + base.ToString()
+
 // ── Preprocessor directives ───────────────────────────────────────────────────
 
 #nowarn "25"
