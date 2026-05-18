@@ -13572,6 +13572,58 @@
     }
   },
   {
+    "type": "type_and_decl",
+    "named": true,
+    "fields": {
+      "alias": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "enum_type_defn",
+          "named": true
+        },
+        {
+          "type": "primary_constructor",
+          "named": true
+        },
+        {
+          "type": "record_type_defn",
+          "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
+        },
+        {
+          "type": "union_type_defn",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "type_check_pattern",
     "named": true,
     "fields": {},
@@ -13649,6 +13701,10 @@
         },
         {
           "type": "record_type_defn",
+          "named": true
+        },
+        {
+          "type": "type_and_decl",
           "named": true
         },
         {

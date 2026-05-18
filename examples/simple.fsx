@@ -326,6 +326,26 @@ let unwrap opt =
     | Some x -> x
     | None -> 0
 
+// Mutual type recursion
+type MutualEven =
+    | MZero
+    | MSuccEven of MutualOdd
+
+and MutualOdd =
+    | MSuccOdd of MutualEven
+
+type JsonValue =
+    | JNull
+    | JBool of bool
+    | JNumber of float
+    | JString of string
+    | JArray of JsonArray
+    | JObject of JsonObject
+
+and JsonArray = JsonValue list
+
+and JsonObject = (string * JsonValue) list
+
 // Named union fields
 type Contact =
     | Email of address: string

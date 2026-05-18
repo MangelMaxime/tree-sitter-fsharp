@@ -187,6 +187,9 @@
 (type_decl
   name: (identifier) @type)
 
+(type_and_decl
+  name: (identifier) @type)
+
 (exception_decl
   name: (identifier) @type)
 

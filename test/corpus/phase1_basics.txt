@@ -2014,3 +2014,58 @@ type Shape =
           (tuple_type
             (type_expression (long_identifier (identifier)))
             (type_expression (long_identifier (identifier)))))))))
+
+================================================================================
+Mutual type recursion union
+================================================================================
+
+type Even =
+    | Zero
+    | SuccEven of Odd
+
+and Odd =
+    | SuccOdd of Even
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression (long_identifier (identifier)))))
+    (type_and_decl
+      name: (identifier)
+      (union_type_defn
+        (union_case
+          name: (identifier)
+          fields: (type_expression (long_identifier (identifier))))))))
+
+================================================================================
+Mutual type recursion with alias
+================================================================================
+
+type JsonValue =
+    | JNull
+    | JArray of JsonArray
+
+and JsonArray = JsonValue list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression (long_identifier (identifier)))))
+    (type_and_decl
+      name: (identifier)
+      alias: (type_expression
+        (postfix_type
+          (type_expression (long_identifier (identifier)))
+          (long_identifier (identifier)))))))

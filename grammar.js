@@ -137,6 +137,22 @@ export default grammar({
             // can't start a type_expression, so the parser naturally reduces with empty body and
             // the body tokens appear flat at the source_file level.
             optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.type_expression))),
+            repeat($.type_and_decl),
+        )),
+
+        // and Even = ...  (mutual type recursion continuation)
+        type_and_decl: $ => prec.right(seq(
+            "and",
+            field('name', $.identifier),
+            optional(seq(
+                "<",
+                $.type_parameter,
+                repeat(seq(",", $.type_parameter)),
+                ">",
+            )),
+            optional($.primary_constructor),
+            "=",
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.type_expression))),
         )),
 
         // (x: int, y: string)  in  type Foo(x: int, y: string) =
