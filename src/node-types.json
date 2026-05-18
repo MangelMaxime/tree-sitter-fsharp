@@ -1,5 +1,10 @@
 [
   {
+    "type": "access_modifier",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "additive_expression",
     "named": true,
     "fields": {},
@@ -2089,6 +2094,32 @@
     }
   },
   {
+    "type": "module_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "multiplicative_expression",
     "named": true,
     "fields": {},
@@ -2213,6 +2244,22 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "namespace_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -3043,7 +3090,15 @@
           "named": true
         },
         {
+          "type": "module_decl",
+          "named": true
+        },
+        {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "namespace_decl",
           "named": true
         },
         {
@@ -3668,6 +3723,10 @@
     "named": false
   },
   {
+    "type": "global",
+    "named": false
+  },
+  {
     "type": "identifier",
     "named": true
   },
@@ -3684,6 +3743,10 @@
     "named": false
   },
   {
+    "type": "internal",
+    "named": false
+  },
+  {
     "type": "let",
     "named": false
   },
@@ -3697,7 +3760,15 @@
     "named": false
   },
   {
+    "type": "module",
+    "named": false
+  },
+  {
     "type": "mutable",
+    "named": false
+  },
+  {
+    "type": "namespace",
     "named": false
   },
   {
@@ -3714,6 +3785,14 @@
   },
   {
     "type": "open",
+    "named": false
+  },
+  {
+    "type": "private",
+    "named": false
+  },
+  {
+    "type": "public",
     "named": false
   },
   {

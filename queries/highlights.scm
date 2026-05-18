@@ -1,4 +1,6 @@
 [
+  "namespace"
+  "module"
   "open"
   "type"
   "let"
@@ -17,6 +19,12 @@
   "mutable"
   "of"
 ] @keyword
+
+[
+  "private"
+  "internal"
+  "public"
+] @keyword.control.access
 
 "not" @keyword.operator
 
@@ -97,6 +105,12 @@
 (generic_type (long_identifier) @type)
 (postfix_type (long_identifier) @type)
 (type_parameter) @type.parameter
+
+(namespace_decl
+  name: (long_identifier) @namespace)
+
+(module_decl
+  name: (long_identifier) @namespace)
 
 (import_decl
   [

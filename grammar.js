@@ -77,6 +77,24 @@ export default grammar({
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 
+        // namespace Foo.Bar  or  namespace global
+        namespace_decl: $ => seq(
+            "namespace",
+            choice("global", field('name', $.long_identifier)),
+        ),
+
+        // module Foo.Bar                    (file-level / abbreviated module)
+        // module [private|internal] Foo =   (explicit nested module header; body is top-level)
+        module_decl: $ => seq(
+            "module",
+            optional($.access_modifier),
+            optional("rec"),
+            field('name', $.long_identifier),
+            optional("="),
+        ),
+
+        access_modifier: _ => choice("private", "internal", "public"),
+
         // type Point = { X: int; Y: int }
         // type Shape = | Circle of float | Rectangle of float * float
         // type Option<'a> = | Some of 'a | None
@@ -468,6 +486,8 @@ export default grammar({
         )),
 
         _token: $ => choice(
+            $.namespace_decl,
+            $.module_decl,
             $.import_decl,
             $.type_decl,
             $.let_binding,

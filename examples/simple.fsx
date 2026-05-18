@@ -363,3 +363,16 @@ let record_nested =
                 Y = 100
             }
     }
+
+// Nested modules (valid in .fsx scripts)
+module MathUtils =
+    let square x = x * x
+    let cube x = x * x * x
+
+module private StringUtils =
+    let upper (s: string) = s.ToUpper()
+    let lower (s: string) = s.ToLower()
+
+module rec Recursive =
+    let even n = if n = 0 then true else odd (n - 1)
+    let odd n = if n = 0 then false else even (n - 1)
