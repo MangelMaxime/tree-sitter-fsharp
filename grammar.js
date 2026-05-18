@@ -279,6 +279,15 @@ export default grammar({
             $.match_expression,
             $.lambda_expression,
             $.let_expression,
+            $.computation_expression,
+            $.for_expression,
+            $.while_expression,
+            // CE result forms — also valid in if/match branches inside CEs
+            $.ce_return_expr,
+            $.ce_return_bang_expr,
+            $.ce_yield_expr,
+            $.ce_yield_bang_expr,
+            $.ce_do_bang_expr,
         )),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
@@ -465,6 +474,81 @@ export default grammar({
             ),
         ),
 
+        // ── For / While ───────────────────────────────────────────────────────
+
+        // for x in xs do body   (imperative loop, returns unit)
+        for_expression: $ => prec.right(PREC.IF_EXPR,
+            seq("for", $.identifier, "in", $._expression, "do", $._expression),
+        ),
+
+        // while cond do body   (imperative loop, returns unit)
+        while_expression: $ => prec.right(PREC.IF_EXPR,
+            seq("while", $._expression, "do", $._expression),
+        ),
+
+        // ── Computation expressions ────────────────────────────────────────
+        // async { ... }  task { ... }  seq { ... }  promise { ... }
+        // Builder name is any identifier; body is a flat sequence of CE statements.
+        // Lower prec (CE_EXPR=15) than application_expression (APP_EXPR=16) so that
+        // `f { field = val }` keeps the record-as-arg interpretation when both paths
+        // are explored by GLR.
+        computation_expression: $ => prec(PREC.CE_EXPR,
+            seq(
+                field('builder', $.long_identifier),
+                "{",
+                repeat($._ce_statement),
+                "}",
+            ),
+        ),
+
+        // A statement inside a computation expression body.
+        // Inline rule: just a named alias for the choice.
+        _ce_statement: $ => choice(
+            $.ce_let_bang_expr,
+            $.ce_do_bang_expr,
+            $.use_binding,
+            $.ce_use_bang_expr,
+            $.ce_match_bang_expr,
+            $.let_binding,
+            $.do_stmt,
+            $._expression,  // covers return/yield/return!/yield!/for/while/if/match/…
+        ),
+
+        // let! x = expr
+        ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
+            seq("let!", field('name', $.identifier), "=", $._expression),
+        ),
+
+        // do! expr
+        ce_do_bang_expr: $ => seq("do!", $._expression),
+
+        // use x = disposable  (also used as a top-level _token outside CEs)
+        use_binding: $ => prec.right(PREC.LET_DECL,
+            seq("use", optional("rec"), field('name', $.identifier), "=", $._expression),
+        ),
+
+        // use! x = expr
+        ce_use_bang_expr: $ => prec.right(PREC.LET_DECL,
+            seq("use!", field('name', $.identifier), "=", $._expression),
+        ),
+
+        // match! expr with | pat -> expr …
+        ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
+            seq("match!", $._expression, "with", repeat1($.match_arm)),
+        ),
+
+        // return expr   (also in _expression so it works in if/match branches)
+        ce_return_expr: $ => seq("return", $._expression),
+
+        // return! expr
+        ce_return_bang_expr: $ => seq("return!", $._expression),
+
+        // yield expr
+        ce_yield_expr: $ => seq("yield", $._expression),
+
+        // yield! expr
+        ce_yield_bang_expr: $ => seq("yield!", $._expression),
+
         match_expression: ($) => prec.right(PREC.MATCH_EXPR,
             seq(
                 "match",
@@ -613,6 +697,7 @@ export default grammar({
             $.import_decl,
             $.type_decl,
             $.let_binding,
+            $.use_binding,
             $.member_defn,
             $.abstract_member_defn,
             $.interface_impl,

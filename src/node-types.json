@@ -59,6 +59,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -67,11 +87,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -152,6 +180,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -186,6 +218,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -194,11 +246,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -279,6 +339,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -313,6 +377,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -321,11 +405,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -406,6 +498,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -440,6 +536,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -448,11 +564,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -533,6 +657,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -642,6 +770,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -650,11 +798,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -735,6 +891,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -778,11 +938,11 @@
     "fields": {}
   },
   {
-    "type": "comparison_expression",
+    "type": "ce_do_bang_expr",
     "named": true,
     "fields": {},
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": true,
       "types": [
         {
@@ -806,6 +966,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -814,11 +994,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -899,6 +1087,1502 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_let_bang_expr",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_match_bang_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_arm",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_return_bang_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_return_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_use_bang_expr",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_yield_bang_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ce_yield_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "comparison_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "computation_expression",
+    "named": true,
+    "fields": {
+      "builder": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_let_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_match_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_use_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "do_stmt",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_binding",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "use_binding",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -933,6 +2617,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -941,11 +2645,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1026,6 +2738,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -1075,6 +2791,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1083,11 +2819,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1169,6 +2913,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -1177,6 +2925,169 @@
     "type": "float_literal",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "for_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "function_type",
@@ -1260,6 +3171,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1268,11 +3199,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1354,6 +3293,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -1402,6 +3345,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1410,11 +3373,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1500,6 +3471,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -1544,6 +3519,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1552,11 +3547,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1638,6 +3641,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -1692,6 +3699,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1700,11 +3727,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1790,6 +3825,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -1858,6 +3897,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -1866,11 +3925,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -1955,6 +4022,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -2024,6 +4095,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2032,11 +4123,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2122,6 +4221,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -2155,6 +4258,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2163,11 +4286,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2248,6 +4379,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -2351,6 +4486,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2359,11 +4514,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2449,6 +4612,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -2482,6 +4649,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2490,11 +4677,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2580,6 +4775,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -2654,6 +4853,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2662,11 +4881,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2747,6 +4974,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -2822,6 +5053,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2830,11 +5081,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -2915,6 +5174,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -2980,6 +5243,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -2988,11 +5271,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -3073,6 +5364,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -3130,6 +5425,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -3138,11 +5453,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -3223,6 +5546,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -3315,6 +5642,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -3323,11 +5670,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -3408,6 +5763,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -3583,6 +5942,26 @@
             "named": true
           },
           {
+            "type": "ce_do_bang_expr",
+            "named": true
+          },
+          {
+            "type": "ce_return_bang_expr",
+            "named": true
+          },
+          {
+            "type": "ce_return_expr",
+            "named": true
+          },
+          {
+            "type": "ce_yield_bang_expr",
+            "named": true
+          },
+          {
+            "type": "ce_yield_expr",
+            "named": true
+          },
+          {
             "type": "char_literal",
             "named": true
           },
@@ -3591,11 +5970,19 @@
             "named": true
           },
           {
+            "type": "computation_expression",
+            "named": true
+          },
+          {
             "type": "cons_expression",
             "named": true
           },
           {
             "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "for_expression",
             "named": true
           },
           {
@@ -3676,6 +6063,10 @@
           },
           {
             "type": "verbatim_string",
+            "named": true
+          },
+          {
+            "type": "while_expression",
             "named": true
           }
         ]
@@ -3769,11 +6160,35 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
         {
           "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
           "named": true
         },
         {
@@ -3786,6 +6201,10 @@
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -3901,11 +6320,19 @@
           "named": true
         },
         {
+          "type": "use_binding",
+          "named": true
+        },
+        {
           "type": "val_field",
           "named": true
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         },
         {
@@ -3949,6 +6376,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -3957,11 +6404,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -4042,6 +6497,10 @@
         },
         {
           "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
           "named": true
         }
       ]
@@ -4197,6 +6656,26 @@
           "named": true
         },
         {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
           "type": "char_literal",
           "named": true
         },
@@ -4205,11 +6684,19 @@
           "named": true
         },
         {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
           "type": "cons_expression",
           "named": true
         },
         {
           "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
           "named": true
         },
         {
@@ -4291,6 +6778,10 @@
         {
           "type": "verbatim_string",
           "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
         }
       ]
     }
@@ -4337,6 +6828,176 @@
     }
   },
   {
+    "type": "use_binding",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "val_field",
     "named": true,
     "fields": {
@@ -4366,6 +7027,165 @@
     "type": "verbatim_string",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "while_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "additive_expression",
+          "named": true
+        },
+        {
+          "type": "and_expression",
+          "named": true
+        },
+        {
+          "type": "application_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "ce_do_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_return_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_bang_expr",
+          "named": true
+        },
+        {
+          "type": "ce_yield_expr",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "comparison_expression",
+          "named": true
+        },
+        {
+          "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "cons_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "for_expression",
+          "named": true
+        },
+        {
+          "type": "if_expression",
+          "named": true
+        },
+        {
+          "type": "infix_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "match_expression",
+          "named": true
+        },
+        {
+          "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "or_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "pipe_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
+          "named": true
+        },
+        {
+          "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "%",
@@ -4520,6 +7340,10 @@
     "named": false
   },
   {
+    "type": "do!",
+    "named": false
+  },
+  {
     "type": "elif",
     "named": false
   },
@@ -4529,6 +7353,10 @@
   },
   {
     "type": "false",
+    "named": false
+  },
+  {
+    "type": "for",
     "named": false
   },
   {
@@ -4572,12 +7400,20 @@
     "named": false
   },
   {
+    "type": "let!",
+    "named": false
+  },
+  {
     "type": "line_comment",
     "named": true,
     "extra": true
   },
   {
     "type": "match",
+    "named": false
+  },
+  {
+    "type": "match!",
     "named": false
   },
   {
@@ -4629,6 +7465,14 @@
     "named": false
   },
   {
+    "type": "return",
+    "named": false
+  },
+  {
+    "type": "return!",
+    "named": false
+  },
+  {
     "type": "static",
     "named": false
   },
@@ -4661,11 +7505,23 @@
     "named": true
   },
   {
+    "type": "use",
+    "named": false
+  },
+  {
+    "type": "use!",
+    "named": false
+  },
+  {
     "type": "val",
     "named": false
   },
   {
     "type": "when",
+    "named": false
+  },
+  {
+    "type": "while",
     "named": false
   },
   {
@@ -4680,6 +7536,14 @@
     "type": "xml_doc_comment",
     "named": true,
     "extra": true
+  },
+  {
+    "type": "yield",
+    "named": false
+  },
+  {
+    "type": "yield!",
+    "named": false
   },
   {
     "type": "{",

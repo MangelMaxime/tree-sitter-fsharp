@@ -478,3 +478,88 @@ type Singleton() =
 type Connection(?host: string, ?port: int) =
     member _.Host = defaultArg host "localhost"
     member _.Port = defaultArg port 5432
+
+// ── For / While loops ────────────────────────────────────────────────────────
+
+let print_items () =
+    for x in [ 1; 2; 3 ] do
+        printfn "%d" x
+
+let while_demo =
+    while false do ()
+
+// ── Computation expressions ───────────────────────────────────────────────────
+
+// async — F# built-in async workflow
+let async_result =
+    async {
+        let! x = async { return 42 }
+        do! Async.Sleep 0
+        return x
+    }
+
+let async_if =
+    async {
+        let! value = async { return 10 }
+        if value > 5 then
+            return "big"
+        else
+            return "small"
+    }
+
+let async_match =
+    async {
+        let! value = async { return 42 }
+        match value with
+        | 0 -> return "zero"
+        | n -> return "other"
+    }
+
+// seq — lazy sequences
+let seq_range =
+    seq {
+        yield 1
+        yield 2
+        yield 3
+    }
+
+let seq_for =
+    seq {
+        for x in [ 1; 2; 3 ] do
+            yield x * 2
+    }
+
+let seq_yield_bang =
+    seq {
+        yield! [ 1; 2; 3 ]
+        yield 4
+    }
+
+// task — .NET Task-based async (same keywords as async)
+let task_result =
+    task {
+        let! data = task { return 42 }
+        return data * 2
+    }
+
+// promise — custom CE builder (same keyword set)
+// let promise_result =
+//     promise {
+//         let! x = fetchAsync ()
+//         return x
+//     }
+
+// use / use! inside CE
+let async_use =
+    async {
+        use resource = new System.IO.MemoryStream()
+        return resource.Length
+    }
+
+// match! inside CE
+let async_match_bang =
+    async {
+        match! async { return 42 } with
+        | 42 -> return "answer"
+        | _ -> return "other"
+    }

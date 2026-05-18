@@ -6,13 +6,6 @@
   "let"
   "rec"
   "fun"
-  "if"
-  "then"
-  "else"
-  "elif"
-  "match"
-  "with"
-  "when"
   "as"
   "in"
   "inline"
@@ -27,6 +20,8 @@
   "static"
   "val"
   "do"
+  "use"
+  "let!" "do!" "use!"
 ] @keyword
 
 [
@@ -40,6 +35,12 @@
 [
   "|"
   "->"
+  "if" "then" "else" "elif"
+  "match" "with" "when"
+  "for" "while"
+  "return" "return!"
+  "yield" "yield!"
+  "match!"
 ] @keyword.control
 
 "." @punctuation
@@ -159,3 +160,12 @@
 
 (record_field
   name: (long_identifier) @variable.other.member)
+
+; Computation expression builder name (async, task, seq, promise, …)
+(computation_expression
+  builder: (long_identifier) @keyword)
+
+; CE bang-binding names
+(ce_let_bang_expr name: (identifier) @variable)
+(ce_use_bang_expr name: (identifier) @variable)
+(use_binding name: (identifier) @variable)
