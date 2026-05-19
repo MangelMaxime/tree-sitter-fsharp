@@ -1289,6 +1289,7 @@ export default grammar({
         )),
 
         _token: $ => choice(
+            $.preproc_if,
             $.preproc_directive,
             prec.dynamic(1, $.measure_type_decl),
             $.attribute,
@@ -1537,11 +1538,61 @@ export default grammar({
             "*)",
         ),
 
+        // Matches non-structural directives: #nowarn, #r, #load, #line, etc.
+        // Structural directives (#if, #elif, #else, #endif) are handled by preproc_if
+        // with dedicated high-priority tokens below.
         preproc_keyword: _ => token(seq("#", /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
 
         preproc_directive: $ => prec.right(seq(
             field('name', $.preproc_keyword),
             optional(field('argument', choice($.string_literal, $.int_literal, $.long_identifier))),
         )),
+
+        // High-priority tokens for structural directives — prec(1) beats preproc_keyword (prec 0)
+        // when both patterns match the same string. Longer match still wins unconditionally,
+        // so "#ifdef" still falls to preproc_keyword (7 chars > 3/4).
+        preproc_if_kw: _ => token(prec(1, seq("#if", /[ \t]*/))),
+        preproc_elif_kw: _ => token(prec(1, seq("#elif", /[ \t]*/))),
+        preproc_else_kw: _ => token(prec(1, seq("#else", /[ \t]*/))),
+        preproc_endif_kw: _ => token(prec(1, seq("#endif", /[ \t]*/))),
+
+        // Boolean condition expression used by #if and #elif.
+        // && binds tighter than || (prec 2 vs 1).
+        preproc_expression: $ => choice(
+            $.identifier,
+            "true",
+            "false",
+            seq("!", $.preproc_expression),
+            seq("(", $.preproc_expression, ")"),
+            prec.left(2, seq($.preproc_expression, "&&", $.preproc_expression)),
+            prec.left(1, seq($.preproc_expression, "||", $.preproc_expression)),
+        ),
+
+        // #if COND
+        //     body…
+        // [#elif COND
+        //     body…]
+        // [#else
+        //     body…]
+        // #endif
+        preproc_if: $ => seq(
+            $.preproc_if_kw,
+            field('condition', $.preproc_expression),
+            repeat($._token),
+            repeat($.preproc_elif_clause),
+            optional($.preproc_else_clause),
+            $.preproc_endif_kw,
+        ),
+
+        preproc_elif_clause: $ => seq(
+            $.preproc_elif_kw,
+            field('condition', $.preproc_expression),
+            repeat($._token),
+        ),
+
+        preproc_else_clause: $ => seq(
+            $.preproc_else_kw,
+            repeat($._token),
+        ),
     }
 });
