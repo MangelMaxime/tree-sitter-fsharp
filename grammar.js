@@ -427,6 +427,9 @@ export default grammar({
             $.string_literal,
             $.verbatim_string,
             $.triple_quoted_string,
+            $.interpolated_string,
+            $.interpolated_verbatim_string,
+            $.interpolated_triple_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -486,6 +489,9 @@ export default grammar({
             $.string_literal,
             $.verbatim_string,
             $.triple_quoted_string,
+            $.interpolated_string,
+            $.interpolated_verbatim_string,
+            $.interpolated_triple_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -1266,6 +1272,37 @@ export default grammar({
             )
         ),
 
+        // Content segments for interpolated strings (token.immediate = no whitespace skip)
+        _interp_string_text: _ => token.immediate(repeat1(choice(
+            /[^"\\{}]+/,
+            /\\[\\'"abfnrtv0]/,
+            /\\[0-9]{3}/,
+            /\\x[0-9a-fA-F]{2}/,
+            /\\u[0-9a-fA-F]{4}/,
+            /\\U[0-9a-fA-F]{8}/,
+            '{{',
+            '}}',
+        ))),
+
+        _interp_verbatim_text: _ => token.immediate(repeat1(choice(
+            /[^"{}]+/,
+            '""',
+            '{{',
+            '}}',
+        ))),
+
+        // "  + safe char avoids greedily consuming """ (the closing delimiter)
+        _interp_triple_text: _ => token.immediate(repeat1(choice(
+            /[^"{}]+/,
+            /""[^"{}]/,
+            /"[^"{}]/,
+            '{{',
+            '}}',
+        ))),
+
+        // Everything after : inside {expr:fmt} until the closing }
+        _interp_format_spec: _ => token.immediate(/[^}]+/),
+
         _string_byte_suffix: _ => token.immediate("B"),
 
         // "hello"  or  "hello"B
@@ -1281,6 +1318,44 @@ export default grammar({
                 repeat(choice(/[^"]+/, /"[^"]/, /""[^"]/)),
                 '"""',
             )
+        ),
+
+        // {expr}  or  {expr:format_spec}  inside an interpolated string
+        interpolation: $ => seq(
+            '{',
+            $._expression,
+            optional(seq(':', alias($._interp_format_spec, $.format_string))),
+            '}',
+        ),
+
+        // $"text {expr:fmt} text"
+        interpolated_string: $ => seq(
+            '$"',
+            repeat(choice(
+                $.interpolation,
+                alias($._interp_string_text, $.string_content),
+            )),
+            '"',
+        ),
+
+        // $@"verbatim {expr}"  or  @$"verbatim {expr}"
+        interpolated_verbatim_string: $ => seq(
+            choice('$@"', '@$"'),
+            repeat(choice(
+                $.interpolation,
+                alias($._interp_verbatim_text, $.string_content),
+            )),
+            '"',
+        ),
+
+        // $"""triple {expr}"""
+        interpolated_triple_string: $ => seq(
+            '$"""',
+            repeat(choice(
+                $.interpolation,
+                alias($._interp_triple_text, $.string_content),
+            )),
+            '"""',
         ),
 
         bool_literal: _ => choice("true", "false"),

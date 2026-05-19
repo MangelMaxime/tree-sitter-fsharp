@@ -2497,3 +2497,121 @@ type m
     (attribute_target
       name: (long_identifier (identifier)))
     name: (identifier)))
+
+================================================================================
+Interpolated string no holes
+================================================================================
+
+$"hello world"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)))
+
+================================================================================
+Interpolated string single hole
+================================================================================
+
+$"Hello {name}!"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier)))
+    (string_content)))
+
+================================================================================
+Interpolated string expression in hole
+================================================================================
+
+$"Result: {x + 1}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (additive_expression
+        (long_identifier (identifier))
+        (int_literal)))))
+
+================================================================================
+Interpolated string with format spec
+================================================================================
+
+$"Price: {price:F2}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier))
+      (format_string))))
+
+================================================================================
+Interpolated string multiple holes
+================================================================================
+
+$"Hello {firstName} {lastName}!"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier)))
+    (interpolation
+      (long_identifier (identifier)))
+    (string_content)))
+
+================================================================================
+Interpolated verbatim string
+================================================================================
+
+$@"Path: {path}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_verbatim_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier)))))
+
+================================================================================
+Interpolated triple-quoted string
+================================================================================
+
+$"""Hello {name}!"""
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_triple_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier)))
+    (string_content)))
+
+================================================================================
+Interpolated string escaped braces
+================================================================================
+
+$"{{literal braces}} and {value}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (long_identifier (identifier)))))

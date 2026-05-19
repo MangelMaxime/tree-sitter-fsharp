@@ -115,6 +115,12 @@
 (string_literal) @string
 (verbatim_string) @string
 (triple_quoted_string) @string
+(interpolated_string) @string
+(interpolated_verbatim_string) @string
+(interpolated_triple_string) @string
+(interpolation "{" @punctuation.special)
+(interpolation "}" @punctuation.special)
+(interpolation (format_string) @string.special)
 (bool_literal) @constant.builtin.boolean
 (unit) @constant.builtin
 (null_literal) @constant.builtin

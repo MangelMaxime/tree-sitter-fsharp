@@ -957,3 +957,37 @@ let genericSum (x : float<'u>) (y : float<'u>) = x + y
 
 // Comparison still works (space before <)
 let isBig = length > 2.0<cm>
+
+// ── String interpolation ──────────────────────────────────────────────────────
+
+// Basic interpolation
+let greeting name = $"Hello, {name}!"
+
+// Expression in hole
+let info = $"Sum: {1 + 2}"
+
+// Format specifier
+let price = 9.99
+let formatted = $"Price: {price:F2}"
+
+// Multiple holes
+let firstName = "John"
+let lastName = "Doe"
+let full = $"Name: {firstName} {lastName}"
+
+// Escaped braces (literal { and })
+let escaped = $"Braces: {{not a hole}}"
+
+// Verbatim interpolated
+let path = @"C:\tmp"
+let msg = $@"File at: {path}"
+
+// Triple-quoted interpolated
+let multi =
+    $"""
+    Hello {firstName}!
+    Your total is {price:F2}.
+    """
+
+// Nested expressions
+let cond = $"""Status: {if price > 5.0 then "expensive" else "cheap"}"""
