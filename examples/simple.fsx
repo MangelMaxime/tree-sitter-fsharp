@@ -1017,3 +1017,33 @@ let greet (name: string) =
     if name = null then
         invalidArg (nameof name) "name must not be null"
     $"Hello, {name}!"
+
+// ── Generic type constraints ──────────────────────────────────────────────────
+
+// Subtype constraint: 'T must implement IComparable
+type Wrapper2<'T when 'T :> System.IComparable> = { value: 'T }
+
+// Comparison constraint on a function
+let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
+
+// Equality constraint
+let distinct<'T when 'T : equality> (xs: 'T list) = List.distinct xs
+
+// Null constraint
+type Nullable<'T when 'T : null> = { inner: 'T }
+
+// Not struct (reference type only)
+type RefOnly<'T when 'T : not struct> = { inner: 'T }
+
+// Unmanaged constraint (for low-level code)
+let inline zeroBits<'T when 'T : unmanaged> (x: 'T) = x
+
+// Enum constraint
+type EnumWrapper<'T when 'T : enum<int>> = { tag: 'T }
+
+// Default constructor constraint
+type Factory<'T when 'T : (new : unit -> 'T)> = { create: unit -> 'T }
+
+// Multiple constraints with and
+type Container<'T, 'U when 'T : comparison and 'U : equality> =
+    { key: 'T; value: 'U }

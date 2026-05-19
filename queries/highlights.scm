@@ -38,6 +38,9 @@
 
 ["not" "upcast" "downcast" "nameof"] @keyword.operator
 
+(type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
+(type_constraint "not" @keyword.operator)
+
 [
   "|"
   "->"

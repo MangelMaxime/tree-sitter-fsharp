@@ -150,12 +150,7 @@ export default grammar({
         type_decl: $ => prec.right(seq(
             "type",
             field('name', $.identifier),
-            optional(seq(
-                "<",
-                $.type_parameter,
-                repeat(seq(",", $.type_parameter)),
-                ">",
-            )),
+            optional($.type_parameter_list),
             optional($.primary_constructor),
             "=",
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
@@ -170,12 +165,7 @@ export default grammar({
         type_and_decl: $ => prec.right(seq(
             "and",
             field('name', $.identifier),
-            optional(seq(
-                "<",
-                $.type_parameter,
-                repeat(seq(",", $.type_parameter)),
-                ">",
-            )),
+            optional($.type_parameter_list),
             optional($.primary_constructor),
             "=",
             optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
@@ -654,7 +644,7 @@ export default grammar({
                 optional("rec"),
                 optional(choice("inline", "mutable")),
                 field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
-                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
+                optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -669,7 +659,7 @@ export default grammar({
                 "and",
                 optional(choice("inline", "mutable")),
                 field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
-                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
+                optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -683,7 +673,7 @@ export default grammar({
                 optional("rec"),
                 optional(choice("inline", "mutable")),
                 field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
-                optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
+                optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -1147,6 +1137,33 @@ export default grammar({
             choice("'", "^"),
             /[a-zA-Z_][a-zA-Z0-9_']*/,
         )),
+
+        // <'T, 'U when 'T :> IFoo and 'U : comparison>
+        type_parameter_list: $ => seq(
+            "<",
+            $.type_parameter,
+            repeat(seq(",", $.type_parameter)),
+            optional(seq(
+                "when",
+                $.type_constraint,
+                repeat(seq("and", $.type_constraint)),
+            )),
+            ">",
+        ),
+
+        // 'T :> IFoo   'T : null   'T : comparison   …
+        type_constraint: $ => choice(
+            seq($.type_parameter, ":>", $.type_expression),
+            seq($.type_parameter, ":", "null"),
+            seq($.type_parameter, ":", "struct"),
+            seq($.type_parameter, ":", "not", "struct"),
+            seq($.type_parameter, ":", "comparison"),
+            seq($.type_parameter, ":", "equality"),
+            seq($.type_parameter, ":", "unmanaged"),
+            seq($.type_parameter, ":", "enum", "<", $.type_expression, ">"),
+            seq($.type_parameter, ":", "delegate", "<", $.type_expression, ",", $.type_expression, ">"),
+            seq($.type_parameter, ":", "(", "new", ":", "unit", "->", $.type_expression, ")"),
+        ),
 
         // (|Even|Odd|)  (|Integer|_|)  (|Single|)
         // Single terminal so the lexer never splits "(|" as "(" then "|",

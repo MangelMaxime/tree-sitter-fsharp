@@ -2783,6 +2783,74 @@ match t with
       (int_literal))))
 
 ================================================================================
+Type constraint subtype
+================================================================================
+
+type Foo<'T when 'T :> System.IComparable> = { value: 'T }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (type_expression (long_identifier (identifier) (identifier)))))
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression (type_parameter))))))
+
+================================================================================
+Type constraint comparison let binding
+================================================================================
+
+let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint (type_parameter)))
+    parameters: (parameter
+      (identifier)
+      (type_expression (postfix_type
+        (type_expression (type_parameter))
+        (long_identifier (identifier)))))
+    (application_expression
+      (long_identifier (identifier) (identifier))
+      (long_identifier (identifier)))))
+
+================================================================================
+Type constraint two params with and
+================================================================================
+
+type Pair<'T, 'U when 'T : equality and 'U : null> = { fst: 'T; snd: 'U }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_parameter)
+      (type_constraint (type_parameter))
+      (type_constraint (type_parameter)))
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression (type_parameter)))
+      (record_type_field
+        name: (identifier)
+        type: (type_expression (type_parameter))))))
+
+================================================================================
 Nameof simple identifier
 ================================================================================
 

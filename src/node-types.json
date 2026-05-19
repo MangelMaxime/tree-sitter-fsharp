@@ -9330,7 +9330,7 @@
           "named": true
         },
         {
-          "type": "type_parameter",
+          "type": "type_parameter_list",
           "named": true
         },
         {
@@ -9636,7 +9636,7 @@
           "named": true
         },
         {
-          "type": "type_parameter",
+          "type": "type_parameter_list",
           "named": true
         },
         {
@@ -9938,7 +9938,7 @@
           "named": true
         },
         {
-          "type": "type_parameter",
+          "type": "type_parameter_list",
           "named": true
         },
         {
@@ -11975,6 +11975,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "null_literal",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "object_expression",
@@ -15631,7 +15636,7 @@
           "named": true
         },
         {
-          "type": "type_parameter",
+          "type": "type_parameter_list",
           "named": true
         },
         {
@@ -15671,6 +15676,25 @@
         },
         {
           "type": "postfix_type",
+          "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_constraint",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "type_expression",
           "named": true
         },
         {
@@ -15730,7 +15754,7 @@
           "named": true
         },
         {
-          "type": "type_parameter",
+          "type": "type_parameter_list",
           "named": true
         },
         {
@@ -15782,6 +15806,25 @@
         },
         {
           "type": "tuple_type",
+          "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_parameter_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -17708,7 +17751,15 @@
     "named": true
   },
   {
+    "type": "comparison",
+    "named": false
+  },
+  {
     "type": "default",
+    "named": false
+  },
+  {
+    "type": "delegate",
     "named": false
   },
   {
@@ -17737,6 +17788,14 @@
   },
   {
     "type": "end",
+    "named": false
+  },
+  {
+    "type": "enum",
+    "named": false
+  },
+  {
+    "type": "equality",
     "named": false
   },
   {
@@ -17857,8 +17916,8 @@
     "named": false
   },
   {
-    "type": "null_literal",
-    "named": true
+    "type": "null",
+    "named": false
   },
   {
     "type": "of",
@@ -17909,6 +17968,10 @@
     "named": false
   },
   {
+    "type": "struct",
+    "named": false
+  },
+  {
     "type": "symbolic_op",
     "named": true
   },
@@ -17942,7 +18005,15 @@
   },
   {
     "type": "unit",
+    "named": false
+  },
+  {
+    "type": "unit",
     "named": true
+  },
+  {
+    "type": "unmanaged",
+    "named": false
   },
   {
     "type": "upcast",
