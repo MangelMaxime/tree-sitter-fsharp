@@ -5655,6 +5655,37 @@
     }
   },
   {
+    "type": "destructure_parameter",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "record_pattern",
+          "named": true
+        },
+        {
+          "type": "struct_tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "wildcard_pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "do_stmt",
     "named": true,
     "fields": {},
@@ -13902,6 +13933,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "destructure_parameter",
+          "named": true
+        },
         {
           "type": "identifier",
           "named": true

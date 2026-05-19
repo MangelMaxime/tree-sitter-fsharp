@@ -1195,9 +1195,26 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            $.tuple_params,    // (x: int, y: int) or (x: int) — OOP-style grouped params
-            $.tuple_pattern,   // (a, b)  (Some x)  (x)
-            $.record_pattern,  // { X = x }
+            $.tuple_params,                // (x: int, y: int) or (x: int) — OOP-style grouped params
+            $.destructure_parameter,       // ((a,b): int*int)  ({X=x}: Point)
+            $.tuple_pattern,               // (a, b)  (Some x)  (x)
+            $.record_pattern,              // { X = x }
+        ),
+
+        // (pattern : type) where the inner pattern is a destructuring form, not a bare identifier.
+        // Bare-identifier form (x: int) is covered by tuple_params to avoid conflict with
+        // multi-param OOP signatures like (x: int, y: int).
+        destructure_parameter: $ => seq(
+            "(",
+            choice(
+                $.tuple_pattern,
+                $.struct_tuple_pattern,
+                $.record_pattern,
+                $.wildcard_pattern,
+            ),
+            ":",
+            $.type_expression,
+            ")",
         ),
 
         // cm^3  m^-1  (measure type raised to a power)

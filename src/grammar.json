@@ -5634,11 +5634,57 @@
         },
         {
           "type": "SYMBOL",
+          "name": "destructure_parameter"
+        },
+        {
+          "type": "SYMBOL",
           "name": "tuple_pattern"
         },
         {
           "type": "SYMBOL",
           "name": "record_pattern"
+        }
+      ]
+    },
+    "destructure_parameter": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "tuple_pattern"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "struct_tuple_pattern"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "record_pattern"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "wildcard_pattern"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ":"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_expression"
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },
