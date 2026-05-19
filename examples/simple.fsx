@@ -1293,3 +1293,21 @@ type Formatter() =
 // Optional parameters in member methods
 type Query() =
     member this.Run(sql: string, ?timeout: int) = sprintf "'%s' timeout=%d" sql (defaultArg timeout 30)
+
+// ── static let / static do ───────────────────────────────────────────────────
+
+// static let runs once when the type is first used (class-level value)
+type Counter2() =
+    static let mutable count = 0
+    static let defaultName = "unnamed"
+    static do printfn "Counter type initialized"
+    member _.Increment() = count <- count + 1
+    member _.Count = count
+    member _.DefaultName = defaultName
+
+// static let mutable with a type annotation
+type Cache<'T>() =
+    static let mutable store: Map<string, 'T> = Map.empty
+    static do printfn "Cache initialized"
+    member _.Set key value = store <- Map.add key value store
+    member _.Get key = Map.tryFind key store

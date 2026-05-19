@@ -356,7 +356,8 @@ export default grammar({
         ),
 
         // do expr  (class initializer or module-level side effect)
-        do_stmt: $ => seq("do", $._expression),
+        // static do runs once at type initialization time
+        do_stmt: $ => seq(optional("static"), "do", $._expression),
 
         // val mutable field: int  (explicit field in class)
         val_field: $ => seq(
@@ -696,6 +697,7 @@ export default grammar({
 
         let_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
+                optional("static"),
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
