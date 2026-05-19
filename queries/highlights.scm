@@ -207,6 +207,8 @@
 (type_decl
   name: (identifier) @type)
 
+(type_extension_name (identifier) @type)
+
 (measure_type_decl
   name: (identifier) @type)
 

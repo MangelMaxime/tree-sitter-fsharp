@@ -79,6 +79,9 @@ export default grammar({
         // measure_type_decl starts with "[<" (same as attribute); GLR explores both paths
         // and prec.dynamic(1) on measure_type_decl in _token selects it when it succeeds.
         [$.attribute, $.measure_type_decl],
+        // After "type identifier", both type_decl and type_extension_name are viable.
+        // GLR explores both; "=" resolves to type_decl, "with" resolves to type_extension.
+        [$.type_decl, $.type_extension_name],
     ],
 
 
@@ -170,6 +173,32 @@ export default grammar({
             "=",
             optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
         )),
+
+        // type Foo with              — simple (intrinsic) extension
+        // type Foo<'T> with          — generic extension
+        // type System.String with    — optional (external) extension
+        // Body members appear as flat _token siblings (same as class bodies).
+        //
+        // A named node for the type extension name avoids the issue where an
+        // anonymous choice(seq(...)) propagates multiple "name:" labels to child
+        // identifiers, causing query `name: (identifier)` to only match the first.
+        // With a named rule, `field('name', $.type_extension_name)` produces a single
+        // "name:" field, and `(type_extension_name (identifier))` captures all idents.
+        //
+        // LALR disambiguation from type_decl:
+        //   - Qualified (dot-separated): type_decl fails immediately at "."
+        //   - Simple: disambiguated by "with" vs "=" after optional type_parameter_list
+        type_extension: $ => seq(
+            "type",
+            field('name', $.type_extension_name),
+            optional($.type_parameter_list),
+            "with",
+        ),
+
+        type_extension_name: $ => choice(
+            seq($.identifier, repeat1(seq(".", $.identifier))),  // qualified: System.String
+            $.identifier,                                          // simple: Foo
+        ),
 
         // (x: int, y: string)  in  type Foo(x: int, y: string) =
         primary_constructor: $ => seq(
@@ -1184,6 +1213,7 @@ export default grammar({
             $.module_decl,
             $.import_decl,
             $.type_decl,
+            $.type_extension,
             $.exception_decl,
             $.let_binding,
             $.use_binding,

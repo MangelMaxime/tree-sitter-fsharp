@@ -496,6 +496,73 @@
         ]
       }
     },
+    "type_extension": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "type"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "type_extension_name"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "type_parameter_list"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "with"
+        }
+      ]
+    },
+    "type_extension_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "REPEAT1",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "."
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "identifier"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        }
+      ]
+    },
     "primary_constructor": {
       "type": "SEQ",
       "members": [
@@ -5785,6 +5852,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "type_extension"
+        },
+        {
+          "type": "SYMBOL",
           "name": "exception_decl"
         },
         {
@@ -7059,6 +7130,10 @@
     [
       "attribute",
       "measure_type_decl"
+    ],
+    [
+      "type_decl",
+      "type_extension_name"
     ]
   ],
   "precedences": [],

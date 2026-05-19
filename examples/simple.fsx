@@ -294,12 +294,6 @@ type Color =
     | Blue
 
 // Enum type definitions
-type Direction =
-    | North = 0
-    | South = 1
-    | East = 2
-    | West = 3
-
 type FilePermission =
     | None = 0
     | Read = 1
@@ -519,9 +513,9 @@ type Cat(name: string) =
         member this.Name = name
         member this.Sound() = "Meow!"
 
-type Wrapper<'T>(value: 'T) =
+type Wrapper2<'T>(value: 'T) =
     member this.Value = value
-    member this.Map (f: 'T -> 'T) = Wrapper(f value)
+    member this.Map (f: 'T -> 'T) = Wrapper2(f value)
 
 type MathHelperClass =
     static member Square x = x * x
@@ -1021,7 +1015,7 @@ let greet (name: string) =
 // ── Generic type constraints ──────────────────────────────────────────────────
 
 // Subtype constraint: 'T must implement IComparable
-type Wrapper2<'T when 'T :> System.IComparable> = { value: 'T }
+type Wrapper4<'T when 'T :> System.IComparable> = { value: 'T }
 
 // Comparison constraint on a function
 let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
@@ -1047,3 +1041,48 @@ type Factory<'T when 'T : (new : unit -> 'T)> = { create: unit -> 'T }
 // Multiple constraints with and
 type Container<'T, 'U when 'T : comparison and 'U : equality> =
     { key: 'T; value: 'U }
+
+// ── Type extensions ───────────────────────────────────────────────────────────
+
+// Intrinsic extension — adds members to a type defined in the same module
+type Counter with
+    member this.IsZero = counter = 0
+
+// Generic type extension with a constraint
+type Wrapper3<'T when 'T : equality>(value: 'T) =
+    class end
+
+type Wrapper3<'T when 'T : equality> with
+    member this.Contains (x: 'T) (xs: 'T list) = List.contains x xs
+
+// Extension with static and instance members
+type Color with
+    static member Random () = Red
+    member this.IsWarm =
+        match this with
+        | Red -> true
+        | _ -> false
+
+type Direction =
+    | North
+    | South
+    | West
+    | East
+
+// Extension with multiple members
+type Direction with
+    member this.Opposite =
+        match this with
+        | North -> South
+        | South -> North
+        | East -> West
+        | West -> East
+
+    member this.IsVertical =
+        match this with
+        | North | South -> true
+        | _ -> false
+
+type System.String with
+
+    static member Additional () = failwith ""

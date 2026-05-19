@@ -2783,6 +2783,70 @@ match t with
       (int_literal))))
 
 ================================================================================
+Type extension simple
+================================================================================
+
+type Counter with
+    member this.Reset() = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier)))
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    parameters: (parameter (unit))
+    (unit)))
+
+================================================================================
+Type extension qualified name
+================================================================================
+
+type System.String with
+    member this.IsEmpty = this.Length = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier)
+      (identifier)))
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    (comparison_expression
+      (long_identifier (identifier) (identifier))
+      (int_literal))))
+
+================================================================================
+Type extension with type constraint
+================================================================================
+
+type Wrapper<'T when 'T : comparison> with
+    member this.IsEmpty xs = List.isEmpty xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier))
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint (type_parameter))))
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (application_expression
+      (long_identifier (identifier) (identifier))
+      (long_identifier (identifier)))))
+
+================================================================================
 Type constraint subtype
 ================================================================================
 
