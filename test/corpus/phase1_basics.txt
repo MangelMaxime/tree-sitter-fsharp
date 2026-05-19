@@ -2246,3 +2246,75 @@ let (|>) a f = f a
     (application_expression
       (long_identifier (identifier))
       (long_identifier (identifier)))))
+
+================================================================================
+Anonymous record expression single field
+================================================================================
+
+let p = {| X = 1.0 |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (anonymous_record_expression
+      (record_field
+        name: (long_identifier (identifier))
+        value: (float_literal)))))
+
+================================================================================
+Anonymous record expression multiple fields
+================================================================================
+
+let alice = {| Name = "Alice"; Age = 30 |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (anonymous_record_expression
+      (record_field
+        name: (long_identifier (identifier))
+        value: (string_literal))
+      (record_field
+        name: (long_identifier (identifier))
+        value: (int_literal)))))
+
+================================================================================
+Anonymous record copy-update expression
+================================================================================
+
+let bob = {| alice with Name = "Bob" |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (anonymous_record_expression
+      base: (long_identifier (identifier))
+      (record_field
+        name: (long_identifier (identifier))
+        value: (string_literal)))))
+
+================================================================================
+Anonymous record type alias
+================================================================================
+
+type Point = {| X: float; Y: float |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (anonymous_record_type
+        (record_type_field
+          name: (identifier)
+          type: (type_expression (long_identifier (identifier))))
+        (record_type_field
+          name: (identifier)
+          type: (type_expression (long_identifier (identifier))))))))

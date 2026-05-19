@@ -854,7 +854,7 @@ let debug_value = false
 let complex_condition = true
 #endif
 
-#load "helper.fsx"
+// #load "helper.fsx"
 #r "nuget: Newtonsoft.Json"
 
 // ── Backtick-quoted identifiers ───────────────────────────────────────────────
@@ -871,3 +871,53 @@ let b =
         ignore Box.``box--indented``
     else
         ()
+
+// ── Anonymous record types ────────────────────────────────────────────────────
+
+type NamedPoint =
+    {|
+        X: float
+        Y: float
+    |}
+
+type PersonInfo =
+    {|
+        Name: string
+        Age: int
+        Email: string option
+    |}
+
+let origin
+    : {|
+          X: float
+          Y: float
+      |} =
+    {|
+        X = 0.0
+        Y = 0.0
+    |}
+
+let alice =
+    {|
+        Name = "Alice"
+        Age = 30
+    |}
+
+let bob =
+    {| alice with
+        Name = "Bob"
+        Age = 25
+    |}
+
+let greetAnon
+    (p:
+        {|
+            Name: string
+        |})
+    =
+    printfn "Hello, %s!" p.Name
+
+greetAnon
+    {|
+        Name = "Charlie"
+    |}

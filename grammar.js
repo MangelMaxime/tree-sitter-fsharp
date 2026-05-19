@@ -334,6 +334,7 @@ export default grammar({
             $.generic_type,
             $.array_type,
             $.parenthesized_type,
+            $.anonymous_record_type,
             $.type_parameter,
             $.long_identifier,
         ),
@@ -346,6 +347,15 @@ export default grammar({
             field('name', $.identifier),
             "=",
             field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
+        ),
+
+        // {| Name: string; Age: int |}  (anonymous record type expression)
+        anonymous_record_type: $ => seq(
+            "{|",
+            $.record_type_field,
+            repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(optional(";"), $.record_type_field))),
+            optional(";"),
+            "|}",
         ),
 
         record_type_defn: $ => seq(
@@ -382,6 +392,7 @@ export default grammar({
             $.list_expression,
             $.array_expression,
             $.record_expression,
+            $.anonymous_record_expression,
             $.tuple_expression,
             $.int_literal,
             $.float_literal,
@@ -440,6 +451,7 @@ export default grammar({
             $.list_expression,
             $.array_expression,
             $.record_expression,
+            $.anonymous_record_expression,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -533,6 +545,26 @@ export default grammar({
         // prec.dynamic(APP_EXPR + 1) on the repeat body resolves the GLR conflict: when `Y`
         // could either start a new field or be consumed as a function argument to the previous
         // field's value, prefer starting a new field.
+        // {| Name = "Alice"; Age = 30 |}  or  {| r with Name = "Bob" |}
+        anonymous_record_expression: $ => seq(
+            "{|",
+            choice(
+                seq(
+                    field('base', $._simple_expression),
+                    "with",
+                    $.record_field,
+                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
+                    optional(";"),
+                ),
+                seq(
+                    $.record_field,
+                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
+                    optional(";"),
+                ),
+            ),
+            "|}",
+        ),
+
         record_expression: $ => seq(
             "{",
             choice(
@@ -999,6 +1031,7 @@ export default grammar({
             $.generic_type,
             $.array_type,
             $.parenthesized_type,
+            $.anonymous_record_type,
             $.type_parameter,
             $.long_identifier,
         ),
