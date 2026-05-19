@@ -1346,3 +1346,28 @@ type Transformer<'a, 'b> = delegate of 'a -> 'b
 //         and! c = async { return 3 }
 //         return a + b + c
 //     }
+
+// ── Struct tuples ─────────────────────────────────────────────────────────────
+
+// struct tuple expressions
+let st_pair = struct (1, 2)
+let st_mixed = struct ("hello", 42)
+
+// struct tuple types
+type Point3D =
+    struct
+        val x: float
+        val y: float
+        val z: float
+    end
+
+let st_typed (x: struct (int * string)) = x
+
+// struct tuple pattern in match
+let st_describe t =
+    match t with
+    | struct (0, _) -> "zero first"
+    | struct (a, b) -> sprintf "%d, %d" a b
+
+// struct tuple destructure in let
+let struct (sx, sy) = struct (10, 20)

@@ -29,6 +29,7 @@
   "begin" "end"
   "function"
   "delegate"
+  "struct"
 ] @keyword
 
 [

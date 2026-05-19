@@ -391,6 +391,10 @@
                     "name": "delegate_type_defn"
                   },
                   {
+                    "type": "SYMBOL",
+                    "name": "struct_type_defn"
+                  },
+                  {
                     "type": "FIELD",
                     "name": "alias",
                     "content": {
@@ -494,6 +498,10 @@
                   {
                     "type": "SYMBOL",
                     "name": "delegate_type_defn"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "struct_type_defn"
                   },
                   {
                     "type": "FIELD",
@@ -1726,6 +1734,26 @@
         "name": "enum_case"
       }
     },
+    "struct_type_defn": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "struct"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_token"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "end"
+        }
+      ]
+    },
     "delegate_type_defn": {
       "type": "SEQ",
       "members": [
@@ -2213,6 +2241,59 @@
           {
             "type": "SYMBOL",
             "name": "ce_do_bang_expr"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "struct_tuple_expression"
+          }
+        ]
+      }
+    },
+    "struct_tuple_expression": {
+      "type": "PREC",
+      "value": 21,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "struct"
+          },
+          {
+            "type": "STRING",
+            "value": "("
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "STRING",
+            "value": ","
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              ]
+            }
+          },
+          {
+            "type": "STRING",
+            "value": ")"
           }
         ]
       }
@@ -3254,6 +3335,10 @@
                 },
                 {
                   "type": "SYMBOL",
+                  "name": "struct_tuple_pattern"
+                },
+                {
+                  "type": "SYMBOL",
                   "name": "record_pattern"
                 },
                 {
@@ -3397,6 +3482,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "tuple_pattern"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "struct_tuple_pattern"
                 },
                 {
                   "type": "SYMBOL",
@@ -3548,6 +3637,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "tuple_pattern"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "struct_tuple_pattern"
                 },
                 {
                   "type": "SYMBOL",
@@ -4513,6 +4606,10 @@
                 },
                 {
                   "type": "SYMBOL",
+                  "name": "struct_tuple_pattern"
+                },
+                {
+                  "type": "SYMBOL",
                   "name": "record_pattern"
                 },
                 {
@@ -4567,6 +4664,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "tuple_pattern"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "struct_tuple_pattern"
                 },
                 {
                   "type": "SYMBOL",
@@ -4856,6 +4957,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "struct_tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
           "name": "typed_pattern"
         },
         {
@@ -4881,6 +4986,43 @@
         {
           "type": "SYMBOL",
           "name": "named_field_pattern"
+        }
+      ]
+    },
+    "struct_tuple_pattern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "struct"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "pattern"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "SYMBOL",
+                "name": "pattern"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },
@@ -5585,6 +5727,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "struct_tuple_type"
+        },
+        {
+          "type": "SYMBOL",
           "name": "postfix_type"
         },
         {
@@ -5614,6 +5760,27 @@
         {
           "type": "SYMBOL",
           "name": "long_identifier"
+        }
+      ]
+    },
+    "struct_tuple_type": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "struct"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_type"
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },

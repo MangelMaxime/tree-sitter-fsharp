@@ -165,7 +165,7 @@ export default grammar({
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
             // can't start a type_expression, so the parser naturally reduces with empty body and
             // the body tokens appear flat at the source_file level.
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
             repeat($.type_and_decl),
         )),
 
@@ -177,7 +177,7 @@ export default grammar({
             optional($.type_parameter_list),
             optional($.tuple_params),
             "=",
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
         )),
 
         // type Foo with              — simple (intrinsic) extension
@@ -408,6 +408,11 @@ export default grammar({
         // type Color = | Red = 0 | Green = 1 | Blue = 2
         enum_type_defn: $ => repeat1($.enum_case),
 
+        // type Point3D = struct val x: float … end
+        // Body is a flat repeat of _token (same approach as class bodies).
+        // "end" is only lexed as a keyword once this rule exists in the grammar.
+        struct_type_defn: $ => seq("struct", repeat($._token), "end"),
+
         // type MyDelegate = delegate of int -> string
         // type Handler = delegate of (obj * EventArgs) -> unit
         delegate_type_defn: $ => seq(
@@ -518,6 +523,18 @@ export default grammar({
             $.ce_yield_expr,
             $.ce_yield_bang_expr,
             $.ce_do_bang_expr,
+            $.struct_tuple_expression,
+        )),
+
+        // struct (a, b)  struct (a, b, c)
+        struct_tuple_expression: $ => prec(PREC.PAREN_EXPR, seq(
+            "struct",
+            "(",
+            $._expression,
+            ",",
+            $._expression,
+            repeat(seq(",", $._expression)),
+            ")",
         )),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
@@ -713,7 +730,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -731,7 +748,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -748,7 +765,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -962,7 +979,7 @@ export default grammar({
         // let! x = expr [and! y = expr ...]  — parallel applicative binding
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("let!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression,
             repeat($.ce_and_bang_expr),
             ),
@@ -971,7 +988,7 @@ export default grammar({
         // and! y = expr  — continuation of a parallel let! group
         ce_and_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("and!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression),
         ),
 
@@ -1030,6 +1047,7 @@ export default grammar({
             $.cons_pattern,
             $.or_pattern,
             $.tuple_pattern,
+            $.struct_tuple_pattern,
             $.typed_pattern,
             $.as_pattern,
             $.list_pattern,
@@ -1037,6 +1055,15 @@ export default grammar({
             $.type_check_pattern,
             $.record_pattern,
             $.named_field_pattern,
+        ),
+
+        // struct (a, b)  — destructure a struct tuple in match/let
+        struct_tuple_pattern: $ => seq(
+            "struct",
+            "(",
+            $.pattern,
+            repeat(seq(",", $.pattern)),
+            ")",
         ),
 
         // Constructor(field = pat; field2 = pat2)  — named DU field pattern
@@ -1196,6 +1223,7 @@ export default grammar({
         type_expression: $ => choice(
             $.function_type,
             $.tuple_type,
+            $.struct_tuple_type,
             $.postfix_type,
             $.generic_type,
             $.array_type,
@@ -1205,6 +1233,9 @@ export default grammar({
             $.type_parameter,
             $.long_identifier,
         ),
+
+        // struct (int * string)  — value-type tuple type
+        struct_tuple_type: $ => seq("struct", "(", $.tuple_type, ")"),
 
         // int -> string  (right-assoc: int -> string -> bool = int -> (string -> bool))
         function_type: $ => prec.right(TYPE_PREC.FUNCTION, seq(
