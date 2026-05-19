@@ -1207,3 +1207,50 @@ let describe (obj: obj) =
     | :? int | :? float -> "numeric"
     | :? string -> "text"
     | _ -> "other"
+
+// ── Typed expressions (expr : type) ─────────────────────────────────────────
+
+let te_int    = (42 : int)
+let te_list   = ([] : int list)
+let te_result = (failwith "todo" : Result<int, string>)
+let te_nested = ((1 + 2) : int)
+
+// As a function argument
+let te_arg = string (42 : int)
+
+// ── For-loop pattern destructuring ──────────────────────────────────────────
+
+let pairs = [(1, "a"); (2, "b")]
+
+for (k, v) in pairs do
+    printfn "%d %s" k v
+
+for _ in [1; 2; 3] do
+    printfn "tick"
+
+let points = [{ X = 0; Y = 0 }; { X = 1; Y = 2 }]
+
+for { X = x; Y = y } in points do
+    printfn "(%d, %d)" x y
+
+// ── Typed patterns ───────────────────────────────────────────────────────────
+
+// In match arms
+let tp_match (x: int) =
+    match x with
+    | (n : int) -> string n
+
+// In function parameters
+let tp_simple (x : int) = x * 2
+let tp_tuple ((a, b) : int * int) = a + b
+let tp_record ({ X = x; Y = y } : Point) = x + y
+
+// In let bindings
+let (n : int) = 42
+
+// ── Unary ! (ref cell dereference) ──────────────────────────────────────────
+
+let cell = ref 0
+let v = !cell
+let double_deref r s = !r + !s
+cell.Value <- !cell + 1

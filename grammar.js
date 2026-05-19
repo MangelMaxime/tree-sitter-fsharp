@@ -430,6 +430,7 @@ export default grammar({
 
         _expression: $ => prec(PREC.RARROW, choice(
             $.parenthesized_expression,
+            $.typed_expression,
             $.application_expression,
             $.pipe_expression,
             $.or_expression,
@@ -496,6 +497,10 @@ export default grammar({
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
+        // (expr : type)  — inline type annotation, always parenthesised.
+        // Disambiguated from parenthesized_expression by the ":" after the expression.
+        typed_expression: $ => seq("(", $._expression, ":", $.type_expression, ")"),
+
         // Second argument is restricted to simple expressions (no let/if/match/lambda/operators)
         // so that `let x = 1\nlet y = 2` doesn't try to parse the second `let` as an argument.
         application_expression: $ => prec.left(PREC.APP_EXPR, seq(
@@ -505,6 +510,7 @@ export default grammar({
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
+            $.typed_expression,
             $.list_expression,
             $.array_expression,
             $.record_expression,
@@ -568,7 +574,7 @@ export default grammar({
         )),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
-            choice("not", "~~~", "-"),
+            choice("not", "~~~", "-", "!"),
             $._expression,
         )),
 
@@ -681,7 +687,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -699,7 +705,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -716,7 +722,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -878,8 +884,14 @@ export default grammar({
         // ── For / While ───────────────────────────────────────────────────────
 
         // for x in xs do body   (foreach loop)
+        // Pattern forms: for (k, v) in map do   for { X = x } in pts do   for _ in xs do
         for_expression: $ => prec.right(PREC.IF_EXPR,
-            seq("for", $.identifier, "in", $._expression, "do", $._expression),
+            seq("for", choice(
+                $.identifier,
+                $.wildcard_pattern,
+                $.tuple_pattern,
+                $.record_pattern,
+            ), "in", $._expression, "do", $._expression),
         ),
 
         // for i = start to end do body  (range loop)
@@ -924,7 +936,7 @@ export default grammar({
         // let! x = expr  or  let! (a, b) = expr
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("let!", field('name', choice(
-                $.identifier, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression),
         ),
 
@@ -983,6 +995,7 @@ export default grammar({
             $.cons_pattern,
             $.or_pattern,
             $.tuple_pattern,
+            $.typed_pattern,
             $.as_pattern,
             $.list_pattern,
             $.array_pattern,
@@ -1013,6 +1026,10 @@ export default grammar({
         // Used both as nested sub-patterns and at the top level of match arms (replaces the old
         // repeat(seq("|", pattern)) in match_arm, which was ambiguous once or_pattern was in scope).
         or_pattern: $ => prec.left(1, seq($.pattern, "|", $.pattern)),
+
+        // (pat : type)  — explicit type annotation on a pattern, always parenthesised.
+        // Used in match arms and as function parameters.
+        typed_pattern: $ => seq("(", $.pattern, ":", $.type_expression, ")"),
 
         // { Field = pat; Field2 = pat2 }  (destructure a record in a match arm)
         // prec.dynamic(2) in the repeat body: when a bare identifier follows a DU
@@ -1108,7 +1125,7 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            seq("(", $.identifier, ":", $.type_expression, ")"),
+            $.typed_pattern,   // (x: int)  ((a,b): int*int)
             $.tuple_pattern,   // (a, b)  (Some x)  (x)
             $.record_pattern,  // { X = x }
         ),
