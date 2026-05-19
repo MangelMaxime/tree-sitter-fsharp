@@ -38,7 +38,10 @@
   "public"
 ] @keyword.control.access
 
-["not" "upcast" "downcast" "nameof"] @keyword.operator
+["not" "upcast" "downcast" "nameof" "sizeof" "typeof" "typedefof"] @keyword.operator
+
+(address_of_expression "&" @operator)
+(optional_named_arg "?" @operator)
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)

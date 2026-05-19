@@ -1106,6 +1106,10 @@ type System.String with
 let (a, bb) = (1, 2)
 let (xx, y, z) = (1, 2, 3)
 
+// Unparenthesized tuple destructure
+let u1, u2 = 1, 2
+let u3, u4, u5 = 1, 2, 3
+
 // Record destructure
 let { X = px; Y = py } = { X = 10; Y = 20 }
 
@@ -1411,3 +1415,50 @@ let q_raw2 = <@@ 42 @@>
 
 // Nested: quotation inside a function
 let makeQuotation () = <@ 1 + 2 @>
+
+// ── namespace rec ─────────────────────────────────────────────────────────────
+
+// (namespace rec is only valid at file scope; demonstrated as a comment here
+//  since this file already has a module declaration at line 2)
+// namespace rec MyApp.Domain
+
+// ── Object expression without 'with' ─────────────────────────────────────────
+
+// Minimal object expression — no member overrides
+let obj_no_with =
+    { new System.IDisposable with
+        member _.Dispose() = ()
+    }
+
+// IComparable with just the one required member, no extra members
+let obj_comparable =
+    { new System.IComparable with
+        member _.CompareTo(_) = 0
+    }
+
+// ── Optional named argument reference (?ident) ───────────────────────────────
+
+// ?param = optValue passes an already-wrapped option to an optional parameter
+let maybeTimeout: int option = Some 60
+let _opt_call = Query().Run("SELECT 1", ?timeout = maybeTimeout)
+
+// ── Address-of (&x) ──────────────────────────────────────────────────────────
+
+// &x passes a byref/ref argument; typical use with interop/threading APIs
+let mutable addr_n = 0
+let _addr_result = System.Threading.Interlocked.Increment(&addr_n)
+
+// ── sizeof / typeof / typedefof ───────────────────────────────────────────────
+
+let size_int    = sizeof<int>
+let size_float  = sizeof<float>
+let type_int    = typeof<int>
+let type_string = typeof<string>
+let typedef_list = typedefof<int list>
+let typedef_map  = typedefof<Map<string, int>>
+
+
+type HolderWithDefault() =
+    [<DefaultValue>]
+    val mutable Score: int
+    [<DefaultValue>] val mutable A: int

@@ -97,6 +97,7 @@ export default grammar({
         // namespace Foo.Bar  or  namespace global
         namespace_decl: $ => seq(
             "namespace",
+            optional("rec"),
             choice("global", field('name', $.long_identifier)),
         ),
 
@@ -526,6 +527,11 @@ export default grammar({
             $.struct_tuple_expression,
             $.typed_quotation,
             $.untyped_quotation,
+            $.optional_named_arg,
+            $.address_of_expression,
+            $.sizeof_expression,
+            $.typeof_expression,
+            $.typedefof_expression,
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -544,6 +550,17 @@ export default grammar({
 
         // <@@ expr @@>  — untyped quotation (Expr)
         untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression, "@@>")),
+
+        // ?identifier — optional named argument reference  f(?name = Some value)
+        optional_named_arg: $ => seq("?", $.identifier),
+
+        // &expr — address-of / byref argument  someFunc(&mutableVal)
+        address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._expression)),
+
+        // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics
+        sizeof_expression: $ => seq("sizeof", "<", $.type_expression, ">"),
+        typeof_expression: $ => seq("typeof", "<", $.type_expression, ">"),
+        typedefof_expression: $ => seq("typedefof", "<", $.type_expression, ">"),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
@@ -738,7 +755,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -756,7 +773,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -773,7 +790,7 @@ export default grammar({
                 optional(choice("inline", "mutable")),
                 field('name', choice(
                     $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
@@ -894,8 +911,10 @@ export default grammar({
                 optional(seq($._expression, repeat(seq(",", $._expression)))),
                 ")",
             )),
-            "with",
-            repeat(choice($.member_defn, $.interface_impl)),
+            optional(seq(
+                "with",
+                repeat(choice($.member_defn, $.interface_impl)),
+            )),
             "}",
         ),
 
@@ -987,7 +1006,7 @@ export default grammar({
         // let! x = expr [and! y = expr ...]  — parallel applicative binding
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("let!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.wildcard_pattern,
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression,
             repeat($.ce_and_bang_expr),
             ),
@@ -996,7 +1015,7 @@ export default grammar({
         // and! y = expr  — continuation of a parallel let! group
         ce_and_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("and!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.record_pattern, $.wildcard_pattern,
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression),
         ),
 
@@ -1165,6 +1184,34 @@ export default grammar({
             $.pattern,
             repeat(seq(",", $.pattern)),
             ")",
+        ),
+
+        // Restricted element for unparenthesized tuple patterns.
+        // Excludes identifier_pattern's constructor-application form (long_identifier followed
+        // by a pattern) which would greedily consume `add a b` in `let add a b = ...` before
+        // the parser discovers there is no `,` to form a tuple. Uses long_identifier directly
+        // for bare names; other forms are all unambiguously delimited by a leading token.
+        _tuple_elem_pattern: $ => choice(
+            $.long_identifier,
+            $.wildcard_pattern,
+            $.literal_pattern,
+            $.tuple_pattern,
+            $.struct_tuple_pattern,
+            $.typed_pattern,
+            $.record_pattern,
+            $.list_pattern,
+            $.array_pattern,
+        ),
+
+        // a, b  or  a, b, c — bare tuple pattern without outer parens.
+        // Valid as the name in let/let!/and! bindings: let a, b = 1, 2
+        // Not added to $.pattern to avoid conflicts in match arms, which already
+        // handle comma-separated patterns via match_arm's own repeat.
+        unparenthesized_tuple_pattern: $ => seq(
+            $._tuple_elem_pattern,
+            ",",
+            $._tuple_elem_pattern,
+            repeat(seq(",", $._tuple_elem_pattern)),
         ),
 
         as_pattern: $ => prec.right(seq(
