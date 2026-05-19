@@ -2689,3 +2689,95 @@ $"{now:``yyyy-MM-dd``}"
     (interpolation
       (long_identifier (identifier))
       (format_string))))
+
+================================================================================
+Unparenthesized tuple pattern basic
+================================================================================
+
+match t with
+| true, n -> n
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern (literal_pattern (bool_literal)))
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (long_identifier (identifier)))
+    (match_arm
+      (pattern (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Unparenthesized tuple pattern three elements
+================================================================================
+
+match t with
+| a, b, c -> a
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (long_identifier (identifier)))
+    (match_arm
+      (pattern (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Unparenthesized tuple pattern with OR alternatives
+================================================================================
+
+match t with
+| 1, 2 | 3, 4 -> "yes"
+| _ -> "no"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern (literal_pattern (int_literal)))
+      (pattern (literal_pattern (int_literal)))
+      (pattern (literal_pattern (int_literal)))
+      (pattern (literal_pattern (int_literal)))
+      (string_literal))
+    (match_arm
+      (pattern (wildcard_pattern))
+      (string_literal))))
+
+================================================================================
+Unparenthesized tuple pattern with when guard
+================================================================================
+
+match t with
+| a, b when a > 0 -> a + b
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier (identifier))
+    (match_arm
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (pattern (identifier_pattern (long_identifier (identifier))))
+      (comparison_expression
+        (long_identifier (identifier))
+        (int_literal))
+      (additive_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))
+    (match_arm
+      (pattern (wildcard_pattern))
+      (int_literal))))

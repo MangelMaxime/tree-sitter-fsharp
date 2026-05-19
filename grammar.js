@@ -923,7 +923,8 @@ export default grammar({
         match_arm: ($) => seq(
             "|",
             $.pattern,
-            repeat(seq("|", $.pattern)),
+            repeat(seq(",", $.pattern)),
+            repeat(seq("|", $.pattern, repeat(seq(",", $.pattern)))),
             optional(seq("when", $._expression)),
             "->",
             $._expression,
