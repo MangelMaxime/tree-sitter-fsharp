@@ -959,9 +959,18 @@ export default grammar({
             $._expression,  // covers return/yield/return!/yield!/for/while/if/match/…
         ),
 
-        // let! x = expr  or  let! (a, b) = expr
+        // let! x = expr [and! y = expr ...]  — parallel applicative binding
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
             seq("let!", field('name', choice(
+                $.identifier, $.typed_pattern, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
+            )), "=", $._expression,
+            repeat($.ce_and_bang_expr),
+            ),
+        ),
+
+        // and! y = expr  — continuation of a parallel let! group
+        ce_and_bang_expr: $ => prec.right(PREC.LET_DECL,
+            seq("and!", field('name', choice(
                 $.identifier, $.typed_pattern, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
             )), "=", $._expression),
         ),

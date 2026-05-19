@@ -23,7 +23,7 @@
   "use"
   "new"
   "exception"
-  "let!" "do!" "use!"
+  "let!" "do!" "use!" "and!"
   "get" "set" "and"
   "lazy" "assert"
   "begin" "end"

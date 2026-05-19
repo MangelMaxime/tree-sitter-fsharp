@@ -1319,3 +1319,30 @@ type IntToString = delegate of int -> string
 type Action = delegate of unit -> unit
 type BinaryOp = delegate of (int * int) -> int
 type Transformer<'a, 'b> = delegate of 'a -> 'b
+
+// ── and! in computation expressions ──────────────────────────────────────────
+
+// // Parallel applicative binding — two tasks run concurrently
+// let parallelResult =
+//     async {
+//         let! a = async { return 1 }
+//         and! b = async { return 2 }
+//         return a + b
+//     }
+
+// // Multiple and! clauses
+// let parallelTriple =
+//     async {
+//         let! x = async { return "hello" }
+//         and! y = async { return 42 }
+//         and! z = async { return true }
+//         return x, y, z
+//     }
+
+// // and! with tuple pattern destructuring
+// let parallelDestructure =
+//     async {
+//         let! (a, b) = async { return (1, 2) }
+//         and! c = async { return 3 }
+//         return a + b + c
+//     }
