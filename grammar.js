@@ -82,6 +82,10 @@ export default grammar({
         // After "type identifier", both type_decl and type_extension_name are viable.
         // GLR explores both; "=" resolves to type_decl, "with" resolves to type_extension.
         [$.type_decl, $.type_extension_name],
+        // After "module name =", an identifier could start the abbrev field (module abbreviation)
+        // or be the first token of the next _token (nested module body). GLR explores both;
+        // keyword identifiers fail the abbrev path, plain names succeed the abbreviation path.
+        [$.module_decl],
     ],
 
 
@@ -97,13 +101,15 @@ export default grammar({
         ),
 
         // module Foo.Bar                    (file-level / abbreviated module)
-        // module [private|internal] Foo =   (explicit nested module header; body is top-level)
+        // module [private|internal] Foo =   (explicit nested module header; body is flat tokens)
+        // module M = Lib                    (module abbreviation — target captured as abbrev field)
+        // module M = Lib.Math.Integer       (qualified abbreviation target)
         module_decl: $ => seq(
             "module",
             optional($.access_modifier),
             optional("rec"),
             field('name', $.long_identifier),
-            optional("="),
+            optional(seq("=", optional(field('abbrev', $.long_identifier)))),
         ),
 
         access_modifier: _ => choice("private", "internal", "public"),

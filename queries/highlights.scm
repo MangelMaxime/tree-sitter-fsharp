@@ -180,6 +180,9 @@
 (module_decl
   name: (long_identifier) @namespace)
 
+; module M = Lib  /  module M = Lib.Math.Integer  — abbreviation target
+(module_decl abbrev: (long_identifier) @namespace)
+
 (import_decl
   [
     (long_identifier) @namespace

@@ -11422,6 +11422,16 @@
     "type": "module_decl",
     "named": true,
     "fields": {
+      "abbrev": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,

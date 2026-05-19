@@ -456,6 +456,15 @@ let record_nested =
             }
     }
 
+module Lib =
+    module Math =
+        module Integer =
+            let x = 1
+
+// Module abbreviations (aliases)
+module L = Lib
+module LMI = Lib.Math.Integer
+
 // Nested modules (valid in .fsx scripts)
 module MathUtils =
     let square x = x * x

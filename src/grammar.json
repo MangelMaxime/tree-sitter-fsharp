@@ -104,8 +104,29 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "STRING",
-              "value": "="
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "="
+                },
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "FIELD",
+                      "name": "abbrev",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "long_identifier"
+                      }
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                }
+              ]
             },
             {
               "type": "BLANK"
@@ -7155,6 +7176,9 @@
     [
       "type_decl",
       "type_extension_name"
+    ],
+    [
+      "module_decl"
     ]
   ],
   "precedences": [],
