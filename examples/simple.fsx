@@ -722,7 +722,11 @@ let task_result =
 //         return x
 //     }
 
-// use / use! inside CE
+// use in expression body (auto-dispose)
+let readFile (path: string) =
+    use reader = new System.IO.StreamReader(path)   // reader.Dispose() called automatically
+    reader.ReadToEnd()
+
 let async_use =
     async {
         use resource = new System.IO.MemoryStream()

@@ -2958,3 +2958,56 @@ let n = nameof (Some x)
         (application_expression
           (long_identifier (identifier))
           (long_identifier (identifier)))))))
+
+================================================================================
+Use expression in function body
+================================================================================
+
+let f () =
+    use r = openFile()
+    r.Read()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (unit))
+    (use_expression
+      name: (identifier)
+      (application_expression
+        (application_expression
+          (application_expression
+            (long_identifier (identifier))
+            (unit))
+          (long_identifier (identifier) (identifier)))
+        (unit)))))
+
+================================================================================
+Use expression in member body
+================================================================================
+
+type T() =
+    member this.Run() =
+        use r = openFile()
+        r.Read()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor))
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    parameters: (parameter (unit))
+    (use_expression
+      name: (identifier)
+      (application_expression
+        (application_expression
+          (application_expression
+            (long_identifier (identifier))
+            (unit))
+          (long_identifier (identifier) (identifier)))
+        (unit)))))

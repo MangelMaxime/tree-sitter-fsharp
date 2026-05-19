@@ -267,3 +267,4 @@
 (ce_let_bang_expr name: (identifier) @variable)
 (ce_use_bang_expr name: (identifier) @variable)
 (use_binding name: (identifier) @variable)
+(use_expression name: (identifier) @variable)

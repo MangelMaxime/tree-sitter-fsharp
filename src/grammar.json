@@ -1964,6 +1964,10 @@
           },
           {
             "type": "SYMBOL",
+            "name": "use_expression"
+          },
+          {
+            "type": "SYMBOL",
             "name": "computation_expression"
           },
           {
@@ -3374,6 +3378,35 @@
         ]
       }
     },
+    "use_expression": {
+      "type": "PREC_RIGHT",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "use"
+          },
+          {
+            "type": "FIELD",
+            "name": "name",
+            "content": {
+              "type": "SYMBOL",
+              "name": "identifier"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "="
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
     "set_expression": {
       "type": "PREC_RIGHT",
       "value": 16,
@@ -4227,18 +4260,6 @@
           {
             "type": "STRING",
             "value": "use"
-          },
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "rec"
-              },
-              {
-                "type": "BLANK"
-              }
-            ]
           },
           {
             "type": "FIELD",

@@ -457,6 +457,7 @@ export default grammar({
             $.match_expression,
             $.lambda_expression,
             $.let_expression,
+            $.use_expression,
             $.computation_expression,
             $.for_expression,
             $.for_range_expression,
@@ -712,6 +713,12 @@ export default grammar({
             ),
         ),
 
+        // use r = resource   (in expression bodies; auto-disposes r at end of scope)
+        // The body $._expression greedily absorbs the continuation when there is no `in`.
+        use_expression: $ => prec.right(PREC.LET_EXPR,
+            seq("use", field('name', $.identifier), "=", $._expression),
+        ),
+
         // x <- value   (mutable assignment)
         set_expression: $ => prec.right(PREC.LARROW,
             seq($._expression, "<-", $._expression),
@@ -909,7 +916,7 @@ export default grammar({
 
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
-            seq("use", optional("rec"), field('name', $.identifier), "=", $._expression),
+            seq("use", field('name', $.identifier), "=", $._expression),
         ),
 
         // use! x = expr
