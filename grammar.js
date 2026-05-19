@@ -679,7 +679,10 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
+                field('name', choice(
+                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -694,7 +697,10 @@ export default grammar({
             seq(
                 "and",
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
+                field('name', choice(
+                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -708,7 +714,10 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
+                field('name', choice(
+                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                    $.tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                )),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -912,9 +921,11 @@ export default grammar({
             $._expression,  // covers return/yield/return!/yield!/for/while/if/match/…
         ),
 
-        // let! x = expr
+        // let! x = expr  or  let! (a, b) = expr
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("let!", field('name', $.identifier), "=", $._expression),
+            seq("let!", field('name', choice(
+                $.identifier, $.tuple_pattern, $.record_pattern, $.wildcard_pattern,
+            )), "=", $._expression),
         ),
 
         // do! expr
@@ -960,7 +971,6 @@ export default grammar({
             "|",
             $.pattern,
             repeat(seq(",", $.pattern)),
-            repeat(seq("|", $.pattern, repeat(seq(",", $.pattern)))),
             optional(seq("when", $._expression)),
             "->",
             $._expression,
@@ -971,6 +981,7 @@ export default grammar({
             $.literal_pattern,
             $.identifier_pattern,
             $.cons_pattern,
+            $.or_pattern,
             $.tuple_pattern,
             $.as_pattern,
             $.list_pattern,
@@ -997,6 +1008,11 @@ export default grammar({
             "=",
             field('value', $.pattern),
         ),
+
+        // pat1 | pat2  — alternative patterns (prec.left(1): binds tighter than `as` (0), looser than `::` (2))
+        // Used both as nested sub-patterns and at the top level of match arms (replaces the old
+        // repeat(seq("|", pattern)) in match_arm, which was ambiguous once or_pattern was in scope).
+        or_pattern: $ => prec.left(1, seq($.pattern, "|", $.pattern)),
 
         // { Field = pat; Field2 = pat2 }  (destructure a record in a match arm)
         // prec.dynamic(2) in the repeat body: when a bare identifier follows a DU
@@ -1033,8 +1049,8 @@ export default grammar({
             optional(seq("as", $.identifier)),
         )),
 
-        // x :: rest  or  x :: y :: rest  (right-associative)
-        cons_pattern: $ => prec.right(1, seq($.pattern, "::", $.pattern)),
+        // x :: rest  or  x :: y :: rest  (right-associative; prec 2 > or_pattern 1 > as_pattern 0)
+        cons_pattern: $ => prec.right(2, seq($.pattern, "::", $.pattern)),
 
         wildcard_pattern: _ => "_",
 
@@ -1090,9 +1106,11 @@ export default grammar({
 
         parameter: $ => choice(
             $.identifier,
+            $.unit,
+            $.wildcard_pattern,
             seq("(", $.identifier, ":", $.type_expression, ")"),
-            seq("(", $.identifier, ")"),  // e.g. set(v) in property accessors
-            $.unit,  // () — unit parameter in methods like Foo()
+            $.tuple_pattern,   // (a, b)  (Some x)  (x)
+            $.record_pattern,  // { X = x }
         ),
 
         // cm^3  m^-1  (measure type raised to a power)

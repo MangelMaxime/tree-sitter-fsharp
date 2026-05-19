@@ -2351,6 +2351,18 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "record_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "wildcard_pattern",
+            "named": true
           }
         ]
       }
@@ -9207,6 +9219,10 @@
             "named": true
           },
           {
+            "type": "array_pattern",
+            "named": true
+          },
+          {
             "type": "backtick_identifier",
             "named": true
           },
@@ -9215,7 +9231,23 @@
             "named": true
           },
           {
+            "type": "list_pattern",
+            "named": true
+          },
+          {
             "type": "operator_name",
+            "named": true
+          },
+          {
+            "type": "record_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "wildcard_pattern",
             "named": true
           }
         ]
@@ -9513,6 +9545,10 @@
             "named": true
           },
           {
+            "type": "array_pattern",
+            "named": true
+          },
+          {
             "type": "backtick_identifier",
             "named": true
           },
@@ -9521,7 +9557,23 @@
             "named": true
           },
           {
+            "type": "list_pattern",
+            "named": true
+          },
+          {
             "type": "operator_name",
+            "named": true
+          },
+          {
+            "type": "record_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "wildcard_pattern",
             "named": true
           }
         ]
@@ -9823,6 +9875,10 @@
             "named": true
           },
           {
+            "type": "array_pattern",
+            "named": true
+          },
+          {
             "type": "backtick_identifier",
             "named": true
           },
@@ -9831,7 +9887,23 @@
             "named": true
           },
           {
+            "type": "list_pattern",
+            "named": true
+          },
+          {
             "type": "operator_name",
+            "named": true
+          },
+          {
+            "type": "record_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "wildcard_pattern",
             "named": true
           }
         ]
@@ -12716,6 +12788,21 @@
     }
   },
   {
+    "type": "or_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "parameter",
     "named": true,
     "fields": {},
@@ -12728,11 +12815,23 @@
           "named": true
         },
         {
+          "type": "record_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_pattern",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         },
         {
           "type": "unit",
+          "named": true
+        },
+        {
+          "type": "wildcard_pattern",
           "named": true
         }
       ]
@@ -13046,6 +13145,10 @@
         },
         {
           "type": "named_field_pattern",
+          "named": true
+        },
+        {
+          "type": "or_pattern",
           "named": true
         },
         {

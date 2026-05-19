@@ -1099,3 +1099,111 @@ type Direction with
 type System.String with
 
     static member Additional () = failwith ""
+
+// ── Pattern destructuring in let bindings ────────────────────────────────────
+
+// Tuple destructure
+let (a, bb) = (1, 2)
+let (xx, y, z) = (1, 2, 3)
+
+// Record destructure
+let { X = px; Y = py } = { X = 10; Y = 20 }
+
+// List destructure
+let [first; second] = [1; 2]
+
+// Array destructure
+let [| p; q |] = [| 3; 4 |]
+
+// Wildcard
+let _ = ignore "unused"
+
+// Nested tuple
+let ((a1, a2), b1) = ((1, 2), 3)
+
+// Constructor pattern (partial match)
+let (Some value) = Some 42
+
+// In let ... in expressions
+let result =
+    let (m, n) = (10, 20) in
+    m + n
+
+// ── Pattern destructuring in parameters ──────────────────────────────────────
+
+// Tuple params
+let swap (a, b) = (b, a)
+let fst3 (x, _, _) = x
+let add_pair (a, b) = a + b
+
+// Wildcard param
+let constant _ = 42
+let ignore2 _ _ = ()
+
+// Record param
+let getX { X = x } = x
+let getXY { X = x; Y = y } = (x, y)
+
+// Nested tuple param
+let fst_of_pair ((a, _), _) = a
+
+// Lambda with tuple param
+let swap_lambda = fun (a, b) -> (b, a)
+let sum_triple = fun (a, b, c) -> a + b + c
+
+// Constructor pattern param
+let unwrap_some (Some x) = x
+
+// Mixed: some normal, some destructured
+let combine a (x, y) b = a + x + y + b
+
+// Record param in member
+type PointHelper() =
+    static member Magnitude { X = x; Y = y } = sqrt (float (x*x + y*y))
+
+// ── Or-patterns ──────────────────────────────────────────────────────────────
+
+// Top-level or in match arm
+let classify_pattern n =
+    match n with
+    | 1 | 2 | 3 -> "small"
+    | 4 | 5 -> "medium"
+    | _ -> "large"
+
+// Nested or-pattern (inside constructor)
+let unwrap_result r =
+    match r with
+    | Ok (0 | 1) -> "zero or one"
+    | Ok n -> string n
+    | Error _ -> "error"
+
+// Or with cons
+let starts_with_small xs =
+    match xs with
+    | 1 :: _ | 2 :: _ -> true
+    | _ -> false
+
+// Or with as — `as` wraps the whole or-pattern
+let first_small n =
+    match n with
+    | 1 | 2 as x -> x
+    | _ -> 0
+
+// Or inside list pattern
+let head_small xs =
+    match xs with
+    | (1 | 2 | 3) :: _ -> true
+    | _ -> false
+
+// Or in function expression
+let parity_pattern = function
+    | 0 | 2 | 4 | 6 | 8 -> "even digit"
+    | 1 | 3 | 5 | 7 | 9 -> "odd digit"
+    | _ -> "not a digit"
+
+// Or with type-test pattern
+let describe (obj: obj) =
+    match obj with
+    | :? int | :? float -> "numeric"
+    | :? string -> "text"
+    | _ -> "other"
