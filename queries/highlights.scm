@@ -210,6 +210,10 @@
 (abstract_member_defn
   name: (backtick_identifier) @function)
 
+(type_constraint member_name: (identifier) @function)
+(type_constraint member_name: (backtick_identifier) @function)
+(type_constraint member_name: (operator_name) @function)
+
 (val_field
   name: (identifier) @variable.other.member)
 

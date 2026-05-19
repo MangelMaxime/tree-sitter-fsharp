@@ -1306,6 +1306,15 @@ export default grammar({
             seq($.type_parameter, ":", "enum", "<", $.type_expression, ">"),
             seq($.type_parameter, ":", "delegate", "<", $.type_expression, ",", $.type_expression, ">"),
             seq($.type_parameter, ":", "(", "new", ":", "unit", "->", $.type_expression, ")"),
+            // SRTP member constraint: ^T : (member Foo: int -> int)
+            //                         ^T : (static member (+): ^T * ^T -> ^T)
+            seq($.type_parameter, ":", "(",
+                optional("static"),
+                "member",
+                field('member_name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                ":",
+                field('member_type', $.type_expression),
+                ")"),
         ),
 
         // (|Even|Odd|)  (|Integer|_|)  (|Single|)

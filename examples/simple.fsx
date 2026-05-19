@@ -1371,3 +1371,28 @@ let st_describe t =
 
 // struct tuple destructure in let
 let struct (sx, sy) = struct (10, 20)
+
+// TODO: Broken we need to detect indentation scopes to have the right colors it seems like
+// let hasFocused (tests: string list) =
+//     let rec check test =
+//         true
+
+//     List.exists check tests
+
+// ── SRTP member constraints ────────────────────────────────────────────────────
+
+// Instance member constraint
+let inline getName< ^T when ^T : (member Name: string)> (x: ^T) =
+    failwith "srtp"
+
+// Static member constraint
+let inline add3< ^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    failwith "srtp"
+
+// Multiple constraints with and
+let inline combined< ^T when ^T : (member Name: string) and ^T : (member Age: int)> (x: ^T) =
+    failwith "srtp"
+
+// Operator constraint
+let inline add2< ^T when ^T : (static member op_Addition: ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    failwith "srtp"

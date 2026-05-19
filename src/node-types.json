@@ -18941,7 +18941,36 @@
   {
     "type": "type_constraint",
     "named": true,
-    "fields": {},
+    "fields": {
+      "member_name": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "operator_name",
+            "named": true
+          }
+        ]
+      },
+      "member_type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
       "required": true,
