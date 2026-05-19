@@ -280,10 +280,6 @@ type Shape =
     | Rectangle of float * float
     | Point
 
-type MyOption<'a> =
-    | Some of 'a
-    | None
-
 type MyResult<'ok, 'err> =
     | Ok of 'ok
     | Error of 'err
@@ -774,6 +770,42 @@ type NamedThing(name: string) =
 type SpecialThing(name: string) =
     inherit NamedThing(name)
     override this.ToString() = "Special: " + base.ToString()
+
+// ── Active patterns ───────────────────────────────────────────────────────────
+
+// Complete multi-case
+let (|Even|Odd|) n =
+    if n % 2 = 0 then Even else Odd
+
+// Single-case
+let (|Double|) n = n * 2
+
+// Partial (returns option)
+let (|ParseInt|_|) (s: string) =
+    match System.Int32.TryParse(s) with
+    | true, n -> Some n
+    | _ -> None
+
+// Parameterized partial
+let (|DivisibleBy|_|) divisor n =
+    if n % divisor = 0 then Some () else None
+
+// Usage in match
+let parity n =
+    match n with
+    | Even -> "even"
+    | Odd -> "odd"
+
+let try_parse s =
+    match s with
+    | ParseInt n -> n
+    | _ -> 0
+
+let check_div n =
+    match n with
+    | DivisibleBy 3 -> "fizz"
+    | DivisibleBy 5 -> "buzz"
+    | _ -> string n
 
 // ── Named DU field patterns ───────────────────────────────────────────────────
 

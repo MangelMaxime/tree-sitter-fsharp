@@ -586,7 +586,7 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -601,7 +601,7 @@ export default grammar({
             seq(
                 "and",
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -615,7 +615,7 @@ export default grammar({
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                field('name', choice($.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name)),
                 optional(seq("<", $.type_parameter, repeat(seq(",", $.type_parameter)), ">")),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -1045,6 +1045,17 @@ export default grammar({
         type_parameter: _ => token(seq(
             choice("'", "^"),
             /[a-zA-Z_][a-zA-Z0-9_']*/,
+        )),
+
+        // (|Even|Odd|)  (|Integer|_|)  (|Single|)
+        // Single terminal so the lexer never splits "(|" as "(" then "|",
+        // which would break operator definitions like let (|>) a b = …
+        active_pattern_name: _ => token(seq(
+            "(|",
+            /[a-zA-Z_][a-zA-Z0-9_']*/,
+            repeat(seq("|", /[a-zA-Z_][a-zA-Z0-9_']*/)),
+            optional(seq("|", "_")),
+            "|)",
         )),
 
         _token: $ => choice(

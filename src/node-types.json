@@ -7862,6 +7862,10 @@
         "required": true,
         "types": [
           {
+            "type": "active_pattern_name",
+            "named": true
+          },
+          {
             "type": "backtick_identifier",
             "named": true
           },
@@ -8135,6 +8139,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "active_pattern_name",
+            "named": true
+          },
           {
             "type": "backtick_identifier",
             "named": true
@@ -8413,6 +8421,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "active_pattern_name",
+            "named": true
+          },
           {
             "type": "backtick_identifier",
             "named": true
@@ -15528,6 +15540,10 @@
   {
     "type": "abstract",
     "named": false
+  },
+  {
+    "type": "active_pattern_name",
+    "named": true
   },
   {
     "type": "and",

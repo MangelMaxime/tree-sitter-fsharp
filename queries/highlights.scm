@@ -118,6 +118,9 @@
 (null_literal) @constant.builtin
 
 (let_binding
+  name: (active_pattern_name) @function)
+
+(let_binding
   name: (identifier) @function
   parameters: (parameter
     (identifier) @variable.parameter)*)

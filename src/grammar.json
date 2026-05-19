@@ -2714,6 +2714,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "operator_name"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "active_pattern_name"
                 }
               ]
             }
@@ -2861,6 +2865,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "operator_name"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "active_pattern_name"
                 }
               ]
             }
@@ -3013,6 +3021,10 @@
                 {
                   "type": "SYMBOL",
                   "name": "operator_name"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "active_pattern_name"
                 }
               ]
             }
@@ -4987,6 +4999,63 @@
           {
             "type": "PATTERN",
             "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+          }
+        ]
+      }
+    },
+    "active_pattern_name": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "(|"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "|"
+                },
+                {
+                  "type": "PATTERN",
+                  "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+                }
+              ]
+            }
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "|"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "_"
+                  }
+                ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": "|)"
           }
         ]
       }
