@@ -2615,3 +2615,77 @@ $"{{literal braces}} and {value}"
     (string_content)
     (interpolation
       (long_identifier (identifier)))))
+
+================================================================================
+Printf-style format specifier float
+================================================================================
+
+$"%0.3f{System.Math.PI}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (interpolation
+      (printf_format_string)
+      (dot_expression
+        object: (long_identifier (identifier) (identifier))
+        member: (identifier)))))
+
+================================================================================
+Printf-style format specifier hex
+================================================================================
+
+$"0x%08x{43962}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (printf_format_string)
+      (int_literal))))
+
+================================================================================
+Printf-style format specifier diagnostic
+================================================================================
+
+$"The data is %A{data}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (interpolation
+      (printf_format_string)
+      (long_identifier (identifier)))))
+
+================================================================================
+Literal percent not treated as format spec
+================================================================================
+
+$"100% done"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (string_content)
+    (string_content)
+    (string_content)))
+
+================================================================================
+NET-style format with double-backtick special chars
+================================================================================
+
+$"{now:``yyyy-MM-dd``}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (interpolated_string
+    (interpolation
+      (long_identifier (identifier))
+      (format_string))))

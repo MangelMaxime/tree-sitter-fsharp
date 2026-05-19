@@ -6180,7 +6180,7 @@
           "members": [
             {
               "type": "PATTERN",
-              "value": "[^\"\\\\{}]+"
+              "value": "[^\"\\\\{}%]+"
             },
             {
               "type": "PATTERN",
@@ -6223,7 +6223,7 @@
           "members": [
             {
               "type": "PATTERN",
-              "value": "[^\"{}]+"
+              "value": "[^\"{}%]+"
             },
             {
               "type": "STRING",
@@ -6250,15 +6250,15 @@
           "members": [
             {
               "type": "PATTERN",
-              "value": "[^\"{}]+"
+              "value": "[^\"{}%]+"
             },
             {
               "type": "PATTERN",
-              "value": "\"\"[^\"{}]"
+              "value": "\"\"[^\"{}%]"
             },
             {
               "type": "PATTERN",
-              "value": "\"[^\"{}]"
+              "value": "\"[^\"{}%]"
             },
             {
               "type": "STRING",
@@ -6277,6 +6277,20 @@
       "content": {
         "type": "PATTERN",
         "value": "[^}]+"
+      }
+    },
+    "_interp_percent": {
+      "type": "IMMEDIATE_TOKEN",
+      "content": {
+        "type": "STRING",
+        "value": "%"
+      }
+    },
+    "_printf_format": {
+      "type": "IMMEDIATE_TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "%[-+ #0]*[0-9]*(?:\\.[0-9]+)?[A-Za-z]\\{"
       }
     },
     "_string_byte_suffix": {
@@ -6365,45 +6379,72 @@
       }
     },
     "interpolation": {
-      "type": "SEQ",
+      "type": "CHOICE",
       "members": [
         {
-          "type": "STRING",
-          "value": "{"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "_expression"
-        },
-        {
-          "type": "CHOICE",
+          "type": "SEQ",
           "members": [
             {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": ":"
-                },
-                {
-                  "type": "ALIAS",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_interp_format_spec"
-                  },
-                  "named": true,
-                  "value": "format_string"
-                }
-              ]
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_printf_format"
+              },
+              "named": true,
+              "value": "printf_format_string"
             },
             {
-              "type": "BLANK"
+              "type": "SYMBOL",
+              "name": "_expression"
+            },
+            {
+              "type": "STRING",
+              "value": "}"
             }
           ]
         },
         {
-          "type": "STRING",
-          "value": "}"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "{"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_expression"
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ":"
+                    },
+                    {
+                      "type": "ALIAS",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "_interp_format_spec"
+                      },
+                      "named": true,
+                      "value": "format_string"
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "STRING",
+              "value": "}"
+            }
+          ]
         }
       ]
     },
@@ -6428,6 +6469,15 @@
                 "content": {
                   "type": "SYMBOL",
                   "name": "_interp_string_text"
+                },
+                "named": true,
+                "value": "string_content"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_interp_percent"
                 },
                 "named": true,
                 "value": "string_content"
@@ -6474,6 +6524,15 @@
                 },
                 "named": true,
                 "value": "string_content"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_interp_percent"
+                },
+                "named": true,
+                "value": "string_content"
               }
             ]
           }
@@ -6505,6 +6564,15 @@
                 "content": {
                   "type": "SYMBOL",
                   "name": "_interp_triple_text"
+                },
+                "named": true,
+                "value": "string_content"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_interp_percent"
                 },
                 "named": true,
                 "value": "string_content"

@@ -8358,6 +8358,10 @@
           "named": true
         },
         {
+          "type": "printf_format_string",
+          "named": true
+        },
+        {
           "type": "range_expression",
           "named": true
         },
@@ -14478,6 +14482,11 @@
     }
   },
   {
+    "type": "string_content",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "string_literal",
     "named": true,
     "fields": {}
@@ -17533,6 +17542,10 @@
     "named": true
   },
   {
+    "type": "printf_format_string",
+    "named": true
+  },
+  {
     "type": "private",
     "named": false
   },
@@ -17559,10 +17572,6 @@
   {
     "type": "static",
     "named": false
-  },
-  {
-    "type": "string_content",
-    "named": true
   },
   {
     "type": "symbolic_op",

@@ -991,3 +991,14 @@ let multi =
 
 // Nested expressions
 let cond = $"""Status: {if price > 5.0 then "expensive" else "cheap"}"""
+
+// Printf-style format specifiers (before the {)
+let piStr    = $"%0.3f{System.Math.PI}"   // "3.142"
+let hexStr   = $"0x%08x{43962}"           // "0x0000abba"
+let dataStr  = $"The data is %A{[0..4]}"  // diagnostic %A
+
+// Literal % (not a format spec — no { immediately after)
+let pct = $"Progress: 100%% complete"
+
+// .NET-style with double-backtick escaped separator
+let dateStr  = $"{System.DateTime.UtcNow:``yyyy-MM-dd``}"

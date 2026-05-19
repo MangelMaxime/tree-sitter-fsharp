@@ -121,6 +121,7 @@
 (interpolation "{" @punctuation.special)
 (interpolation "}" @punctuation.special)
 (interpolation (format_string) @string.special)
+(interpolation (printf_format_string) @string.special)
 (bool_literal) @constant.builtin.boolean
 (unit) @constant.builtin
 (null_literal) @constant.builtin

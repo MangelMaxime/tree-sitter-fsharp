@@ -1273,8 +1273,9 @@ export default grammar({
         ),
 
         // Content segments for interpolated strings (token.immediate = no whitespace skip)
+        // % is excluded so that printf-style %fmt{ specifiers are tokenised separately.
         _interp_string_text: _ => token.immediate(repeat1(choice(
-            /[^"\\{}]+/,
+            /[^"\\{}%]+/,
             /\\[\\'"abfnrtv0]/,
             /\\[0-9]{3}/,
             /\\x[0-9a-fA-F]{2}/,
@@ -1285,7 +1286,7 @@ export default grammar({
         ))),
 
         _interp_verbatim_text: _ => token.immediate(repeat1(choice(
-            /[^"{}]+/,
+            /[^"{}%]+/,
             '""',
             '{{',
             '}}',
@@ -1293,15 +1294,23 @@ export default grammar({
 
         // "  + safe char avoids greedily consuming """ (the closing delimiter)
         _interp_triple_text: _ => token.immediate(repeat1(choice(
-            /[^"{}]+/,
-            /""[^"{}]/,
-            /"[^"{}]/,
+            /[^"{}%]+/,
+            /""[^"{}%]/,
+            /"[^"{}%]/,
             '{{',
             '}}',
         ))),
 
         // Everything after : inside {expr:fmt} until the closing }
         _interp_format_spec: _ => token.immediate(/[^}]+/),
+
+        // Fallback for a literal % that is NOT the start of a valid printf format spec
+        _interp_percent: _ => token.immediate('%'),
+
+        // Printf-style format prefix: %[flags][width][.precision]conv{
+        // The { is included so this token only matches when a hole immediately follows,
+        // which prevents false positives like "100% done".
+        _printf_format: _ => token.immediate(/%[-+ #0]*[0-9]*(?:\.[0-9]+)?[A-Za-z]\{/),
 
         _string_byte_suffix: _ => token.immediate("B"),
 
@@ -1320,40 +1329,52 @@ export default grammar({
             )
         ),
 
-        // {expr}  or  {expr:format_spec}  inside an interpolated string
-        interpolation: $ => seq(
-            '{',
-            $._expression,
-            optional(seq(':', alias($._interp_format_spec, $.format_string))),
-            '}',
+        // {expr}, {expr:.NET-fmt}, or %printf-fmt{expr}
+        interpolation: $ => choice(
+            // %fmt{expr}  — printf-style; _printf_format includes the opening {
+            seq(
+                alias($._printf_format, $.printf_format_string),
+                $._expression,
+                '}',
+            ),
+            // {expr}  or  {expr:.NET-fmt}
+            seq(
+                '{',
+                $._expression,
+                optional(seq(':', alias($._interp_format_spec, $.format_string))),
+                '}',
+            ),
         ),
 
-        // $"text {expr:fmt} text"
+        // $"text %fmt{expr} {expr:.NET-fmt} text"
         interpolated_string: $ => seq(
             '$"',
             repeat(choice(
                 $.interpolation,
                 alias($._interp_string_text, $.string_content),
+                alias($._interp_percent, $.string_content),
             )),
             '"',
         ),
 
-        // $@"verbatim {expr}"  or  @$"verbatim {expr}"
+        // $@"verbatim %fmt{expr} {expr}"  or  @$"..."
         interpolated_verbatim_string: $ => seq(
             choice('$@"', '@$"'),
             repeat(choice(
                 $.interpolation,
                 alias($._interp_verbatim_text, $.string_content),
+                alias($._interp_percent, $.string_content),
             )),
             '"',
         ),
 
-        // $"""triple {expr}"""
+        // $"""triple %fmt{expr} {expr}"""
         interpolated_triple_string: $ => seq(
             '$"""',
             repeat(choice(
                 $.interpolation,
                 alias($._interp_triple_text, $.string_content),
+                alias($._interp_percent, $.string_content),
             )),
             '"""',
         ),
