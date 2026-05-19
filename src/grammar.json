@@ -2245,6 +2245,14 @@
           {
             "type": "SYMBOL",
             "name": "struct_tuple_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "typed_quotation"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "untyped_quotation"
           }
         ]
       }
@@ -2294,6 +2302,48 @@
           {
             "type": "STRING",
             "value": ")"
+          }
+        ]
+      }
+    },
+    "typed_quotation": {
+      "type": "PREC",
+      "value": 21,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "<@"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "STRING",
+            "value": "@>"
+          }
+        ]
+      }
+    },
+    "untyped_quotation": {
+      "type": "PREC",
+      "value": 21,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "<@@"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          },
+          {
+            "type": "STRING",
+            "value": "@@>"
           }
         ]
       }

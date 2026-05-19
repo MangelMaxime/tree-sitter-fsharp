@@ -524,6 +524,8 @@ export default grammar({
             $.ce_yield_bang_expr,
             $.ce_do_bang_expr,
             $.struct_tuple_expression,
+            $.typed_quotation,
+            $.untyped_quotation,
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -536,6 +538,12 @@ export default grammar({
             repeat(seq(",", $._expression)),
             ")",
         )),
+
+        // <@ expr @>   — typed quotation (Expr<'T>)
+        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression, "@>")),
+
+        // <@@ expr @@>  — untyped quotation (Expr)
+        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression, "@@>")),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 

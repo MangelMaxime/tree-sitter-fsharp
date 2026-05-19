@@ -102,6 +102,11 @@
   ">]"
 ] @punctuation.bracket
 
+(typed_quotation "<@" @punctuation.special)
+(typed_quotation "@>" @punctuation.special)
+(untyped_quotation "<@@" @punctuation.special)
+(untyped_quotation "@@>" @punctuation.special)
+
 [
   ";"
   ","

@@ -1396,3 +1396,18 @@ let inline combined< ^T when ^T : (member Name: string) and ^T : (member Age: in
 // Operator constraint
 let inline add2< ^T when ^T : (static member op_Addition: ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
     failwith "srtp"
+
+// ── Code quotations ────────────────────────────────────────────────────────────
+
+// Typed quotation: Expr<'T>
+let q_int = <@ 1 + 2 @>
+let q_fn = <@ fun x -> x + 1 @>
+let q_let = <@ let x = 10 in x * 2 @>
+let q_if = <@ if true then 1 else 0 @>
+
+// Untyped quotation: Expr
+let q_raw = <@@ printfn "hello" @@>
+let q_raw2 = <@@ 42 @@>
+
+// Nested: quotation inside a function
+let makeQuotation () = <@ 1 + 2 @>
