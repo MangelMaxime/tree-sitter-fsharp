@@ -151,6 +151,11 @@
 (postfix_type (long_identifier) @type)
 (type_parameter) @type.parameter
 
+; Unit identifiers in measure types and literals
+(measure_power_type (long_identifier) @type)
+(measure_expression (long_identifier) @type)
+(measure_expression (type_parameter) @type.parameter)
+
 ; Type name in :? pattern  (| :? System.Exception as e ->)
 (type_check_pattern (long_identifier) @type)
 (type_check_pattern (generic_type (long_identifier) @type))
@@ -190,6 +195,9 @@
   name: (identifier) @variable.other.member)
 
 (type_decl
+  name: (identifier) @type)
+
+(measure_type_decl
   name: (identifier) @type)
 
 (type_and_decl

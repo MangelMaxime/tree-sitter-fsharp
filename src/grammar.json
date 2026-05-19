@@ -231,6 +231,76 @@
         }
       ]
     },
+    "measure_type_decl": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "[<"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "attribute_target"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ";"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "attribute_target"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ">]"
+        },
+        {
+          "type": "STRING",
+          "value": "type"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "="
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alias",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "measure_expression"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
     "type_decl": {
       "type": "PREC_RIGHT",
       "value": 0,
@@ -329,7 +399,19 @@
                     "name": "alias",
                     "content": {
                       "type": "SYMBOL",
-                      "name": "type_expression"
+                      "name": "measure_expression"
+                    }
+                  },
+                  {
+                    "type": "PREC_DYNAMIC",
+                    "value": 1,
+                    "content": {
+                      "type": "FIELD",
+                      "name": "alias",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "type_expression"
+                      }
                     }
                   }
                 ]
@@ -447,7 +529,19 @@
                     "name": "alias",
                     "content": {
                       "type": "SYMBOL",
-                      "name": "type_expression"
+                      "name": "measure_expression"
+                    }
+                  },
+                  {
+                    "type": "PREC_DYNAMIC",
+                    "value": 1,
+                    "content": {
+                      "type": "FIELD",
+                      "name": "alias",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "type_expression"
+                      }
                     }
                   }
                 ]
@@ -1789,6 +1883,10 @@
           },
           {
             "type": "SYMBOL",
+            "name": "measure_literal"
+          },
+          {
+            "type": "SYMBOL",
             "name": "int_literal"
           },
           {
@@ -2006,6 +2104,10 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "measure_literal"
         },
         {
           "type": "SYMBOL",
@@ -4984,6 +5086,128 @@
         }
       ]
     },
+    "measure_power_type": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        },
+        {
+          "type": "STRING",
+          "value": "^"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "int_literal"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "negative_literal"
+            }
+          ]
+        }
+      ]
+    },
+    "measure_expression": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PREC_LEFT",
+          "value": 1,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              },
+              {
+                "type": "STRING",
+                "value": "/"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              }
+            ]
+          }
+        },
+        {
+          "type": "PREC_LEFT",
+          "value": 2,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              },
+              {
+                "type": "STRING",
+                "value": "*"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              }
+            ]
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "measure_power_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "int_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_parameter"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        }
+      ]
+    },
+    "measure_literal": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "int_literal"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "float_literal"
+            }
+          ]
+        },
+        {
+          "type": "IMMEDIATE_TOKEN",
+          "content": {
+            "type": "STRING",
+            "value": "<"
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "measure_expression"
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        }
+      ]
+    },
     "type_expression": {
       "type": "CHOICE",
       "members": [
@@ -5014,6 +5238,10 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "measure_power_type"
         },
         {
           "type": "SYMBOL",
@@ -5115,8 +5343,21 @@
             "value": "<"
           },
           {
-            "type": "SYMBOL",
-            "name": "type_expression"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PREC_DYNAMIC",
+                "value": 1,
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "type_expression"
+                }
+              },
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              }
+            ]
           },
           {
             "type": "REPEAT",
@@ -5128,8 +5369,21 @@
                   "value": ","
                 },
                 {
-                  "type": "SYMBOL",
-                  "name": "type_expression"
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "PREC_DYNAMIC",
+                      "value": 1,
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "type_expression"
+                      }
+                    },
+                    {
+                      "type": "SYMBOL",
+                      "name": "measure_expression"
+                    }
+                  ]
                 }
               ]
             }
@@ -5267,6 +5521,14 @@
         {
           "type": "SYMBOL",
           "name": "preproc_directive"
+        },
+        {
+          "type": "PREC_DYNAMIC",
+          "value": 1,
+          "content": {
+            "type": "SYMBOL",
+            "name": "measure_type_decl"
+          }
         },
         {
           "type": "SYMBOL",
@@ -6226,6 +6488,14 @@
     [
       "_union_field_type",
       "type_expression"
+    ],
+    [
+      "measure_expression",
+      "type_expression"
+    ],
+    [
+      "attribute",
+      "measure_type_decl"
     ]
   ],
   "precedences": [],

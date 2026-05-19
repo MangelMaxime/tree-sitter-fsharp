@@ -73,6 +73,12 @@ export default grammar({
         // Named union field type vs anonymous union field type: after 'name: 'a' or 'name: T',
         // '*' could start the next named field OR extend the type into a tuple_type.
         [$._union_field_type, $.type_expression],
+        // measure_expression and type_expression both match long_identifier and type_parameter,
+        // so GLR explores both when the parser sees a single atom in generic type args or aliases.
+        [$.measure_expression, $.type_expression],
+        // measure_type_decl starts with "[<" (same as attribute); GLR explores both paths
+        // and prec.dynamic(1) on measure_type_decl in _token selects it when it succeeds.
+        [$.attribute, $.measure_type_decl],
     ],
 
 
@@ -117,6 +123,25 @@ export default grammar({
             )),
         ),
 
+        // [<Measure>] type cm          (no body)
+        // [<Measure>] type ml = cm^3  (measure alias)
+        // [<Measure>]                 (attribute on its own line)
+        // type Pa = N/m^2
+        //
+        // Embeds the attribute so the rule starts with "[<" — completely distinct from
+        // type_decl which starts with "type". No "=" required here.
+        // GLR: when "[<...>] type" is seen, both this rule and attribute+type_decl are
+        // explored; prec.dynamic(1) in _token makes this rule win when it can parse fully.
+        measure_type_decl: $ => seq(
+            "[<",
+            $.attribute_target,
+            repeat(seq(";", $.attribute_target)),
+            ">]",
+            "type",
+            field('name', $.identifier),
+            optional(seq("=", field('alias', $.measure_expression))),
+        ),
+
         // type Point = { X: int; Y: int }
         // type Shape = | Circle of float | Rectangle of float * float
         // type Option<'a> = | Some of 'a | None
@@ -136,9 +161,10 @@ export default grammar({
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
             // can't start a type_expression, so the parser naturally reduces with empty body and
             // the body tokens appear flat at the source_file level.
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.type_expression))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
             repeat($.type_and_decl),
         )),
+
 
         // and Even = ...  (mutual type recursion continuation)
         type_and_decl: $ => prec.right(seq(
@@ -152,7 +178,7 @@ export default grammar({
             )),
             optional($.primary_constructor),
             "=",
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.type_expression))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
         )),
 
         // (x: int, y: string)  in  type Foo(x: int, y: string) =
@@ -394,6 +420,7 @@ export default grammar({
             $.record_expression,
             $.anonymous_record_expression,
             $.tuple_expression,
+            $.measure_literal,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -452,6 +479,7 @@ export default grammar({
             $.array_expression,
             $.record_expression,
             $.anonymous_record_expression,
+            $.measure_literal,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -1024,6 +1052,34 @@ export default grammar({
             $.unit,  // () — unit parameter in methods like Foo()
         ),
 
+        // cm^3  m^-1  (measure type raised to a power)
+        measure_power_type: $ => seq(
+            $.long_identifier,
+            "^",
+            choice($.int_literal, $.negative_literal),
+        ),
+
+        // Compound measure expressions: m/s  kg*m/s^2  'u  1
+        // Juxtaposition (kg m) is not supported — use explicit * instead.
+        measure_expression: $ => choice(
+            prec.left(1, seq($.measure_expression, "/", $.measure_expression)),
+            prec.left(2, seq($.measure_expression, "*", $.measure_expression)),
+            $.measure_power_type,
+            $.int_literal,
+            $.type_parameter,
+            $.long_identifier,
+        ),
+
+        // 3.0<cm>  55.0<miles/hour>  3u<days>
+        // token.immediate ensures no whitespace between the number and '<',
+        // distinguishing measure literals from comparison expressions (1.0 < x).
+        measure_literal: $ => seq(
+            choice($.int_literal, $.float_literal),
+            token.immediate("<"),
+            $.measure_expression,
+            ">",
+        ),
+
         type_expression: $ => choice(
             $.function_type,
             $.tuple_type,
@@ -1032,6 +1088,7 @@ export default grammar({
             $.array_type,
             $.parenthesized_type,
             $.anonymous_record_type,
+            $.measure_power_type,
             $.type_parameter,
             $.long_identifier,
         ),
@@ -1059,8 +1116,8 @@ export default grammar({
         generic_type: $ => prec(TYPE_PREC.APP, seq(
             $.long_identifier,
             "<",
-            $.type_expression,
-            repeat(seq(",", $.type_expression)),
+            choice(prec.dynamic(1, $.type_expression), $.measure_expression),
+            repeat(seq(",", choice(prec.dynamic(1, $.type_expression), $.measure_expression))),
             ">",
         )),
 
@@ -1093,6 +1150,7 @@ export default grammar({
 
         _token: $ => choice(
             $.preproc_directive,
+            prec.dynamic(1, $.measure_type_decl),
             $.attribute,
             $.namespace_decl,
             $.module_decl,

@@ -921,3 +921,39 @@ greetAnon
     {|
         Name = "Charlie"
     |}
+
+// ── Units of measure ─────────────────────────────────────────────────────────
+
+// Measure type declarations (attribute inline and on separate line)
+[<Measure>] type cm
+[<Measure>] type kg
+[<Measure>] type s
+[<Measure>] type steps
+
+[<Measure>]
+type m
+
+// Measure type aliases
+[<Measure>] type ml = cm^3
+[<Measure>] type N = kg*m/s^2
+[<Measure>] type Pa = N/m^2
+
+// Measure-typed literals (no space before <)
+let length    = 3.0<cm>
+let mass      = 75.0<kg>
+let speed     = 55.0<m/s>
+let accel     = 9.8<m/s^2>
+let stepCount = 10000u<steps>
+
+// Measure types in type annotations
+let distance : float<m> = 100.0<m>
+
+// Measure types in generic position
+type Velocity = float<m/s>
+type Force     = float<kg*m/s^2>
+
+// Generic function over any unit
+let genericSum (x : float<'u>) (y : float<'u>) = x + y
+
+// Comparison still works (space before <)
+let isBig = length > 2.0<cm>
