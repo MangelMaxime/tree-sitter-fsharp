@@ -2031,6 +2031,10 @@
           },
           {
             "type": "SYMBOL",
+            "name": "nameof_expression"
+          },
+          {
+            "type": "SYMBOL",
             "name": "new_expression"
           },
           {
@@ -3720,6 +3724,19 @@
         {
           "type": "SYMBOL",
           "name": "_expression"
+        }
+      ]
+    },
+    "nameof_expression": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "nameof"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_simple_expression"
         }
       ]
     },

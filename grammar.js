@@ -457,6 +457,7 @@ export default grammar({
             $.type_test_expression,
             $.upcast_expr,
             $.downcast_expr,
+            $.nameof_expression,
             $.new_expression,
             $.object_expression,
             // CE result forms — also valid in if/match branches inside CEs
@@ -764,6 +765,9 @@ export default grammar({
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         upcast_expr: $ => seq("upcast", $._expression),
         downcast_expr: $ => seq("downcast", $._expression),
+
+        // nameof expr  — returns the string name of the identifier/member at compile time
+        nameof_expression: $ => seq("nameof", $._simple_expression),
 
         // ── New object ────────────────────────────────────────────────────────
         // new TypeName(args)  or  new TypeName<T>(args)

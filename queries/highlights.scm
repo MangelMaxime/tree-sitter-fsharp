@@ -36,7 +36,7 @@
   "public"
 ] @keyword.control.access
 
-["not" "upcast" "downcast"] @keyword.operator
+["not" "upcast" "downcast" "nameof"] @keyword.operator
 
 [
   "|"

@@ -199,6 +199,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -447,6 +451,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -818,6 +826,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -1066,6 +1078,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -1369,6 +1385,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -1646,6 +1666,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -1899,6 +1923,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -2190,6 +2218,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -2452,6 +2484,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -2707,6 +2743,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -2958,6 +2998,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -3206,6 +3250,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -3471,6 +3519,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -3719,6 +3771,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -3973,6 +4029,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -4221,6 +4281,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -4506,6 +4570,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -4758,6 +4826,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -5027,6 +5099,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -5292,6 +5368,10 @@
             "named": true
           },
           {
+            "type": "nameof_expression",
+            "named": true
+          },
+          {
             "type": "new_expression",
             "named": true
           },
@@ -5544,6 +5624,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -5792,6 +5876,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -6134,6 +6222,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -6386,6 +6478,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -6712,6 +6808,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -6986,6 +7086,10 @@
             "named": true
           },
           {
+            "type": "nameof_expression",
+            "named": true
+          },
+          {
             "type": "new_expression",
             "named": true
           },
@@ -7229,6 +7333,10 @@
           },
           {
             "type": "multiplicative_expression",
+            "named": true
+          },
+          {
+            "type": "nameof_expression",
             "named": true
           },
           {
@@ -7484,6 +7592,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -7732,6 +7844,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -7998,6 +8114,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -8334,6 +8454,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -8589,6 +8713,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -8841,6 +8969,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -9135,6 +9267,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -9440,6 +9576,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -9738,6 +9878,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -9990,6 +10134,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -10321,6 +10469,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -10577,6 +10729,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -10993,6 +11149,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -11289,6 +11449,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -11422,6 +11586,97 @@
       "types": [
         {
           "type": "named_field_pat",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "nameof_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "anonymous_record_expression",
+          "named": true
+        },
+        {
+          "type": "array_expression",
+          "named": true
+        },
+        {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "interpolated_string",
+          "named": true
+        },
+        {
+          "type": "interpolated_triple_string",
+          "named": true
+        },
+        {
+          "type": "interpolated_verbatim_string",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "measure_literal",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "object_expression",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
           "named": true
         }
       ]
@@ -11628,6 +11883,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -11905,6 +12164,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -12168,6 +12431,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -12442,6 +12709,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -12763,6 +13034,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -13115,6 +13390,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -13363,6 +13642,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -13729,6 +14012,10 @@
             "named": true
           },
           {
+            "type": "nameof_expression",
+            "named": true
+          },
+          {
             "type": "new_expression",
             "named": true
           },
@@ -14063,6 +14350,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -14371,6 +14662,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "namespace_decl",
           "named": true
         },
@@ -14656,6 +14951,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -14911,6 +15210,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -15159,6 +15462,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -15649,6 +15956,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -15901,6 +16212,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -16275,6 +16590,10 @@
           "named": true
         },
         {
+          "type": "nameof_expression",
+          "named": true
+        },
+        {
           "type": "new_expression",
           "named": true
         },
@@ -16523,6 +16842,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -16789,6 +17112,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -17071,6 +17398,10 @@
         },
         {
           "type": "multiplicative_expression",
+          "named": true
+        },
+        {
+          "type": "nameof_expression",
           "named": true
         },
         {
@@ -17507,6 +17838,10 @@
   },
   {
     "type": "mutable",
+    "named": false
+  },
+  {
+    "type": "nameof",
     "named": false
   },
   {

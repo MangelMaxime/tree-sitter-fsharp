@@ -2781,3 +2781,48 @@ match t with
     (match_arm
       (pattern (wildcard_pattern))
       (int_literal))))
+
+================================================================================
+Nameof simple identifier
+================================================================================
+
+let n = nameof x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (nameof_expression
+      (long_identifier (identifier)))))
+
+================================================================================
+Nameof qualified name
+================================================================================
+
+let n = nameof System.Math
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (nameof_expression
+      (long_identifier (identifier) (identifier)))))
+
+================================================================================
+Nameof parenthesized expression
+================================================================================
+
+let n = nameof (Some x)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (nameof_expression
+      (parenthesized_expression
+        (application_expression
+          (long_identifier (identifier))
+          (long_identifier (identifier)))))))

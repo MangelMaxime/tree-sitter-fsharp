@@ -1002,3 +1002,18 @@ let pct = $"Progress: 100%% complete"
 
 // .NET-style with double-backtick escaped separator
 let dateStr  = $"{System.DateTime.UtcNow:``yyyy-MM-dd``}"
+
+// ── nameof ────────────────────────────────────────────────────────────────────
+
+// Simple identifier
+let xxx = 42
+let xName = nameof xxx
+
+// Qualified name — returns the last segment
+let mathName = nameof System.Math
+
+// Useful for argument validation
+let greet (name: string) =
+    if name = null then
+        invalidArg (nameof name) "name must not be null"
+    $"Hello, {name}!"
