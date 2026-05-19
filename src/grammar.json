@@ -387,6 +387,10 @@
                     "name": "enum_type_defn"
                   },
                   {
+                    "type": "SYMBOL",
+                    "name": "delegate_type_defn"
+                  },
+                  {
                     "type": "FIELD",
                     "name": "alias",
                     "content": {
@@ -486,6 +490,10 @@
                   {
                     "type": "SYMBOL",
                     "name": "enum_type_defn"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "delegate_type_defn"
                   },
                   {
                     "type": "FIELD",
@@ -1717,6 +1725,39 @@
         "type": "SYMBOL",
         "name": "enum_case"
       }
+    },
+    "delegate_type_defn": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "delegate"
+        },
+        {
+          "type": "STRING",
+          "value": "of"
+        },
+        {
+          "type": "FIELD",
+          "name": "arg_type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "type_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "->"
+        },
+        {
+          "type": "FIELD",
+          "name": "return_type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "type_expression"
+          }
+        }
+      ]
     },
     "enum_case": {
       "type": "SEQ",

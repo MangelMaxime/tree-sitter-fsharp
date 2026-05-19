@@ -28,6 +28,7 @@
   "lazy" "assert"
   "begin" "end"
   "function"
+  "delegate"
 ] @keyword
 
 [

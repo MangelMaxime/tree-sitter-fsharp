@@ -165,7 +165,7 @@ export default grammar({
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
             // can't start a type_expression, so the parser naturally reduces with empty body and
             // the body tokens appear flat at the source_file level.
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
             repeat($.type_and_decl),
         )),
 
@@ -177,7 +177,7 @@ export default grammar({
             optional($.type_parameter_list),
             optional($.tuple_params),
             "=",
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
         )),
 
         // type Foo with              — simple (intrinsic) extension
@@ -407,6 +407,16 @@ export default grammar({
 
         // type Color = | Red = 0 | Green = 1 | Blue = 2
         enum_type_defn: $ => repeat1($.enum_case),
+
+        // type MyDelegate = delegate of int -> string
+        // type Handler = delegate of (obj * EventArgs) -> unit
+        delegate_type_defn: $ => seq(
+            "delegate",
+            "of",
+            field('arg_type', $.type_expression),
+            "->",
+            field('return_type', $.type_expression),
+        ),
 
         enum_case: $ => seq(
             "|",

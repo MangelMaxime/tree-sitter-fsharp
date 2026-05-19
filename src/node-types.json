@@ -5099,6 +5099,32 @@
     }
   },
   {
+    "type": "delegate_type_defn",
+    "named": true,
+    "fields": {
+      "arg_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "return_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "do_stmt",
     "named": true,
     "fields": {},
@@ -16499,6 +16525,10 @@
       "required": false,
       "types": [
         {
+          "type": "delegate_type_defn",
+          "named": true
+        },
+        {
           "type": "enum_type_defn",
           "named": true
         },
@@ -16612,6 +16642,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "delegate_type_defn",
+          "named": true
+        },
         {
           "type": "enum_type_defn",
           "named": true

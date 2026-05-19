@@ -1311,3 +1311,11 @@ type Cache<'T>() =
     static do printfn "Cache initialized"
     member _.Set key value = store <- Map.add key value store
     member _.Get key = Map.tryFind key store
+
+// ── Delegate type declarations ────────────────────────────────────────────────
+
+type StringMapper = delegate of string -> string
+type IntToString = delegate of int -> string
+type Action = delegate of unit -> unit
+type BinaryOp = delegate of (int * int) -> int
+type Transformer<'a, 'b> = delegate of 'a -> 'b
