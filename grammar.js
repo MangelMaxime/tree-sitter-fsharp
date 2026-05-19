@@ -160,7 +160,7 @@ export default grammar({
             "type",
             field('name', $.identifier),
             optional($.type_parameter_list),
-            optional($.primary_constructor),
+            optional($.tuple_params),
             "=",
             // Body is optional: class/interface bodies use keywords (member, abstract, …) that
             // can't start a type_expression, so the parser naturally reduces with empty body and
@@ -175,7 +175,7 @@ export default grammar({
             "and",
             field('name', $.identifier),
             optional($.type_parameter_list),
-            optional($.primary_constructor),
+            optional($.tuple_params),
             "=",
             optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
         )),
@@ -206,21 +206,35 @@ export default grammar({
             $.identifier,                                          // simple: Foo
         ),
 
-        // (x: int, y: string)  in  type Foo(x: int, y: string) =
-        primary_constructor: $ => seq(
+        // Parenthesised comma-separated parameter group — the OOP/tuple calling convention.
+        // Used in: type Foo(x: int, y: int) =    new(x) = Foo(x, 0)    member this.Add(x, y) = …
+        // Each element may be optional (?name) and/or typed (name: type).
+        tuple_params: $ => seq(
             "(",
             optional(seq(
-                $.primary_ctor_param,
-                repeat(seq(",", $.primary_ctor_param)),
+                $.tuple_param,
+                repeat(seq(",", $.tuple_param)),
             )),
             ")",
         ),
 
-        primary_ctor_param: $ => seq(
+        tuple_param: $ => seq(
             optional("?"),
             $.identifier,
             optional(seq(":", $.type_expression)),
         ),
+
+        // new(params) = expr [then expr]  — secondary (additional) constructor inside a class body.
+        // Starts with bare "(" so it can't be confused with new_expression (which needs a type name
+        // between "new" and "(").  The optional `then` clause runs side-effects after delegation.
+        secondary_constructor: $ => prec.right(seq(
+            optional($.access_modifier),
+            "new",
+            field('parameters', $.tuple_params),
+            "=",
+            $._expression,
+            optional(seq("then", $._expression)),
+        )),
 
         // member this.Name = expr
         // member this.Method arg : RetType = expr
@@ -1125,7 +1139,7 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            $.typed_pattern,   // (x: int)  ((a,b): int*int)
+            $.tuple_params,    // (x: int, y: int) or (x: int) — OOP-style grouped params
             $.tuple_pattern,   // (a, b)  (Some x)  (x)
             $.record_pattern,  // { X = x }
         ),
@@ -1266,6 +1280,7 @@ export default grammar({
             $.let_binding,
             $.use_binding,
             $.member_defn,
+            $.secondary_constructor,
             $.abstract_member_defn,
             $.interface_impl,
             $.inherit_decl,

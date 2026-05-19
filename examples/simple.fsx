@@ -1254,3 +1254,42 @@ let cell = ref 0
 let v = !cell
 let double_deref r s = !r + !s
 cell.Value <- !cell + 1
+
+// ── Secondary constructors ───────────────────────────────────────────────────
+
+type Vec2(x: float, y: float) =
+    new() = Vec2(0.0, 0.0)
+    new(v: float) = Vec2(v, v)
+    member _.X = x
+    member _.Y = y
+
+// With then clause — side-effects after delegation
+type TrackedPoint(x: int, y: int) =
+    new(x: int) =
+        TrackedPoint(x, 0)
+        then printfn "TrackedPoint(%d, 0)" x
+    member _.X = x
+    member _.Y = y
+
+// Access modifier on secondary constructor
+type Connection2(host: string, port: int) =
+    private new() = Connection2("localhost", 5432)
+    new(host: string) = Connection2(host, 5432)
+    member _.Endpoint = sprintf "%s:%d" host port
+
+// ── OOP-style tuple parameters in members ────────────────────────────────────
+
+// Multi-parameter members using tuple (OOP) calling convention
+type Calculator() =
+    member this.Add(x: int, y: int) = x + y
+    member this.Sub(x: int, y: int) = x - y
+    static member Mul(a: float, b: float) = a * b
+
+// Single typed parameter (equivalent to typed_pattern but via tuple_params)
+type Formatter() =
+    member this.Format(value: int) = string value
+    member this.Pad(s: string, width: int) = s.PadLeft(width)
+
+// Optional parameters in member methods
+type Query() =
+    member this.Run(sql: string, ?timeout: int) = sprintf "'%s' timeout=%d" sql (defaultArg timeout 30)
