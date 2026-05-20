@@ -236,6 +236,45 @@ export default grammar({
             optional(seq("then", $._expression)),
         )),
 
+        // `: TypeExpr` return-type annotation. Shared hidden helper used in 7 places
+        // (let_binding family, member_defn, _method_body, auto-property). Wrapping
+        // with optional($._return_type_annot) at call sites preserves the previous
+        // semantics while sharing the LR states for the colon+type sequence.
+        _return_type_annot: $ => seq(":", field('return_type', $.type_expression)),
+
+        // Shared prefix for instance members: `member/override/default [inline] self.Name`.
+        // Used by both method form and property-with-accessor form.
+        _instance_member_prefix: $ => seq(
+            choice("member", "override", "default"),
+            optional("inline"),
+            field('self', $.member_self_ident),
+            ".",
+            field('name', $.identifier),
+        ),
+
+        // Shared prefix for static members: `static [inline] member Name`.
+        _static_member_prefix: $ => seq(
+            "static",
+            optional("inline"),
+            "member",
+            field('name', $.identifier),
+        ),
+
+        // Shared method body: params [:return-type] = expr
+        _method_body: $ => seq(
+            field('parameters', repeat($.parameter)),
+            optional($._return_type_annot),
+            "=",
+            $._expression,
+        ),
+
+        // Shared property body: with get/set accessor [and get/set accessor]
+        _accessor_body: $ => seq(
+            "with",
+            $.property_accessor,
+            optional(seq("and", $.property_accessor)),
+        ),
+
         // member this.Name = expr
         // member this.Method arg : RetType = expr
         // static member Name args = expr
@@ -244,65 +283,18 @@ export default grammar({
         // member this.Prop with get() = expr and set(v) = expr
         // member val AutoProp = expr with get, set
         member_defn: $ => choice(
+            seq($._instance_member_prefix, $._method_body),
+            seq($._static_member_prefix, $._method_body),
+            seq($._instance_member_prefix, $._accessor_body),
+            seq($._static_member_prefix, $._accessor_body),
+            // auto-property: [static] member val Name [: type] = expr [with get [, set]]
+            // Merged: instance/static differ only by optional("static") prefix.
             seq(
-                choice("member", "override", "default"),
-                optional("inline"),
-                field('self', $.member_self_ident),
-                ".",
-                field('name', $.identifier),
-                field('parameters', repeat($.parameter)),
-                optional(seq(":", field('return_type', $.type_expression))),
-                "=",
-                $._expression,
-            ),
-            seq(
-                "static",
-                optional("inline"),
-                "member",
-                field('name', $.identifier),
-                field('parameters', repeat($.parameter)),
-                optional(seq(":", field('return_type', $.type_expression))),
-                "=",
-                $._expression,
-            ),
-            // instance property with get/set accessor
-            seq(
-                choice("member", "override", "default"),
-                optional("inline"),
-                field('self', $.member_self_ident),
-                ".",
-                field('name', $.identifier),
-                "with",
-                $.property_accessor,
-                optional(seq("and", $.property_accessor)),
-            ),
-            // static property with get/set accessor
-            seq(
-                "static",
-                optional("inline"),
-                "member",
-                field('name', $.identifier),
-                "with",
-                $.property_accessor,
-                optional(seq("and", $.property_accessor)),
-            ),
-            // auto-property: member val Name [: type] = expr [with get [, set]]
-            seq(
+                optional("static"),
                 "member",
                 "val",
                 field('name', $.identifier),
-                optional(seq(":", field('return_type', $.type_expression))),
-                "=",
-                $._expression,
-                optional($.auto_property_accessors),
-            ),
-            // static auto-property
-            seq(
-                "static",
-                "member",
-                "val",
-                field('name', $.identifier),
-                optional(seq(":", field('return_type', $.type_expression))),
+                optional($._return_type_annot),
                 "=",
                 $._expression,
                 optional($.auto_property_accessors),
@@ -723,16 +715,25 @@ export default grammar({
             $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
         ),
 
+        // Shared signature for let-family bindings: the "[inline/mutable] name
+        // [type-params] params [:return-type]" middle. The leading static/rec and
+        // the trailing "= body" differ per site, so they stay at the call sites.
+        // Used by let_binding, let_and_binding, let_decl_indented, and let_expression
+        // Branch B — 4-way shared LR states.
+        _let_signature: $ => seq(
+            optional(choice("inline", "mutable")),
+            field('name', $._let_name_pattern),
+            optional($.type_parameter_list),
+            field('parameters', repeat($.parameter)),
+            optional($._return_type_annot),
+        ),
+
         let_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
                 optional("static"),
                 "let",
                 optional("rec"),
-                optional(choice("inline", "mutable")),
-                field('name', $._let_name_pattern),
-                optional($.type_parameter_list),
-                field('parameters', repeat($.parameter)),
-                optional(seq(":", field('return_type', $.type_expression))),
+                $._let_signature,
                 "=",
                 choice(
                     seq($._body_indent, $._expression, $._body_dedent),
@@ -746,11 +747,7 @@ export default grammar({
         let_and_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
                 "and",
-                optional(choice("inline", "mutable")),
-                field('name', $._let_name_pattern),
-                optional($.type_parameter_list),
-                field('parameters', repeat($.parameter)),
-                optional(seq(":", field('return_type', $.type_expression))),
+                $._let_signature,
                 "=",
                 $._expression,
             ),
@@ -762,11 +759,7 @@ export default grammar({
         let_decl_indented: ($) => seq(
             "let",
             optional("rec"),
-            optional(choice("inline", "mutable")),
-            field('name', $._let_name_pattern),
-            optional($.type_parameter_list),
-            field('parameters', repeat($.parameter)),
-            optional(seq(":", field('return_type', $.type_expression))),
+            $._let_signature,
             "=",
             $._indent,
             field('body', $._expression),
@@ -791,11 +784,7 @@ export default grammar({
                 seq(
                     "let",
                     optional("rec"),
-                    optional(choice("inline", "mutable")),
-                    field('name', $._let_name_pattern),
-                    optional($.type_parameter_list),
-                    field('parameters', repeat($.parameter)),
-                    optional(seq(":", field('return_type', $.type_expression))),
+                    $._let_signature,
                     "=",
                     $._expression,
                     "in",
