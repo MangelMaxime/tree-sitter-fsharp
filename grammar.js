@@ -146,6 +146,19 @@ export default grammar({
         // type Option<'a> = | Some of 'a | None
         // type Foo(x: int) =        (class with primary constructor; body is flat top-level tokens)
         // type IFoo =               (interface; body is flat abstract_member_defn tokens)
+        // Body of a `type ... =` or `and ... =` declaration. Hidden helper shared
+        // between type_decl and type_and_decl so the 7-way choice's LR states are
+        // built once instead of twice.
+        _type_decl_body: $ => choice(
+            $.record_type_defn,
+            $.union_type_defn,
+            $.enum_type_defn,
+            $.delegate_type_defn,
+            $.struct_type_defn,
+            field('alias', $.measure_expression),
+            prec.dynamic(1, field('alias', $.type_expression)),
+        ),
+
         type_decl: $ => prec.right(seq(
             "type",
             field('name', $.identifier),
@@ -153,10 +166,7 @@ export default grammar({
             optional($.tuple_params),
             // "=" is optional: [<Measure>] type kg has no body.
             // Class/interface bodies are also empty (members appear as flat _token siblings).
-            optional(seq(
-                "=",
-                optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
-            )),
+            optional(seq("=", optional($._type_decl_body))),
             repeat($.type_and_decl),
         )),
 
@@ -167,10 +177,7 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.tuple_params),
-            optional(seq(
-                "=",
-                optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
-            )),
+            optional(seq("=", optional($._type_decl_body))),
         )),
 
         // type Foo with              — simple (intrinsic) extension
@@ -707,16 +714,22 @@ export default grammar({
         // let (>>=) a b = ...  — operator definition name in parens
         operator_name: $ => seq("(", $.symbolic_op, ")"),
 
+        // The name a let-binding can bind. Hidden helper so the choice's LR states
+        // are built once and shared across let_binding, let_and_binding,
+        // let_decl_indented, and let_expression Branch B — avoiding 4x duplication
+        // of the same 11-alternative pattern.
+        _let_name_pattern: $ => choice(
+            $.identifier, $.operator_name, $.active_pattern_name,
+            $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+        ),
+
         let_binding: ($) => prec.right(PREC.LET_DECL,
             seq(
                 optional("static"),
                 "let",
                 optional("rec"),
                 optional(choice("inline", "mutable")),
-                field('name', choice(
-                    $.identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-                )),
+                field('name', $._let_name_pattern),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -734,10 +747,7 @@ export default grammar({
             seq(
                 "and",
                 optional(choice("inline", "mutable")),
-                field('name', choice(
-                    $.identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-                )),
+                field('name', $._let_name_pattern),
                 optional($.type_parameter_list),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
@@ -753,10 +763,7 @@ export default grammar({
             "let",
             optional("rec"),
             optional(choice("inline", "mutable")),
-            field('name', choice(
-                $.identifier, $.operator_name, $.active_pattern_name,
-                $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-            )),
+            field('name', $._let_name_pattern),
             optional($.type_parameter_list),
             field('parameters', repeat($.parameter)),
             optional(seq(":", field('return_type', $.type_expression))),
@@ -785,10 +792,7 @@ export default grammar({
                     "let",
                     optional("rec"),
                     optional(choice("inline", "mutable")),
-                    field('name', choice(
-                        $.identifier, $.operator_name, $.active_pattern_name,
-                        $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-                    )),
+                    field('name', $._let_name_pattern),
                     optional($.type_parameter_list),
                     field('parameters', repeat($.parameter)),
                     optional(seq(":", field('return_type', $.type_expression))),
@@ -971,20 +975,24 @@ export default grammar({
             $._expression,  // covers return/yield/return!/yield!/do!/for/while/if/match/…
         ),
 
+        // Names bindable by CE bang-binds (let!, and!). Hidden helper shared between
+        // ce_let_bang_expr and ce_and_bang_expr to share LR states.
+        // Narrower than _let_name_pattern: no operator_name/active_pattern_name/list/array
+        // (since CE bang-binds are simpler).
+        _ce_bang_name_pattern: $ => choice(
+            $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
+        ),
+
         // let! x = expr [and! y = expr ...]  — parallel applicative binding
         ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("let!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
-            )), "=", $._expression,
+            seq("let!", field('name', $._ce_bang_name_pattern), "=", $._expression,
             repeat($.ce_and_bang_expr),
             ),
         ),
 
         // and! y = expr  — continuation of a parallel let! group
         ce_and_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("and!", field('name', choice(
-                $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
-            )), "=", $._expression),
+            seq("and!", field('name', $._ce_bang_name_pattern), "=", $._expression),
         ),
 
         // use x = disposable  (also used as a top-level _token outside CEs)

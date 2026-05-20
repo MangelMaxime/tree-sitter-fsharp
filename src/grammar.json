@@ -264,6 +264,51 @@
         }
       ]
     },
+    "_type_decl_body": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "record_type_defn"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "union_type_defn"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "enum_type_defn"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "delegate_type_defn"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_type_defn"
+        },
+        {
+          "type": "FIELD",
+          "name": "alias",
+          "content": {
+            "type": "SYMBOL",
+            "name": "measure_expression"
+          }
+        },
+        {
+          "type": "PREC_DYNAMIC",
+          "value": 1,
+          "content": {
+            "type": "FIELD",
+            "name": "alias",
+            "content": {
+              "type": "SYMBOL",
+              "name": "type_expression"
+            }
+          }
+        }
+      ]
+    },
     "type_decl": {
       "type": "PREC_RIGHT",
       "value": 0,
@@ -320,49 +365,8 @@
                     "type": "CHOICE",
                     "members": [
                       {
-                        "type": "CHOICE",
-                        "members": [
-                          {
-                            "type": "SYMBOL",
-                            "name": "record_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "union_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "enum_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "delegate_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "struct_type_defn"
-                          },
-                          {
-                            "type": "FIELD",
-                            "name": "alias",
-                            "content": {
-                              "type": "SYMBOL",
-                              "name": "measure_expression"
-                            }
-                          },
-                          {
-                            "type": "PREC_DYNAMIC",
-                            "value": 1,
-                            "content": {
-                              "type": "FIELD",
-                              "name": "alias",
-                              "content": {
-                                "type": "SYMBOL",
-                                "name": "type_expression"
-                              }
-                            }
-                          }
-                        ]
+                        "type": "SYMBOL",
+                        "name": "_type_decl_body"
                       },
                       {
                         "type": "BLANK"
@@ -442,49 +446,8 @@
                     "type": "CHOICE",
                     "members": [
                       {
-                        "type": "CHOICE",
-                        "members": [
-                          {
-                            "type": "SYMBOL",
-                            "name": "record_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "union_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "enum_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "delegate_type_defn"
-                          },
-                          {
-                            "type": "SYMBOL",
-                            "name": "struct_type_defn"
-                          },
-                          {
-                            "type": "FIELD",
-                            "name": "alias",
-                            "content": {
-                              "type": "SYMBOL",
-                              "name": "measure_expression"
-                            }
-                          },
-                          {
-                            "type": "PREC_DYNAMIC",
-                            "value": 1,
-                            "content": {
-                              "type": "FIELD",
-                              "name": "alias",
-                              "content": {
-                                "type": "SYMBOL",
-                                "name": "type_expression"
-                              }
-                            }
-                          }
-                        ]
+                        "type": "SYMBOL",
+                        "name": "_type_decl_body"
                       },
                       {
                         "type": "BLANK"
@@ -3268,6 +3231,55 @@
         }
       ]
     },
+    "_let_name_pattern": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "operator_name"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "active_pattern_name"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typed_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unparenthesized_tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "record_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "list_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "array_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "wildcard_pattern"
+        }
+      ]
+    },
     "let_binding": {
       "type": "PREC_RIGHT",
       "value": 7,
@@ -3327,53 +3339,8 @@
             "type": "FIELD",
             "name": "name",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "identifier"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "operator_name"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "active_pattern_name"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "typed_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "struct_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "unparenthesized_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "record_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "list_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "array_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "wildcard_pattern"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_let_name_pattern"
             }
           },
           {
@@ -3499,53 +3466,8 @@
             "type": "FIELD",
             "name": "name",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "identifier"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "operator_name"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "active_pattern_name"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "typed_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "struct_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "unparenthesized_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "record_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "list_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "array_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "wildcard_pattern"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_let_name_pattern"
             }
           },
           {
@@ -3651,53 +3573,8 @@
           "type": "FIELD",
           "name": "name",
           "content": {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "identifier"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "operator_name"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "active_pattern_name"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "typed_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "tuple_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "struct_tuple_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "unparenthesized_tuple_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "record_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "list_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "array_pattern"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "wildcard_pattern"
-              }
-            ]
+            "type": "SYMBOL",
+            "name": "_let_name_pattern"
           }
         },
         {
@@ -3841,53 +3718,8 @@
                 "type": "FIELD",
                 "name": "name",
                 "content": {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "SYMBOL",
-                      "name": "identifier"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "operator_name"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "active_pattern_name"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "typed_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "tuple_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "struct_tuple_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "unparenthesized_tuple_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "record_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "list_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "array_pattern"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "wildcard_pattern"
-                    }
-                  ]
+                  "type": "SYMBOL",
+                  "name": "_let_name_pattern"
                 }
               },
               {
@@ -4728,6 +4560,39 @@
         }
       ]
     },
+    "_ce_bang_name_pattern": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typed_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unparenthesized_tuple_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "record_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "wildcard_pattern"
+        }
+      ]
+    },
     "ce_let_bang_expr": {
       "type": "PREC_RIGHT",
       "value": 7,
@@ -4742,37 +4607,8 @@
             "type": "FIELD",
             "name": "name",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "identifier"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "typed_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "struct_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "unparenthesized_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "record_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "wildcard_pattern"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_ce_bang_name_pattern"
             }
           },
           {
@@ -4807,37 +4643,8 @@
             "type": "FIELD",
             "name": "name",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "identifier"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "typed_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "struct_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "unparenthesized_tuple_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "record_pattern"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "wildcard_pattern"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_ce_bang_name_pattern"
             }
           },
           {
