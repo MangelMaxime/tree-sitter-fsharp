@@ -59,6 +59,17 @@ export default grammar({
 
     word: $ => $.identifier,
 
+    externals: $ => [
+        // _body_indent/_body_dedent: wrap let_binding bodies (checked first by scanner).
+        // _indent/_dedent: wrap let_decl_indented bodies inside let_expression.
+        // Listing _body_indent before _indent ensures the scanner emits _body_indent when both
+        // are valid, which kills the let_decl_indented path so let_binding wins at module level.
+        $._body_indent,
+        $._body_dedent,
+        $._indent,
+        $._dedent,
+    ],
+
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
 
     // Without these declarations prec.dynamic is silently ignored.
@@ -86,6 +97,9 @@ export default grammar({
         // or be the first token of the next _token (nested module body). GLR explores both;
         // keyword identifiers fail the abbrev path, plain names succeed the abbreviation path.
         [$.module_decl],
+        // After "let x = expr", expr could be extended (application_expression) or
+        // let_binding reduces. let_expression now requires "in" so it resolves deterministically.
+        [$.application_expression, $.let_binding],
     ],
 
 
@@ -761,7 +775,10 @@ export default grammar({
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
-                $._expression,
+                choice(
+                    seq($._body_indent, $._expression, $._body_dedent),
+                    $._expression,
+                ),
                 repeat($.let_and_binding),
             ),
         ),
@@ -783,22 +800,57 @@ export default grammar({
             ),
         ),
 
+        // "let x = \n    body" — body on next indented line, body has its own node.
+        // Used as the binding part of let_expression when the body is indented.
+        // The INDENT/DEDENT tokens are zero-width and emitted by the external scanner.
+        let_decl_indented: ($) => seq(
+            "let",
+            optional("rec"),
+            optional(choice("inline", "mutable")),
+            field('name', choice(
+                $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+            )),
+            optional($.type_parameter_list),
+            field('parameters', repeat($.parameter)),
+            optional(seq(":", field('return_type', $.type_expression))),
+            "=",
+            $._indent,
+            field('body', $._expression),
+            $._dedent,
+        ),
+
+        // let_expression:
+        //   Branch A — indented body (let x = \n    body \n continuation)
+        //              Scanner emits _indent/_dedent to scope the body.
+        //   Branch B — explicit-in body (let x = expr in continuation)
+        //              "in" is REQUIRED: without "in", indented bodies use branch A,
+        //              and module-level lets use let_binding. This eliminates the
+        //              3-way GLR conflict that caused state-count explosion.
         let_expression: ($) => prec.right(PREC.LET_EXPR,
-            seq(
-                "let",
-                optional("rec"),
-                optional(choice("inline", "mutable")),
-                field('name', choice(
-                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
-                    $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-                )),
-                optional($.type_parameter_list),
-                field('parameters', repeat($.parameter)),
-                optional(seq(":", field('return_type', $.type_expression))),
-                "=",
-                $._expression,
-                "in",
-                $._expression,
+            choice(
+                // Branch A: indented body + continuation (scanner-delimited)
+                seq(
+                    field('binding', $.let_decl_indented),
+                    field('continuation', $._expression),
+                ),
+                // Branch B: explicit "in" body
+                seq(
+                    "let",
+                    optional("rec"),
+                    optional(choice("inline", "mutable")),
+                    field('name', choice(
+                        $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                        $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+                    )),
+                    optional($.type_parameter_list),
+                    field('parameters', repeat($.parameter)),
+                    optional(seq(":", field('return_type', $.type_expression))),
+                    "=",
+                    $._expression,
+                    "in",
+                    $._expression,
+                ),
             ),
         ),
 

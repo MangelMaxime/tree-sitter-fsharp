@@ -12,7 +12,10 @@
             ],
             "highlights": "queries/highlights.scm",
             "injection-regex": "^fsharp$",
-            "class-name": "TreeSitterFsharp"
+            "class-name": "TreeSitterFsharp",
+            "external-files": [
+                "src/scanner.c"
+            ]
         }
     ],
     "metadata": {
