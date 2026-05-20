@@ -157,6 +157,20 @@
 (let_binding
   name: (operator_name) @function)
 
+(let_decl_indented
+  name: (active_pattern_name) @function)
+
+(let_decl_indented
+  name: (identifier) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
+
+(let_decl_indented
+  name: (backtick_identifier) @function)
+
+(let_decl_indented
+  name: (operator_name) @function)
+
 (let_and_binding
   name: (identifier) @function
   parameters: (parameter

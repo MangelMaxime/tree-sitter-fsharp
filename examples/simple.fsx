@@ -1376,7 +1376,6 @@ let st_describe t =
 // struct tuple destructure in let
 let struct (sx, sy) = struct (10, 20)
 
-// TODO: Broken we need to detect indentation scopes to have the right colors it seems like
 let hasFocused (tests: string list) =
     let rec check test =
         true
