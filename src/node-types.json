@@ -8,10 +8,6 @@
         "required": true,
         "types": [
           {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
             "type": "identifier",
             "named": true
           }
@@ -3224,10 +3220,6 @@
         "required": true,
         "types": [
           {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
             "type": "identifier",
             "named": true
           }
@@ -5645,10 +5637,6 @@
             "named": true
           },
           {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
             "type": "identifier",
             "named": true
           },
@@ -5932,10 +5920,6 @@
           },
           {
             "type": "array_pattern",
-            "named": true
-          },
-          {
-            "type": "backtick_identifier",
             "named": true
           },
           {
@@ -6435,10 +6419,6 @@
             "named": true
           },
           {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
             "type": "identifier",
             "named": true
           },
@@ -6738,10 +6718,6 @@
           },
           {
             "type": "array_pattern",
-            "named": true
-          },
-          {
-            "type": "backtick_identifier",
             "named": true
           },
           {
@@ -7291,10 +7267,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "backtick_identifier",
-          "named": true
-        },
         {
           "type": "identifier",
           "named": true
@@ -7853,10 +7825,6 @@
         "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "backtick_identifier",
-            "named": true
-          },
           {
             "type": "identifier",
             "named": true
@@ -12729,10 +12697,6 @@
         "required": false,
         "types": [
           {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
             "type": "identifier",
             "named": true
           },
@@ -15132,10 +15096,6 @@
   {
     "type": "assert",
     "named": false
-  },
-  {
-    "type": "backtick_identifier",
-    "named": true
   },
   {
     "type": "begin",

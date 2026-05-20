@@ -260,7 +260,7 @@ export default grammar({
                 optional("inline"),
                 field('self', $.member_self_ident),
                 ".",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -270,7 +270,7 @@ export default grammar({
                 "static",
                 optional("inline"),
                 "member",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 field('parameters', repeat($.parameter)),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
@@ -282,7 +282,7 @@ export default grammar({
                 optional("inline"),
                 field('self', $.member_self_ident),
                 ".",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 "with",
                 $.property_accessor,
                 optional(seq("and", $.property_accessor)),
@@ -292,7 +292,7 @@ export default grammar({
                 "static",
                 optional("inline"),
                 "member",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 "with",
                 $.property_accessor,
                 optional(seq("and", $.property_accessor)),
@@ -301,7 +301,7 @@ export default grammar({
             seq(
                 "member",
                 "val",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
                 $._expression,
@@ -312,7 +312,7 @@ export default grammar({
                 "static",
                 "member",
                 "val",
-                field('name', choice($.identifier, $.backtick_identifier)),
+                field('name', $.identifier),
                 optional(seq(":", field('return_type', $.type_expression))),
                 "=",
                 $._expression,
@@ -343,7 +343,7 @@ export default grammar({
             optional("static"),
             "abstract",
             optional("member"),
-            field('name', choice($.identifier, $.backtick_identifier)),
+            field('name', $.identifier),
             ":",
             $.type_expression,
         ),
@@ -721,7 +721,7 @@ export default grammar({
                 optional("rec"),
                 optional(choice("inline", "mutable")),
                 field('name', choice(
-                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                    $.identifier, $.operator_name, $.active_pattern_name,
                     $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
@@ -742,7 +742,7 @@ export default grammar({
                 "and",
                 optional(choice("inline", "mutable")),
                 field('name', choice(
-                    $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                    $.identifier, $.operator_name, $.active_pattern_name,
                     $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                 )),
                 optional($.type_parameter_list),
@@ -761,7 +761,7 @@ export default grammar({
             optional("rec"),
             optional(choice("inline", "mutable")),
             field('name', choice(
-                $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                $.identifier, $.operator_name, $.active_pattern_name,
                 $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
             )),
             optional($.type_parameter_list),
@@ -793,7 +793,7 @@ export default grammar({
                     optional("rec"),
                     optional(choice("inline", "mutable")),
                     field('name', choice(
-                        $.identifier, $.backtick_identifier, $.operator_name, $.active_pattern_name,
+                        $.identifier, $.operator_name, $.active_pattern_name,
                         $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
                     )),
                     optional($.type_parameter_list),
@@ -821,7 +821,7 @@ export default grammar({
         dot_expression: $ => prec(PREC.DOT, seq(
             field('object', $._expression),
             ".",
-            field('member', choice($.identifier, $.backtick_identifier)),
+            field('member', $.identifier),
         )),
 
         // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]
@@ -1352,7 +1352,7 @@ export default grammar({
             seq($.type_parameter, ":", "(",
                 optional("static"),
                 "member",
-                field('member_name', choice($.identifier, $.backtick_identifier, $.operator_name)),
+                field('member_name', choice($.identifier, $.operator_name)),
                 ":",
                 field('member_type', $.type_expression),
                 ")"),
@@ -1398,15 +1398,14 @@ export default grammar({
 
         // keyword: _ => choice(...KEYWORDS),
 
-        identifier: _ => /[a-zA-Z_][a-zA-Z0-9_']*/,
-
-        // backtick_identifier is intentionally a SEPARATE rule from identifier.
-        // Merging them via regex alternation (/.../|/``...``/) would break the
-        // `word: $ => $.identifier` property — tree-sitter's keyword detection
-        // only works when `word` points to a single-pattern regex. A combined
-        // regex silently disables keyword recognition, causing `else`, `then`,
-        // `let`, etc. to be parsed as plain identifiers.
-        backtick_identifier: _ => /``[^`\n\r\t]+``/,
+        // Covers plain F# identifiers and backtick-quoted identifiers (``any text``),
+        // unified in one terminal. token(choice(...)) is still a single terminal so
+        // `word: $ => $.identifier` continues to work for keyword detection —
+        // backtick forms never match keywords.
+        identifier: _ => token(choice(
+            /[a-zA-Z_][a-zA-Z0-9_']*/,
+            /``[^`\n\r\t]+``/,
+        )),
 
         // prec.right(DOT=19) beats the REDUCE of _expression (RARROW=3), so
         // identifier chains like A.B.C stay as a single long_identifier node
@@ -1415,8 +1414,8 @@ export default grammar({
         long_identifier: $ =>
             prec.right(PREC.DOT,
                 seq(
-                    choice($.identifier, $.backtick_identifier),
-                    repeat(seq(".", choice($.identifier, $.backtick_identifier))),
+                    $.identifier,
+                    repeat(seq(".", $.identifier)),
                 ),
             ),
 

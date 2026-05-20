@@ -152,9 +152,6 @@
     (identifier) @variable.parameter)*)
 
 (let_binding
-  name: (backtick_identifier) @function)
-
-(let_binding
   name: (operator_name) @function)
 
 (let_decl_indented
@@ -166,18 +163,12 @@
     (identifier) @variable.parameter)*)
 
 (let_decl_indented
-  name: (backtick_identifier) @function)
-
-(let_decl_indented
   name: (operator_name) @function)
 
 (let_and_binding
   name: (identifier) @function
   parameters: (parameter
     (identifier) @variable.parameter)*)
-
-(let_and_binding
-  name: (backtick_identifier) @function)
 
 (lambda_expression
   (parameter
@@ -221,19 +212,12 @@
 (member_defn
   name: (identifier) @function)
 
-(member_defn
-  name: (backtick_identifier) @function)
-
 (property_accessor (parameter (identifier) @variable.parameter))
 
 (abstract_member_defn
   name: (identifier) @function)
 
-(abstract_member_defn
-  name: (backtick_identifier) @function)
-
 (type_constraint member_name: (identifier) @function)
-(type_constraint member_name: (backtick_identifier) @function)
 (type_constraint member_name: (operator_name) @function)
 
 (val_field
@@ -281,7 +265,15 @@
 
 ; Member access on non-identifier expressions: arr.[0].Length, (f x).Name
 (dot_expression member: (identifier) @variable.other.member)
-(dot_expression member: (backtick_identifier) @variable.other.member)
+
+; DU constructors and active-pattern cases in match patterns.
+; Capitalized identifier in identifier_pattern position = constructor (F# convention).
+((identifier_pattern
+   (long_identifier (identifier) @constructor))
+ (#match? @constructor "^[A-Z]"))
+
+; Named DU field pattern: Email(address = addr) → highlight the constructor name
+(named_field_pattern constructor: (long_identifier) @constructor)
 
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
