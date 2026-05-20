@@ -264,76 +264,6 @@
         }
       ]
     },
-    "measure_type_decl": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "[<"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "attribute_target"
-        },
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": ";"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "attribute_target"
-              }
-            ]
-          }
-        },
-        {
-          "type": "STRING",
-          "value": ">]"
-        },
-        {
-          "type": "STRING",
-          "value": "type"
-        },
-        {
-          "type": "FIELD",
-          "name": "name",
-          "content": {
-            "type": "SYMBOL",
-            "name": "identifier"
-          }
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "="
-                },
-                {
-                  "type": "FIELD",
-                  "name": "alias",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "measure_expression"
-                  }
-                }
-              ]
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        }
-      ]
-    },
     "type_decl": {
       "type": "PREC_RIGHT",
       "value": 0,
@@ -377,54 +307,67 @@
             ]
           },
           {
-            "type": "STRING",
-            "value": "="
-          },
-          {
             "type": "CHOICE",
             "members": [
               {
-                "type": "CHOICE",
+                "type": "SEQ",
                 "members": [
                   {
-                    "type": "SYMBOL",
-                    "name": "record_type_defn"
+                    "type": "STRING",
+                    "value": "="
                   },
                   {
-                    "type": "SYMBOL",
-                    "name": "union_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "enum_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "delegate_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "struct_type_defn"
-                  },
-                  {
-                    "type": "FIELD",
-                    "name": "alias",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "measure_expression"
-                    }
-                  },
-                  {
-                    "type": "PREC_DYNAMIC",
-                    "value": 1,
-                    "content": {
-                      "type": "FIELD",
-                      "name": "alias",
-                      "content": {
-                        "type": "SYMBOL",
-                        "name": "type_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "CHOICE",
+                        "members": [
+                          {
+                            "type": "SYMBOL",
+                            "name": "record_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "union_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "enum_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "delegate_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "struct_type_defn"
+                          },
+                          {
+                            "type": "FIELD",
+                            "name": "alias",
+                            "content": {
+                              "type": "SYMBOL",
+                              "name": "measure_expression"
+                            }
+                          },
+                          {
+                            "type": "PREC_DYNAMIC",
+                            "value": 1,
+                            "content": {
+                              "type": "FIELD",
+                              "name": "alias",
+                              "content": {
+                                "type": "SYMBOL",
+                                "name": "type_expression"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "BLANK"
                       }
-                    }
+                    ]
                   }
                 ]
               },
@@ -486,54 +429,67 @@
             ]
           },
           {
-            "type": "STRING",
-            "value": "="
-          },
-          {
             "type": "CHOICE",
             "members": [
               {
-                "type": "CHOICE",
+                "type": "SEQ",
                 "members": [
                   {
-                    "type": "SYMBOL",
-                    "name": "record_type_defn"
+                    "type": "STRING",
+                    "value": "="
                   },
                   {
-                    "type": "SYMBOL",
-                    "name": "union_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "enum_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "delegate_type_defn"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "struct_type_defn"
-                  },
-                  {
-                    "type": "FIELD",
-                    "name": "alias",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "measure_expression"
-                    }
-                  },
-                  {
-                    "type": "PREC_DYNAMIC",
-                    "value": 1,
-                    "content": {
-                      "type": "FIELD",
-                      "name": "alias",
-                      "content": {
-                        "type": "SYMBOL",
-                        "name": "type_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "CHOICE",
+                        "members": [
+                          {
+                            "type": "SYMBOL",
+                            "name": "record_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "union_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "enum_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "delegate_type_defn"
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "struct_type_defn"
+                          },
+                          {
+                            "type": "FIELD",
+                            "name": "alias",
+                            "content": {
+                              "type": "SYMBOL",
+                              "name": "measure_expression"
+                            }
+                          },
+                          {
+                            "type": "PREC_DYNAMIC",
+                            "value": 1,
+                            "content": {
+                              "type": "FIELD",
+                              "name": "alias",
+                              "content": {
+                                "type": "SYMBOL",
+                                "name": "type_expression"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "BLANK"
                       }
-                    }
+                    ]
                   }
                 ]
               },
@@ -1933,6 +1889,63 @@
         ]
       }
     },
+    "_literal": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "measure_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "int_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "float_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "char_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "string_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "verbatim_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "triple_quoted_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "interpolated_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "interpolated_verbatim_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "interpolated_triple_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "bool_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unit"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "null_literal"
+        }
+      ]
+    },
     "_expression": {
       "type": "PREC",
       "value": 3,
@@ -1981,55 +1994,7 @@
           },
           {
             "type": "SYMBOL",
-            "name": "measure_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "int_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "float_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "char_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "string_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "verbatim_string"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "triple_quoted_string"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "interpolated_string"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "interpolated_verbatim_string"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "interpolated_triple_string"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "bool_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "unit"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "null_literal"
+            "name": "_literal"
           },
           {
             "type": "SYMBOL",
@@ -6740,14 +6705,6 @@
           "name": "preproc_directive"
         },
         {
-          "type": "PREC_DYNAMIC",
-          "value": 1,
-          "content": {
-            "type": "SYMBOL",
-            "name": "measure_type_decl"
-          }
-        },
-        {
           "type": "SYMBOL",
           "name": "attribute"
         },
@@ -8259,10 +8216,6 @@
     [
       "measure_expression",
       "type_expression"
-    ],
-    [
-      "attribute",
-      "measure_type_decl"
     ],
     [
       "type_decl",

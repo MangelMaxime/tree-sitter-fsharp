@@ -7750,42 +7750,6 @@
     }
   },
   {
-    "type": "measure_type_decl",
-    "named": true,
-    "fields": {
-      "alias": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "measure_expression",
-            "named": true
-          }
-        ]
-      },
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "attribute_target",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "member_defn",
     "named": true,
     "fields": {
@@ -9545,10 +9509,6 @@
           "named": true
         },
         {
-          "type": "measure_type_decl",
-          "named": true
-        },
-        {
           "type": "member_defn",
           "named": true
         },
@@ -9849,10 +9809,6 @@
         },
         {
           "type": "measure_literal",
-          "named": true
-        },
-        {
-          "type": "measure_type_decl",
           "named": true
         },
         {
@@ -10186,10 +10142,6 @@
         },
         {
           "type": "measure_literal",
-          "named": true
-        },
-        {
-          "type": "measure_type_decl",
           "named": true
         },
         {
@@ -11367,10 +11319,6 @@
           "named": true
         },
         {
-          "type": "measure_type_decl",
-          "named": true
-        },
-        {
           "type": "member_defn",
           "named": true
         },
@@ -11918,10 +11866,6 @@
         },
         {
           "type": "measure_literal",
-          "named": true
-        },
-        {
-          "type": "measure_type_decl",
           "named": true
         },
         {

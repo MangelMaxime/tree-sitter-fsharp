@@ -86,9 +86,6 @@ export default grammar({
         // measure_expression and type_expression both match long_identifier and type_parameter,
         // so GLR explores both when the parser sees a single atom in generic type args or aliases.
         [$.measure_expression, $.type_expression],
-        // measure_type_decl starts with "[<" (same as attribute); GLR explores both paths
-        // and prec.dynamic(1) on measure_type_decl in _token selects it when it succeeds.
-        [$.attribute, $.measure_type_decl],
         // After "type identifier", both type_decl and type_extension_name are viable.
         // GLR explores both; "=" resolves to type_decl, "with" resolves to type_extension.
         [$.type_decl, $.type_extension_name],
@@ -143,24 +140,6 @@ export default grammar({
             )),
         ),
 
-        // [<Measure>] type cm          (no body)
-        // [<Measure>] type ml = cm^3  (measure alias)
-        // [<Measure>]                 (attribute on its own line)
-        // type Pa = N/m^2
-        //
-        // Embeds the attribute so the rule starts with "[<" — completely distinct from
-        // type_decl which starts with "type". No "=" required here.
-        // GLR: when "[<...>] type" is seen, both this rule and attribute+type_decl are
-        // explored; prec.dynamic(1) in _token makes this rule win when it can parse fully.
-        measure_type_decl: $ => seq(
-            "[<",
-            $.attribute_target,
-            repeat(seq(";", $.attribute_target)),
-            ">]",
-            "type",
-            field('name', $.identifier),
-            optional(seq("=", field('alias', $.measure_expression))),
-        ),
 
         // type Point = { X: int; Y: int }
         // type Shape = | Circle of float | Rectangle of float * float
@@ -172,11 +151,12 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.tuple_params),
-            "=",
-            // Body is optional: class/interface bodies use keywords (member, abstract, …) that
-            // can't start a type_expression, so the parser naturally reduces with empty body and
-            // the body tokens appear flat at the source_file level.
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            // "=" is optional: [<Measure>] type kg has no body.
+            // Class/interface bodies are also empty (members appear as flat _token siblings).
+            optional(seq(
+                "=",
+                optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            )),
             repeat($.type_and_decl),
         )),
 
@@ -187,8 +167,10 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.tuple_params),
-            "=",
-            optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            optional(seq(
+                "=",
+                optional(choice($.record_type_defn, $.union_type_defn, $.enum_type_defn, $.delegate_type_defn, $.struct_type_defn, field('alias', $.measure_expression), prec.dynamic(1, field('alias', $.type_expression)))),
+            )),
         )),
 
         // type Foo with              — simple (intrinsic) extension
@@ -469,17 +451,7 @@ export default grammar({
             field('type', $.type_expression),
         )),
 
-        _expression: $ => prec(PREC.RARROW, choice(
-            $.parenthesized_expression,
-            $.typed_expression,
-            $.application_expression,
-            $.binary_expression,
-            $.unary_expression,
-            $.list_expression,
-            $.array_expression,
-            $.record_expression,
-            $.anonymous_record_expression,
-            $.tuple_expression,
+        _literal: $ => choice(
             $.measure_literal,
             $.int_literal,
             $.float_literal,
@@ -493,6 +465,20 @@ export default grammar({
             $.bool_literal,
             $.unit,
             $.null_literal,
+        ),
+
+        _expression: $ => prec(PREC.RARROW, choice(
+            $.parenthesized_expression,
+            $.typed_expression,
+            $.application_expression,
+            $.binary_expression,
+            $.unary_expression,
+            $.list_expression,
+            $.array_expression,
+            $.record_expression,
+            $.anonymous_record_expression,
+            $.tuple_expression,
+            $._literal,
             $.long_identifier,
             $.if_expression,
             $.match_expression,
@@ -1372,7 +1358,6 @@ export default grammar({
         _token: $ => choice(
             $.preproc_if,
             $.preproc_directive,
-            prec.dynamic(1, $.measure_type_decl),
             $.attribute,
             $.namespace_decl,
             $.module_decl,
