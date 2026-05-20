@@ -606,7 +606,14 @@ export default grammar({
             $._expression,
         )),
 
-        symbolic_op: _ => token(/[!$%&*+\-\/<=>?@^|][!$%&*+\/<=>?@^|~]*/),
+        // Multi-char regex requires 2+ chars and excludes @ as start char (so @>, @@>
+        // don't match — they remain distinct quotation-close tokens). Single-char @ is
+        // a separate alternative because it's used for list append (xs @ ys).
+        // Tree-sitter's longest-match rule handles the @ vs @> case at lex time.
+        symbolic_op: _ => token(choice(
+            "@",
+            /[!$%&*+\-\/<=>?^|][!$%&*+\/<=>?@^|~]+/,
+        )),
 
         list_expression: $ => seq(
             "[",

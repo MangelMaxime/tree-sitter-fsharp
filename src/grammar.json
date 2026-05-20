@@ -2754,8 +2754,17 @@
     "symbolic_op": {
       "type": "TOKEN",
       "content": {
-        "type": "PATTERN",
-        "value": "[!$%&*+\\-\\/<=>?@^|][!$%&*+\\/<=>?@^|~]*"
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "@"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[!$%&*+\\-\\/<=>?^|][!$%&*+\\/<=>?@^|~]+"
+          }
+        ]
       }
     },
     "list_expression": {
