@@ -1606,17 +1606,16 @@ export default grammar({
 
         xml_doc_comment: _ => token(seq("///", /.*/)),
 
-        block_comment: $ => seq(
-            "(*",
-            repeat(choice(/[^(*]/, /\*[^)]/, /\([^*]/, $.block_comment)),
-            "*)",
-        ),
+        // Non-nesting block comment. Nested comments (* (* inner *) *) are not supported —
+        // the outer comment closes at the first *). This is a pragmatic tradeoff: making
+        // block_comment a single token() removes the recursive grammar rule from extras,
+        // which otherwise inflated every parser state's item set.
+        block_comment: _ => token(seq("(*", /([^*]|\*+[^)*])*\*+/, ")")),
 
-        block_doc_comment: $ => seq(
-            "(**",
-            repeat(choice(/[^(*]/, /\*[^)]/, /\([^*]/, $.block_comment)),
-            "*)",
-        ),
+        // Doc comment: starts with (**. prec(1) wins over block_comment when both match the
+        // same length (e.g. "(** doc *)" matches both; prec(1) selects block_doc_comment).
+        block_doc_comment: _ => token(prec(1, seq("(**", /([^*]|\*+[^)*])*\*+/, ")"))),
+
 
         // Matches non-structural directives: #nowarn, #r, #load, #line, etc.
         // Structural directives (#if, #elif, #else, #endif) are handled by preproc_if
