@@ -80,7 +80,6 @@ export default grammar({
     conflicts: $ => [
         [$.record_type_field, $.postfix_type],
         [$.record_field, $.application_expression],
-        [$.index_slice, $.range_expression],
         // Named union field type vs anonymous union field type: after 'name: 'a' or 'name: T',
         // '*' could start the next named field OR extend the type into a tuple_type.
         [$._union_field_type, $.type_expression],
@@ -97,9 +96,6 @@ export default grammar({
         // or be the first token of the next _token (nested module body). GLR explores both;
         // keyword identifiers fail the abbrev path, plain names succeed the abbreviation path.
         [$.module_decl],
-        // After "let x = expr", expr could be extended (application_expression) or
-        // let_binding reduces. let_expression now requires "in" so it resolves deterministically.
-        [$.application_expression, $.let_binding],
     ],
 
 
@@ -477,15 +473,8 @@ export default grammar({
             $.parenthesized_expression,
             $.typed_expression,
             $.application_expression,
-            $.pipe_expression,
-            $.or_expression,
-            $.and_expression,
-            $.additive_expression,
-            $.multiplicative_expression,
-            $.comparison_expression,
+            $.binary_expression,
             $.unary_expression,
-            $.cons_expression,
-            $.infix_expression,
             $.list_expression,
             $.array_expression,
             $.record_expression,
@@ -512,40 +501,26 @@ export default grammar({
             $.use_expression,
             $.computation_expression,
             $.for_expression,
-            $.for_range_expression,
             $.while_expression,
-            $.set_expression,
-            $.range_expression,
             $.dot_expression,
             $.index_expression,
-            $.try_with_expression,
-            $.try_finally_expression,
-            $.lazy_expression,
-            $.assert_expression,
+            $.try_expression,
+            $.prefix_keyword_expression,
             $.begin_end_expression,
             $.function_expression,
-            $.upcast_expression,
-            $.downcast_expression,
-            $.type_test_expression,
-            $.upcast_expr,
-            $.downcast_expr,
+            $.typecast_expression,
+            $.keyword_cast_expression,
             $.nameof_expression,
             $.new_expression,
             $.object_expression,
             // CE result forms — also valid in if/match branches inside CEs
-            $.ce_return_expr,
-            $.ce_return_bang_expr,
-            $.ce_yield_expr,
-            $.ce_yield_bang_expr,
-            $.ce_do_bang_expr,
+            $.ce_result_expr,
             $.struct_tuple_expression,
             $.typed_quotation,
             $.untyped_quotation,
             $.optional_named_arg,
             $.address_of_expression,
-            $.sizeof_expression,
-            $.typeof_expression,
-            $.typedefof_expression,
+            $.type_keyword_expression,
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -572,9 +547,12 @@ export default grammar({
         address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._expression)),
 
         // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics
-        sizeof_expression: $ => seq("sizeof", "<", $.type_expression, ">"),
-        typeof_expression: $ => seq("typeof", "<", $.type_expression, ">"),
-        typedefof_expression: $ => seq("typedefof", "<", $.type_expression, ">"),
+        type_keyword_expression: $ => seq(
+            choice("sizeof", "typeof", "typedefof"),
+            "<",
+            $.type_expression,
+            ">",
+        ),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
@@ -613,31 +591,20 @@ export default grammar({
             $.object_expression,
         ),
 
-        pipe_expression: $ => prec.left(PREC.PIPE_EXPR, seq(
-            $._expression,
-            choice("|>", "<|", ">>", "<<"),
-            $._expression,
-        )),
-
-        or_expression: $ => prec.left(PREC.BOOL_OR, seq(
-            $._expression, "||", $._expression,
-        )),
-
-        and_expression: $ => prec.left(PREC.BOOL_AND, seq(
-            $._expression, "&&", $._expression,
-        )),
-
-        additive_expression: $ => prec.left(PREC.ADDITIVE, seq(
-            $._expression,
-            choice("+", "-"),
-            $._expression,
-        )),
-
-        multiplicative_expression: $ => prec.left(PREC.MULTIPLICATIVE, seq(
-            $._expression,
-            choice("*", "/", "%"),
-            $._expression,
-        )),
+        // All infix binary operations collapsed into one rule to reduce post-_expression state bloat.
+        // Each alternative carries its own prec so shift/reduce between operators still resolves correctly.
+        binary_expression: $ => choice(
+            prec.left(PREC.PIPE_EXPR,      seq($._expression, choice("|>", "<|", ">>", "<<"), $._expression)),
+            prec.left(PREC.BOOL_OR,        seq($._expression, "||", $._expression)),
+            prec.left(PREC.BOOL_AND,       seq($._expression, "&&", $._expression)),
+            prec.left(PREC.ADDITIVE,       seq($._expression, choice("+", "-"), $._expression)),
+            prec.left(PREC.MULTIPLICATIVE, seq($._expression, choice("*", "/", "%"), $._expression)),
+            prec.left(PREC.INFIX_OP,       seq($._expression, choice(">", "<", ">=", "<=", "=", "<>"), $._expression)),
+            prec.right(PREC.INFIX_OP,      seq($._expression, "::", $._expression)),
+            prec.left(PREC.INFIX_OP,       seq($._expression, $.symbolic_op, $._expression)),
+            prec.right(PREC.LARROW,        seq($._expression, "<-", $._expression)),
+            prec.right(1,                  seq($._expression, "..", $._expression)),
+        ),
 
         lambda_expression: $ => prec.right(PREC.FUN_EXPR,
             seq(
@@ -648,23 +615,9 @@ export default grammar({
             ),
         ),
 
-        comparison_expression: $ => prec.left(PREC.INFIX_OP, seq(
-            $._expression,
-            choice(">", "<", ">=", "<=", "=", "<>"),
-            $._expression,
-        )),
-
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
             choice("not", "~~~", "-", "!"),
             $._expression,
-        )),
-
-        cons_expression: $ => prec.right(PREC.INFIX_OP, seq(
-            $._expression, "::", $._expression,
-        )),
-
-        infix_expression: $ => prec.left(PREC.INFIX_OP, seq(
-            $._expression, $.symbolic_op, $._expression,
         )),
 
         symbolic_op: _ => token(/[!$%&*+\-\/<=>?@^|][!$%&*+\/<=>?@^|~]*/),
@@ -860,18 +813,6 @@ export default grammar({
             seq("use", field('name', $.identifier), "=", $._expression),
         ),
 
-        // x <- value   (mutable assignment)
-        set_expression: $ => prec.right(PREC.LARROW,
-            seq($._expression, "<-", $._expression),
-        ),
-
-        // 1..10  (simple range — stepped ranges like 1..2..10 nest as range(1, range(2,10)))
-        // prec = 1 (lowest) so arithmetic/comparison binds first:
-        //   0..n-1  →  0..(n-1)   ✓
-        range_expression: $ => prec.right(1,
-            seq($._expression, "..", $._expression),
-        ),
-
         // expr.Member  — member access on any expression that can't extend long_identifier.
         // long_identifier(prec.right DOT=19) wins the shift-reduce conflict at "."
         // when the LHS is a plain identifier, so A.B.C stays a single long_identifier.
@@ -898,11 +839,9 @@ export default grammar({
             repeat(seq(",", $._index_arg)),
         ),
 
-        // index_slice vs range_expression both start with expr+"..", so we
-        // declare a GLR conflict and let the parser explore both paths:
-        //   1..   → index_slice wins  (range_expression fails: no rhs before ] or ,)
-        //   1..2  → range_expression wins (inside $._expression; index_slice fails: 2 ≠ ] or ,)
-        //   ..2   → index_slice only (unambiguous: range_expression needs lhs first)
+        // index_slice vs binary_expression(".." alternative) both start with expr+"..".
+        // prec.dynamic(DOTDOT_SLICE) on index_slice makes it preferred inside index args,
+        // where binary_expression's range alternative would fail (no rhs before ] or ,).
         index_slice: $ => prec.dynamic(PREC.DOTDOT_SLICE, choice(
             seq($._expression, ".."),
             seq("..", $._expression),
@@ -914,24 +853,13 @@ export default grammar({
         ),
 
         // ── Type casts ────────────────────────────────────────────────────────
-        // expr :> Type   — upcast (widening, always safe)
-        upcast_expression: $ => prec(PREC.TYPED_EXPR,
-            seq($._expression, ":>", $.type_expression),
-        ),
-
-        // expr :?> Type  — downcast (narrowing, throws InvalidCastException on failure)
-        downcast_expression: $ => prec(PREC.TYPED_EXPR,
-            seq($._expression, ":?>", $.type_expression),
-        ),
-
-        // expr :? Type   — type test, returns bool
-        type_test_expression: $ => prec(PREC.TYPED_EXPR,
-            seq($._expression, ":?", $.type_expression),
+        // expr :> Type   upcast;  expr :?> Type   downcast;  expr :? Type   type test
+        typecast_expression: $ => prec(PREC.TYPED_EXPR,
+            seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
 
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
-        upcast_expr: $ => seq("upcast", $._expression),
-        downcast_expr: $ => seq("downcast", $._expression),
+        keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),
 
         // nameof expr  — returns the string name of the identifier/member at compile time
         nameof_expression: $ => seq("nameof", $._simple_expression),
@@ -979,21 +907,19 @@ export default grammar({
             optional(seq("of", $.type_expression)),
         ),
 
-        // try expr with | pat -> expr …
-        try_with_expression: $ => prec.right(PREC.MATCH_EXPR,
-            seq("try", $._expression, "with", repeat1($.match_arm)),
+        // try expr with | pat -> expr …   /   try expr finally expr
+        try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
+            "try", $._expression,
+            choice(
+                seq("with", repeat1($.match_arm)),
+                seq("finally", $._expression),
+            ),
+        )),
+
+        // lazy expr / assert expr — prefix keyword wrapping an expression
+        prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR,
+            seq(choice("lazy", "assert"), $._expression),
         ),
-
-        // try expr finally expr
-        try_finally_expression: $ => seq(
-            "try", $._expression, "finally", $._expression,
-        ),
-
-        // lazy expr  — creates a Lazy<'T> thunk
-        lazy_expression: $ => prec(PREC.PREFIX_EXPR, seq("lazy", $._expression)),
-
-        // assert expr  — raises AssertionException if expr is false
-        assert_expression: $ => prec(PREC.PREFIX_EXPR, seq("assert", $._expression)),
 
         // begin expr end  — sequenced block (equivalent to parenthesized)
         begin_end_expression: $ => prec(PREC.PAREN_EXPR, seq("begin", $._expression, "end")),
@@ -1005,22 +931,20 @@ export default grammar({
 
         // ── For / While ───────────────────────────────────────────────────────
 
-        // for x in xs do body   (foreach loop)
-        // Pattern forms: for (k, v) in map do   for { X = x } in pts do   for _ in xs do
-        for_expression: $ => prec.right(PREC.IF_EXPR,
-            seq("for", choice(
-                $.identifier,
-                $.wildcard_pattern,
-                $.tuple_pattern,
-                $.record_pattern,
-            ), "in", $._expression, "do", $._expression),
-        ),
-
-        // for i = start to end do body  (range loop)
-        // for i = start downto end do body  (counting down)
-        for_range_expression: $ => prec.right(PREC.IF_EXPR,
-            seq("for", $.identifier, "=", $._expression, choice("to", "downto"), $._expression, "do", $._expression),
-        ),
+        // for x in xs do body   (foreach)  /  for i = start to/downto end do body  (range)
+        for_expression: $ => prec.right(PREC.IF_EXPR, seq(
+            "for",
+            choice(
+                seq(
+                    choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
+                    "in", $._expression, "do", $._expression,
+                ),
+                seq(
+                    $.identifier,
+                    "=", $._expression, choice("to", "downto"), $._expression, "do", $._expression,
+                ),
+            ),
+        )),
 
         // while cond do body   (imperative loop, returns unit)
         while_expression: $ => prec.right(PREC.IF_EXPR,
@@ -1046,13 +970,12 @@ export default grammar({
         // Inline rule: just a named alias for the choice.
         _ce_statement: $ => choice(
             $.ce_let_bang_expr,
-            $.ce_do_bang_expr,
             $.use_binding,
             $.ce_use_bang_expr,
             $.ce_match_bang_expr,
             $.let_binding,
             $.do_stmt,
-            $._expression,  // covers return/yield/return!/yield!/for/while/if/match/…
+            $._expression,  // covers return/yield/return!/yield!/do!/for/while/if/match/…
         ),
 
         // let! x = expr [and! y = expr ...]  — parallel applicative binding
@@ -1071,9 +994,6 @@ export default grammar({
             )), "=", $._expression),
         ),
 
-        // do! expr
-        ce_do_bang_expr: $ => seq("do!", $._expression),
-
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
             seq("use", field('name', $.identifier), "=", $._expression),
@@ -1089,17 +1009,14 @@ export default grammar({
             seq("match!", $._expression, "with", repeat1($.match_arm)),
         ),
 
-        // return expr   (also in _expression so it works in if/match branches)
-        ce_return_expr: $ => seq("return", $._expression),
-
-        // return! expr
-        ce_return_bang_expr: $ => seq("return!", $._expression),
-
-        // yield expr
-        ce_yield_expr: $ => seq("yield", $._expression),
-
-        // yield! expr
-        ce_yield_bang_expr: $ => seq("yield!", $._expression),
+        // return/yield/do! result forms — in _expression so they work inside if/match branches in CEs
+        ce_result_expr: $ => choice(
+            seq("return", $._expression),
+            seq("return!", $._expression),
+            seq("yield", $._expression),
+            seq("yield!", $._expression),
+            seq("do!", $._expression),
+        ),
 
         match_expression: ($) => prec.right(PREC.MATCH_EXPR,
             seq(

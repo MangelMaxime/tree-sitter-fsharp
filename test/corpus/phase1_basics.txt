@@ -351,7 +351,7 @@ fun x -> x + 1
 (source_file
   (lambda_expression
     (parameter (identifier))
-    (additive_expression
+    (binary_expression
       (long_identifier (identifier))
       (int_literal))))
 
@@ -623,7 +623,7 @@ Parenthesized expression
 
 (source_file
   (parenthesized_expression
-    (additive_expression
+    (binary_expression
       (int_literal)
       (int_literal))))
 
@@ -636,7 +636,7 @@ Additive expression
 --------------------------------------------------------------------------------
 
 (source_file
-  (additive_expression
+  (binary_expression
     (int_literal)
     (int_literal)))
 
@@ -649,9 +649,9 @@ Multiplicative binds tighter than additive
 --------------------------------------------------------------------------------
 
 (source_file
-  (additive_expression
+  (binary_expression
     (int_literal)
-    (multiplicative_expression
+    (binary_expression
       (int_literal)
       (int_literal))))
 
@@ -664,8 +664,8 @@ a + b > c
 --------------------------------------------------------------------------------
 
 (source_file
-  (comparison_expression
-    (additive_expression
+  (binary_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -682,13 +682,13 @@ a > b && c > d
 --------------------------------------------------------------------------------
 
 (source_file
-  (and_expression
-    (comparison_expression
+  (binary_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
         (identifier)))
-    (comparison_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -703,10 +703,10 @@ a || b && c
 --------------------------------------------------------------------------------
 
 (source_file
-  (or_expression
+  (binary_expression
     (long_identifier
       (identifier))
-    (and_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -721,7 +721,7 @@ x |> f
 --------------------------------------------------------------------------------
 
 (source_file
-  (pipe_expression
+  (binary_expression
     (long_identifier
       (identifier))
     (long_identifier
@@ -738,10 +738,10 @@ let result = a + b * c
 (source_file
   (let_binding
     name: (identifier)
-    (additive_expression
+    (binary_expression
       (long_identifier
         (identifier))
-      (multiplicative_expression
+      (binary_expression
         (long_identifier
           (identifier))
         (long_identifier
@@ -780,7 +780,7 @@ x :: xs
 --------------------------------------------------------------------------------
 
 (source_file
-  (cons_expression
+  (binary_expression
     (long_identifier
       (identifier))
     (long_identifier
@@ -795,10 +795,10 @@ x :: y :: z
 --------------------------------------------------------------------------------
 
 (source_file
-  (cons_expression
+  (binary_expression
     (long_identifier
       (identifier))
-    (cons_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -813,7 +813,7 @@ a >>= b
 --------------------------------------------------------------------------------
 
 (source_file
-  (infix_expression
+  (binary_expression
     (long_identifier
       (identifier))
     (symbolic_op)
@@ -829,7 +829,7 @@ xs @ ys
 --------------------------------------------------------------------------------
 
 (source_file
-  (infix_expression
+  (binary_expression
     (long_identifier
       (identifier))
     (symbolic_op)
@@ -845,8 +845,8 @@ a + b :: c
 --------------------------------------------------------------------------------
 
 (source_file
-  (cons_expression
-    (additive_expression
+  (binary_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -866,7 +866,7 @@ let inline square x = x * x
   (let_binding
     name: (identifier)
     parameters: (parameter (identifier))
-    (multiplicative_expression
+    (binary_expression
       (long_identifier (identifier))
       (long_identifier (identifier)))))
 
@@ -911,7 +911,7 @@ let x = 1 in x + 1
   (let_expression
     name: (identifier)
     (int_literal)
-    (additive_expression
+    (binary_expression
       (long_identifier (identifier))
       (int_literal))))
 
@@ -927,7 +927,7 @@ let double x = x * 2 in double 21
   (let_expression
     name: (identifier)
     parameters: (parameter (identifier))
-    (multiplicative_expression
+    (binary_expression
       (long_identifier (identifier))
       (int_literal))
     (application_expression
@@ -949,7 +949,7 @@ let x = 1 in let y = 2 in x + y
     (let_expression
       name: (identifier)
       (int_literal)
-      (additive_expression
+      (binary_expression
         (long_identifier (identifier))
         (long_identifier (identifier))))))
 
@@ -1040,7 +1040,7 @@ a || b, c
 
 (source_file
   (tuple_expression
-    (or_expression
+    (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -1067,7 +1067,7 @@ match x with
         (identifier_pattern
           (long_identifier
             (identifier))))
-      (comparison_expression
+      (binary_expression
         (long_identifier
           (identifier))
         (int_literal))
@@ -1360,7 +1360,7 @@ let x = arr.[1..2]
     name: (identifier)
     (index_expression
       object: (long_identifier (identifier))
-      index: (range_expression
+      index: (binary_expression
         (int_literal)
         (int_literal)))))
 
@@ -1544,7 +1544,7 @@ let x = arr.[0..1].Length.ToString()
         object: (dot_expression
           object: (index_expression
             object: (long_identifier (identifier))
-            index: (range_expression (int_literal) (int_literal)))
+            index: (binary_expression (int_literal) (int_literal)))
           member: (identifier))
         member: (identifier))
       (unit))))
@@ -1597,7 +1597,7 @@ member this.Value
       (long_identifier (identifier)))
     (property_accessor
       parameters: (parameter (identifier))
-      (set_expression
+      (binary_expression
         (long_identifier (identifier))
         (long_identifier (identifier))))))
 
@@ -1615,7 +1615,7 @@ member this.Raw with set v = _x <- v
     name: (identifier)
     (property_accessor
       parameters: (parameter (identifier))
-      (set_expression
+      (binary_expression
         (long_identifier (identifier))
         (long_identifier (identifier))))))
 
@@ -1687,9 +1687,9 @@ let x = lazy (1 + 2)
 (source_file
   (let_binding
     name: (identifier)
-    (lazy_expression
+    (prefix_keyword_expression
       (parenthesized_expression
-        (additive_expression (int_literal) (int_literal))))))
+        (binary_expression (int_literal) (int_literal))))))
 
 ================================================================================
 Assert expression
@@ -1702,9 +1702,9 @@ let x = assert (n > 0)
 (source_file
   (let_binding
     name: (identifier)
-    (assert_expression
+    (prefix_keyword_expression
       (parenthesized_expression
-        (comparison_expression (long_identifier (identifier)) (int_literal))))))
+        (binary_expression (long_identifier (identifier)) (int_literal))))))
 
 ================================================================================
 Function expression
@@ -1734,7 +1734,7 @@ for i = 1 to 5 do printfn "x"
 --------------------------------------------------------------------------------
 
 (source_file
-  (for_range_expression
+  (for_expression
     (identifier)
     (int_literal)
     (int_literal)
@@ -1751,7 +1751,7 @@ for i = 5 downto 1 do printfn "x"
 --------------------------------------------------------------------------------
 
 (source_file
-  (for_range_expression
+  (for_expression
     (identifier)
     (int_literal)
     (int_literal)
@@ -1771,7 +1771,7 @@ let x = begin 1 + 2 end
   (let_binding
     name: (identifier)
     (begin_end_expression
-      (additive_expression (int_literal) (int_literal)))))
+      (binary_expression (int_literal) (int_literal)))))
 
 ================================================================================
 Mutual recursion with and
@@ -2116,7 +2116,7 @@ match s with
             name: (identifier)
             value: (pattern
               (identifier_pattern (long_identifier (identifier)))))))
-      (multiplicative_expression
+      (binary_expression
         (long_identifier (identifier))
         (long_identifier (identifier))))))
 
@@ -2211,7 +2211,7 @@ let (|Double|) n = n * 2
   (let_binding
     name: (active_pattern_name)
     parameters: (parameter (identifier))
-    (multiplicative_expression
+    (binary_expression
       (long_identifier (identifier))
       (int_literal))))
 
@@ -2479,7 +2479,7 @@ let b = 1.0 < x
 (source_file
   (let_binding
     name: (identifier)
-    (comparison_expression
+    (binary_expression
       (float_literal)
       (long_identifier (identifier)))))
 
@@ -2537,7 +2537,7 @@ $"Result: {x + 1}"
   (interpolated_string
     (string_content)
     (interpolation
-      (additive_expression
+      (binary_expression
         (long_identifier (identifier))
         (int_literal)))))
 
@@ -2772,10 +2772,10 @@ match t with
     (match_arm
       (pattern (identifier_pattern (long_identifier (identifier))))
       (pattern (identifier_pattern (long_identifier (identifier))))
-      (comparison_expression
+      (binary_expression
         (long_identifier (identifier))
         (int_literal))
-      (additive_expression
+      (binary_expression
         (long_identifier (identifier))
         (long_identifier (identifier))))
     (match_arm
@@ -2818,7 +2818,7 @@ type System.String with
   (member_defn
     self: (member_self_ident (identifier))
     name: (identifier)
-    (comparison_expression
+    (binary_expression
       (long_identifier (identifier) (identifier))
       (int_literal))))
 

@@ -6,8 +6,14 @@ HELIX_GRAMMARS="$HOME/.config/helix/runtime/grammars"
 HELIX_QUERIES="$HOME/.config/helix/runtime/queries/fsharp"
 
 # --- Compile ---
-echo "Generating parser..."
-tree-sitter generate "$REPO_DIR/grammar.js"
+# Skip regeneration if grammar.js and scanner.c are older than the generated parser.c.
+if [ "$REPO_DIR/src/parser.c" -nt "$REPO_DIR/grammar.js" ] && \
+   [ "$REPO_DIR/src/parser.c" -nt "$REPO_DIR/src/scanner.c" ]; then
+    echo "Skipping parser generation (grammar unchanged)..."
+else
+    echo "Generating parser..."
+    tree-sitter generate "$REPO_DIR/grammar.js"
+fi
 
 echo "Building parser.so..."
 tree-sitter build --output "$REPO_DIR/parser.so"
