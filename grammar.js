@@ -723,8 +723,21 @@ export default grammar({
             ),
         ),
 
-        // let (>>=) a b = ...  — operator definition name in parens
-        operator_name: $ => seq("(", $.symbolic_op, ")"),
+        // let (>>=) a b = ...  — operator definition name in parens.
+        // symbolic_op only matches multi-char operators (deliberately tightened for perf),
+        // so single-char operators that are also valid F# operator names are listed
+        // explicitly here. They tokenise as their own keywords elsewhere; this just
+        // lets the parser accept them inside the (...) operator-name wrapper.
+        operator_name: $ => seq(
+            "(",
+            choice(
+                $.symbolic_op,
+                "+", "-", "*", "/", "%",
+                "=", "<", ">",
+                "&", "|", "^",
+            ),
+            ")",
+        ),
 
         // The name a let-binding can bind. Hidden helper so the choice's LR states
         // are built once and shared across let_binding, let_and_binding,

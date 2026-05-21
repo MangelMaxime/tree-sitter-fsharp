@@ -199,8 +199,10 @@ let add a b = a
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
     (long_identifier
       (identifier))))
 
@@ -303,7 +305,8 @@ fun x -> x
 
 (source_file
   (lambda_expression
-    (parameter (identifier))
+    (parameter
+      (identifier))
     (long_identifier
       (identifier))))
 
@@ -317,8 +320,10 @@ fun x y -> x
 
 (source_file
   (lambda_expression
-    (parameter (identifier))
-    (parameter (identifier))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
     (long_identifier
       (identifier))))
 
@@ -350,9 +355,11 @@ fun x -> x + 1
 
 (source_file
   (lambda_expression
-    (parameter (identifier))
+    (parameter
+      (identifier))
     (binary_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (int_literal))))
 
 ================================================================================
@@ -865,10 +872,13 @@ let inline square x = x * x
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (binary_expression
-      (long_identifier (identifier))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Let mutable binding
@@ -894,10 +904,13 @@ let rec go n = go n
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (application_expression
-      (long_identifier (identifier))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Let expression with in
@@ -912,7 +925,8 @@ let x = 1 in x + 1
     name: (identifier)
     (int_literal)
     (binary_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (int_literal))))
 
 ================================================================================
@@ -926,12 +940,15 @@ let double x = x * 2 in double 21
 (source_file
   (let_expression
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (binary_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (int_literal))
     (application_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (int_literal))))
 
 ================================================================================
@@ -950,8 +967,10 @@ let x = 1 in let y = 2 in x + y
       name: (identifier)
       (int_literal)
       (binary_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Empty list expression
@@ -1172,10 +1191,13 @@ let f : int -> string = ignore
     return_type: (type_expression
       (function_type
         (type_expression
-          (long_identifier (identifier)))
+          (long_identifier
+            (identifier)))
         (type_expression
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Tuple type annotation
@@ -1191,10 +1213,13 @@ let t : int * string = ignore
     return_type: (type_expression
       (tuple_type
         (type_expression
-          (long_identifier (identifier)))
+          (long_identifier
+            (identifier)))
         (type_expression
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Generic type annotation
@@ -1209,10 +1234,13 @@ let xs : list<int> = ignore
     name: (identifier)
     return_type: (type_expression
       (generic_type
-        (long_identifier (identifier))
+        (long_identifier
+          (identifier))
         (type_expression
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Postfix type annotation
@@ -1228,9 +1256,12 @@ let xs : int list = ignore
     return_type: (type_expression
       (postfix_type
         (type_expression
-          (long_identifier (identifier)))
-        (long_identifier (identifier))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Type parameter annotation
@@ -1245,9 +1276,12 @@ let id : 'a -> 'a = ignore
     name: (identifier)
     return_type: (type_expression
       (function_type
-        (type_expression (type_parameter))
-        (type_expression (type_parameter))))
-    (long_identifier (identifier))))
+        (type_expression
+          (type_parameter))
+        (type_expression
+          (type_parameter))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Array type annotation
@@ -1263,8 +1297,10 @@ let arr : int[] = ignore
     return_type: (type_expression
       (array_type
         (type_expression
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Function type is right-associative
@@ -1280,14 +1316,18 @@ let f : int -> int -> int = ignore
     return_type: (type_expression
       (function_type
         (type_expression
-          (long_identifier (identifier)))
+          (long_identifier
+            (identifier)))
         (type_expression
           (function_type
             (type_expression
-              (long_identifier (identifier)))
+              (long_identifier
+                (identifier)))
             (type_expression
-              (long_identifier (identifier)))))))
-    (long_identifier (identifier))))
+              (long_identifier
+                (identifier)))))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Tuple type binds tighter than function arrow
@@ -1305,12 +1345,16 @@ let f : int * string -> bool = ignore
         (type_expression
           (tuple_type
             (type_expression
-              (long_identifier (identifier)))
+              (long_identifier
+                (identifier)))
             (type_expression
-              (long_identifier (identifier)))))
+              (long_identifier
+                (identifier)))))
         (type_expression
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Typed parameter with postfix type
@@ -1328,9 +1372,12 @@ let f (x: int list) = x
       (type_expression
         (postfix_type
           (type_expression
-            (long_identifier (identifier)))
-          (long_identifier (identifier)))))
-    (long_identifier (identifier))))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Index expression single element
@@ -1344,7 +1391,8 @@ let x = arr.[0]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (int_literal))))
 
 ================================================================================
@@ -1359,7 +1407,8 @@ let x = arr.[1..2]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (binary_expression
         (int_literal)
         (int_literal)))))
@@ -1376,7 +1425,8 @@ let x = arr.[1..]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (index_slice
         (int_literal)))))
 
@@ -1392,7 +1442,8 @@ let x = arr.[..2]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (index_slice
         (int_literal)))))
 
@@ -1408,7 +1459,8 @@ let x = dict.["key"]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (string_literal))))
 
 ================================================================================
@@ -1423,7 +1475,8 @@ let x = matrix.[0, 1]
   (let_binding
     name: (identifier)
     (index_expression
-      object: (long_identifier (identifier))
+      object: (long_identifier
+        (identifier))
       index: (tuple_expression
         (int_literal)
         (int_literal)))))
@@ -1440,11 +1493,14 @@ let x = { new IFoo with member this.Bar() = 42 }
   (let_binding
     name: (identifier)
     (object_expression
-      type: (long_identifier (identifier))
+      type: (long_identifier
+        (identifier))
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
-        parameters: (parameter (unit))
+        parameters: (parameter
+          (unit))
         (int_literal)))))
 
 ================================================================================
@@ -1459,10 +1515,12 @@ let x = { new Base(42) with override this.Name = "x" }
   (let_binding
     name: (identifier)
     (object_expression
-      type: (long_identifier (identifier))
+      type: (long_identifier
+        (identifier))
       (int_literal)
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
         (string_literal)))))
 
@@ -1482,18 +1540,25 @@ let x =
   (let_binding
     name: (identifier)
     (object_expression
-      type: (long_identifier (identifier))
+      type: (long_identifier
+        (identifier))
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
-        parameters: (parameter (unit))
+        parameters: (parameter
+          (unit))
         (int_literal))
       (interface_impl
-        type: (type_expression (long_identifier (identifier))))
+        type: (type_expression
+          (long_identifier
+            (identifier))))
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
-        parameters: (parameter (unit))
+        parameters: (parameter
+          (unit))
         (int_literal)))))
 
 ================================================================================
@@ -1509,7 +1574,8 @@ let x = arr.[0].Length
     name: (identifier)
     (dot_expression
       object: (index_expression
-        object: (long_identifier (identifier))
+        object: (long_identifier
+          (identifier))
         index: (int_literal))
       member: (identifier))))
 
@@ -1525,7 +1591,8 @@ let x = ("hello").Length
   (let_binding
     name: (identifier)
     (dot_expression
-      object: (parenthesized_expression (string_literal))
+      object: (parenthesized_expression
+        (string_literal))
       member: (identifier))))
 
 ================================================================================
@@ -1543,8 +1610,11 @@ let x = arr.[0..1].Length.ToString()
       (dot_expression
         object: (dot_expression
           object: (index_expression
-            object: (long_identifier (identifier))
-            index: (binary_expression (int_literal) (int_literal)))
+            object: (long_identifier
+              (identifier))
+            index: (binary_expression
+              (int_literal)
+              (int_literal)))
           member: (identifier))
         member: (identifier))
       (unit))))
@@ -1560,7 +1630,9 @@ let x = List.map
 (source_file
   (let_binding
     name: (identifier)
-    (long_identifier (identifier) (identifier))))
+    (long_identifier
+      (identifier)
+      (identifier))))
 
 ================================================================================
 Property get accessor
@@ -1572,11 +1644,14 @@ member this.Count with get() = _count
 
 (source_file
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
     (property_accessor
-      parameters: (parameter (unit))
-      (long_identifier (identifier)))))
+      parameters: (parameter
+        (unit))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Property get and set accessors
@@ -1590,16 +1665,22 @@ member this.Value
 
 (source_file
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
     (property_accessor
-      parameters: (parameter (unit))
-      (long_identifier (identifier)))
+      parameters: (parameter
+        (unit))
+      (long_identifier
+        (identifier)))
     (property_accessor
-      parameters: (parameter (identifier))
+      parameters: (parameter
+        (identifier))
       (binary_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Property set accessor bare identifier
@@ -1611,13 +1692,17 @@ member this.Raw with set v = _x <- v
 
 (source_file
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
     (property_accessor
-      parameters: (parameter (identifier))
+      parameters: (parameter
+        (identifier))
       (binary_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Static property get accessor
@@ -1631,7 +1716,8 @@ static member Zero with get() = 0
   (member_defn
     name: (identifier)
     (property_accessor
-      parameters: (parameter (unit))
+      parameters: (parameter
+        (unit))
       (int_literal))))
 
 ================================================================================
@@ -1689,7 +1775,9 @@ let x = lazy (1 + 2)
     name: (identifier)
     (prefix_keyword_expression
       (parenthesized_expression
-        (binary_expression (int_literal) (int_literal))))))
+        (binary_expression
+          (int_literal)
+          (int_literal))))))
 
 ================================================================================
 Assert expression
@@ -1704,7 +1792,10 @@ let x = assert (n > 0)
     name: (identifier)
     (prefix_keyword_expression
       (parenthesized_expression
-        (binary_expression (long_identifier (identifier)) (int_literal))))))
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (int_literal))))))
 
 ================================================================================
 Function expression
@@ -1719,10 +1810,13 @@ let f = function | 0 -> "zero" | _ -> "other"
     name: (identifier)
     (function_expression
       (match_arm
-        (pattern (literal_pattern (int_literal)))
+        (pattern
+          (literal_pattern
+            (int_literal)))
         (string_literal))
       (match_arm
-        (pattern (wildcard_pattern))
+        (pattern
+          (wildcard_pattern))
         (string_literal)))))
 
 ================================================================================
@@ -1739,7 +1833,8 @@ for i = 1 to 5 do printfn "x"
     (int_literal)
     (int_literal)
     (application_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (string_literal))))
 
 ================================================================================
@@ -1756,7 +1851,8 @@ for i = 5 downto 1 do printfn "x"
     (int_literal)
     (int_literal)
     (application_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (string_literal))))
 
 ================================================================================
@@ -1771,7 +1867,9 @@ let x = begin 1 + 2 end
   (let_binding
     name: (identifier)
     (begin_end_expression
-      (binary_expression (int_literal) (int_literal)))))
+      (binary_expression
+        (int_literal)
+        (int_literal)))))
 
 ================================================================================
 Mutual recursion with and
@@ -1785,12 +1883,16 @@ and g x = x
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
-    (long_identifier (identifier))
+    parameters: (parameter
+      (identifier))
+    (long_identifier
+      (identifier))
     (let_and_binding
       name: (identifier)
-      parameters: (parameter (identifier))
-      (long_identifier (identifier)))))
+      parameters: (parameter
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Enum type definition
@@ -1807,9 +1909,15 @@ type Color =
   (type_decl
     name: (identifier)
     (enum_type_defn
-      (enum_case name: (identifier) value: (int_literal))
-      (enum_case name: (identifier) value: (int_literal))
-      (enum_case name: (identifier) value: (int_literal)))))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal)))))
 
 ================================================================================
 Enum type definition with hex values
@@ -1825,8 +1933,12 @@ type Nibble =
   (type_decl
     name: (identifier)
     (enum_type_defn
-      (enum_case name: (identifier) value: (int_literal))
-      (enum_case name: (identifier) value: (int_literal)))))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal)))))
 
 ================================================================================
 Record pattern single field
@@ -1839,15 +1951,20 @@ match p with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (record_pattern
           (record_field_pattern
-            name: (long_identifier (identifier))
+            name: (long_identifier
+              (identifier))
             value: (pattern
-              (identifier_pattern (long_identifier (identifier)))))))
-      (long_identifier (identifier)))))
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Record pattern multi field with semicolons
@@ -1861,19 +1978,27 @@ match p with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (record_pattern
           (record_field_pattern
-            name: (long_identifier (identifier))
-            value: (pattern (literal_pattern (int_literal))))
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (literal_pattern
+                (int_literal))))
           (record_field_pattern
-            name: (long_identifier (identifier))
-            value: (pattern (literal_pattern (int_literal))))))
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (literal_pattern
+                (int_literal))))))
       (bool_literal))
     (match_arm
-      (pattern (wildcard_pattern))
+      (pattern
+        (wildcard_pattern))
       (bool_literal))))
 
 ================================================================================
@@ -1887,13 +2012,16 @@ match p with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (record_pattern
           (record_field_pattern
-            name: (long_identifier (identifier))
-            value: (pattern (wildcard_pattern)))))
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (wildcard_pattern)))))
       (int_literal))))
 
 ================================================================================
@@ -1907,20 +2035,28 @@ match r with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (record_pattern
           (record_field_pattern
-            name: (long_identifier (identifier))
+            name: (long_identifier
+              (identifier))
             value: (pattern
               (record_pattern
                 (record_field_pattern
-                  name: (long_identifier (identifier))
-                  value: (pattern (literal_pattern (int_literal))))
+                  name: (long_identifier
+                    (identifier))
+                  value: (pattern
+                    (literal_pattern
+                      (int_literal))))
                 (record_field_pattern
-                  name: (long_identifier (identifier))
-                  value: (pattern (literal_pattern (int_literal)))))))))
+                  name: (long_identifier
+                    (identifier))
+                  value: (pattern
+                    (literal_pattern
+                      (int_literal)))))))))
       (bool_literal))))
 
 ================================================================================
@@ -1941,7 +2077,8 @@ type Shape =
         (union_case_named_fields
           (union_case_field
             name: (identifier)
-            type: (long_identifier (identifier))))))))
+            type: (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Named union fields multiple
@@ -1961,10 +2098,12 @@ type Shape =
         (union_case_named_fields
           (union_case_field
             name: (identifier)
-            type: (long_identifier (identifier)))
+            type: (long_identifier
+              (identifier)))
           (union_case_field
             name: (identifier)
-            type: (long_identifier (identifier))))))))
+            type: (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Named union field with postfix type
@@ -1984,12 +2123,16 @@ type T =
         (union_case_named_fields
           (union_case_field
             name: (identifier)
-            type: (long_identifier (identifier)))
+            type: (long_identifier
+              (identifier)))
           (union_case_field
             name: (identifier)
             type: (postfix_type
-              (type_expression (long_identifier (identifier)))
-              (long_identifier (identifier)))))))))
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))))
 
 ================================================================================
 Anonymous union fields still work
@@ -2007,13 +2150,19 @@ type Shape =
     (union_type_defn
       (union_case
         name: (identifier)
-        fields: (type_expression (long_identifier (identifier))))
+        fields: (type_expression
+          (long_identifier
+            (identifier))))
       (union_case
         name: (identifier)
         fields: (type_expression
           (tuple_type
-            (type_expression (long_identifier (identifier)))
-            (type_expression (long_identifier (identifier)))))))))
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier)))))))))
 
 ================================================================================
 Mutual type recursion union
@@ -2032,16 +2181,21 @@ and Odd =
   (type_decl
     name: (identifier)
     (union_type_defn
-      (union_case name: (identifier))
+      (union_case
+        name: (identifier))
       (union_case
         name: (identifier)
-        fields: (type_expression (long_identifier (identifier)))))
+        fields: (type_expression
+          (long_identifier
+            (identifier)))))
     (type_and_decl
       name: (identifier)
       (union_type_defn
         (union_case
           name: (identifier)
-          fields: (type_expression (long_identifier (identifier))))))))
+          fields: (type_expression
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Mutual type recursion with alias
@@ -2059,16 +2213,22 @@ and JsonArray = JsonValue list
   (type_decl
     name: (identifier)
     (union_type_defn
-      (union_case name: (identifier))
+      (union_case
+        name: (identifier))
       (union_case
         name: (identifier)
-        fields: (type_expression (long_identifier (identifier)))))
+        fields: (type_expression
+          (long_identifier
+            (identifier)))))
     (type_and_decl
       name: (identifier)
       alias: (type_expression
         (postfix_type
-          (type_expression (long_identifier (identifier)))
-          (long_identifier (identifier)))))))
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Named DU field pattern single field
@@ -2081,16 +2241,21 @@ match s with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (named_field_pattern
-          constructor: (long_identifier (identifier))
+          constructor: (long_identifier
+            (identifier))
           (named_field_pat
             name: (identifier)
             value: (pattern
-              (identifier_pattern (long_identifier (identifier)))))))
-      (long_identifier (identifier)))))
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Named DU field pattern multiple fields
@@ -2103,22 +2268,30 @@ match s with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (named_field_pattern
-          constructor: (long_identifier (identifier))
+          constructor: (long_identifier
+            (identifier))
           (named_field_pat
             name: (identifier)
             value: (pattern
-              (identifier_pattern (long_identifier (identifier)))))
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
           (named_field_pat
             name: (identifier)
             value: (pattern
-              (identifier_pattern (long_identifier (identifier)))))))
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
       (binary_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Named DU field pattern with wildcard
@@ -2131,14 +2304,17 @@ match s with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (named_field_pattern
-          constructor: (long_identifier (identifier))
+          constructor: (long_identifier
+            (identifier))
           (named_field_pat
             name: (identifier)
-            value: (pattern (wildcard_pattern)))))
+            value: (pattern
+              (wildcard_pattern)))))
       (int_literal))))
 
 ================================================================================
@@ -2153,23 +2329,36 @@ match s with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
       (pattern
         (identifier_pattern
-          (long_identifier (identifier))
+          (long_identifier
+            (identifier))
           (pattern
-            (identifier_pattern (long_identifier (identifier))))))
-      (long_identifier (identifier)))
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier)))
     (match_arm
       (pattern
         (identifier_pattern
-          (long_identifier (identifier))
+          (long_identifier
+            (identifier))
           (pattern
             (tuple_pattern
-              (pattern (identifier_pattern (long_identifier (identifier))))
-              (pattern (identifier_pattern (long_identifier (identifier))))))))
-      (long_identifier (identifier)))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Active pattern complete multi-case
@@ -2182,8 +2371,10 @@ let (|Even|Odd|) n = n
 (source_file
   (let_binding
     name: (active_pattern_name)
-    parameters: (parameter (identifier))
-    (long_identifier (identifier))))
+    parameters: (parameter
+      (identifier))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Active pattern partial
@@ -2196,8 +2387,10 @@ let (|ParseInt|_|) s = None
 (source_file
   (let_binding
     name: (active_pattern_name)
-    parameters: (parameter (identifier))
-    (long_identifier (identifier))))
+    parameters: (parameter
+      (identifier))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Active pattern single case
@@ -2210,9 +2403,11 @@ let (|Double|) n = n * 2
 (source_file
   (let_binding
     name: (active_pattern_name)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (binary_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (int_literal))))
 
 ================================================================================
@@ -2226,9 +2421,12 @@ let (|DivisibleBy|_|) d n = n
 (source_file
   (let_binding
     name: (active_pattern_name)
-    parameters: (parameter (identifier))
-    parameters: (parameter (identifier))
-    (long_identifier (identifier))))
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    (long_identifier
+      (identifier))))
 
 ================================================================================
 Operator definition not broken by active pattern token
@@ -2240,12 +2438,17 @@ let (|>) a f = f a
 
 (source_file
   (let_binding
-    name: (operator_name (symbolic_op))
-    parameters: (parameter (identifier))
-    parameters: (parameter (identifier))
+    name: (operator_name
+      (symbolic_op))
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
     (application_expression
-      (long_identifier (identifier))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Anonymous record expression single field
@@ -2260,7 +2463,8 @@ let p = {| X = 1.0 |}
     name: (identifier)
     (anonymous_record_expression
       (record_field
-        name: (long_identifier (identifier))
+        name: (long_identifier
+          (identifier))
         value: (float_literal)))))
 
 ================================================================================
@@ -2276,10 +2480,12 @@ let alice = {| Name = "Alice"; Age = 30 |}
     name: (identifier)
     (anonymous_record_expression
       (record_field
-        name: (long_identifier (identifier))
+        name: (long_identifier
+          (identifier))
         value: (string_literal))
       (record_field
-        name: (long_identifier (identifier))
+        name: (long_identifier
+          (identifier))
         value: (int_literal)))))
 
 ================================================================================
@@ -2294,9 +2500,11 @@ let bob = {| alice with Name = "Bob" |}
   (let_binding
     name: (identifier)
     (anonymous_record_expression
-      base: (long_identifier (identifier))
+      base: (long_identifier
+        (identifier))
       (record_field
-        name: (long_identifier (identifier))
+        name: (long_identifier
+          (identifier))
         value: (string_literal)))))
 
 ================================================================================
@@ -2314,10 +2522,14 @@ type Point = {| X: float; Y: float |}
       (anonymous_record_type
         (record_type_field
           name: (identifier)
-          type: (type_expression (long_identifier (identifier))))
+          type: (type_expression
+            (long_identifier
+              (identifier))))
         (record_type_field
           name: (identifier)
-          type: (type_expression (long_identifier (identifier))))))))
+          type: (type_expression
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Measure type bodyless declaration
@@ -2330,7 +2542,8 @@ Measure type bodyless declaration
 (source_file
   (attribute
     (attribute_target
-      name: (long_identifier (identifier))))
+      name: (long_identifier
+        (identifier))))
   (type_decl
     name: (identifier)))
 
@@ -2345,12 +2558,14 @@ Measure type alias with power
 (source_file
   (attribute
     (attribute_target
-      name: (long_identifier (identifier))))
+      name: (long_identifier
+        (identifier))))
   (type_decl
     name: (identifier)
     alias: (type_expression
       (measure_power_type
-        (long_identifier (identifier))
+        (long_identifier
+          (identifier))
         (int_literal)))))
 
 ================================================================================
@@ -2364,15 +2579,18 @@ Measure type alias with division
 (source_file
   (attribute
     (attribute_target
-      name: (long_identifier (identifier))))
+      name: (long_identifier
+        (identifier))))
   (type_decl
     name: (identifier)
     alias: (measure_expression
       (measure_expression
-        (long_identifier (identifier)))
+        (long_identifier
+          (identifier)))
       (measure_expression
         (measure_power_type
-          (long_identifier (identifier))
+          (long_identifier
+            (identifier))
           (int_literal))))))
 
 ================================================================================
@@ -2386,18 +2604,22 @@ Measure type alias with multiplication and division
 (source_file
   (attribute
     (attribute_target
-      name: (long_identifier (identifier))))
+      name: (long_identifier
+        (identifier))))
   (type_decl
     name: (identifier)
     alias: (measure_expression
       (measure_expression
         (measure_expression
-          (long_identifier (identifier)))
+          (long_identifier
+            (identifier)))
         (measure_expression
-          (long_identifier (identifier))))
+          (long_identifier
+            (identifier))))
       (measure_expression
         (measure_power_type
-          (long_identifier (identifier))
+          (long_identifier
+            (identifier))
           (int_literal))))))
 
 ================================================================================
@@ -2414,7 +2636,8 @@ let x = 3.0<cm>
     (measure_literal
       (float_literal)
       (measure_expression
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Measure literal integer
@@ -2430,7 +2653,8 @@ let n = 1000u<steps>
     (measure_literal
       (int_literal)
       (measure_expression
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Measure literal compound unit
@@ -2447,9 +2671,11 @@ let s = 55.0<miles/hour>
       (float_literal)
       (measure_expression
         (measure_expression
-          (long_identifier (identifier)))
+          (long_identifier
+            (identifier)))
         (measure_expression
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Generic type with measure unit
@@ -2464,12 +2690,15 @@ type Speed = float<m/s>
     name: (identifier)
     alias: (type_expression
       (generic_type
-        (long_identifier (identifier))
+        (long_identifier
+          (identifier))
         (measure_expression
           (measure_expression
-            (long_identifier (identifier)))
+            (long_identifier
+              (identifier)))
           (measure_expression
-            (long_identifier (identifier))))))))
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Comparison expression not broken by measure literal
@@ -2484,7 +2713,8 @@ let b = 1.0 < x
     name: (identifier)
     (binary_expression
       (float_literal)
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Measure attribute on separate line
@@ -2498,7 +2728,8 @@ type m
 (source_file
   (attribute
     (attribute_target
-      name: (long_identifier (identifier))))
+      name: (long_identifier
+        (identifier))))
   (type_decl
     name: (identifier)))
 
@@ -2526,7 +2757,8 @@ $"Hello {name}!"
   (interpolated_string
     (string_content)
     (interpolation
-      (long_identifier (identifier)))
+      (long_identifier
+        (identifier)))
     (string_content)))
 
 ================================================================================
@@ -2542,7 +2774,8 @@ $"Result: {x + 1}"
     (string_content)
     (interpolation
       (binary_expression
-        (long_identifier (identifier))
+        (long_identifier
+          (identifier))
         (int_literal)))))
 
 ================================================================================
@@ -2557,7 +2790,8 @@ $"Price: {price:F2}"
   (interpolated_string
     (string_content)
     (interpolation
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (format_string))))
 
 ================================================================================
@@ -2572,9 +2806,11 @@ $"Hello {firstName} {lastName}!"
   (interpolated_string
     (string_content)
     (interpolation
-      (long_identifier (identifier)))
+      (long_identifier
+        (identifier)))
     (interpolation
-      (long_identifier (identifier)))
+      (long_identifier
+        (identifier)))
     (string_content)))
 
 ================================================================================
@@ -2589,7 +2825,8 @@ $@"Path: {path}"
   (interpolated_verbatim_string
     (string_content)
     (interpolation
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Interpolated triple-quoted string
@@ -2603,7 +2840,8 @@ $"""Hello {name}!"""
   (interpolated_triple_string
     (string_content)
     (interpolation
-      (long_identifier (identifier)))
+      (long_identifier
+        (identifier)))
     (string_content)))
 
 ================================================================================
@@ -2618,7 +2856,8 @@ $"{{literal braces}} and {value}"
   (interpolated_string
     (string_content)
     (interpolation
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Printf-style format specifier float
@@ -2633,7 +2872,9 @@ $"%0.3f{System.Math.PI}"
     (interpolation
       (printf_format_string)
       (dot_expression
-        object: (long_identifier (identifier) (identifier))
+        object: (long_identifier
+          (identifier)
+          (identifier))
         member: (identifier)))))
 
 ================================================================================
@@ -2664,7 +2905,8 @@ $"The data is %A{data}"
     (string_content)
     (interpolation
       (printf_format_string)
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Literal percent not treated as format spec
@@ -2691,7 +2933,8 @@ $"{now:``yyyy-MM-dd``}"
 (source_file
   (interpolated_string
     (interpolation
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (format_string))))
 
 ================================================================================
@@ -2706,13 +2949,21 @@ match t with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
-      (pattern (literal_pattern (bool_literal)))
-      (pattern (identifier_pattern (long_identifier (identifier))))
-      (long_identifier (identifier)))
+      (pattern
+        (literal_pattern
+          (bool_literal)))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))
     (match_arm
-      (pattern (wildcard_pattern))
+      (pattern
+        (wildcard_pattern))
       (int_literal))))
 
 ================================================================================
@@ -2727,14 +2978,26 @@ match t with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
-      (pattern (identifier_pattern (long_identifier (identifier))))
-      (pattern (identifier_pattern (long_identifier (identifier))))
-      (pattern (identifier_pattern (long_identifier (identifier))))
-      (long_identifier (identifier)))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))
     (match_arm
-      (pattern (wildcard_pattern))
+      (pattern
+        (wildcard_pattern))
       (int_literal))))
 
 ================================================================================
@@ -2749,15 +3012,25 @@ match t with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
-      (pattern (literal_pattern (int_literal)))
-      (pattern (literal_pattern (int_literal)))
-      (pattern (literal_pattern (int_literal)))
-      (pattern (literal_pattern (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
       (string_literal))
     (match_arm
-      (pattern (wildcard_pattern))
+      (pattern
+        (wildcard_pattern))
       (string_literal))))
 
 ================================================================================
@@ -2772,18 +3045,29 @@ match t with
 
 (source_file
   (match_expression
-    (long_identifier (identifier))
+    (long_identifier
+      (identifier))
     (match_arm
-      (pattern (identifier_pattern (long_identifier (identifier))))
-      (pattern (identifier_pattern (long_identifier (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
       (binary_expression
-        (long_identifier (identifier))
+        (long_identifier
+          (identifier))
         (int_literal))
       (binary_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))
     (match_arm
-      (pattern (wildcard_pattern))
+      (pattern
+        (wildcard_pattern))
       (int_literal))))
 
 ================================================================================
@@ -2800,9 +3084,11 @@ type Counter with
     name: (type_extension_name
       (identifier)))
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
-    parameters: (parameter (unit))
+    parameters: (parameter
+      (unit))
     (unit)))
 
 ================================================================================
@@ -2820,10 +3106,13 @@ type System.String with
       (identifier)
       (identifier)))
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
     (binary_expression
-      (long_identifier (identifier) (identifier))
+      (long_identifier
+        (identifier)
+        (identifier))
       (int_literal))))
 
 ================================================================================
@@ -2841,14 +3130,20 @@ type Wrapper<'T when 'T : comparison> with
       (identifier))
     (type_parameter_list
       (type_parameter)
-      (type_constraint (type_parameter))))
+      (type_constraint
+        (type_parameter))))
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (application_expression
-      (long_identifier (identifier) (identifier))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Type constraint subtype
@@ -2865,11 +3160,15 @@ type Foo<'T when 'T :> System.IComparable> = { value: 'T }
       (type_parameter)
       (type_constraint
         (type_parameter)
-        (type_expression (long_identifier (identifier) (identifier)))))
+        (type_expression
+          (long_identifier
+            (identifier)
+            (identifier)))))
     (record_type_defn
       (record_type_field
         name: (identifier)
-        type: (type_expression (type_parameter))))))
+        type: (type_expression
+          (type_parameter))))))
 
 ================================================================================
 Type constraint comparison let binding
@@ -2884,15 +3183,22 @@ let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
     name: (identifier)
     (type_parameter_list
       (type_parameter)
-      (type_constraint (type_parameter)))
+      (type_constraint
+        (type_parameter)))
     parameters: (parameter
       (identifier)
-      (type_expression (postfix_type
-        (type_expression (type_parameter))
-        (long_identifier (identifier)))))
+      (type_expression
+        (postfix_type
+          (type_expression
+            (type_parameter))
+          (long_identifier
+            (identifier)))))
     (application_expression
-      (long_identifier (identifier) (identifier))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)
+        (identifier))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Type constraint two params with and
@@ -2908,15 +3214,19 @@ type Pair<'T, 'U when 'T : equality and 'U : null> = { fst: 'T; snd: 'U }
     (type_parameter_list
       (type_parameter)
       (type_parameter)
-      (type_constraint (type_parameter))
-      (type_constraint (type_parameter)))
+      (type_constraint
+        (type_parameter))
+      (type_constraint
+        (type_parameter)))
     (record_type_defn
       (record_type_field
         name: (identifier)
-        type: (type_expression (type_parameter)))
+        type: (type_expression
+          (type_parameter)))
       (record_type_field
         name: (identifier)
-        type: (type_expression (type_parameter))))))
+        type: (type_expression
+          (type_parameter))))))
 
 ================================================================================
 Nameof simple identifier
@@ -2930,7 +3240,8 @@ let n = nameof x
   (let_binding
     name: (identifier)
     (nameof_expression
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))
 
 ================================================================================
 Nameof qualified name
@@ -2944,7 +3255,9 @@ let n = nameof System.Math
   (let_binding
     name: (identifier)
     (nameof_expression
-      (long_identifier (identifier) (identifier)))))
+      (long_identifier
+        (identifier)
+        (identifier)))))
 
 ================================================================================
 Nameof parenthesized expression
@@ -2960,8 +3273,10 @@ let n = nameof (Some x)
     (nameof_expression
       (parenthesized_expression
         (application_expression
-          (long_identifier (identifier))
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Use expression in function body
@@ -2976,15 +3291,19 @@ let f () =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (unit))
+    parameters: (parameter
+      (unit))
     (use_expression
       name: (identifier)
       (application_expression
         (application_expression
           (application_expression
-            (long_identifier (identifier))
+            (long_identifier
+              (identifier))
             (unit))
-          (long_identifier (identifier) (identifier)))
+          (long_identifier
+            (identifier)
+            (identifier)))
         (unit)))))
 
 ================================================================================
@@ -3005,19 +3324,25 @@ type T(x: int) =
       (tuple_param
         (identifier)
         (type_expression
-          (long_identifier (identifier))))))
+          (long_identifier
+            (identifier))))))
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
-    parameters: (parameter (unit))
+    parameters: (parameter
+      (unit))
     (use_expression
       name: (identifier)
       (application_expression
         (application_expression
           (application_expression
-            (long_identifier (identifier))
+            (long_identifier
+              (identifier))
             (unit))
-          (long_identifier (identifier) (identifier)))
+          (long_identifier
+            (identifier)
+            (identifier)))
         (unit)))))
 
 ================================================================================
@@ -3030,8 +3355,11 @@ module M = System.Collections
 
 (source_file
   (module_decl
-    name: (long_identifier (identifier))
-    abbrev: (long_identifier (identifier) (identifier))))
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier))))
 
 ================================================================================
 Module abbreviation three-component
@@ -3043,8 +3371,12 @@ module Dict = System.Collections.Generic
 
 (source_file
   (module_decl
-    name: (long_identifier (identifier))
-    abbrev: (long_identifier (identifier) (identifier) (identifier))))
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier)
+      (identifier))))
 
 ================================================================================
 Module abbreviation with access modifier
@@ -3057,8 +3389,11 @@ module private P = My.Internal
 (source_file
   (module_decl
     (access_modifier)
-    name: (long_identifier (identifier))
-    abbrev: (long_identifier (identifier) (identifier))))
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier))))
 
 ================================================================================
 Inline let with sibling at same column
@@ -3073,12 +3408,14 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (int_literal))
-      continuation: (long_identifier (identifier)))))
+      continuation: (long_identifier
+        (identifier)))))
 
 ================================================================================
 Inline let with two siblings
@@ -3094,7 +3431,8 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
@@ -3104,8 +3442,10 @@ let f x =
           name: (identifier)
           body: (int_literal))
         continuation: (binary_expression
-          (long_identifier (identifier))
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Inline let with interpolated string body
@@ -3121,20 +3461,23 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (interpolated_string
           (string_content)
           (interpolation
-            (long_identifier (identifier)))
+            (long_identifier
+              (identifier)))
           (string_content)))
       continuation: (let_expression
         binding: (let_decl_indented
           name: (identifier)
           body: (string_literal))
-        continuation: (long_identifier (identifier))))))
+        continuation: (long_identifier
+          (identifier))))))
 
 ================================================================================
 Inline let with blank line separator
@@ -3151,7 +3494,8 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
@@ -3161,8 +3505,10 @@ let f x =
           name: (identifier)
           body: (int_literal))
         continuation: (binary_expression
-          (long_identifier (identifier))
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Inline let mixed with indented-body let
@@ -3179,7 +3525,8 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
@@ -3189,8 +3536,10 @@ let f x =
           name: (identifier)
           body: (int_literal))
         continuation: (binary_expression
-          (long_identifier (identifier))
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Inline let inside nested function
@@ -3207,21 +3556,27 @@ let f x =
 (source_file
   (let_binding
     name: (identifier)
-    parameters: (parameter (identifier))
+    parameters: (parameter
+      (identifier))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
-        parameters: (parameter (identifier))
+        parameters: (parameter
+          (identifier))
         body: (let_expression
           binding: (let_decl_indented
             name: (identifier)
             body: (int_literal))
           continuation: (binary_expression
-            (long_identifier (identifier))
-            (long_identifier (identifier)))))
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
       continuation: (application_expression
-        (long_identifier (identifier))
-        (long_identifier (identifier))))))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Inline let inside lambda body
@@ -3240,10 +3595,12 @@ let f =
   (let_binding
     name: (identifier)
     (application_expression
-      (long_identifier (identifier))
+      (long_identifier
+        (identifier))
       (parenthesized_expression
         (lambda_expression
-          (parameter (identifier))
+          (parameter
+            (identifier))
           (let_expression
             binding: (let_decl_indented
               name: (identifier)
@@ -3254,6 +3611,49 @@ let f =
                 body: (int_literal))
               continuation: (binary_expression
                 (binary_expression
-                  (long_identifier (identifier))
-                  (long_identifier (identifier)))
-                (long_identifier (identifier))))))))))
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier))))))))))
+
+================================================================================
+SRTP constraint with single-char operator name
+================================================================================
+
+let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    failwith "srtp"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        member_name: (operator_name)
+        member_type: (type_expression
+          (function_type
+            (type_expression
+              (tuple_type
+                (type_expression
+                  (type_parameter))
+                (type_expression
+                  (type_parameter))))
+            (type_expression
+              (type_parameter))))))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))))
