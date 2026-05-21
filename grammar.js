@@ -1065,8 +1065,13 @@ export default grammar({
         // produces 4 sibling patterns rather than nesting `2 | 3` inside or_pattern.
         // prec(2) wins over or_pattern's prec(1) so the parser prefers continuing
         // the repeat at "|" rather than reducing to or_pattern.
+        //
+        // The leading "|" is optional so F#'s single-arm forms like
+        //   try expr with _ -> 0       function _ -> 0       match x with _ -> 0
+        // parse. Subsequent arms still naturally start with "|" because LR
+        // exploration prefers extending the previous arm's body otherwise.
         match_arm: ($) => seq(
-            "|",
+            optional("|"),
             $.pattern,
             repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),

@@ -3657,3 +3657,176 @@ let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T)
       (long_identifier
         (identifier))
       (string_literal))))
+
+================================================================================
+Inline let inside match arm body
+================================================================================
+
+let f x =
+    match x with
+    | 0 ->
+        let a = 1
+        let b = 2
+        a + b
+    | _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (let_expression
+            binding: (let_decl_indented
+              name: (identifier)
+              body: (int_literal))
+            continuation: (binary_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Inline let inside if-then-else branch
+================================================================================
+
+let f x =
+    if x > 0 then
+        let a = 1
+        let b = 2
+        a + b
+    else
+        0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (int_literal))))
+
+================================================================================
+Inline let inside try-with body
+================================================================================
+
+let f x =
+    try
+        let a = 1
+        let b = 2
+        a + b
+    with _ ->
+        0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (try_expression
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Try-with single arm without leading pipe
+================================================================================
+
+let f x =
+    try
+        1
+    with _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (try_expression
+      (int_literal)
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Match expression first arm without leading pipe
+================================================================================
+
+let f x =
+    match x with
+    0 -> "zero"
+    | _ -> "other"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (string_literal)))))
