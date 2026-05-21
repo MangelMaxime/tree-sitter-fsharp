@@ -59,6 +59,28 @@ export default grammar({
 
     word: $ => $.identifier,
 
+    // Reserved word sets. `global` is empty — every keyword the grammar uses is
+    // already a string literal in some rule, and tree-sitter's default keyword
+    // extraction makes those literals win over `$.identifier`. The `query_ce` set
+    // is activated only inside `computation_expression` bodies (via `reserved(…)`)
+    // so query custom operators like `where`/`select` become their own tokens there
+    // while staying plain identifiers everywhere else (e.g. `List.where`,
+    // `let take n = …`).
+    reserved: {
+        global: _ => [],
+        query_ce: _ => [
+            'select', 'where', 'sortBy', 'sortByDescending',
+            'thenBy', 'thenByDescending', 'take', 'skip',
+            'takeWhile', 'skipWhile', 'distinct', 'count',
+            'head', 'last', 'exactlyOne',
+            'minBy', 'maxBy', 'sumBy', 'averageBy',
+            'find', 'exists', 'all', 'contains', 'nth',
+            'headOrDefault', 'lastOrDefault', 'exactlyOneOrDefault',
+            'groupBy', 'groupValBy', 'groupJoin',
+            'join', 'leftOuterJoin', 'on', 'into',
+        ],
+    },
+
     // Externals are zero-width tokens emitted by src/scanner.c. See that file for
     // details of the offside-rule scanner state.
     externals: $ => [
@@ -917,16 +939,19 @@ export default grammar({
         // ── For / While ───────────────────────────────────────────────────────
 
         // for x in xs do body   (foreach)  /  for i = start to/downto end do body  (range)
+        // Body is optional so a bare `for x in xs do` can open a query CE
+        // (`query { for x in xs do where … select … }`); a body-less `for` outside
+        // a query CE is meaningless and the compiler rejects it anyway.
         for_expression: $ => prec.right(PREC.IF_EXPR, seq(
             "for",
             choice(
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
-                    "in", $._expression, "do", $._expression,
+                    "in", $._expression, "do", optional($._expression),
                 ),
                 seq(
                     $.identifier,
-                    "=", $._expression, choice("to", "downto"), $._expression, "do", $._expression,
+                    "=", $._expression, choice("to", "downto"), $._expression, "do", optional($._expression),
                 ),
             ),
         )),
@@ -939,17 +964,23 @@ export default grammar({
         // `builder { ... }` — async, task, seq, promise, query, or any custom CE.
         // CE_EXPR < APP_EXPR so `f { field = val }` is parsed as application with a
         // record argument when both forms are viable.
+        // `reserved('query_ce', …)` activates the query-CE custom-operator names
+        // (`select`, `where`, `join`, …) as their own tokens inside the body — they
+        // remain plain identifiers in every other parse state.
         computation_expression: $ => prec(PREC.CE_EXPR,
             seq(
                 field('builder', $.long_identifier),
                 "{",
-                repeat($._ce_statement),
+                repeat(reserved('query_ce', $._ce_statement)),
                 "}",
             ),
         ),
 
         // Statements inside a CE body. `_expression` at the end covers
         // return/yield/return!/yield!/do!/for/while/if/match/etc.
+        // The query_* alternatives only match in CE bodies because their leading
+        // keywords are in the `query_ce` reserved set, which is activated by the
+        // `reserved('query_ce', …)` wrap in `computation_expression`.
         _ce_statement: $ => choice(
             $.ce_let_bang_expr,
             $.use_binding,
@@ -957,7 +988,59 @@ export default grammar({
             $.ce_match_bang_expr,
             $.let_binding,
             $.do_stmt,
+            $.query_operator,
+            $.query_join_operator,
+            $.query_group_by_operator,
+            $.query_left_outer_join_operator,
             $._expression,
+        ),
+
+        // Query-CE custom operators that take a single expression argument:
+        //   `select expr`  `where expr`  `sortBy keyExpr`  `take n`  …
+        // These names are reserved only inside `computation_expression` (see the
+        // `query_ce` reserved set + `reserved('query_ce', …)` wrap), so usages like
+        // `List.where`, `let take n = …` outside any CE keep their identifier shape.
+        query_operator: $ => prec.right(seq(
+            field('op', choice(
+                "select", "where", "sortBy", "sortByDescending",
+                "thenBy", "thenByDescending", "take", "skip",
+                "takeWhile", "skipWhile", "distinct", "count",
+                "head", "last", "exactlyOne",
+                "minBy", "maxBy", "sumBy", "averageBy",
+                "find", "exists", "all", "contains", "nth",
+                "headOrDefault", "lastOrDefault", "exactlyOneOrDefault",
+            )),
+            optional($._expression),
+        )),
+
+        // `join name in source on (key1 = key2)`
+        query_join_operator: $ => seq(
+            "join",
+            field('name', $.identifier),
+            "in",
+            field('source', $._expression),
+            "on",
+            field('condition', $._expression),
+        ),
+
+        // `groupBy keyExpr into groupName`  (also `groupValBy v k into g`, `groupJoin …`)
+        query_group_by_operator: $ => seq(
+            choice("groupBy", "groupValBy", "groupJoin"),
+            field('key', $._expression),
+            "into",
+            field('into', $.identifier),
+        ),
+
+        // `leftOuterJoin name in source on (key1 = key2) into groupName`
+        query_left_outer_join_operator: $ => seq(
+            "leftOuterJoin",
+            field('name', $.identifier),
+            "in",
+            field('source', $._expression),
+            "on",
+            field('condition', $._expression),
+            "into",
+            field('into', $.identifier),
         ),
 
         // Bindable names for `let!` / `and!` — narrower than _let_name_pattern

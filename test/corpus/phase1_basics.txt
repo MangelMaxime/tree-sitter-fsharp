@@ -3968,3 +3968,159 @@ type IExtended =
         name: (identifier)
         (type_expression
           (long_identifier (identifier)))))))
+
+================================================================================
+Query expression with where and select
+================================================================================
+
+let r =
+    query {
+        for student in db.Students do
+        where (student.Age > 18)
+        select student.Name
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (computation_expression
+      builder: (long_identifier (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier (identifier) (identifier)))
+      (query_operator
+        (parenthesized_expression
+          (binary_expression
+            (long_identifier (identifier) (identifier))
+            (int_literal))))
+      (query_operator
+        (long_identifier (identifier) (identifier))))))
+
+================================================================================
+Query expression with join
+================================================================================
+
+let r =
+    query {
+        for c in db.Customers do
+        join o in db.Orders on (c.Id = o.CustomerId)
+        select (c.Name, o.Total)
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (computation_expression
+      builder: (long_identifier (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier (identifier) (identifier)))
+      (query_join_operator
+        name: (identifier)
+        source: (long_identifier (identifier) (identifier))
+        condition: (parenthesized_expression
+          (binary_expression
+            (long_identifier (identifier) (identifier))
+            (long_identifier (identifier) (identifier)))))
+      (query_operator
+        (parenthesized_expression
+          (tuple_expression
+            (long_identifier (identifier) (identifier))
+            (long_identifier (identifier) (identifier))))))))
+
+================================================================================
+Query expression with groupBy into
+================================================================================
+
+let r =
+    query {
+        for x in items do
+        groupBy x.Category into g
+        select g.Key
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (computation_expression
+      builder: (long_identifier (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier (identifier)))
+      (query_group_by_operator
+        key: (long_identifier (identifier) (identifier))
+        into: (identifier))
+      (query_operator
+        (long_identifier (identifier) (identifier))))))
+
+================================================================================
+Query expression with leftOuterJoin
+================================================================================
+
+let r =
+    query {
+        for c in customers do
+        leftOuterJoin o in orders on (c.Id = o.CustomerId) into orderGroup
+        select c.Name
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (computation_expression
+      builder: (long_identifier (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier (identifier)))
+      (query_left_outer_join_operator
+        name: (identifier)
+        source: (long_identifier (identifier))
+        condition: (parenthesized_expression
+          (binary_expression
+            (long_identifier (identifier) (identifier))
+            (long_identifier (identifier) (identifier))))
+        into: (identifier))
+      (query_operator
+        (long_identifier (identifier) (identifier))))))
+
+================================================================================
+Query operator names usable as identifiers outside CE
+================================================================================
+
+let where = 1
+let r = List.where (fun x -> x > 0) xs
+let s = List.take 3 ys
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (int_literal))
+  (let_binding
+    name: (identifier)
+    (application_expression
+      (application_expression
+        (long_identifier (identifier) (identifier))
+        (parenthesized_expression
+          (lambda_expression
+            (parameter (identifier))
+            (binary_expression
+              (long_identifier (identifier))
+              (int_literal)))))
+      (long_identifier (identifier))))
+  (let_binding
+    name: (identifier)
+    (application_expression
+      (application_expression
+        (long_identifier (identifier) (identifier))
+        (int_literal))
+      (long_identifier (identifier)))))

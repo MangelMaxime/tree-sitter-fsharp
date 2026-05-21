@@ -282,6 +282,17 @@
 (computation_expression
   builder: (long_identifier) @keyword)
 
+; Query CE custom operators (select/where/groupBy/join/...). The leading keyword
+; is captured by `op:` on the simple query_operator; compound forms use literal
+; keywords inside the rule, so we color them by the literal text.
+(query_operator op: _ @keyword.control)
+(query_join_operator
+  ["join" "in" "on"] @keyword.control)
+(query_group_by_operator
+  ["groupBy" "groupValBy" "groupJoin" "into"] @keyword.control)
+(query_left_outer_join_operator
+  ["leftOuterJoin" "in" "on" "into"] @keyword.control)
+
 ; Exception-raising functions — highlighted like throw/raise in other languages
 ((long_identifier) @function.builtin
  (#match? @function.builtin "^(raise|reraise|failwith|failwithf|invalidArg|invalidOp|nullArg)$"))

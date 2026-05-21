@@ -750,6 +750,128 @@ let async_match_bang =
         | _ -> return "other"
     }
 
+// ── Query expressions ────────────────────────────────────────────────────────
+
+// Simple where + select
+let q_where_select =
+    query {
+        for x in [ 1..10 ] do
+        where (x > 5)
+        select x
+    }
+
+// Chained custom operators: where → sortBy → take → select
+let q_chain =
+    query {
+        for x in [ 1..100 ] do
+        where (x % 2 = 0)
+        sortBy x
+        take 5
+        select (x * x)
+    }
+
+// sortByDescending + thenBy
+let q_sort_multi =
+    query {
+        for p in [ "alice", 30; "bob", 25; "carol", 30 ] do
+        sortByDescending (snd p)
+        thenBy (fst p)
+        select p
+    }
+
+// groupBy … into
+let q_group =
+    query {
+        for x in [ 1..10 ] do
+        groupBy (x % 3) into g
+        select (g.Key, g.ToString())
+    }
+
+// Aggregating terminals: count / head / last / exists / contains
+let q_count =
+    query {
+        for x in [ 1..100 ] do
+        where (x % 5 = 0)
+        count
+    }
+
+let q_head =
+    query {
+        for x in [ 5; 3; 8; 1 ] do
+        sortByDescending x
+        head
+    }
+
+let q_exists =
+    query {
+        for x in [ 1..10 ] do
+        exists (x = 7)
+    }
+
+// distinct / skip / takeWhile / skipWhile
+let q_distinct =
+    query {
+        for x in [ 1; 1; 2; 3; 3; 4 ] do
+        distinct
+    }
+
+let q_window =
+    query {
+        for x in [ 1..20 ] do
+        skip 5
+        takeWhile (x < 15)
+        select x
+    }
+
+// minBy / maxBy / sumBy / averageBy
+let q_stats =
+    query {
+        for x in [ 1..10 ] do
+        sumBy (x * x)
+    }
+
+// Source data for the join examples below
+type Customer = { Id: int; Name: string }
+type Order    = { CustomerId: int; Total: decimal }
+
+let customers : Customer list =
+    [
+        { Id = 1; Name = "Alice" }
+        { Id = 2; Name = "Bob" }
+    ]
+
+let orders : Order list =
+    [
+        { CustomerId = 1; Total = 42.0m }
+        { CustomerId = 1; Total = 10.0m }
+        { CustomerId = 2; Total =  5.0m }
+    ]
+
+// join … in … on (…)
+let q_join =
+    query {
+        for c in customers do
+        join o in orders on (c.Id = o.CustomerId)
+        select (c.Name, o.Total)
+    }
+
+// leftOuterJoin … into
+let q_left_join =
+    query {
+        for c in customers do
+        leftOuterJoin o in orders on (c.Id = o.CustomerId) into orderGroup
+        select (c.Name, orderGroup)
+    }
+
+// The query custom-operator names remain ordinary identifiers outside CEs.
+// These all parse as plain `List.<member>` applications, not query operators.
+let q_id_select x = x + 1
+let q_id_where x = x > 0
+let q_id_distinct_call = List.distinct [ 1; 1; 2 ]
+let q_id_take_call = List.take 3 [ 1..10 ]
+let q_id_where_call = List.where (fun x -> x > 0) [ -1; 0; 1; 2 ]
+let q_id_count_call = List.length [ 1; 2; 3 ]
+
 let lazy_val = lazy (1 + 2)
 
 let safe_assert x = assert (x > 0)
@@ -1484,3 +1606,9 @@ let withTimeout (ms: int) (computation: Async<unit>) : Async<unit> =
 
         ()
     )
+
+type Empty =
+    class end
+
+type IEmpty =
+    interface end

@@ -4204,8 +4204,16 @@
                     "value": "do"
                   },
                   {
-                    "type": "SYMBOL",
-                    "name": "_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_expression"
+                      },
+                      {
+                        "type": "BLANK"
+                      }
+                    ]
                   }
                 ]
               },
@@ -4246,8 +4254,16 @@
                     "value": "do"
                   },
                   {
-                    "type": "SYMBOL",
-                    "name": "_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_expression"
+                      },
+                      {
+                        "type": "BLANK"
+                      }
+                    ]
                   }
                 ]
               }
@@ -4302,8 +4318,12 @@
           {
             "type": "REPEAT",
             "content": {
-              "type": "SYMBOL",
-              "name": "_ce_statement"
+              "type": "RESERVED",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_ce_statement"
+              },
+              "context_name": "query_ce"
             }
           },
           {
@@ -4342,7 +4362,297 @@
         },
         {
           "type": "SYMBOL",
+          "name": "query_operator"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "query_join_operator"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "query_group_by_operator"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "query_left_outer_join_operator"
+        },
+        {
+          "type": "SYMBOL",
           "name": "_expression"
+        }
+      ]
+    },
+    "query_operator": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "op",
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "select"
+                },
+                {
+                  "type": "STRING",
+                  "value": "where"
+                },
+                {
+                  "type": "STRING",
+                  "value": "sortBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "sortByDescending"
+                },
+                {
+                  "type": "STRING",
+                  "value": "thenBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "thenByDescending"
+                },
+                {
+                  "type": "STRING",
+                  "value": "take"
+                },
+                {
+                  "type": "STRING",
+                  "value": "skip"
+                },
+                {
+                  "type": "STRING",
+                  "value": "takeWhile"
+                },
+                {
+                  "type": "STRING",
+                  "value": "skipWhile"
+                },
+                {
+                  "type": "STRING",
+                  "value": "distinct"
+                },
+                {
+                  "type": "STRING",
+                  "value": "count"
+                },
+                {
+                  "type": "STRING",
+                  "value": "head"
+                },
+                {
+                  "type": "STRING",
+                  "value": "last"
+                },
+                {
+                  "type": "STRING",
+                  "value": "exactlyOne"
+                },
+                {
+                  "type": "STRING",
+                  "value": "minBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "maxBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "sumBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "averageBy"
+                },
+                {
+                  "type": "STRING",
+                  "value": "find"
+                },
+                {
+                  "type": "STRING",
+                  "value": "exists"
+                },
+                {
+                  "type": "STRING",
+                  "value": "all"
+                },
+                {
+                  "type": "STRING",
+                  "value": "contains"
+                },
+                {
+                  "type": "STRING",
+                  "value": "nth"
+                },
+                {
+                  "type": "STRING",
+                  "value": "headOrDefault"
+                },
+                {
+                  "type": "STRING",
+                  "value": "lastOrDefault"
+                },
+                {
+                  "type": "STRING",
+                  "value": "exactlyOneOrDefault"
+                }
+              ]
+            }
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_expression"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "query_join_operator": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "join"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "in"
+        },
+        {
+          "type": "FIELD",
+          "name": "source",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "on"
+        },
+        {
+          "type": "FIELD",
+          "name": "condition",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        }
+      ]
+    },
+    "query_group_by_operator": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "groupBy"
+            },
+            {
+              "type": "STRING",
+              "value": "groupValBy"
+            },
+            {
+              "type": "STRING",
+              "value": "groupJoin"
+            }
+          ]
+        },
+        {
+          "type": "FIELD",
+          "name": "key",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "into"
+        },
+        {
+          "type": "FIELD",
+          "name": "into",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        }
+      ]
+    },
+    "query_left_outer_join_operator": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "leftOuterJoin"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "in"
+        },
+        {
+          "type": "FIELD",
+          "name": "source",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "on"
+        },
+        {
+          "type": "FIELD",
+          "name": "condition",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "into"
+        },
+        {
+          "type": "FIELD",
+          "name": "into",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
         }
       ]
     },
@@ -7927,5 +8237,145 @@
   ],
   "inline": [],
   "supertypes": [],
-  "reserved": {}
+  "reserved": {
+    "global": [],
+    "query_ce": [
+      {
+        "type": "STRING",
+        "value": "select"
+      },
+      {
+        "type": "STRING",
+        "value": "where"
+      },
+      {
+        "type": "STRING",
+        "value": "sortBy"
+      },
+      {
+        "type": "STRING",
+        "value": "sortByDescending"
+      },
+      {
+        "type": "STRING",
+        "value": "thenBy"
+      },
+      {
+        "type": "STRING",
+        "value": "thenByDescending"
+      },
+      {
+        "type": "STRING",
+        "value": "take"
+      },
+      {
+        "type": "STRING",
+        "value": "skip"
+      },
+      {
+        "type": "STRING",
+        "value": "takeWhile"
+      },
+      {
+        "type": "STRING",
+        "value": "skipWhile"
+      },
+      {
+        "type": "STRING",
+        "value": "distinct"
+      },
+      {
+        "type": "STRING",
+        "value": "count"
+      },
+      {
+        "type": "STRING",
+        "value": "head"
+      },
+      {
+        "type": "STRING",
+        "value": "last"
+      },
+      {
+        "type": "STRING",
+        "value": "exactlyOne"
+      },
+      {
+        "type": "STRING",
+        "value": "minBy"
+      },
+      {
+        "type": "STRING",
+        "value": "maxBy"
+      },
+      {
+        "type": "STRING",
+        "value": "sumBy"
+      },
+      {
+        "type": "STRING",
+        "value": "averageBy"
+      },
+      {
+        "type": "STRING",
+        "value": "find"
+      },
+      {
+        "type": "STRING",
+        "value": "exists"
+      },
+      {
+        "type": "STRING",
+        "value": "all"
+      },
+      {
+        "type": "STRING",
+        "value": "contains"
+      },
+      {
+        "type": "STRING",
+        "value": "nth"
+      },
+      {
+        "type": "STRING",
+        "value": "headOrDefault"
+      },
+      {
+        "type": "STRING",
+        "value": "lastOrDefault"
+      },
+      {
+        "type": "STRING",
+        "value": "exactlyOneOrDefault"
+      },
+      {
+        "type": "STRING",
+        "value": "groupBy"
+      },
+      {
+        "type": "STRING",
+        "value": "groupValBy"
+      },
+      {
+        "type": "STRING",
+        "value": "groupJoin"
+      },
+      {
+        "type": "STRING",
+        "value": "join"
+      },
+      {
+        "type": "STRING",
+        "value": "leftOuterJoin"
+      },
+      {
+        "type": "STRING",
+        "value": "on"
+      },
+      {
+        "type": "STRING",
+        "value": "into"
+      }
+    ]
+  }
 }
