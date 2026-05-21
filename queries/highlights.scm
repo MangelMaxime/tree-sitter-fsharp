@@ -278,6 +278,10 @@
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))
 
+; Type name in object expressions { new IFoo with … } / { new Base(arg) with … }
+(object_expression type: (long_identifier) @type)
+(object_expression type: (generic_type (long_identifier) @type))
+
 ; Computation expression builder name (async, task, seq, promise, …)
 (computation_expression
   builder: (long_identifier) @keyword)
@@ -292,6 +296,39 @@
   ["groupBy" "groupValBy" "groupJoin" "into"] @keyword.control)
 (query_left_outer_join_operator
   ["leftOuterJoin" "in" "on" "into"] @keyword.control)
+
+; Exception type after `raise`/`reraise`. Three shapes:
+;   raise (MyError args)           — constructor call inside parens
+;   raise (MyError)                — no-arg constructor in parens
+;   raise MyError                  — no parens
+; The `^[A-Z]` guard on the captured identifier avoids false-positives on
+; `raise myVar` (variable holding an exception). A PascalCase-named variable
+; would still false-positive, but that fights F# naming convention.
+;
+; These patterns come BEFORE the @function.builtin pattern below so the
+; `raise` long_identifier ends up with @function.builtin colour — Helix
+; uses the last matching capture, and capturing `raise` here as
+; @function.builtin (no theme colour) would otherwise wipe out the builtin tint.
+((application_expression
+   (long_identifier) @function.builtin
+   (parenthesized_expression
+     (application_expression
+       (long_identifier) @type)))
+ (#match? @function.builtin "^(raise|reraise)$")
+ (#match? @type "^[A-Z]"))
+
+((application_expression
+   (long_identifier) @function.builtin
+   (parenthesized_expression
+     (long_identifier) @type))
+ (#match? @function.builtin "^(raise|reraise)$")
+ (#match? @type "^[A-Z]"))
+
+((application_expression
+   (long_identifier) @function.builtin
+   (long_identifier) @type)
+ (#match? @function.builtin "^(raise|reraise)$")
+ (#match? @type "^[A-Z]"))
 
 ; Exception-raising functions — highlighted like throw/raise in other languages
 ((long_identifier) @function.builtin
