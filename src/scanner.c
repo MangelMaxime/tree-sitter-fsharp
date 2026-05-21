@@ -4,14 +4,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Order must match externals in grammar.js.
+// External scanner for F# offside-rule tokens.
+//
+// Tree-sitter only supports LALR(1) over a fixed token grammar, but F# uses
+// indentation to delimit several constructs that have no syntactic terminator.
+// The scanner emits zero-width tokens to bracket those constructs.
+//
+//   BODY_INDENT/BODY_DEDENT — wrap module-level let_binding bodies.
+//   INDENT/DEDENT           — wrap indented let_decl_indented bodies inside
+//                             let_expression.
+//   INLINE_OPEN/INLINE_CLOSE — wrap same-line let_decl_indented bodies. The
+//                             scanner records the body's start column on OPEN
+//                             and emits CLOSE at the first line whose column
+//                             is <= that recorded column.
+//
+// The enum order must match the externals: array in grammar.js.
 typedef enum {
-    BODY_INDENT,       // wraps let_binding bodies; prioritized over INDENT when both valid
+    BODY_INDENT,
     BODY_DEDENT,
-    INDENT,            // wraps let_decl_indented bodies inside let_expression
+    INDENT,
     DEDENT,
-    INLINE_OPEN,       // start of inline-body let_decl_indented; pushes body col
-    INLINE_CLOSE,      // end of inline body; pops; fires when next line col <= pushed col
+    INLINE_OPEN,
+    INLINE_CLOSE,
 } TokenType;
 
 typedef struct {
@@ -37,8 +51,8 @@ static void stack_pop(IndentStack *s) {
 }
 
 typedef struct {
-    IndentStack indents;       // BODY_INDENT / INDENT block columns
-    IndentStack inline_cols;   // INLINE_OPEN body columns (popped by INLINE_CLOSE)
+    IndentStack indents;      // pushed by BODY_INDENT / INDENT, popped by their DEDENT
+    IndentStack inline_cols;  // pushed by INLINE_OPEN, popped by INLINE_CLOSE
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -88,9 +102,9 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
     n = deserialize_stack(&s->inline_cols, buf, length, n);
 }
 
-// Scan forward to find the column of the next non-blank, non-comment line.
-// Returns true if found; sets *col to that column.
-// Advances the lexer (observation only — caller marked_end before calling).
+// Skip to the next non-blank, non-comment line and return its indent column in
+// *col. Returns false on EOF. Advances the lexer; the caller must have already
+// called mark_end at the position where the token should appear.
 static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
     // Skip the rest of the current line (non-newline chars).
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
@@ -145,17 +159,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close) return false;
 
-    // INLINE_OPEN: emitted right after the `=` of a let_decl_indented when the body
-    // starts on the same line (not the next). Pushes the body's start column so that
-    // INLINE_CLOSE can later compare against it.
+    // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
+    // the same line. Pushes the body's start column so INLINE_CLOSE can compare.
     //
-    // Suppressed when _body_indent is also valid — that's the body position of a
-    // let_binding, where we want let_binding to win over let_decl_indented inline
-    // (module-level lets).
-    //
-    // Also suppressed when there's an `in` keyword on the rest of the current line —
-    // that means let_expression Branch B (explicit `let ... = expr in expr`) is
-    // intended, and emitting INLINE_OPEN would commit to the wrong branch.
+    // Suppressed in two cases:
+    //   1. BODY_INDENT is also valid — let_binding owns this position; we want it
+    //      to win over let_decl_indented inline (module-level lets).
+    //   2. An `in` keyword appears on the rest of the current line — that means
+    //      let_expression Branch B (explicit `let ... = expr in expr`) is intended,
+    //      and committing to inline here would dead-end the parse.
     if (want_inline_open && !want_body_indent) {
         // Skip horizontal whitespace to find the start of the body.
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
@@ -202,17 +214,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // Body on next line — fall through; INDENT will handle it.
     }
 
-    // Mark the token as zero-width at the current position.
+    // From here we're handling BODY_INDENT / BODY_DEDENT / INDENT / DEDENT /
+    // INLINE_CLOSE — all of which only fire at a line boundary.
     lexer->mark_end(lexer);
 
-    // Skip horizontal whitespace on the current line.
     bool at_newline = (lexer->lookahead == '\n' || lexer->lookahead == '\r');
     if (!at_newline) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             lexer->advance(lexer, true);
         }
-        // Inline content — only INDENT-style tokens could fire, but we only emit them
-        // for bodies starting on the NEXT line.
+        // Still on the current line with non-whitespace content — none of the
+        // remaining tokens fire here (they all describe what happens at the *next*
+        // significant line).
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
             return false;
         }
@@ -220,8 +233,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     uint32_t col = 0;
     if (!next_line_indent(lexer, &col)) {
-        // EOF — close any open block.
-        // INLINE_CLOSE first so inline-bodied lets close before surrounding blocks.
+        // EOF: close any open block. INLINE_CLOSE first so inline-bodied lets
+        // close before any surrounding BODY_/INDENT blocks.
         if (want_inline_close && s->inline_cols.size > 0) {
             stack_pop(&s->inline_cols);
             lexer->result_symbol = INLINE_CLOSE;
@@ -244,10 +257,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     uint32_t current = stack_top(&s->indents);
 
-    // INLINE_CLOSE: fires when next non-blank line is at col <= the recorded body
-    // column. This is the F# offside rule: anything indented at-or-less than the
-    // body's start terminates it (sibling let, continuation expression, or end of
-    // enclosing block).
+    // INLINE_CLOSE: any line at column <= the recorded body column ends the inline
+    // body (sibling let, continuation expression, or end of enclosing block).
     if (want_inline_close && s->inline_cols.size > 0) {
         uint32_t body_col = stack_top(&s->inline_cols);
         if (col <= body_col) {
@@ -257,10 +268,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
+    // Indent — push a new block.
+    // BODY_INDENT is preferred over INDENT so that at the body position of a
+    // module-level let_binding, the parser commits to let_binding rather than
+    // exploring let_decl_indented (which would fail without _indent).
     if (col > current) {
-        // BODY_INDENT is checked first so that let_binding wins over let_decl_indented
-        // when both are valid (same "let x =" prefix). The scanner emitting BODY_INDENT
-        // instead of INDENT causes the let_decl_indented path to fail immediately.
         if (want_body_indent) {
             stack_push(&s->indents, col);
             lexer->result_symbol = BODY_INDENT;
@@ -273,9 +285,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
+    // Dedent — pop. DEDENT is preferred over BODY_DEDENT so inner let_decl_indented
+    // bodies close before the outer let_binding body.
     if (col < current) {
-        // DEDENT is checked before BODY_DEDENT so that inner let_decl_indented bodies
-        // close before the outer let_binding body closes.
         if (want_dedent) {
             stack_pop(&s->indents);
             lexer->result_symbol = DEDENT;
