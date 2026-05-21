@@ -1461,3 +1461,19 @@ type HolderWithDefault() =
     [<DefaultValue>]
     val mutable Score: int
     [<DefaultValue>] val mutable A: int
+
+/// OSC 8 hyperlink: clicking opens the file at the given line in the terminal.
+/// The visible text uses a relative path; the URL uses the absolute path.
+let fileLink (filePath: string) (lineNumber: int) =
+    let url = $"file://%s{filePath}:%d{lineNumber}"
+    let cwd = ""
+
+    let rel =
+        if filePath.StartsWith(cwd) then
+            filePath.[cwd.Length + 1 ..]
+        else
+            filePath
+
+    let display = $"%s{rel}:%d{lineNumber}"
+    sprintf "\x1b]8;;%s\x1b\\%s\x1b]8;;\x1b\\" url display
+

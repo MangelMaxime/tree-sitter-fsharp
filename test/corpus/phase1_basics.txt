@@ -3059,3 +3059,166 @@ module private P = My.Internal
     (access_modifier)
     name: (long_identifier (identifier))
     abbrev: (long_identifier (identifier) (identifier))))
+
+================================================================================
+Inline let with sibling at same column
+================================================================================
+
+let f x =
+    let a = 1
+    a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (long_identifier (identifier)))))
+
+================================================================================
+Inline let with two siblings
+================================================================================
+
+let f x =
+    let a = 1
+    let b = 2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier (identifier))
+          (long_identifier (identifier)))))))
+
+================================================================================
+Inline let with interpolated string body
+================================================================================
+
+let f x =
+    let url = $"a{x}b"
+    let cwd = ""
+    url
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (interpolated_string
+          (string_content)
+          (interpolation
+            (long_identifier (identifier)))
+          (string_content)))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (string_literal))
+        continuation: (long_identifier (identifier))))))
+
+================================================================================
+Inline let with blank line separator
+================================================================================
+
+let f x =
+    let a = 1
+
+    let b = 2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier (identifier))
+          (long_identifier (identifier)))))))
+
+================================================================================
+Inline let mixed with indented-body let
+================================================================================
+
+let f x =
+    let a = 1
+    let b =
+        2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier (identifier))
+          (long_identifier (identifier)))))))
+
+================================================================================
+Inline let inside nested function
+================================================================================
+
+let f x =
+    let inner y =
+        let a = 1
+        a + y
+    inner x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter (identifier))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        parameters: (parameter (identifier))
+        body: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier (identifier))
+            (long_identifier (identifier)))))
+      continuation: (application_expression
+        (long_identifier (identifier))
+        (long_identifier (identifier))))))

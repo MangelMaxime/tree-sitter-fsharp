@@ -62,12 +62,16 @@ export default grammar({
     externals: $ => [
         // _body_indent/_body_dedent: wrap let_binding bodies (checked first by scanner).
         // _indent/_dedent: wrap let_decl_indented bodies inside let_expression.
+        // _inline_let_end: terminates an inline-body let_decl_indented; emitted when the
+        //   next non-blank line's column is <= the top of the indents stack (F#'s offside
+        //   rule: sibling let bindings and the continuation expression close the body).
         // Listing _body_indent before _indent ensures the scanner emits _body_indent when both
         // are valid, which kills the let_decl_indented path so let_binding wins at module level.
         $._body_indent,
         $._body_dedent,
         $._indent,
         $._dedent,
+        $._inline_let_end,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -766,17 +770,24 @@ export default grammar({
             ),
         ),
 
-        // "let x = \n    body" — body on next indented line, body has its own node.
-        // Used as the binding part of let_expression when the body is indented.
-        // The INDENT/DEDENT tokens are zero-width and emitted by the external scanner.
+        // "let x = body" as a binding inside let_expression.
+        //
+        // Two body forms, disambiguated by the scanner right after `=`:
+        //   - Indented:  let x =\n    body            (scanner emits _indent/_dedent)
+        //   - Inline:    let x = body                  (scanner emits _inline_let_end)
+        //
+        // _inline_let_end fires at end of body when the next non-blank line is at col
+        // <= the top of the indents stack — i.e., back to the surrounding block's column,
+        // matching F#'s offside rule for sibling bindings and the continuation expression.
         let_decl_indented: ($) => seq(
             "let",
             optional("rec"),
             $._let_signature,
             "=",
-            $._indent,
-            field('body', $._expression),
-            $._dedent,
+            choice(
+                seq($._indent, field('body', $._expression), $._dedent),
+                seq(field('body', $._expression), $._inline_let_end),
+            ),
         ),
 
         // let_expression:

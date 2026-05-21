@@ -4,12 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Order must match externals in grammar.js: _body_indent, _body_dedent, _indent, _dedent
+// Order must match externals in grammar.js.
 typedef enum {
-    BODY_INDENT,  // wraps let_binding bodies; prioritized over INDENT when both valid
+    BODY_INDENT,       // wraps let_binding bodies; prioritized over INDENT when both valid
     BODY_DEDENT,
-    INDENT,       // wraps let_decl_indented bodies inside let_expression
+    INDENT,            // wraps let_decl_indented bodies inside let_expression
     DEDENT,
+    INLINE_LET_END,    // terminates inline-body let_decl_indented at sibling/continuation col
 } TokenType;
 
 typedef struct {
@@ -123,8 +124,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_body_dedent = valid_symbols[BODY_DEDENT];
     bool want_indent = valid_symbols[INDENT];
     bool want_dedent = valid_symbols[DEDENT];
+    bool want_inline_end = valid_symbols[INLINE_LET_END];
 
-    if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent) return false;
+    if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
+        && !want_inline_end) return false;
 
     // Mark the token as zero-width at the current position.
     lexer->mark_end(lexer);
@@ -142,10 +145,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
+    // INLINE_LET_END is only valid INSIDE an open block — i.e., when at least one
+    // BODY_INDENT or INDENT has been pushed. At module level (indents.size == 0)
+    // `let` is always a let_binding, never a let_decl_indented inline, so we never
+    // emit INLINE_LET_END there.
+    bool inline_end_eligible = want_inline_end && s->indents.size >= 1;
+
     uint32_t col = 0;
     if (!next_line_indent(lexer, &col)) {
-        // EOF — emit the appropriate dedent to close any open block.
-        // DEDENT before BODY_DEDENT mirrors the indentation priority for pops.
+        // EOF — close any open block.
+        // INLINE_LET_END first so inline-bodied lets close before surrounding blocks.
+        if (inline_end_eligible) {
+            lexer->result_symbol = INLINE_LET_END;
+            return true;
+        }
         if (s->indents.size > 0) {
             if (want_dedent) {
                 stack_pop(&s->indents);
@@ -162,6 +175,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     uint32_t current = stack_top(&s->indents);
+
+    // INLINE_LET_END: fires when next non-blank line is at col <= the surrounding
+    // block's column (top of indents stack). This is the F# offside rule: a sibling
+    // `let` or a continuation expression at the same column terminates the body.
+    if (inline_end_eligible && col <= current) {
+        lexer->result_symbol = INLINE_LET_END;
+        return true;
+    }
 
     if (col > current) {
         // BODY_INDENT is checked first so that let_binding wins over let_decl_indented
