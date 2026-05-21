@@ -277,12 +277,17 @@ export default grammar({
         ),
 
         // `params [:return-type] = expr` — shared by instance and static method members.
-        _method_body: $ => seq(
+        // Body optional so mid-edit `member this.Foo() =` still produces a real
+        // `member_defn` node (no MISSING-identifier recovery), giving Helix's
+        // indent walk something concrete to anchor `@extend` against. prec.right
+        // keeps the body greedy when it's present (parser prefers consuming the
+        // expression over reducing `_method_body` at the `=`).
+        _method_body: $ => prec.right(seq(
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
             "=",
-            $._expression,
-        ),
+            optional($._expression),
+        )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
         _accessor_body: $ => seq(
@@ -713,14 +718,18 @@ export default grammar({
             repeat(seq(",", $._expression)),
         )),
 
+        // Branch bodies (after `then`/`else`) are `optional` so that mid-edit shapes like
+        // `if cond then` (with no body typed yet) still parse as a real `if_expression`
+        // rather than collapsing into an ERROR — Helix's indent algorithm walks the tree
+        // from the end of the previous line, and only sees @indent when this node exists.
         if_expression: $ => prec.right(PREC.IF_EXPR,
             seq(
                 "if",
                 $._expression,
                 "then",
-                $._expression,
-                repeat(seq("elif", $._expression, "then", $._expression)),
-                optional(seq("else", $._expression)),
+                optional($._expression),
+                repeat(seq("elif", $._expression, "then", optional($._expression))),
+                optional(seq("else", optional($._expression))),
             ),
         ),
 
@@ -957,8 +966,9 @@ export default grammar({
         )),
 
         // while cond do body   (imperative loop, returns unit)
+        // Body optional for the same mid-edit indent reason as `if_expression`.
         while_expression: $ => prec.right(PREC.IF_EXPR,
-            seq("while", $._expression, "do", $._expression),
+            seq("while", $._expression, "do", optional($._expression)),
         ),
 
         // `builder { ... }` — async, task, seq, promise, query, or any custom CE.
