@@ -163,7 +163,7 @@ export default grammar({
             "type",
             field('name', $.identifier),
             optional($.type_parameter_list),
-            optional($.tuple_params),
+            optional($.primary_constructor),
             // "=" is optional: [<Measure>] type kg has no body.
             // Class/interface bodies are also empty (members appear as flat _token siblings).
             optional(seq("=", optional($._type_decl_body))),
@@ -176,7 +176,7 @@ export default grammar({
             "and",
             field('name', $.identifier),
             optional($.type_parameter_list),
-            optional($.tuple_params),
+            optional($.primary_constructor),
             optional(seq("=", optional($._type_decl_body))),
         )),
 
@@ -217,6 +217,19 @@ export default grammar({
             )),
             ")",
         ),
+
+        // Primary constructor for class types: `type T()` or `type Dog(name: string, …)`.
+        // The `unit` branch handles `type T()` — the lexer atomises `()` into the unit
+        // token, so we accept it here rather than trying to re-split into `(` `)`.
+        primary_constructor: $ => prec(20, choice(
+            $.unit,
+            seq(
+                "(",
+                $.tuple_param,
+                repeat(seq(",", $.tuple_param)),
+                ")",
+            ),
+        )),
 
         tuple_param: $ => seq(
             optional("?"),
@@ -1017,10 +1030,16 @@ export default grammar({
             ),
         ),
 
+        // Allow both "," (tuple element) and "|" (or-alternative) as separators
+        // between top-level patterns of a match arm, so that
+        //   | 1, 2 | 3, 4 -> "yes"
+        // produces 4 sibling patterns rather than nesting `2 | 3` inside or_pattern.
+        // prec(2) wins over or_pattern's prec(1) so the parser prefers continuing
+        // the repeat at "|" rather than reducing to or_pattern.
         match_arm: ($) => seq(
             "|",
             $.pattern,
-            repeat(seq(",", $.pattern)),
+            repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),
             "->",
             $._expression,
@@ -1201,15 +1220,23 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            $.tuple_params,                // (x: int, y: int) or (x: int) — OOP-style grouped params
+            // (x: type) — single typed parameter, flat structure for curried functions.
+            // prec(20) is high enough to win over tuple_params, tuple_pattern, etc.
+            // so that  let f (x: int) (y: int) = …  produces two separate flat parameters
+            // instead of nesting each in a 1-element tuple_params.
+            prec(20, seq("(", $.identifier, ":", $.type_expression, ")")),
+            // (x) — parenthesized identifier, flat structure. Used in property accessors
+            // like `set(v) = …` where the test expects `parameter (identifier)` rather
+            // than nesting in tuple_pattern.
+            prec(20, seq("(", $.identifier, ")")),
+            $.tuple_params,                // (x: int, y: int) — OOP-style grouped params (multi)
             $.destructure_parameter,       // ((a,b): int*int)  ({X=x}: Point)
             $.tuple_pattern,               // (a, b)  (Some x)  (x)
             $.record_pattern,              // { X = x }
         ),
 
         // (pattern : type) where the inner pattern is a destructuring form, not a bare identifier.
-        // Bare-identifier form (x: int) is covered by tuple_params to avoid conflict with
-        // multi-param OOP signatures like (x: int, y: int).
+        // Bare-identifier form (x: int) is handled by the inline typed parameter above.
         destructure_parameter: $ => seq(
             "(",
             choice(

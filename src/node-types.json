@@ -8746,7 +8746,7 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
@@ -8767,6 +8767,10 @@
         },
         {
           "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "type_expression",
           "named": true
         },
         {
@@ -10294,6 +10298,25 @@
         },
         {
           "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "primary_constructor",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "tuple_param",
+          "named": true
+        },
+        {
+          "type": "unit",
           "named": true
         }
       ]
@@ -12539,15 +12562,15 @@
           "named": true
         },
         {
+          "type": "primary_constructor",
+          "named": true
+        },
+        {
           "type": "record_type_defn",
           "named": true
         },
         {
           "type": "struct_type_defn",
-          "named": true
-        },
-        {
-          "type": "tuple_params",
           "named": true
         },
         {
@@ -12686,15 +12709,15 @@
           "named": true
         },
         {
+          "type": "primary_constructor",
+          "named": true
+        },
+        {
           "type": "record_type_defn",
           "named": true
         },
         {
           "type": "struct_type_defn",
-          "named": true
-        },
-        {
-          "type": "tuple_params",
           "named": true
         },
         {

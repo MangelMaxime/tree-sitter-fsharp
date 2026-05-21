@@ -2991,7 +2991,7 @@ let f () =
 Use expression in member body
 ================================================================================
 
-type T() =
+type T(x: int) =
     member this.Run() =
         use r = openFile()
         r.Read()
@@ -3001,7 +3001,11 @@ type T() =
 (source_file
   (type_decl
     name: (identifier)
-    (primary_constructor))
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier (identifier))))))
   (member_defn
     self: (member_self_ident (identifier))
     name: (identifier)
