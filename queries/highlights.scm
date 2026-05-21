@@ -30,6 +30,7 @@
   "function"
   "delegate"
   "struct"
+  "class"
 ] @keyword
 
 [

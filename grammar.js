@@ -151,6 +151,8 @@ export default grammar({
             $.enum_type_defn,
             $.delegate_type_defn,
             $.struct_type_defn,
+            $.class_type_defn,
+            $.interface_type_defn,
             field('alias', $.measure_expression),
             prec.dynamic(1, field('alias', $.type_expression)),
         ),
@@ -393,6 +395,14 @@ export default grammar({
 
         // type Point3D = struct val x: float … end — body is a flat repeat of _token.
         struct_type_defn: $ => seq("struct", repeat($._token), "end"),
+
+        // type Foo() = class member … end  — explicit class block (members as flat _tokens).
+        class_type_defn: $ => seq("class", repeat($._token), "end"),
+
+        // type IFoo = interface abstract … end  — explicit interface block.
+        // Distinguished from interface_impl (which sits in class bodies as `interface T with …`)
+        // by the trailing `end`; ambiguity at the leading `interface` is explored via GLR.
+        interface_type_defn: $ => seq("interface", repeat($._token), "end"),
 
         // type MyDelegate = delegate of int -> string
         // type Handler = delegate of (obj * EventArgs) -> unit

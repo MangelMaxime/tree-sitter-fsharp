@@ -288,6 +288,14 @@
           "name": "struct_type_defn"
         },
         {
+          "type": "SYMBOL",
+          "name": "class_type_defn"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "interface_type_defn"
+        },
+        {
           "type": "FIELD",
           "name": "alias",
           "content": {
@@ -1489,6 +1497,46 @@
         {
           "type": "STRING",
           "value": "struct"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_token"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "end"
+        }
+      ]
+    },
+    "class_type_defn": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "class"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_token"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "end"
+        }
+      ]
+    },
+    "interface_type_defn": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "interface"
         },
         {
           "type": "REPEAT",

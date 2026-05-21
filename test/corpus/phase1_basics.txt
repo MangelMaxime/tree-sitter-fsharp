@@ -3862,3 +3862,109 @@ type Foo() =
         continuation: (binary_expression
           (long_identifier (identifier))
           (long_identifier (identifier)))))))
+
+================================================================================
+Empty class block
+================================================================================
+
+type Foo = class end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (class_type_defn)))
+
+================================================================================
+Empty interface block
+================================================================================
+
+type IFoo = interface end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn)))
+
+================================================================================
+Class block with members
+================================================================================
+
+type Foo() =
+    class
+        member this.Bar() = 1
+        member this.Baz = 2
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor (unit))
+    (class_type_defn
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        parameters: (parameter (unit))
+        (int_literal))
+      (member_defn
+        self: (member_self_ident (identifier))
+        name: (identifier)
+        (int_literal)))))
+
+================================================================================
+Interface block with abstract members
+================================================================================
+
+type IFoo =
+    interface
+        abstract member Bar: int
+        abstract member Baz: string -> int
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (long_identifier (identifier))))
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier (identifier)))
+            (type_expression
+              (long_identifier (identifier)))))))))
+
+================================================================================
+Interface block with inherit
+================================================================================
+
+type IExtended =
+    interface
+        inherit IBase
+        abstract member Foo: int
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn
+      (inherit_decl
+        base: (type_expression
+          (long_identifier (identifier))))
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (long_identifier (identifier)))))))
