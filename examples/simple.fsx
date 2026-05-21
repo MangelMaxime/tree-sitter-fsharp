@@ -1477,3 +1477,10 @@ let fileLink (filePath: string) (lineNumber: int) =
     let display = $"%s{rel}:%d{lineNumber}"
     sprintf "\x1b]8;;%s\x1b\\%s\x1b]8;;\x1b\\" url display
 
+let withTimeout (ms: int) (computation: Async<unit>) : Async<unit> =
+    Async.FromContinuations(fun (resolve, reject, _cancel) ->
+        let mutable settled = false
+        let mutable timerId: obj = null
+
+        ()
+    )

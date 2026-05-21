@@ -62,16 +62,19 @@ export default grammar({
     externals: $ => [
         // _body_indent/_body_dedent: wrap let_binding bodies (checked first by scanner).
         // _indent/_dedent: wrap let_decl_indented bodies inside let_expression.
-        // _inline_let_end: terminates an inline-body let_decl_indented; emitted when the
-        //   next non-blank line's column is <= the top of the indents stack (F#'s offside
-        //   rule: sibling let bindings and the continuation expression close the body).
-        // Listing _body_indent before _indent ensures the scanner emits _body_indent when both
-        // are valid, which kills the let_decl_indented path so let_binding wins at module level.
+        // _inline_open/_inline_close: wrap inline-body let_decl_indented. Scanner pushes
+        //   the body's start column on _inline_open, then emits _inline_close when the
+        //   next non-blank line is at a column <= that pushed column. This is F#'s offside
+        //   rule for inline lets — siblings or continuation expressions at the *let's*
+        //   column close the body, even inside lambdas/CEs/parenthesized arguments where
+        //   the surrounding `indents` stack doesn't reflect the local indentation.
+        //   Suppressed at module level (indents.size == 0) so let_binding always wins.
         $._body_indent,
         $._body_dedent,
         $._indent,
         $._dedent,
-        $._inline_let_end,
+        $._inline_open,
+        $._inline_close,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -774,11 +777,13 @@ export default grammar({
         //
         // Two body forms, disambiguated by the scanner right after `=`:
         //   - Indented:  let x =\n    body            (scanner emits _indent/_dedent)
-        //   - Inline:    let x = body                  (scanner emits _inline_let_end)
+        //   - Inline:    let x = body                  (scanner emits _inline_open/_close)
         //
-        // _inline_let_end fires at end of body when the next non-blank line is at col
-        // <= the top of the indents stack — i.e., back to the surrounding block's column,
-        // matching F#'s offside rule for sibling bindings and the continuation expression.
+        // For the inline form the scanner records the body's starting column on _inline_open
+        // and emits _inline_close when the next non-blank line is at column <= that recorded
+        // column — F#'s offside rule. Tracking the body column locally lets this work inside
+        // lambdas, CE blocks, and parenthesized arguments where the surrounding indents
+        // stack does not reflect the local indentation.
         let_decl_indented: ($) => seq(
             "let",
             optional("rec"),
@@ -786,7 +791,7 @@ export default grammar({
             "=",
             choice(
                 seq($._indent, field('body', $._expression), $._dedent),
-                seq(field('body', $._expression), $._inline_let_end),
+                seq($._inline_open, field('body', $._expression), $._inline_close),
             ),
         ),
 

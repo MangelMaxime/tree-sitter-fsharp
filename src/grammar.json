@@ -3388,6 +3388,10 @@
               "type": "SEQ",
               "members": [
                 {
+                  "type": "SYMBOL",
+                  "name": "_inline_open"
+                },
+                {
                   "type": "FIELD",
                   "name": "body",
                   "content": {
@@ -3397,7 +3401,7 @@
                 },
                 {
                   "type": "SYMBOL",
-                  "name": "_inline_let_end"
+                  "name": "_inline_close"
                 }
               ]
             }
@@ -7809,7 +7813,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "_inline_let_end"
+      "name": "_inline_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_inline_close"
     }
   ],
   "inline": [],

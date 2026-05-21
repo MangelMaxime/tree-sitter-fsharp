@@ -10,7 +10,8 @@ typedef enum {
     BODY_DEDENT,
     INDENT,            // wraps let_decl_indented bodies inside let_expression
     DEDENT,
-    INLINE_LET_END,    // terminates inline-body let_decl_indented at sibling/continuation col
+    INLINE_OPEN,       // start of inline-body let_decl_indented; pushes body col
+    INLINE_CLOSE,      // end of inline body; pops; fires when next line col <= pushed col
 } TokenType;
 
 typedef struct {
@@ -36,7 +37,8 @@ static void stack_pop(IndentStack *s) {
 }
 
 typedef struct {
-    IndentStack indents;
+    IndentStack indents;       // BODY_INDENT / INDENT block columns
+    IndentStack inline_cols;   // INLINE_OPEN body columns (popped by INLINE_CLOSE)
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -46,31 +48,44 @@ void *tree_sitter_fsharp_external_scanner_create(void) {
 void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     Scanner *s = payload;
     free(s->indents.data);
+    free(s->inline_cols.data);
     free(s);
+}
+
+static unsigned serialize_stack(const IndentStack *st, char *buf, unsigned n) {
+    uint32_t sz = st->size;
+    if (n + 4 > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) return n;
+    memcpy(buf + n, &sz, 4); n += 4;
+    for (uint32_t i = 0; i < sz && n + 4 <= TREE_SITTER_SERIALIZATION_BUFFER_SIZE; i++) {
+        memcpy(buf + n, &st->data[i], 4); n += 4;
+    }
+    return n;
+}
+
+static unsigned deserialize_stack(IndentStack *st, const char *buf, unsigned length, unsigned n) {
+    st->size = 0;
+    if (n + 4 > length) return n;
+    uint32_t sz; memcpy(&sz, buf + n, 4); n += 4;
+    for (uint32_t i = 0; i < sz && n + 4 <= length; i++) {
+        uint32_t v; memcpy(&v, buf + n, 4); n += 4;
+        stack_push(st, v);
+    }
+    return n;
 }
 
 unsigned tree_sitter_fsharp_external_scanner_serialize(void *payload, char *buf) {
     Scanner *s = payload;
     unsigned n = 0;
-    uint32_t sz = s->indents.size;
-    if (n + 4 > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) return n;
-    memcpy(buf + n, &sz, 4); n += 4;
-    for (uint32_t i = 0; i < sz && n + 4 <= TREE_SITTER_SERIALIZATION_BUFFER_SIZE; i++) {
-        memcpy(buf + n, &s->indents.data[i], 4); n += 4;
-    }
+    n = serialize_stack(&s->indents, buf, n);
+    n = serialize_stack(&s->inline_cols, buf, n);
     return n;
 }
 
 void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *buf, unsigned length) {
     Scanner *s = payload;
-    s->indents.size = 0;
     unsigned n = 0;
-    if (n + 4 > length) return;
-    uint32_t sz; memcpy(&sz, buf + n, 4); n += 4;
-    for (uint32_t i = 0; i < sz && n + 4 <= length; i++) {
-        uint32_t v; memcpy(&v, buf + n, 4); n += 4;
-        stack_push(&s->indents, v);
-    }
+    n = deserialize_stack(&s->indents, buf, length, n);
+    n = deserialize_stack(&s->inline_cols, buf, length, n);
 }
 
 // Scan forward to find the column of the next non-blank, non-comment line.
@@ -124,10 +139,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_body_dedent = valid_symbols[BODY_DEDENT];
     bool want_indent = valid_symbols[INDENT];
     bool want_dedent = valid_symbols[DEDENT];
-    bool want_inline_end = valid_symbols[INLINE_LET_END];
+    bool want_inline_open = valid_symbols[INLINE_OPEN];
+    bool want_inline_close = valid_symbols[INLINE_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
-        && !want_inline_end) return false;
+        && !want_inline_open && !want_inline_close) return false;
+
+    // INLINE_OPEN: emitted right after the `=` of a let_decl_indented when the body
+    // starts on the same line (not the next). Pushes the body's start column so that
+    // INLINE_CLOSE can later compare against it. Suppressed at module level
+    // (indents.size == 0) so let_binding wins over let_decl_indented inline.
+    if (want_inline_open && s->indents.size >= 1) {
+        // Skip horizontal whitespace to find the start of the body.
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+            lexer->advance(lexer, true);
+        }
+        // Same-line body? (Not newline / EOF.)
+        if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            lexer->mark_end(lexer);
+            stack_push(&s->inline_cols, lexer->get_column(lexer));
+            lexer->result_symbol = INLINE_OPEN;
+            return true;
+        }
+        // Body on next line — fall through; INDENT will handle it.
+    }
 
     // Mark the token as zero-width at the current position.
     lexer->mark_end(lexer);
@@ -145,18 +180,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
-    // INLINE_LET_END is only valid INSIDE an open block — i.e., when at least one
-    // BODY_INDENT or INDENT has been pushed. At module level (indents.size == 0)
-    // `let` is always a let_binding, never a let_decl_indented inline, so we never
-    // emit INLINE_LET_END there.
-    bool inline_end_eligible = want_inline_end && s->indents.size >= 1;
-
     uint32_t col = 0;
     if (!next_line_indent(lexer, &col)) {
         // EOF — close any open block.
-        // INLINE_LET_END first so inline-bodied lets close before surrounding blocks.
-        if (inline_end_eligible) {
-            lexer->result_symbol = INLINE_LET_END;
+        // INLINE_CLOSE first so inline-bodied lets close before surrounding blocks.
+        if (want_inline_close && s->inline_cols.size > 0) {
+            stack_pop(&s->inline_cols);
+            lexer->result_symbol = INLINE_CLOSE;
             return true;
         }
         if (s->indents.size > 0) {
@@ -176,12 +206,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     uint32_t current = stack_top(&s->indents);
 
-    // INLINE_LET_END: fires when next non-blank line is at col <= the surrounding
-    // block's column (top of indents stack). This is the F# offside rule: a sibling
-    // `let` or a continuation expression at the same column terminates the body.
-    if (inline_end_eligible && col <= current) {
-        lexer->result_symbol = INLINE_LET_END;
-        return true;
+    // INLINE_CLOSE: fires when next non-blank line is at col <= the recorded body
+    // column. This is the F# offside rule: anything indented at-or-less than the
+    // body's start terminates it (sibling let, continuation expression, or end of
+    // enclosing block).
+    if (want_inline_close && s->inline_cols.size > 0) {
+        uint32_t body_col = stack_top(&s->inline_cols);
+        if (col <= body_col) {
+            stack_pop(&s->inline_cols);
+            lexer->result_symbol = INLINE_CLOSE;
+            return true;
+        }
     }
 
     if (col > current) {
