@@ -764,30 +764,41 @@ export default grammar({
             optional($._return_type_annot),
         ),
 
-        let_binding: ($) => prec.right(PREC.LET_DECL,
-            seq(
+        // Two explicit branches so the body-present case has a static `prec` win
+        // over the body-absent case. `optional(body)` + GLR exploration didn't
+        // bias correctly — tree-sitter ended up preferring the shorter "no body"
+        // parse and turned `let x = 1` into `let_binding` + a sibling `int_literal`.
+        // The body-absent branch lets mid-edit `let x =` parse as a real
+        // `let_binding` node so Helix's indent walk has something to anchor on,
+        // and the `!body` field-absence predicate in `indents.scm` targets it.
+        let_binding: ($) => prec.right(PREC.LET_DECL, choice(
+            prec(2, seq(
                 optional("static"),
                 "let",
                 optional("rec"),
                 $._let_signature,
                 "=",
                 choice(
-                    seq($._body_indent, $._expression, $._body_dedent),
-                    $._expression,
+                    seq($._body_indent, field('body', $._expression), $._body_dedent),
+                    field('body', $._expression),
                 ),
                 repeat($.let_and_binding),
-            ),
-        ),
-
-        // and name params [: type] = expr  (mutual recursion continuation)
-        let_and_binding: ($) => prec.right(PREC.LET_DECL,
-            seq(
-                "and",
+            )),
+            prec(1, seq(
+                optional("static"),
+                "let",
+                optional("rec"),
                 $._let_signature,
                 "=",
-                $._expression,
-            ),
-        ),
+                repeat($.let_and_binding),
+            )),
+        )),
+
+        // and name params [: type] = expr  (mutual recursion continuation)
+        let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
+            prec(2, seq("and", $._let_signature, "=", field('body', $._expression))),
+            prec(1, seq("and", $._let_signature, "=")),
+        )),
 
         // A let binding inside let_expression. Two body forms, chosen by the scanner
         // right after `=`:

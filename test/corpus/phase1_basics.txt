@@ -186,7 +186,7 @@ let x = 42
 (source_file
   (let_binding
     name: (identifier)
-    (int_literal)))
+    body: (int_literal)))
 
 ================================================================================
 Let binding with function parameters
@@ -203,7 +203,7 @@ let add a b = a
       (identifier))
     parameters: (parameter
       (identifier))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -227,7 +227,7 @@ let add (a: int) (b: int) = a
       (type_expression
         (long_identifier
           (identifier))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -516,7 +516,7 @@ let s = "hello"
 (source_file
   (let_binding
     name: (identifier)
-    (string_literal)))
+    body: (string_literal)))
 
 ================================================================================
 Let binding with char
@@ -529,7 +529,7 @@ let c = 'x'
 (source_file
   (let_binding
     name: (identifier)
-    (char_literal)))
+    body: (char_literal)))
 
 ================================================================================
 Match on char literal
@@ -613,7 +613,7 @@ let r = List.length xs
 (source_file
   (let_binding
     name: (identifier)
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier)
         (identifier))
@@ -745,7 +745,7 @@ let result = a + b * c
 (source_file
   (let_binding
     name: (identifier)
-    (binary_expression
+    body: (binary_expression
       (long_identifier
         (identifier))
       (binary_expression
@@ -874,7 +874,7 @@ let inline square x = x * x
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (binary_expression
+    body: (binary_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -891,7 +891,7 @@ let mutable count = 0
 (source_file
   (let_binding
     name: (identifier)
-    (int_literal)))
+    body: (int_literal)))
 
 ================================================================================
 Let rec already supported
@@ -906,7 +906,7 @@ let rec go n = go n
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -1196,7 +1196,7 @@ let f : int -> string = ignore
         (type_expression
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1218,7 +1218,7 @@ let t : int * string = ignore
         (type_expression
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1239,7 +1239,7 @@ let xs : list<int> = ignore
         (type_expression
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1260,7 +1260,7 @@ let xs : int list = ignore
             (identifier)))
         (long_identifier
           (identifier))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1280,7 +1280,7 @@ let id : 'a -> 'a = ignore
           (type_parameter))
         (type_expression
           (type_parameter))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1299,7 +1299,7 @@ let arr : int[] = ignore
         (type_expression
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1326,7 +1326,7 @@ let f : int -> int -> int = ignore
             (type_expression
               (long_identifier
                 (identifier)))))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1353,7 +1353,7 @@ let f : int * string -> bool = ignore
         (type_expression
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1376,7 +1376,7 @@ let f (x: int list) = x
               (identifier)))
           (long_identifier
             (identifier)))))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -1390,7 +1390,7 @@ let x = arr.[0]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (int_literal))))
@@ -1406,7 +1406,7 @@ let x = arr.[1..2]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (binary_expression
@@ -1424,7 +1424,7 @@ let x = arr.[1..]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (index_slice
@@ -1441,7 +1441,7 @@ let x = arr.[..2]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (index_slice
@@ -1458,7 +1458,7 @@ let x = dict.["key"]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (string_literal))))
@@ -1474,7 +1474,7 @@ let x = matrix.[0, 1]
 (source_file
   (let_binding
     name: (identifier)
-    (index_expression
+    body: (index_expression
       object: (long_identifier
         (identifier))
       index: (tuple_expression
@@ -1492,7 +1492,7 @@ let x = { new IFoo with member this.Bar() = 42 }
 (source_file
   (let_binding
     name: (identifier)
-    (object_expression
+    body: (object_expression
       type: (long_identifier
         (identifier))
       (member_defn
@@ -1514,7 +1514,7 @@ let x = { new Base(42) with override this.Name = "x" }
 (source_file
   (let_binding
     name: (identifier)
-    (object_expression
+    body: (object_expression
       type: (long_identifier
         (identifier))
       (int_literal)
@@ -1539,7 +1539,7 @@ let x =
 (source_file
   (let_binding
     name: (identifier)
-    (object_expression
+    body: (object_expression
       type: (long_identifier
         (identifier))
       (member_defn
@@ -1572,7 +1572,7 @@ let x = arr.[0].Length
 (source_file
   (let_binding
     name: (identifier)
-    (dot_expression
+    body: (dot_expression
       object: (index_expression
         object: (long_identifier
           (identifier))
@@ -1590,7 +1590,7 @@ let x = ("hello").Length
 (source_file
   (let_binding
     name: (identifier)
-    (dot_expression
+    body: (dot_expression
       object: (parenthesized_expression
         (string_literal))
       member: (identifier))))
@@ -1606,7 +1606,7 @@ let x = arr.[0..1].Length.ToString()
 (source_file
   (let_binding
     name: (identifier)
-    (application_expression
+    body: (application_expression
       (dot_expression
         object: (dot_expression
           object: (index_expression
@@ -1630,7 +1630,7 @@ let x = List.map
 (source_file
   (let_binding
     name: (identifier)
-    (long_identifier
+    body: (long_identifier
       (identifier)
       (identifier))))
 
@@ -1773,7 +1773,7 @@ let x = lazy (1 + 2)
 (source_file
   (let_binding
     name: (identifier)
-    (prefix_keyword_expression
+    body: (prefix_keyword_expression
       (parenthesized_expression
         (binary_expression
           (int_literal)
@@ -1790,7 +1790,7 @@ let x = assert (n > 0)
 (source_file
   (let_binding
     name: (identifier)
-    (prefix_keyword_expression
+    body: (prefix_keyword_expression
       (parenthesized_expression
         (binary_expression
           (long_identifier
@@ -1808,7 +1808,7 @@ let f = function | 0 -> "zero" | _ -> "other"
 (source_file
   (let_binding
     name: (identifier)
-    (function_expression
+    body: (function_expression
       (match_arm
         (pattern
           (literal_pattern
@@ -1866,7 +1866,7 @@ let x = begin 1 + 2 end
 (source_file
   (let_binding
     name: (identifier)
-    (begin_end_expression
+    body: (begin_end_expression
       (binary_expression
         (int_literal)
         (int_literal)))))
@@ -1885,13 +1885,13 @@ and g x = x
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (long_identifier
+    body: (long_identifier
       (identifier))
     (let_and_binding
       name: (identifier)
       parameters: (parameter
         (identifier))
-      (long_identifier
+      body: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -2373,7 +2373,7 @@ let (|Even|Odd|) n = n
     name: (active_pattern_name)
     parameters: (parameter
       (identifier))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -2389,7 +2389,7 @@ let (|ParseInt|_|) s = None
     name: (active_pattern_name)
     parameters: (parameter
       (identifier))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -2405,7 +2405,7 @@ let (|Double|) n = n * 2
     name: (active_pattern_name)
     parameters: (parameter
       (identifier))
-    (binary_expression
+    body: (binary_expression
       (long_identifier
         (identifier))
       (int_literal))))
@@ -2425,7 +2425,7 @@ let (|DivisibleBy|_|) d n = n
       (identifier))
     parameters: (parameter
       (identifier))
-    (long_identifier
+    body: (long_identifier
       (identifier))))
 
 ================================================================================
@@ -2444,7 +2444,7 @@ let (|>) a f = f a
       (identifier))
     parameters: (parameter
       (identifier))
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier))
       (long_identifier
@@ -2461,7 +2461,7 @@ let p = {| X = 1.0 |}
 (source_file
   (let_binding
     name: (identifier)
-    (anonymous_record_expression
+    body: (anonymous_record_expression
       (record_field
         name: (long_identifier
           (identifier))
@@ -2478,7 +2478,7 @@ let alice = {| Name = "Alice"; Age = 30 |}
 (source_file
   (let_binding
     name: (identifier)
-    (anonymous_record_expression
+    body: (anonymous_record_expression
       (record_field
         name: (long_identifier
           (identifier))
@@ -2499,7 +2499,7 @@ let bob = {| alice with Name = "Bob" |}
 (source_file
   (let_binding
     name: (identifier)
-    (anonymous_record_expression
+    body: (anonymous_record_expression
       base: (long_identifier
         (identifier))
       (record_field
@@ -2633,7 +2633,7 @@ let x = 3.0<cm>
 (source_file
   (let_binding
     name: (identifier)
-    (measure_literal
+    body: (measure_literal
       (float_literal)
       (measure_expression
         (long_identifier
@@ -2650,7 +2650,7 @@ let n = 1000u<steps>
 (source_file
   (let_binding
     name: (identifier)
-    (measure_literal
+    body: (measure_literal
       (int_literal)
       (measure_expression
         (long_identifier
@@ -2667,7 +2667,7 @@ let s = 55.0<miles/hour>
 (source_file
   (let_binding
     name: (identifier)
-    (measure_literal
+    body: (measure_literal
       (float_literal)
       (measure_expression
         (measure_expression
@@ -2711,7 +2711,7 @@ let b = 1.0 < x
 (source_file
   (let_binding
     name: (identifier)
-    (binary_expression
+    body: (binary_expression
       (float_literal)
       (long_identifier
         (identifier)))))
@@ -3193,7 +3193,7 @@ let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
             (type_parameter))
           (long_identifier
             (identifier)))))
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier)
         (identifier))
@@ -3239,7 +3239,7 @@ let n = nameof x
 (source_file
   (let_binding
     name: (identifier)
-    (nameof_expression
+    body: (nameof_expression
       (long_identifier
         (identifier)))))
 
@@ -3254,7 +3254,7 @@ let n = nameof System.Math
 (source_file
   (let_binding
     name: (identifier)
-    (nameof_expression
+    body: (nameof_expression
       (long_identifier
         (identifier)
         (identifier)))))
@@ -3270,7 +3270,7 @@ let n = nameof (Some x)
 (source_file
   (let_binding
     name: (identifier)
-    (nameof_expression
+    body: (nameof_expression
       (parenthesized_expression
         (application_expression
           (long_identifier
@@ -3293,7 +3293,7 @@ let f () =
     name: (identifier)
     parameters: (parameter
       (unit))
-    (use_expression
+    body: (use_expression
       name: (identifier)
       (application_expression
         (application_expression
@@ -3410,7 +3410,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (int_literal))
@@ -3433,7 +3433,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (int_literal))
@@ -3463,7 +3463,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (interpolated_string
@@ -3496,7 +3496,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (int_literal))
@@ -3527,7 +3527,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         body: (int_literal))
@@ -3558,7 +3558,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (let_expression
+    body: (let_expression
       binding: (let_decl_indented
         name: (identifier)
         parameters: (parameter
@@ -3594,7 +3594,7 @@ let f =
 (source_file
   (let_binding
     name: (identifier)
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier))
       (parenthesized_expression
@@ -3653,7 +3653,7 @@ let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T)
       (identifier)
       (type_expression
         (type_parameter)))
-    (application_expression
+    body: (application_expression
       (long_identifier
         (identifier))
       (string_literal))))
@@ -3677,7 +3677,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (match_expression
+    body: (match_expression
       (long_identifier
         (identifier))
       (match_arm
@@ -3721,7 +3721,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (if_expression
+    body: (if_expression
       (binary_expression
         (long_identifier
           (identifier))
@@ -3760,7 +3760,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (try_expression
+    body: (try_expression
       (let_expression
         binding: (let_decl_indented
           name: (identifier)
@@ -3795,7 +3795,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (try_expression
+    body: (try_expression
       (int_literal)
       (match_arm
         (pattern
@@ -3818,7 +3818,7 @@ let f x =
     name: (identifier)
     parameters: (parameter
       (identifier))
-    (match_expression
+    body: (match_expression
       (long_identifier
         (identifier))
       (match_arm
@@ -3846,11 +3846,14 @@ type Foo() =
 (source_file
   (type_decl
     name: (identifier)
-    (primary_constructor (unit)))
+    (primary_constructor
+      (unit)))
   (member_defn
-    self: (member_self_ident (identifier))
+    self: (member_self_ident
+      (identifier))
     name: (identifier)
-    parameters: (parameter (unit))
+    parameters: (parameter
+      (unit))
     (let_expression
       binding: (let_decl_indented
         name: (identifier)
@@ -3860,8 +3863,10 @@ type Foo() =
           name: (identifier)
           body: (int_literal))
         continuation: (binary_expression
-          (long_identifier (identifier))
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Empty class block
@@ -3904,15 +3909,19 @@ type Foo() =
 (source_file
   (type_decl
     name: (identifier)
-    (primary_constructor (unit))
+    (primary_constructor
+      (unit))
     (class_type_defn
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
-        parameters: (parameter (unit))
+        parameters: (parameter
+          (unit))
         (int_literal))
       (member_defn
-        self: (member_self_ident (identifier))
+        self: (member_self_ident
+          (identifier))
         name: (identifier)
         (int_literal)))))
 
@@ -3935,15 +3944,18 @@ type IFoo =
       (abstract_member_defn
         name: (identifier)
         (type_expression
-          (long_identifier (identifier))))
+          (long_identifier
+            (identifier))))
       (abstract_member_defn
         name: (identifier)
         (type_expression
           (function_type
             (type_expression
-              (long_identifier (identifier)))
+              (long_identifier
+                (identifier)))
             (type_expression
-              (long_identifier (identifier)))))))))
+              (long_identifier
+                (identifier)))))))))
 
 ================================================================================
 Interface block with inherit
@@ -3963,11 +3975,13 @@ type IExtended =
     (interface_type_defn
       (inherit_decl
         base: (type_expression
-          (long_identifier (identifier))))
+          (long_identifier
+            (identifier))))
       (abstract_member_defn
         name: (identifier)
         (type_expression
-          (long_identifier (identifier)))))))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Query expression with where and select
@@ -3985,18 +3999,25 @@ let r =
 (source_file
   (let_binding
     name: (identifier)
-    (computation_expression
-      builder: (long_identifier (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
       (for_expression
         (identifier)
-        (long_identifier (identifier) (identifier)))
+        (long_identifier
+          (identifier)
+          (identifier)))
       (query_operator
         (parenthesized_expression
           (binary_expression
-            (long_identifier (identifier) (identifier))
+            (long_identifier
+              (identifier)
+              (identifier))
             (int_literal))))
       (query_operator
-        (long_identifier (identifier) (identifier))))))
+        (long_identifier
+          (identifier)
+          (identifier))))))
 
 ================================================================================
 Query expression with join
@@ -4014,23 +4035,36 @@ let r =
 (source_file
   (let_binding
     name: (identifier)
-    (computation_expression
-      builder: (long_identifier (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
       (for_expression
         (identifier)
-        (long_identifier (identifier) (identifier)))
+        (long_identifier
+          (identifier)
+          (identifier)))
       (query_join_operator
         name: (identifier)
-        source: (long_identifier (identifier) (identifier))
+        source: (long_identifier
+          (identifier)
+          (identifier))
         condition: (parenthesized_expression
           (binary_expression
-            (long_identifier (identifier) (identifier))
-            (long_identifier (identifier) (identifier)))))
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)
+              (identifier)))))
       (query_operator
         (parenthesized_expression
           (tuple_expression
-            (long_identifier (identifier) (identifier))
-            (long_identifier (identifier) (identifier))))))))
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)
+              (identifier))))))))
 
 ================================================================================
 Query expression with groupBy into
@@ -4048,16 +4082,22 @@ let r =
 (source_file
   (let_binding
     name: (identifier)
-    (computation_expression
-      builder: (long_identifier (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
       (for_expression
         (identifier)
-        (long_identifier (identifier)))
+        (long_identifier
+          (identifier)))
       (query_group_by_operator
-        key: (long_identifier (identifier) (identifier))
+        key: (long_identifier
+          (identifier)
+          (identifier))
         into: (identifier))
       (query_operator
-        (long_identifier (identifier) (identifier))))))
+        (long_identifier
+          (identifier)
+          (identifier))))))
 
 ================================================================================
 Query expression with leftOuterJoin
@@ -4075,21 +4115,30 @@ let r =
 (source_file
   (let_binding
     name: (identifier)
-    (computation_expression
-      builder: (long_identifier (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
       (for_expression
         (identifier)
-        (long_identifier (identifier)))
+        (long_identifier
+          (identifier)))
       (query_left_outer_join_operator
         name: (identifier)
-        source: (long_identifier (identifier))
+        source: (long_identifier
+          (identifier))
         condition: (parenthesized_expression
           (binary_expression
-            (long_identifier (identifier) (identifier))
-            (long_identifier (identifier) (identifier))))
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)
+              (identifier))))
         into: (identifier))
       (query_operator
-        (long_identifier (identifier) (identifier))))))
+        (long_identifier
+          (identifier)
+          (identifier))))))
 
 ================================================================================
 Query operator names usable as identifiers outside CE
@@ -4104,23 +4153,31 @@ let s = List.take 3 ys
 (source_file
   (let_binding
     name: (identifier)
-    (int_literal))
+    body: (int_literal))
   (let_binding
     name: (identifier)
-    (application_expression
+    body: (application_expression
       (application_expression
-        (long_identifier (identifier) (identifier))
+        (long_identifier
+          (identifier)
+          (identifier))
         (parenthesized_expression
           (lambda_expression
-            (parameter (identifier))
+            (parameter
+              (identifier))
             (binary_expression
-              (long_identifier (identifier))
+              (long_identifier
+                (identifier))
               (int_literal)))))
-      (long_identifier (identifier))))
+      (long_identifier
+        (identifier))))
   (let_binding
     name: (identifier)
-    (application_expression
+    body: (application_expression
       (application_expression
-        (long_identifier (identifier) (identifier))
+        (long_identifier
+          (identifier)
+          (identifier))
         (int_literal))
-      (long_identifier (identifier)))))
+      (long_identifier
+        (identifier)))))

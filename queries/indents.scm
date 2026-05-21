@@ -12,10 +12,7 @@
 ; ── Bindings ──────────────────────────────────────────────────────────────────
 ; `let x = …` — body on subsequent lines is indented under the binding.
 [
-  (let_binding)
-  (let_and_binding)
   (let_decl_indented)
-  ; (let_expression) ; Disabled because it seems to be giving too much false positive
   (use_binding)
   (use_expression)
   (ce_let_bang_expr)
@@ -23,6 +20,12 @@
   (ce_use_bang_expr)
   (secondary_constructor)
 ] @indent
+
+; `let x =` (no body yet) and `and x =` (no body yet) — mid-edit shape.
+; `!body` matches only when the body field is absent, so completed bindings
+; like `let x = 1` (body field present) don't trigger this @indent @extend.
+((let_binding !body) @indent @extend)
+((let_and_binding !body) @indent @extend)
 
 ; ── Functions, lambdas, members ───────────────────────────────────────────────
 ; @extend on member_defn / property_accessor / secondary_constructor: their body
