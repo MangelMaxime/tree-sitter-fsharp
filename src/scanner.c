@@ -147,19 +147,57 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     // INLINE_OPEN: emitted right after the `=` of a let_decl_indented when the body
     // starts on the same line (not the next). Pushes the body's start column so that
-    // INLINE_CLOSE can later compare against it. Suppressed at module level
-    // (indents.size == 0) so let_binding wins over let_decl_indented inline.
-    if (want_inline_open && s->indents.size >= 1) {
+    // INLINE_CLOSE can later compare against it.
+    //
+    // Suppressed when _body_indent is also valid — that's the body position of a
+    // let_binding, where we want let_binding to win over let_decl_indented inline
+    // (module-level lets).
+    //
+    // Also suppressed when there's an `in` keyword on the rest of the current line —
+    // that means let_expression Branch B (explicit `let ... = expr in expr`) is
+    // intended, and emitting INLINE_OPEN would commit to the wrong branch.
+    if (want_inline_open && !want_body_indent) {
         // Skip horizontal whitespace to find the start of the body.
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             lexer->advance(lexer, true);
         }
         // Same-line body? (Not newline / EOF.)
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            uint32_t body_col = lexer->get_column(lexer);
             lexer->mark_end(lexer);
-            stack_push(&s->inline_cols, lexer->get_column(lexer));
-            lexer->result_symbol = INLINE_OPEN;
-            return true;
+
+            // Peek for `in` on the rest of the current line.
+            bool prev_word = false;
+            bool found_in = false;
+            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+                int32_t c = lexer->lookahead;
+                bool c_word = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                              (c >= '0' && c <= '9') || c == '_' || c == '\'';
+                if (!prev_word && c == 'i') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == 'n') {
+                        lexer->advance(lexer, true);
+                        int32_t n = lexer->lookahead;
+                        bool n_word = (n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') ||
+                                      (n >= '0' && n <= '9') || n == '_' || n == '\'';
+                        if (!n_word) { found_in = true; break; }
+                        prev_word = true;
+                    } else {
+                        prev_word = c_word;
+                    }
+                } else {
+                    lexer->advance(lexer, true);
+                    prev_word = c_word;
+                }
+            }
+
+            if (!found_in) {
+                stack_push(&s->inline_cols, body_col);
+                lexer->result_symbol = INLINE_OPEN;
+                return true;
+            }
+            // `in` found on rest of line — let Branch B match. Fall through.
+            return false;
         }
         // Body on next line — fall through; INDENT will handle it.
     }

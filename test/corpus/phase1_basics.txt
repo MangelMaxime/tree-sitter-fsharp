@@ -3830,3 +3830,35 @@ let f x =
         (pattern
           (wildcard_pattern))
         (string_literal)))))
+
+================================================================================
+Inline let inside member body
+================================================================================
+
+type Foo() =
+    member this.Bar () =
+        let a = 1
+        let b = 2
+        a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor (unit)))
+  (member_defn
+    self: (member_self_ident (identifier))
+    name: (identifier)
+    parameters: (parameter (unit))
+    (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier (identifier))
+          (long_identifier (identifier)))))))
