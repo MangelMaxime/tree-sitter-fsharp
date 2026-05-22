@@ -228,7 +228,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     // From here we're handling BODY_INDENT / BODY_DEDENT / INDENT / DEDENT /
-    // INLINE_CLOSE — all of which only fire at a line boundary.
+    // INLINE_CLOSE — these normally only fire at a line boundary, with one
+    // exception: BODY_DEDENT also fires inline when the next non-whitespace
+    // char is a closing delimiter (`}` or the `end` keyword). That lets blocks
+    // whose body ends on the same line as the close still parse — e.g.
+    //   `{ new IFoo with member _.X = 1 }`
+    // where the `}` sits right after the last member instead of on its own
+    // line. Without this, `interface_impl`/`type_extension`/etc. require the
+    // user to break the close onto a new line.
     lexer->mark_end(lexer);
 
     bool at_newline = (lexer->lookahead == '\n' || lexer->lookahead == '\r');
@@ -236,10 +243,40 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             lexer->advance(lexer, true);
         }
-        // Still on the current line with non-whitespace content — none of the
-        // remaining tokens fire here (they all describe what happens at the *next*
-        // significant line).
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            // Mid-line non-whitespace ahead. If it's a recognised closing
+            // delimiter and the parser is expecting BODY_DEDENT (i.e. we are
+            // inside an indented body that needs to close before the
+            // delimiter), pop one indent level and emit BODY_DEDENT.
+            if (want_body_dedent && s->indents.size > 0) {
+                if (lexer->lookahead == '}') {
+                    stack_pop(&s->indents);
+                    lexer->result_symbol = BODY_DEDENT;
+                    return true;
+                }
+                // Match the `end` keyword (must be followed by a non-word
+                // char, so we don't mistake identifiers like `enderror`).
+                if (lexer->lookahead == 'e') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == 'n') {
+                        lexer->advance(lexer, true);
+                        if (lexer->lookahead == 'd') {
+                            lexer->advance(lexer, true);
+                            int32_t after = lexer->lookahead;
+                            bool word_continues =
+                                (after >= 'a' && after <= 'z') ||
+                                (after >= 'A' && after <= 'Z') ||
+                                (after >= '0' && after <= '9') ||
+                                after == '_' || after == '\'';
+                            if (!word_continues) {
+                                stack_pop(&s->indents);
+                                lexer->result_symbol = BODY_DEDENT;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
             return false;
         }
     }
