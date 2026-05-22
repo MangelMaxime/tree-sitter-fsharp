@@ -457,6 +457,17 @@ let record_nested =
             }
     }
 
+// Edge case: a trailing line-comment on a record field's value must not cause
+// the value expression to greedily absorb the next field's name. Both `Y` and
+// `Z` here should highlight as record fields (variable.other.member), not as
+// part of the previous value's expression.
+let record_with_comments =
+    {
+        X = 1 // trailing comment on the value
+        Y = 2
+        Z = 3
+    }
+
 module Lib =
     module Math =
         module Integer =

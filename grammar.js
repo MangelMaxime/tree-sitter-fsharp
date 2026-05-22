@@ -106,7 +106,6 @@ export default grammar({
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$.record_type_field, $.postfix_type],
-        [$.record_field, $.application_expression],
         // After `name: T` in a named union field, `*` could start the next field or
         // extend T into a tuple_type.
         [$._union_field_type, $.type_expression],
@@ -715,23 +714,20 @@ export default grammar({
 
         // {| Name = "Alice"; Age = 30 |}  or  {| r with Name = "Bob" |}
         // Copy-update base is _simple_expression so it can't be confused with the
-        // record_field's `name = value` form. prec.dynamic prefers starting a new field
-        // over extending the previous field's value via application.
+        // record_field's `name = value` form. Like `record_type_defn`, we have
+        // two body forms: indented (uses `_body_indent` + `_virtual_semi` for
+        // field separation) and inline (explicit `;` only). The indented form
+        // prevents a field's value expression from greedily absorbing the next
+        // field's name across a newline.
         anonymous_record_expression: $ => seq(
             "{|",
             choice(
                 seq(
                     field('base', $._simple_expression),
                     "with",
-                    $.record_field,
-                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
-                    optional(";"),
+                    $._record_fields,
                 ),
-                seq(
-                    $.record_field,
-                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
-                    optional(";"),
-                ),
+                $._record_fields,
             ),
             "|}",
         ),
@@ -744,17 +740,30 @@ export default grammar({
                 seq(
                     field('base', $._simple_expression),
                     "with",
-                    $.record_field,
-                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
-                    optional(";"),
+                    $._record_fields,
                 ),
-                seq(
-                    $.record_field,
-                    repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(optional(";"), $.record_field))),
-                    optional(";"),
-                ),
+                $._record_fields,
             ),
             "}",
+        ),
+
+        // Shared field-list body for record/anonymous-record expressions.
+        _record_fields: $ => choice(
+            seq(
+                $._body_indent,
+                $.record_field,
+                repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(
+                    choice(";", $._virtual_semi),
+                    $.record_field,
+                ))),
+                optional(choice(";", $._virtual_semi)),
+                $._body_dedent,
+            ),
+            seq(
+                $.record_field,
+                repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(";", $.record_field))),
+                optional(";"),
+            ),
         ),
 
         // prec(APP_EXPR) lets prec.dynamic in record_expression/anonymous_record_expression
