@@ -1614,6 +1614,9 @@ export default grammar({
             "|)",
         )),
 
+        // Top-level token: anything that can sit at module / source-file scope
+        // or inside a `module Foo =` body (which uses `repeat($._token)`).
+        //
         // Class-body-only declarations (member_defn, secondary_constructor,
         // abstract_member_defn, interface_impl, inherit_decl, val_field) are
         // NOT listed here — they parse exclusively as `_class_body_member`
@@ -1621,23 +1624,40 @@ export default grammar({
         // expand-selection (member → type → file) work and lets indent rules
         // distinguish "inside a member's body" from "between members".
         _token: $ => choice(
+            // Script-only header
             $.shebang,
+
+            // Preprocessor directives (conditional + non-structural)
             $.preproc_if,
             $.preproc_directive,
+
+            // Attribute attached to the following declaration
             $.attribute,
+
+            // Scope declarations
             $.namespace_decl,
             $.module_decl,
-            $.import_decl,
+            $.import_decl,         // `open Foo`
+
+            // Type-level declarations
             $.type_decl,
             $.type_extension,
             $.exception_decl,
+
+            // Value-level declarations
             $.let_binding,
             $.use_binding,
             $.do_stmt,
+
+            // Comments (also extras, but listed so they can stand as a child
+            // of source_file / module body when surrounded by other tokens)
             $.xml_doc_comment,
             $.line_comment,
             $.block_comment,
             $.block_doc_comment,
+
+            // Bare expression statements (last so all the above forms win
+            // when their leading keyword/punctuation is unambiguous)
             $._expression,
         ),
 
