@@ -148,7 +148,7 @@ export default grammar({
         //
         // After `=` we choose between an abbreviation target (inline
         // long_identifier) and an indented body (declarations as children).
-        module_decl: $ => prec.dynamic(1, seq(
+        module_decl: $ => seq(
             repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             "module",
             optional($.access_modifier),
@@ -162,7 +162,7 @@ export default grammar({
                     $._body_dedent,
                 ),
             )))),
-        )),
+        ),
 
         access_modifier: _ => choice("private", "internal", "public"),
 

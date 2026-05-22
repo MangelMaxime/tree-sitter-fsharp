@@ -368,8 +368,10 @@
 ; Type name inside `nameof` — `nameof System.Math` highlights `System.Math` as
 ; a type, while `nameof xxx` (camelCase value) stays plain. Same `^[A-Z]` guard
 ; as the raise rule below.
+; Per-identifier capture (not just the whole long_identifier) so the
+; PascalCase / @variable.other.member heuristics earlier are overridden.
 ((nameof_expression
-   (long_identifier) @type)
+   (long_identifier (identifier) @type))
  (#match? @type "^[A-Z]"))
 
 ; Exception type after `raise`/`reraise`. Three shapes:
