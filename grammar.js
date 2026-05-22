@@ -752,12 +752,25 @@ export default grammar({
             prec.right(1,                  seq($._expression, "..", $._expression)),
         ),
 
+        // Two-branch form (like `if_expression`):
+        //   prec(2) — body present (`fun x -> body`)
+        //   prec(1) — body absent (`fun x ->`), mid-edit shape so Helix can still
+        //             anchor indent on the `lambda_expression` node.
+        // Body uses `_indented_or_inline_body` so multi-line lambdas pick up the
+        // scanner's `_body_indent`/`_virtual_semi` machinery (sequence bodies).
         lambda_expression: $ => prec.right(PREC.FUN_EXPR,
-            seq(
-                "fun",
-                repeat1($.parameter),
-                "->",
-                field('body', $._expression),
+            choice(
+                prec(2, seq(
+                    "fun",
+                    repeat1($.parameter),
+                    "->",
+                    field('body', $._indented_or_inline_body),
+                )),
+                prec(1, seq(
+                    "fun",
+                    repeat1($.parameter),
+                    "->",
+                )),
             ),
         ),
 
@@ -1131,28 +1144,51 @@ export default grammar({
         // ── For / While ───────────────────────────────────────────────────────
 
         // for x in xs do body   (foreach)  /  for i = start to/downto end do body  (range)
-        // Body is optional so a bare `for x in xs do` can open a query CE
-        // (`query { for x in xs do where … select … }`); a body-less `for` outside
-        // a query CE is meaningless and the compiler rejects it anyway.
+        //
+        // Body is `optional($._expression)` — NOT `_indented_or_inline_body` like
+        // `if_expression`/`while_expression`/`lambda_expression`. Reason: a bare
+        // `for x in xs do` can be followed by a query-CE custom operator
+        // (`query { for x in xs do where … select … }`). When the body uses
+        // `_indented_or_inline_body`, the scanner emits `_body_indent` for the
+        // next line and the parser commits to a body parse — but the reserved
+        // `query_ce` keyword set doesn't propagate through `_body_indent`'s
+        // state boundary, so `where` becomes a plain identifier and gets eaten
+        // as an application-expression body. Sticking with `$._expression`
+        // keeps `where`/`select` reserved at the body slot, so the parser
+        // correctly leaves the body empty and treats them as `query_operator`
+        // siblings in the CE.
+        //
+        // Trade-off: a non-CE `for` with a multi-statement body parses as a
+        // single chained application instead of `sequence_expression`. The
+        // existing test corpus only exercises single-statement for-bodies and
+        // this matches the pre-change behavior; revisit only if multi-statement
+        // for-bodies become important.
         for_expression: $ => prec.right(PREC.IF_EXPR, seq(
             "for",
             choice(
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
-                    "in", $._expression, "do", optional($._expression),
+                    "in", $._expression, "do", optional(field('body', $._expression)),
                 ),
                 seq(
                     $.identifier,
-                    "=", $._expression, choice("to", "downto"), $._expression, "do", optional($._expression),
+                    "=", $._expression, choice("to", "downto"), $._expression, "do",
+                    optional(field('body', $._expression)),
                 ),
             ),
         )),
 
         // while cond do body   (imperative loop, returns unit)
-        // Body optional for the same mid-edit indent reason as `if_expression`.
-        while_expression: $ => prec.right(PREC.IF_EXPR,
-            seq("while", $._expression, "do", optional($._expression)),
-        ),
+        // Two-branch form (like `for_expression`); body-absent branch covers both
+        // mid-edit (`while cond do`) and the parser-recovery case where the body
+        // can't be the next token.
+        while_expression: $ => prec.right(PREC.IF_EXPR, choice(
+            prec(2, seq(
+                "while", $._expression, "do",
+                field('body', $._indented_or_inline_body),
+            )),
+            prec(1, seq("while", $._expression, "do")),
+        )),
 
         // `builder { ... }` — async, task, seq, promise, query, or any custom CE.
         // CE_EXPR < APP_EXPR so `f { field = val }` is parsed as application with a
