@@ -384,10 +384,10 @@ let oldAdd x y = x + y
 [<AutoOpen>]
 [<RequireQualifiedAccess>]
 type AttributedUnion =
-    | X
+    | [<DefaultValue>] X
     | Y
 
-type [<RequireQualifiedAccess>] FooAttributedUnion =
+type [<RequireQualifiedAccess;NoComparison>] FooAttributedUnion =
     | Value of int
 
 [<Literal>]
@@ -404,6 +404,23 @@ type StringList = string list
 type Point2D = float * float
 type StringMap<'v> = Map<string, 'v>
 type Predicate<'a> = 'a -> bool
+
+type Foo() =
+      member this.Bar(
+          [<System.Runtime.InteropServices.Optional;
+            System.Runtime.InteropServices.DefaultParameterValue(42)>] x: int
+      ) = x
+
+// Caller info attributes
+type Logger() =
+  member this.Log(
+      msg: string,
+      [<System.Runtime.CompilerServices.CallerMemberName>] ?memberName: string,
+      [<System.Runtime.CompilerServices.CallerFilePath>] ?filePath: string
+  ) = ()
+
+// ParamArray (params)
+let format ([<System.ParamArray>] args: obj[]) = ()
 
 // Record expressions
 let record_creation =

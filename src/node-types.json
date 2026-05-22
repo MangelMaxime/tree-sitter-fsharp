@@ -9528,6 +9528,10 @@
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "destructure_parameter",
           "named": true
         },
@@ -14952,6 +14956,10 @@
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -16296,6 +16304,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
         {
           "type": "line_comment",
           "named": true

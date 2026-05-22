@@ -656,6 +656,13 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
+        },
+        {
           "type": "CHOICE",
           "members": [
             {
@@ -1388,6 +1395,13 @@
           {
             "type": "STRING",
             "value": "|"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "attribute"
+            }
           },
           {
             "type": "FIELD",
@@ -6012,6 +6026,13 @@
                 "value": "("
               },
               {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "attribute"
+                }
+              },
+              {
                 "type": "SYMBOL",
                 "name": "identifier"
               },
@@ -6039,6 +6060,13 @@
               {
                 "type": "STRING",
                 "value": "("
+              },
+              {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "attribute"
+                }
               },
               {
                 "type": "SYMBOL",

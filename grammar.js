@@ -250,6 +250,7 @@ export default grammar({
         )),
 
         tuple_param: $ => seq(
+            repeat($.attribute),    // [<DefaultParameterValue(42)>], [<CallerMemberName>], etc.
             optional("?"),
             $.identifier,
             optional(seq(":", $.type_expression)),
@@ -402,6 +403,7 @@ export default grammar({
         // absorbing the comment.
         union_case: $ => prec.right(seq(
             "|",
+            repeat($.attribute),   // `| [<DefaultValue>] X` — attribute on a DU case
             field('name', $.identifier),
             optional(seq("of", choice(
                 $.union_case_named_fields,
@@ -1392,8 +1394,11 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            prec(20, seq("(", $.identifier, ":", $.type_expression, ")")),  // (x: int)
-            prec(20, seq("(", $.identifier, ")")),                            // (x)
+            // `([<Attr>] x: int)` / `([<Attr>] x)` — attributes on curried params
+            // (used for ParamArray, optional/caller-info attributes outside tuple
+            // form, etc.).
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, ")")),
+            prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             $.tuple_params,                // (x: int, y: int) — OOP-style multi-param
             $.destructure_parameter,       // ((a,b): int*int)   ({X=x}: Point)
             $.tuple_pattern,               // (a, b)   (Some x)
