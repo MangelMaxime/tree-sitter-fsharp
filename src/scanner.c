@@ -322,17 +322,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     if (want_virtual_semi && col == current && s->indents.size > 0) {
         int32_t c = lexer->lookahead;
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
-        if (!blocked && (c == 'e' || c == 'w' || c == 't' || c == 'd' ||
-                          c == 'i' || c == 'a' || c == 'f' || c == 'o')) {
-            const char *match = NULL;
-            if (c == 'e') match = "else";
-            else if (c == 'w') match = "with";
-            else if (c == 't') match = "then";
-            else if (c == 'd') match = "do";
-            else if (c == 'i') match = "in";
-            else if (c == 'a') match = "and";
-            else if (c == 'f') match = "finally";
-            else if (c == 'o') match = "of";
+        // Read the next identifier-shaped word so we can match against a list
+        // of "blocker" keywords. Any keyword that starts a sibling declaration
+        // inside a class/module/let body, OR continues the enclosing construct
+        // (else/elif/with/etc.), means we should NOT emit a virtual_semi for
+        // an expression-sequence continuation here.
+        if (!blocked) {
             int32_t buf[16];
             size_t i = 0;
             int32_t look = lexer->lookahead;
@@ -342,15 +337,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                 lexer->advance(lexer, true);
                 look = lexer->lookahead;
             }
-            const char *cands[3] = { match, NULL, NULL };
-            if (match && match[0] == 'e') cands[1] = "elif";
-            for (int ci = 0; ci < 3 && cands[ci]; ci++) {
-                const char *k = cands[ci];
-                size_t kl = strlen(k);
+            static const char *blockers[] = {
+                // Continuation keywords for the enclosing construct
+                "else", "elif", "with", "then", "do", "in", "and", "finally", "of",
+                // Closes a `class`/`struct`/`interface` block
+                "end",
+                // Class-body / module-body sibling declaration starters
+                "let", "member", "abstract", "override", "default", "inherit",
+                "interface", "val", "new", "static",
+                "type", "module", "namespace", "exception", "open", "and",
+                NULL,
+            };
+            for (const char **k = blockers; *k; k++) {
+                size_t kl = strlen(*k);
                 if (kl != i) continue;
                 bool eq = true;
                 for (size_t j = 0; j < kl; j++) {
-                    if (buf[j] != (int32_t)k[j]) { eq = false; break; }
+                    if (buf[j] != (int32_t)(*k)[j]) { eq = false; break; }
                 }
                 if (eq) { blocked = true; break; }
             }

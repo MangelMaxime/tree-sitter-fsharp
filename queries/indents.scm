@@ -28,15 +28,14 @@
 ((let_and_binding !body) @indent @extend)
 
 ; ── Functions, lambdas, members ───────────────────────────────────────────────
-; @extend on member_defn / property_accessor / secondary_constructor: their body
-; ends at the trailing expression, but mid-edit (`member this.Foo() =` with no
-; body typed yet) the node still ends right after `=`. @extend carries the
-; indent onto the next line so pressing Enter after `=` indents.
-[
-  (member_defn)
-  (abstract_member_defn)
-  (property_accessor)
-] @indent @extend
+; member_defn is now a CHILD of type_decl, so when a member has its body the
+; indent for "Enter after the body" comes from the enclosing type_decl
+; (sibling-member column). The mid-edit case (`member this.Foo() =` with no
+; body yet, body field absent) still needs @indent @extend so the next line
+; lands at the body indent.
+((member_defn !body) @indent @extend)
+((abstract_member_defn) @indent @extend)
+((property_accessor !body) @indent @extend)
 
 [
   (lambda_expression)

@@ -1501,7 +1501,7 @@ let x = { new IFoo with member this.Bar() = 42 }
         name: (identifier)
         parameters: (parameter
           (unit))
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Object expression with constructor args
@@ -1522,7 +1522,7 @@ let x = { new Base(42) with override this.Name = "x" }
         self: (member_self_ident
           (identifier))
         name: (identifier)
-        (string_literal)))))
+        body: (string_literal)))))
 
 ================================================================================
 Object expression with interface implementation
@@ -1548,7 +1548,7 @@ let x =
         name: (identifier)
         parameters: (parameter
           (unit))
-        (int_literal))
+        body: (int_literal))
       (interface_impl
         type: (type_expression
           (long_identifier
@@ -1559,7 +1559,7 @@ let x =
         name: (identifier)
         parameters: (parameter
           (unit))
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Dot expression after index
@@ -1638,129 +1638,164 @@ let x = List.map
 Property get accessor
 ================================================================================
 
-member this.Count with get() = _count
+type Counter() =
+    member this.Count with get() = _count
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
-    self: (member_self_ident
-      (identifier))
+  (type_decl
     name: (identifier)
-    (property_accessor
-      parameters: (parameter
-        (unit))
-      (long_identifier
-        (identifier)))))
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (long_identifier
+          (identifier))))))
 
 ================================================================================
 Property get and set accessors
 ================================================================================
 
-member this.Value
-    with get() = _x
-    and set(v) = _x <- v
+type Counter() =
+    member this.Value
+        with get() = _x
+        and set(v) = _x <- v
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
-    self: (member_self_ident
-      (identifier))
+  (type_decl
     name: (identifier)
-    (property_accessor
-      parameters: (parameter
-        (unit))
-      (long_identifier
-        (identifier)))
-    (property_accessor
-      parameters: (parameter
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
         (identifier))
-      (binary_expression
-        (long_identifier
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (long_identifier
+          (identifier)))
+      (property_accessor
+        parameters: (parameter
           (identifier))
-        (long_identifier
-          (identifier))))))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Property set accessor bare identifier
 ================================================================================
 
-member this.Raw with set v = _x <- v
+type Counter() =
+    member this.Raw with set v = _x <- v
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
-    self: (member_self_ident
-      (identifier))
+  (type_decl
     name: (identifier)
-    (property_accessor
-      parameters: (parameter
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
         (identifier))
-      (binary_expression
-        (long_identifier
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
           (identifier))
-        (long_identifier
-          (identifier))))))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
 
 ================================================================================
 Static property get accessor
 ================================================================================
 
-static member Zero with get() = 0
+type Counter() =
+    static member Zero with get() = 0
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
+  (type_decl
     name: (identifier)
-    (property_accessor
-      parameters: (parameter
-        (unit))
-      (int_literal))))
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (int_literal)))))
 
 ================================================================================
 Auto-implemented property with get and set
 ================================================================================
 
-member val Name = "" with get, set
+type Counter() =
+    member val Name = "" with get, set
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
+  (type_decl
     name: (identifier)
-    (string_literal)
-    (auto_property_accessors)))
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (string_literal)
+      (auto_property_accessors))))
 
 ================================================================================
 Auto-implemented property with get only
 ================================================================================
 
-member val ReadOnly = 42 with get
+type Counter() =
+    member val ReadOnly = 42 with get
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
+  (type_decl
     name: (identifier)
-    (int_literal)
-    (auto_property_accessors)))
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (int_literal)
+      (auto_property_accessors))))
 
 ================================================================================
 Static auto-implemented property
 ================================================================================
 
-static member val DefaultName = "default" with get, set
+type Counter() =
+    static member val DefaultName = "default" with get, set
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (member_defn
+  (type_decl
     name: (identifier)
-    (string_literal)
-    (auto_property_accessors)))
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (string_literal)
+      (auto_property_accessors))))
 
 ================================================================================
 Lazy expression
@@ -3082,14 +3117,14 @@ type Counter with
 (source_file
   (type_extension
     name: (type_extension_name
-      (identifier)))
-  (member_defn
-    self: (member_self_ident
       (identifier))
-    name: (identifier)
-    parameters: (parameter
-      (unit))
-    (unit)))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (unit))))
 
 ================================================================================
 Type extension qualified name
@@ -3104,16 +3139,16 @@ type System.String with
   (type_extension
     name: (type_extension_name
       (identifier)
-      (identifier)))
-  (member_defn
-    self: (member_self_ident
       (identifier))
-    name: (identifier)
-    (binary_expression
-      (long_identifier
-        (identifier)
+    (member_defn
+      self: (member_self_ident
         (identifier))
-      (int_literal))))
+      name: (identifier)
+      body: (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (int_literal)))))
 
 ================================================================================
 Type extension with type constraint
@@ -3131,19 +3166,19 @@ type Wrapper<'T when 'T : comparison> with
     (type_parameter_list
       (type_parameter)
       (type_constraint
-        (type_parameter))))
-  (member_defn
-    self: (member_self_ident
-      (identifier))
-    name: (identifier)
-    parameters: (parameter
-      (identifier))
-    (application_expression
-      (long_identifier
-        (identifier)
+        (type_parameter)))
+    (member_defn
+      self: (member_self_ident
         (identifier))
-      (long_identifier
-        (identifier)))))
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Type constraint subtype
@@ -3325,25 +3360,25 @@ type T(x: int) =
         (identifier)
         (type_expression
           (long_identifier
-            (identifier))))))
-  (member_defn
-    self: (member_self_ident
-      (identifier))
-    name: (identifier)
-    parameters: (parameter
-      (unit))
-    (use_expression
+            (identifier)))))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
       name: (identifier)
-      (application_expression
+      parameters: (parameter
+        (unit))
+      body: (use_expression
+        name: (identifier)
         (application_expression
           (application_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (unit))
             (long_identifier
-              (identifier))
-            (unit))
-          (long_identifier
-            (identifier)
-            (identifier)))
-        (unit)))))
+              (identifier)
+              (identifier)))
+          (unit))))))
 
 ================================================================================
 Module abbreviation two-component
@@ -3847,26 +3882,26 @@ type Foo() =
   (type_decl
     name: (identifier)
     (primary_constructor
-      (unit)))
-  (member_defn
-    self: (member_self_ident
-      (identifier))
-    name: (identifier)
-    parameters: (parameter
       (unit))
-    (let_expression
-      binding: (let_decl_indented
-        name: (identifier)
-        body: (int_literal))
-      continuation: (let_expression
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (let_expression
         binding: (let_decl_indented
           name: (identifier)
           body: (int_literal))
-        continuation: (binary_expression
-          (long_identifier
-            (identifier))
-          (long_identifier
-            (identifier)))))))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Empty class block
@@ -3918,12 +3953,12 @@ type Foo() =
         name: (identifier)
         parameters: (parameter
           (unit))
-        (int_literal))
+        body: (int_literal))
       (member_defn
         self: (member_self_ident
           (identifier))
         name: (identifier)
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Interface block with abstract members

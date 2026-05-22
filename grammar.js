@@ -133,15 +133,26 @@ export default grammar({
         ),
 
         // module Foo.Bar                    (file-level / abbreviated module)
-        // module [private|internal] Foo =   (explicit nested module header; body is flat tokens)
+        // module [private|internal] Foo =   (nested module — body indented under,
+        //                                    consumed as children via _body_indent)
         // module M = Lib                    (module abbreviation — target captured as abbrev field)
         // module M = Lib.Math.Integer       (qualified abbreviation target)
+        //
+        // After `=` we choose between an abbreviation target (inline
+        // long_identifier) and an indented body (declarations as children).
         module_decl: $ => seq(
             "module",
             optional($.access_modifier),
             optional("rec"),
             field('name', $.long_identifier),
-            optional(seq("=", optional(field('abbrev', $.long_identifier)))),
+            optional(seq("=", optional(choice(
+                field('abbrev', $.long_identifier),
+                seq(
+                    $._body_indent,
+                    repeat($._token),
+                    $._body_dedent,
+                ),
+            )))),
         ),
 
         access_modifier: _ => choice("private", "internal", "public"),
@@ -185,16 +196,24 @@ export default grammar({
         ),
 
         // `=` is optional: `[<Measure>] type kg` and empty class/interface bodies have none.
-        // `repeat($.attribute)` accepts the inline form `type [<Attr>] Foo = …`
-        // in addition to the standard `[<Attr>] type Foo = …` (attributes as
-        // separate top-level _token nodes preceding the type_decl).
+        // After `=`, the body takes one of two shapes:
+        //   • Inline (same line): a `_type_decl_body` — record `{…}`, union/enum
+        //     `| Case`, alias, etc. — parses directly without any body-indent token.
+        //   • Indented (own line at deeper column): `_body_indent` fires, and the
+        //     content inside is EITHER the same `_type_decl_body` (for record /
+        //     union / enum / etc. wrapping at the type-body column) OR a sequence
+        //     of class-body members (`member this.X = …`, `val`, etc.).
+        //
+        // This makes class/extension members CHILDREN of `type_decl` rather than
+        // `_token` siblings — fixes expand-selection (member → type → file) and
+        // gives "Enter after a member" the correct indent (the member's own column).
         type_decl: $ => prec.right(seq(
             "type",
             repeat($.attribute),
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
-            optional(seq("=", optional($._type_decl_body))),
+            optional(seq("=", optional($._type_decl_body_or_class))),
             repeat($.type_and_decl),
         )),
 
@@ -205,11 +224,12 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
-            optional(seq("=", optional($._type_decl_body))),
+            optional(seq("=", optional($._type_decl_body_or_class))),
         )),
 
-        // Intrinsic or external type extension. Body members appear as flat _token
-        // siblings, like class bodies.
+        // Intrinsic or external type extension. The body — extension members —
+        // follows the `with` and is wrapped by `_body_indent`/`_body_dedent` so
+        // members are children of `type_extension`, not siblings.
         //   type Foo with             type Foo<'T> with             type System.String with
         type_extension: $ => seq(
             "type",
@@ -217,6 +237,45 @@ export default grammar({
             field('name', $.type_extension_name),
             optional($.type_parameter_list),
             "with",
+            optional(seq(
+                $._body_indent,
+                repeat($._class_body_member),
+                $._body_dedent,
+            )),
+        ),
+
+        // Body of `type Foo = …` (or `and Foo = …`): inline `_type_decl_body`
+        // when on the same line as `=`, or an indented wrap when on a new line.
+        // Inside the indented wrap, the body content is EITHER another
+        // `_type_decl_body` (for record/union/enum/alias whose first significant
+        // token sits at the body column) or a sequence of class-body members.
+        _type_decl_body_or_class: $ => choice(
+            $._type_decl_body,
+            seq(
+                $._body_indent,
+                choice(
+                    $._type_decl_body,
+                    repeat1($._class_body_member),
+                ),
+                $._body_dedent,
+            ),
+        ),
+
+        // Everything legal inside a class or type-extension body.
+        _class_body_member: $ => choice(
+            $.attribute,
+            $.inherit_decl,
+            $.member_defn,
+            $.abstract_member_defn,
+            $.interface_impl,
+            $.secondary_constructor,
+            $.val_field,
+            $.do_stmt,
+            $.let_binding,
+            $.xml_doc_comment,
+            $.line_comment,
+            $.block_comment,
+            $.block_doc_comment,
         ),
 
         type_extension_name: $ => choice(
@@ -298,7 +357,7 @@ export default grammar({
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
             "=",
-            optional($._expression),
+            optional(field('body', $._expression)),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
@@ -338,7 +397,7 @@ export default grammar({
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
             "=",
-            $._expression,
+            field('body', $._expression),
         ),
 
         // with get [, set]  (auto-property accessor list)
@@ -441,16 +500,18 @@ export default grammar({
         // type Color = | Red = 0 | Green = 1 | Blue = 2
         enum_type_defn: $ => repeat1($.enum_case),
 
-        // type Point3D = struct val x: float … end — body is a flat repeat of _token.
-        struct_type_defn: $ => seq("struct", repeat($._token), "end"),
+        // type Point3D = struct val x: float … end — block-style bodies hold the
+        // same class-body members as `type Foo() = …` (no _body_indent needed
+        // since `struct`/`class`/`interface` is the open and `end` is the close).
+        struct_type_defn: $ => seq("struct", repeat($._class_body_member), "end"),
 
-        // type Foo() = class member … end  — explicit class block (members as flat _tokens).
-        class_type_defn: $ => seq("class", repeat($._token), "end"),
+        // type Foo() = class member … end  — explicit class block.
+        class_type_defn: $ => seq("class", repeat($._class_body_member), "end"),
 
         // type IFoo = interface abstract … end  — explicit interface block.
         // Distinguished from interface_impl (which sits in class bodies as `interface T with …`)
         // by the trailing `end`; ambiguity at the leading `interface` is explored via GLR.
-        interface_type_defn: $ => seq("interface", repeat($._token), "end"),
+        interface_type_defn: $ => seq("interface", repeat($._class_body_member), "end"),
 
         // type MyDelegate = delegate of int -> string
         // type Handler = delegate of (obj * EventArgs) -> unit
@@ -1554,6 +1615,12 @@ export default grammar({
             "|)",
         )),
 
+        // Class-body-only declarations (member_defn, secondary_constructor,
+        // abstract_member_defn, interface_impl, inherit_decl, val_field) are
+        // NOT listed here — they parse exclusively as `_class_body_member`
+        // children of `type_decl`/`type_extension`. That nesting is what makes
+        // expand-selection (member → type → file) work and lets indent rules
+        // distinguish "inside a member's body" from "between members".
         _token: $ => choice(
             $.shebang,
             $.preproc_if,
@@ -1567,13 +1634,7 @@ export default grammar({
             $.exception_decl,
             $.let_binding,
             $.use_binding,
-            $.member_defn,
-            $.secondary_constructor,
-            $.abstract_member_defn,
-            $.interface_impl,
-            $.inherit_decl,
             $.do_stmt,
-            $.val_field,
             $.xml_doc_comment,
             $.line_comment,
             $.block_comment,

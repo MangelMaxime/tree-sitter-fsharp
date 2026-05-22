@@ -1675,6 +1675,3 @@ type Runner =
 
             let test = ()
             ()
-
-type Test () =
-    member this.A () = ""
