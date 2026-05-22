@@ -430,11 +430,24 @@ export default grammar({
             )),
         )),
 
-        // interface IFoo with   (member impls follow as flat tokens)
+        // interface IFoo with                interface IBar with
+        //     member this.A = …                  member _.B = …
+        //
+        // Same `_body_indent`/`_body_dedent` pattern as `type_extension`: the
+        // member impls following `with` become children of the `interface_impl`
+        // node, so expand-selection walks identifier → member_defn →
+        // interface_impl → enclosing class/object_expression.
         interface_impl: $ => seq(
             "interface",
             field('type', $.type_expression),
-            optional("with"),
+            optional(seq(
+                "with",
+                optional(seq(
+                    $._body_indent,
+                    repeat($._class_body_member),
+                    $._body_dedent,
+                )),
+            )),
         ),
 
         // do expr  (class initializer or module-level side effect)

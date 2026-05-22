@@ -463,7 +463,8 @@ let x =
     { new IFoo with
         member this.Bar() = 1
       interface IBaz with
-        member this.Qux() = 2 }
+        member this.Qux() = 2
+    }
 
 --------------------------------------------------------------------------------
 
@@ -483,14 +484,14 @@ let x =
       (interface_impl
         type: (type_expression
           (long_identifier
-            (identifier))))
-      (member_defn
-        self: (member_self_ident
-          (identifier))
-        name: (identifier)
-        parameters: (parameter
-          (unit))
-        body: (int_literal)))))
+            (identifier)))
+        (member_defn
+          self: (member_self_ident
+            (identifier))
+          name: (identifier)
+          parameters: (parameter
+            (unit))
+          body: (int_literal))))))
 
 ================================================================================
 Dot expression after index
@@ -708,4 +709,3 @@ let n = nameof (Some x)
             (identifier))
           (long_identifier
             (identifier)))))))
-

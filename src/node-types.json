@@ -5047,6 +5047,64 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "abstract_member_defn",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "block_comment",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
+          "named": true
+        },
+        {
+          "type": "do_stmt",
+          "named": true
+        },
+        {
+          "type": "inherit_decl",
+          "named": true
+        },
+        {
+          "type": "interface_impl",
+          "named": true
+        },
+        {
+          "type": "let_binding",
+          "named": true
+        },
+        {
+          "type": "line_comment",
+          "named": true
+        },
+        {
+          "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "secondary_constructor",
+          "named": true
+        },
+        {
+          "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
     }
   },
   {
