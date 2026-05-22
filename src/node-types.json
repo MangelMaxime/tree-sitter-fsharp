@@ -9269,6 +9269,10 @@
       "required": false,
       "types": [
         {
+          "type": "abstract_member_defn",
+          "named": true
+        },
+        {
           "type": "address_of_expression",
           "named": true
         },
@@ -9285,11 +9289,23 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "begin_end_expression",
           "named": true
         },
         {
           "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "block_comment",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
           "named": true
         },
         {
@@ -9306,6 +9322,10 @@
         },
         {
           "type": "computation_expression",
+          "named": true
+        },
+        {
+          "type": "do_stmt",
           "named": true
         },
         {
@@ -9330,6 +9350,10 @@
         },
         {
           "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "inherit_decl",
           "named": true
         },
         {
@@ -9361,7 +9385,15 @@
           "named": true
         },
         {
+          "type": "let_binding",
+          "named": true
+        },
+        {
           "type": "let_expression",
+          "named": true
+        },
+        {
+          "type": "line_comment",
           "named": true
         },
         {
@@ -9414,6 +9446,10 @@
         },
         {
           "type": "record_expression",
+          "named": true
+        },
+        {
+          "type": "secondary_constructor",
           "named": true
         },
         {
@@ -9473,11 +9509,19 @@
           "named": true
         },
         {
+          "type": "val_field",
+          "named": true
+        },
+        {
           "type": "verbatim_string",
           "named": true
         },
         {
           "type": "while_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]

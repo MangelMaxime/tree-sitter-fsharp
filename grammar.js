@@ -1061,6 +1061,13 @@ export default grammar({
 
         // { new IFoo with member ... }  or  { new BaseClass(arg) with override ... }
         // The leading `new` keyword disambiguates from record_expression.
+        //
+        // The `with`-body uses `_class_body_member` (the same rule that fills
+        // `type_decl`/`type_extension` bodies). Object expressions don't allow
+        // every class-body form (e.g. `val mutable`, `new(…)`, `let`, `do` are
+        // all invalid here), but accepting them at parse time and letting the
+        // F# compiler reject the invalid combinations is fine for a syntax
+        // grammar — and keeping a single member-list rule avoids drift.
         object_expression: $ => seq(
             "{",
             "new",
@@ -1072,7 +1079,7 @@ export default grammar({
             )),
             optional(seq(
                 "with",
-                repeat(choice($.member_defn, $.interface_impl)),
+                repeat($._class_body_member),
             )),
             "}",
         ),

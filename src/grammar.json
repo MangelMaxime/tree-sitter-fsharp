@@ -4402,17 +4402,8 @@
                 {
                   "type": "REPEAT",
                   "content": {
-                    "type": "CHOICE",
-                    "members": [
-                      {
-                        "type": "SYMBOL",
-                        "name": "member_defn"
-                      },
-                      {
-                        "type": "SYMBOL",
-                        "name": "interface_impl"
-                      }
-                    ]
+                    "type": "SYMBOL",
+                    "name": "_class_body_member"
                   }
                 }
               ]
