@@ -329,7 +329,7 @@ type JsonValue =
     | JBool of bool
     | JNumber of float
     | JString of string
-    | JArray of JsonArray
+    | JArray of JsonArray // Check that the line below is highlighted correctly even with this comment
     | JObject of JsonObject
 
 and JsonArray = JsonValue list

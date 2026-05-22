@@ -388,14 +388,22 @@ export default grammar({
 
         union_type_defn: $ => repeat1($.union_case),
 
-        union_case: $ => seq(
+        // `repeat($.line_comment)` absorbs trailing comments INTO `union_case`
+        // so the next case's `|` becomes the parser's one-token lookahead.
+        // Without it, a line comment after a case is the lookahead and the
+        // parser reduces `union_type_defn` early (the action table at the
+        // case's end has no shift for `line_comment` other than as extras).
+        // `prec.right` resolves the shift/reduce conflict in favour of
+        // absorbing the comment.
+        union_case: $ => prec.right(seq(
             "|",
             field('name', $.identifier),
             optional(seq("of", choice(
                 $.union_case_named_fields,
                 field('fields', $.type_expression),
             ))),
-        ),
+            repeat($.line_comment),
+        )),
 
         // | Circle of radius: float  or  | Rect of width: float * height: float
         union_case_named_fields: $ => seq(

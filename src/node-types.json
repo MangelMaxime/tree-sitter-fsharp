@@ -16281,9 +16281,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "line_comment",
+          "named": true
+        },
         {
           "type": "union_case_named_fields",
           "named": true
