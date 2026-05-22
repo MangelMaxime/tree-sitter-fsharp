@@ -716,6 +716,26 @@ let while_demo =
     while i < 3 do
         i <- i + 1
 
+// Multi-statement body — parses as `sequence_expression` (each statement is
+// its own child). Try expand-selection from `"done"`: it should walk to the
+// surrounding statement, then to the while body, then to `while_expression`.
+let while_multi () =
+    let mutable n = 0
+    while n < 3 do
+        printfn "iter %d" n
+        printfn "done"
+        n <- n + 1
+
+// Multi-statement body — `for_expression`'s body still parses as a single
+// chained `application_expression` (second `printfn` is treated as an arg of
+// the first). Expand-selection walks through invented application nodes
+// instead of statement siblings. Asymmetric with the `while_multi` case above
+// — a known trade-off to keep query-CE parsing working (see grammar.js).
+let for_multi () =
+    for i in [ 1; 2; 3 ] do
+        printfn "item: %d" i
+        printfn "double: %d" (i * 2)
+
 // ── Computation expressions ───────────────────────────────────────────────────
 
 // async — F# built-in async workflow
