@@ -15041,6 +15041,10 @@
       "required": false,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "class_type_defn",
           "named": true
         },
@@ -15196,6 +15200,10 @@
       "required": false,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "class_type_defn",
           "named": true
         },
@@ -15309,9 +15317,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
         {
           "type": "type_parameter_list",
           "named": true

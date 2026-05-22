@@ -387,6 +387,9 @@ type AttributedUnion =
     | X
     | Y
 
+type [<RequireQualifiedAccess>] FooAttributedUnion =
+    | Value of int
+
 [<Literal>]
 let MaxCount = 100
 
@@ -465,7 +468,6 @@ let record_with_comments =
     {
         X = 1 // trailing comment on the value
         Y = 2
-        Z = 3
     }
 
 module Lib =

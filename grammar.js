@@ -185,8 +185,12 @@ export default grammar({
         ),
 
         // `=` is optional: `[<Measure>] type kg` and empty class/interface bodies have none.
+        // `repeat($.attribute)` accepts the inline form `type [<Attr>] Foo = …`
+        // in addition to the standard `[<Attr>] type Foo = …` (attributes as
+        // separate top-level _token nodes preceding the type_decl).
         type_decl: $ => prec.right(seq(
             "type",
+            repeat($.attribute),
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
@@ -197,6 +201,7 @@ export default grammar({
         // and Even = ...  (mutual type recursion continuation)
         type_and_decl: $ => prec.right(seq(
             "and",
+            repeat($.attribute),
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
@@ -208,6 +213,7 @@ export default grammar({
         //   type Foo with             type Foo<'T> with             type System.String with
         type_extension: $ => seq(
             "type",
+            repeat($.attribute),
             field('name', $.type_extension_name),
             optional($.type_parameter_list),
             "with",

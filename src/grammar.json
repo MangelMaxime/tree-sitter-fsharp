@@ -328,6 +328,13 @@
             "value": "type"
           },
           {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "attribute"
+            }
+          },
+          {
             "type": "FIELD",
             "name": "name",
             "content": {
@@ -409,6 +416,13 @@
             "value": "and"
           },
           {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "attribute"
+            }
+          },
+          {
             "type": "FIELD",
             "name": "name",
             "content": {
@@ -478,6 +492,13 @@
         {
           "type": "STRING",
           "value": "type"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
         },
         {
           "type": "FIELD",
