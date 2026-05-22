@@ -7,51 +7,50 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+// Type-level precedences (only used inside type expressions). Strict total
+// order — each tier wraps the next.
 const TYPE_PREC = {
-    FUNCTION: 1,   // int -> string   (right-assoc, lowest)
+    FUNCTION: 1,   // int -> string             (right-assoc, lowest)
     TUPLE:    2,   // int * string
-    POSTFIX:  3,   // int list, int option  (left-assoc)
-    APP:      4,   // list<int>, int[]  (highest)
+    POSTFIX:  3,   // int list, int option      (left-assoc)
+    APP:      4,   // list<int>, int[]          (highest)
 };
 
+// Expression-level precedences. Values are listed low-to-high; equalities
+// between names at the same value are deliberate and documented below.
 const PREC = {
-    SEQ_EXPR:      1,
-    PIPE_EXPR:     1,   // |>, <|, >>, <<
-    THEN_EXPR:     2,
-    BOOL_OR:       2,   // ||
-    RARROW:        3,
-    BOOL_AND:      3,   // &&
-    INFIX_OP:      4,   // comparison: = <> < > <= >=
-    ADDITIVE:      5,   // + -
-    MULTIPLICATIVE:6,   // * / %
-    LET_DECL:      7,
-    DO_EXPR:       8,
-    FUN_EXPR:      1,   // low so the body $._expression expands greedily
-    MATCH_EXPR:    8,
-    MATCH_DECL:    9,
-    DO_DECL:       10,
-    ELSE_EXPR:     11,
-    INTERFACE:     12,
-    COMMA:         13,
-    INFIX_OR:      13,
-    INFIX_AND:     14,
-    PREFIX_EXPR:   15,
-    APP_EXPR:      16,
-    SPECIAL_INFIX: 16,
-    LARROW:        16,
-    TUPLE_EXPR:    1,    // below BOOL_OR so OR binds tighter than comma
-    CE_EXPR:       15,
-    SPECIAL_PREFIX:17,
-    IF_EXPR:       14,
-    DOT:           19,
-    INDEX_EXPR:    20,
-    PAREN_APP:     21,
-    PAREN_EXPR:    21,
-    TYPED_EXPR:    22,
-    DOTDOT:        22,
-    DOTDOT_SLICE:  23,
-    NEW_OBJ:       24,
-    LET_EXPR:      1,    // low so the in-body $._expression expands greedily
+    // Tier 1 — body-greedy / lowest-binding. Anything here is intentionally
+    // weaker than the operators below so that bodies expand to consume as
+    // much of the trailing expression chain as possible.
+    SEQ_EXPR:       1,   // virtual-semi sequence  (must be loosest)
+    PIPE_EXPR:      1,   // |>, <|, >>, <<
+    FUN_EXPR:       1,   // `fun x -> …` — low so `->` body expands greedily
+    LET_EXPR:       1,   // `let x = … in …`     — same reason
+    TUPLE_EXPR:     1,   // below BOOL_OR so `||` binds tighter than `,`
+
+    BOOL_OR:        2,   // ||
+    RARROW:         3,   // dispatch wrapper for _expression
+    BOOL_AND:       3,   // &&
+    INFIX_OP:       4,   // = <> < > <= >= :: and custom symbolic
+    ADDITIVE:       5,   // + -
+    MULTIPLICATIVE: 6,   // * / %
+
+    // Tier 7+ — declaration / control flow / application binding.
+    LET_DECL:       7,   // `let f x = …` (top-level binding)
+    MATCH_EXPR:     8,   // match / try-with / function
+    IF_EXPR:        14,  // if / elif / else / for / while
+    PREFIX_EXPR:    15,  // unary `not` / `~~~` / `-` / `&` / `lazy` / `assert`
+    CE_EXPR:        15,  // `builder { … }` — below APP_EXPR so `f { … }` is application
+    APP_EXPR:       16,  // `f x` — application binds tighter than CE / prefix
+    LARROW:         16,  // `expr <- expr`  (mutation, similar binding)
+
+    // Tier 19+ — atomic / postfix access. Tightest binding.
+    DOT:            19,  // `a.b.c` long_identifier chain
+    INDEX_EXPR:     20,  // `arr.[i]`
+    PAREN_EXPR:     21,  // `(expr)` / `begin … end` / quotations
+    TYPED_EXPR:     22,  // `(expr : ty)`
+    DOTDOT_SLICE:   23,  // `expr..` and `..expr` inside index args
+    NEW_OBJ:        24,  // `new T(…)`
 };
 
 export default grammar({
