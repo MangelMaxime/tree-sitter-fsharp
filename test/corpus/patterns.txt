@@ -1,0 +1,582 @@
+================================================================================
+Match arm with when guard
+================================================================================
+
+match x with
+| n when n > 0 -> 1
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Empty list pattern
+================================================================================
+
+match xs with
+| [] -> 0
+| _ -> 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (list_pattern))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+List pattern with elements
+================================================================================
+
+match xs with
+| [x; y] -> x
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (list_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+As pattern
+================================================================================
+
+match xs with
+| [] as empty -> 0
+| _ -> 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (as_pattern
+          (pattern
+            (list_pattern))
+          (identifier)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Record pattern single field
+================================================================================
+
+match p with
+| { X = x } -> x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (record_pattern
+          (record_field_pattern
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Record pattern multi field with semicolons
+================================================================================
+
+match p with
+| { X = 0; Y = 0 } -> true
+| _ -> false
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (record_pattern
+          (record_field_pattern
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (literal_pattern
+                (int_literal))))
+          (record_field_pattern
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (literal_pattern
+                (int_literal))))))
+      (bool_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (bool_literal))))
+
+================================================================================
+Record pattern with wildcard value
+================================================================================
+
+match p with
+| { X = _ } -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (record_pattern
+          (record_field_pattern
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (wildcard_pattern)))))
+      (int_literal))))
+
+================================================================================
+Record pattern nested
+================================================================================
+
+match r with
+| { TopLeft = { X = 0; Y = 0 } } -> true
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (record_pattern
+          (record_field_pattern
+            name: (long_identifier
+              (identifier))
+            value: (pattern
+              (record_pattern
+                (record_field_pattern
+                  name: (long_identifier
+                    (identifier))
+                  value: (pattern
+                    (literal_pattern
+                      (int_literal))))
+                (record_field_pattern
+                  name: (long_identifier
+                    (identifier))
+                  value: (pattern
+                    (literal_pattern
+                      (int_literal)))))))))
+      (bool_literal))))
+
+================================================================================
+Named DU field pattern single field
+================================================================================
+
+match s with
+| Circle(radius = r) -> r
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier
+            (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Named DU field pattern multiple fields
+================================================================================
+
+match s with
+| Rect(width = w; height = h) -> w * h
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier
+            (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Named DU field pattern with wildcard
+================================================================================
+
+match s with
+| Circle(radius = _) -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier
+            (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (wildcard_pattern)))))
+      (int_literal))))
+
+================================================================================
+Positional DU pattern still works
+================================================================================
+
+match s with
+| Circle r -> r
+| Rect(w, h) -> w
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (pattern
+            (tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Active pattern complete multi-case
+================================================================================
+
+let (|Even|Odd|) n = n
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (active_pattern_name)
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Active pattern partial
+================================================================================
+
+let (|ParseInt|_|) s = None
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (active_pattern_name)
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Active pattern single case
+================================================================================
+
+let (|Double|) n = n * 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (active_pattern_name)
+    parameters: (parameter
+      (identifier))
+    body: (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal))))
+
+================================================================================
+Active pattern parameterized
+================================================================================
+
+let (|DivisibleBy|_|) d n = n
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (active_pattern_name)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Operator definition not broken by active pattern token
+================================================================================
+
+let (|>) a f = f a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (operator_name
+      (symbolic_op))
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Unparenthesized tuple pattern basic
+================================================================================
+
+match t with
+| true, n -> n
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (bool_literal)))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Unparenthesized tuple pattern three elements
+================================================================================
+
+match t with
+| a, b, c -> a
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Unparenthesized tuple pattern with OR alternatives
+================================================================================
+
+match t with
+| 1, 2 | 3, 4 -> "yes"
+| _ -> "no"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (string_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (string_literal))))
+
+================================================================================
+Unparenthesized tuple pattern with when guard
+================================================================================
+
+match t with
+| a, b when a > 0 -> a + b
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+

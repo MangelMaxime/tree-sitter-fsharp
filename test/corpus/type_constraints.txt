@@ -1,0 +1,123 @@
+================================================================================
+Type constraint subtype
+================================================================================
+
+type Foo<'T when 'T :> System.IComparable> = { value: 'T }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (type_expression
+          (long_identifier
+            (identifier)
+            (identifier)))))
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (type_parameter))))))
+
+================================================================================
+Type constraint comparison let binding
+================================================================================
+
+let sort<'T when 'T : comparison> (xs: 'T list) = List.sort xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (postfix_type
+          (type_expression
+            (type_parameter))
+          (long_identifier
+            (identifier)))))
+    body: (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Type constraint two params with and
+================================================================================
+
+type Pair<'T, 'U when 'T : equality and 'U : null> = { fst: 'T; snd: 'U }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_parameter)
+      (type_constraint
+        (type_parameter))
+      (type_constraint
+        (type_parameter)))
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (type_parameter)))
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (type_parameter))))))
+
+================================================================================
+SRTP constraint with single-char operator name
+================================================================================
+
+let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    failwith "srtp"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        member_name: (operator_name)
+        member_type: (type_expression
+          (function_type
+            (type_expression
+              (tuple_type
+                (type_expression
+                  (type_parameter))
+                (type_expression
+                  (type_parameter))))
+            (type_expression
+              (type_parameter))))))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))))
+

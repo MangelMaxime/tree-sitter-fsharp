@@ -1,0 +1,227 @@
+================================================================================
+Let binding simple value
+================================================================================
+
+let x = 42
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal)))
+
+================================================================================
+Let binding with function parameters
+================================================================================
+
+let add a b = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Let binding with typed parameters
+================================================================================
+
+let add (a: int) (b: int) = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Let binding with string
+================================================================================
+
+let s = "hello"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (string_literal)))
+
+================================================================================
+Let binding with char
+================================================================================
+
+let c = 'x'
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (char_literal)))
+
+================================================================================
+Let binding with arithmetic
+================================================================================
+
+let result = a + b * c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Let inline binding
+================================================================================
+
+let inline square x = x * x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (binary_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Let mutable binding
+================================================================================
+
+let mutable count = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal)))
+
+================================================================================
+Let rec already supported
+================================================================================
+
+let rec go n = go n
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Let expression with in
+================================================================================
+
+let x = 1 in x + 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    (int_literal)
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal))))
+
+================================================================================
+Let expression with function
+================================================================================
+
+let double x = x * 2 in double 21
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (int_literal))))
+
+================================================================================
+Nested let expression
+================================================================================
+
+let x = 1 in let y = 2 in x + y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_expression
+    name: (identifier)
+    (int_literal)
+    (let_expression
+      name: (identifier)
+      (int_literal)
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Two-component qualified name stays long_identifier
+================================================================================
+
+let x = List.map
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (long_identifier
+      (identifier)
+      (identifier))))
+

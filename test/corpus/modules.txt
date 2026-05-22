@@ -1,0 +1,50 @@
+================================================================================
+Module abbreviation two-component
+================================================================================
+
+module M = System.Collections
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier))))
+
+================================================================================
+Module abbreviation three-component
+================================================================================
+
+module Dict = System.Collections.Generic
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier)
+      (identifier))))
+
+================================================================================
+Module abbreviation with access modifier
+================================================================================
+
+module private P = My.Internal
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (access_modifier)
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier))))
+

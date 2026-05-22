@@ -1,0 +1,225 @@
+================================================================================
+Function type annotation
+================================================================================
+
+let f : int -> string = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Tuple type annotation
+================================================================================
+
+let t : int * string = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (tuple_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Generic type annotation
+================================================================================
+
+let xs : list<int> = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Postfix type annotation
+================================================================================
+
+let xs : int list = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (postfix_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Type parameter annotation
+================================================================================
+
+let id : 'a -> 'a = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (function_type
+        (type_expression
+          (type_parameter))
+        (type_expression
+          (type_parameter))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Array type annotation
+================================================================================
+
+let arr : int[] = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (array_type
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Function type is right-associative
+================================================================================
+
+let f : int -> int -> int = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier)))))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Tuple type binds tighter than function arrow
+================================================================================
+
+let f : int * string -> bool = ignore
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    return_type: (type_expression
+      (function_type
+        (type_expression
+          (tuple_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier)))))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Typed parameter with postfix type
+================================================================================
+
+let f (x: int list) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Generic type with measure unit
+================================================================================
+
+type Speed = float<m/s>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (measure_expression
+          (measure_expression
+            (long_identifier
+              (identifier)))
+          (measure_expression
+            (long_identifier
+              (identifier))))))))
+

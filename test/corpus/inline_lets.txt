@@ -1,0 +1,424 @@
+================================================================================
+Use expression in function body
+================================================================================
+
+let f () =
+    use r = openFile()
+    r.Read()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (use_expression
+      name: (identifier)
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (unit))))))
+
+================================================================================
+Inline let with sibling at same column
+================================================================================
+
+let f x =
+    let a = 1
+    a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (long_identifier
+        (identifier)))))
+
+================================================================================
+Inline let with two siblings
+================================================================================
+
+let f x =
+    let a = 1
+    let b = 2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Inline let with interpolated string body
+================================================================================
+
+let f x =
+    let url = $"a{x}b"
+    let cwd = ""
+    url
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (interpolated_string
+          (string_content)
+          (interpolation
+            (long_identifier
+              (identifier)))
+          (string_content)))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (string_literal))
+        continuation: (long_identifier
+          (identifier))))))
+
+================================================================================
+Inline let with blank line separator
+================================================================================
+
+let f x =
+    let a = 1
+
+    let b = 2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Inline let mixed with indented-body let
+================================================================================
+
+let f x =
+    let a = 1
+    let b =
+        2
+    a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (int_literal))
+      continuation: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Inline let inside nested function
+================================================================================
+
+let f x =
+    let inner y =
+        let a = 1
+        a + y
+    inner x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        parameters: (parameter
+          (identifier))
+        body: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      continuation: (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Inline let inside lambda body
+================================================================================
+
+let f =
+    g (fun x ->
+        let a = 1
+        let b = 2
+        a + b + x
+    )
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (lambda_expression
+          (parameter
+            (identifier))
+          (let_expression
+            binding: (let_decl_indented
+              name: (identifier)
+              body: (int_literal))
+            continuation: (let_expression
+              binding: (let_decl_indented
+                name: (identifier)
+                body: (int_literal))
+              continuation: (binary_expression
+                (binary_expression
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier))))))))))
+
+================================================================================
+Inline let inside match arm body
+================================================================================
+
+let f x =
+    match x with
+    | 0 ->
+        let a = 1
+        let b = 2
+        a + b
+    | _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (let_expression
+            binding: (let_decl_indented
+              name: (identifier)
+              body: (int_literal))
+            continuation: (binary_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Inline let inside if-then-else branch
+================================================================================
+
+let f x =
+    if x > 0 then
+        let a = 1
+        let b = 2
+        a + b
+    else
+        0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (int_literal))))
+
+================================================================================
+Inline let inside try-with body
+================================================================================
+
+let f x =
+    try
+        let a = 1
+        let b = 2
+        a + b
+    with _ ->
+        0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (try_expression
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Try-with single arm without leading pipe
+================================================================================
+
+let f x =
+    try
+        1
+    with _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (try_expression
+      (int_literal)
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Match expression first arm without leading pipe
+================================================================================
+
+let f x =
+    match x with
+    0 -> "zero"
+    | _ -> "other"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (string_literal)))))
+

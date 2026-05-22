@@ -1,0 +1,314 @@
+================================================================================
+Property get accessor
+================================================================================
+
+type Counter() =
+    member this.Count with get() = _count
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (long_identifier
+          (identifier))))))
+
+================================================================================
+Property get and set accessors
+================================================================================
+
+type Counter() =
+    member this.Value
+        with get() = _x
+        and set(v) = _x <- v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (long_identifier
+          (identifier)))
+      (property_accessor
+        parameters: (parameter
+          (identifier))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Property set accessor bare identifier
+================================================================================
+
+type Counter() =
+    member this.Raw with set v = _x <- v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (identifier))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Static property get accessor
+================================================================================
+
+type Counter() =
+    static member Zero with get() = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (property_accessor
+        parameters: (parameter
+          (unit))
+        body: (int_literal)))))
+
+================================================================================
+Auto-implemented property with get and set
+================================================================================
+
+type Counter() =
+    member val Name = "" with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (string_literal)
+      (auto_property_accessors))))
+
+================================================================================
+Auto-implemented property with get only
+================================================================================
+
+type Counter() =
+    member val ReadOnly = 42 with get
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (int_literal)
+      (auto_property_accessors))))
+
+================================================================================
+Static auto-implemented property
+================================================================================
+
+type Counter() =
+    static member val DefaultName = "default" with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      (string_literal)
+      (auto_property_accessors))))
+
+================================================================================
+Type extension simple
+================================================================================
+
+type Counter with
+    member this.Reset() = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (unit))))
+
+================================================================================
+Type extension qualified name
+================================================================================
+
+type System.String with
+    member this.IsEmpty = this.Length = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier)
+      (identifier))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      body: (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (int_literal)))))
+
+================================================================================
+Type extension with type constraint
+================================================================================
+
+type Wrapper<'T when 'T : comparison> with
+    member this.IsEmpty xs = List.isEmpty xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    name: (type_extension_name
+      (identifier))
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Use expression in member body
+================================================================================
+
+type T(x: int) =
+    member this.Run() =
+        use r = openFile()
+        r.Read()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (use_expression
+        name: (identifier)
+        (application_expression
+          (application_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (unit))
+            (long_identifier
+              (identifier)
+              (identifier)))
+          (unit))))))
+
+================================================================================
+Inline let inside member body
+================================================================================
+
+type Foo() =
+    member this.Bar () =
+        let a = 1
+        let b = 2
+        a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (let_expression
+          binding: (let_decl_indented
+            name: (identifier)
+            body: (int_literal))
+          continuation: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
+

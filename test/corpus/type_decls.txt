@@ -1,0 +1,436 @@
+================================================================================
+Mutual recursion with and
+================================================================================
+
+let rec f x = x
+and g x = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))
+    (let_and_binding
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      body: (long_identifier
+        (identifier)))))
+
+================================================================================
+Enum type definition
+================================================================================
+
+type Color =
+    | Red = 0
+    | Green = 1
+    | Blue = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (enum_type_defn
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal)))))
+
+================================================================================
+Enum type definition with hex values
+================================================================================
+
+type Nibble =
+    | Low = 0x0F
+    | High = 0xF0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (enum_type_defn
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal)))))
+
+================================================================================
+Named union field single
+================================================================================
+
+type Shape =
+    | Circle of radius: float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier))))))))
+
+================================================================================
+Named union fields multiple
+================================================================================
+
+type Shape =
+    | Rect of width: float * height: float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier)))
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier))))))))
+
+================================================================================
+Named union field with postfix type
+================================================================================
+
+type T =
+    | Node of value: int * next: int option
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier)))
+          (union_case_field
+            name: (identifier)
+            type: (postfix_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Anonymous union fields still work
+================================================================================
+
+type Shape =
+    | Circle of float
+    | Rect of float * float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier))))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (tuple_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Mutual type recursion union
+================================================================================
+
+type Even =
+    | Zero
+    | SuccEven of Odd
+
+and Odd =
+    | SuccOdd of Even
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier)))))
+    (type_and_decl
+      name: (identifier)
+      (union_type_defn
+        (union_case
+          name: (identifier)
+          fields: (type_expression
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Mutual type recursion with alias
+================================================================================
+
+type JsonValue =
+    | JNull
+    | JArray of JsonArray
+
+and JsonArray = JsonValue list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier)))))
+    (type_and_decl
+      name: (identifier)
+      alias: (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Anonymous record expression single field
+================================================================================
+
+let p = {| X = 1.0 |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (anonymous_record_expression
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (float_literal)))))
+
+================================================================================
+Anonymous record expression multiple fields
+================================================================================
+
+let alice = {| Name = "Alice"; Age = 30 |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (anonymous_record_expression
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (string_literal))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (int_literal)))))
+
+================================================================================
+Anonymous record copy-update expression
+================================================================================
+
+let bob = {| alice with Name = "Bob" |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (anonymous_record_expression
+      base: (long_identifier
+        (identifier))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (string_literal)))))
+
+================================================================================
+Anonymous record type alias
+================================================================================
+
+type Point = {| X: float; Y: float |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (anonymous_record_type
+        (record_type_field
+          name: (identifier)
+          type: (type_expression
+            (long_identifier
+              (identifier))))
+        (record_type_field
+          name: (identifier)
+          type: (type_expression
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Empty class block
+================================================================================
+
+type Foo = class end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (class_type_defn)))
+
+================================================================================
+Empty interface block
+================================================================================
+
+type IFoo = interface end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn)))
+
+================================================================================
+Class block with members
+================================================================================
+
+type Foo() =
+    class
+        member this.Bar() = 1
+        member this.Baz = 2
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (class_type_defn
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        parameters: (parameter
+          (unit))
+        body: (int_literal))
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        body: (int_literal)))))
+
+================================================================================
+Interface block with abstract members
+================================================================================
+
+type IFoo =
+    interface
+        abstract member Bar: int
+        abstract member Baz: string -> int
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Interface block with inherit
+================================================================================
+
+type IExtended =
+    interface
+        inherit IBase
+        abstract member Foo: int
+    end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (interface_type_defn
+      (inherit_decl
+        base: (type_expression
+          (long_identifier
+            (identifier))))
+      (abstract_member_defn
+        name: (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))))
+

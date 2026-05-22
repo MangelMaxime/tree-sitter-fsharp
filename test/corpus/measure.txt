@@ -1,0 +1,179 @@
+================================================================================
+Measure type bodyless declaration
+================================================================================
+
+[<Measure>] type cm
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      name: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)))
+
+================================================================================
+Measure type alias with power
+================================================================================
+
+[<Measure>] type ml = cm^3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      name: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (measure_power_type
+        (long_identifier
+          (identifier))
+        (int_literal)))))
+
+================================================================================
+Measure type alias with division
+================================================================================
+
+[<Measure>] type Pa = N/m^2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      name: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)
+    alias: (measure_expression
+      (measure_expression
+        (long_identifier
+          (identifier)))
+      (measure_expression
+        (measure_power_type
+          (long_identifier
+            (identifier))
+          (int_literal))))))
+
+================================================================================
+Measure type alias with multiplication and division
+================================================================================
+
+[<Measure>] type N = kg*m/s^2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      name: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)
+    alias: (measure_expression
+      (measure_expression
+        (measure_expression
+          (long_identifier
+            (identifier)))
+        (measure_expression
+          (long_identifier
+            (identifier))))
+      (measure_expression
+        (measure_power_type
+          (long_identifier
+            (identifier))
+          (int_literal))))))
+
+================================================================================
+Measure literal float
+================================================================================
+
+let x = 3.0<cm>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (measure_literal
+      (float_literal)
+      (measure_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Measure literal integer
+================================================================================
+
+let n = 1000u<steps>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (measure_literal
+      (int_literal)
+      (measure_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Measure literal compound unit
+================================================================================
+
+let s = 55.0<miles/hour>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (measure_literal
+      (float_literal)
+      (measure_expression
+        (measure_expression
+          (long_identifier
+            (identifier)))
+        (measure_expression
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Comparison expression not broken by measure literal
+================================================================================
+
+let b = 1.0 < x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (float_literal)
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Measure attribute on separate line
+================================================================================
+
+[<Measure>]
+type m
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      name: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)))
+

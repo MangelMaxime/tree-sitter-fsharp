@@ -1,0 +1,711 @@
+================================================================================
+Match expression with wildcard
+================================================================================
+
+match x with
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Match expression with multiple arms
+================================================================================
+
+match n with
+| 1 -> 1
+| 2 -> 2
+| n -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (int_literal)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (int_literal))))
+
+================================================================================
+If then else expression
+================================================================================
+
+if x then 1 else 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_expression
+    (long_identifier
+      (identifier))
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Lambda expression
+================================================================================
+
+fun x -> x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (lambda_expression
+    (parameter
+      (identifier))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Lambda expression with multiple parameters
+================================================================================
+
+fun x y -> x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (lambda_expression
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Lambda expression with typed parameter
+================================================================================
+
+fun (x: int) -> x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (lambda_expression
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Lambda expression body consumes operators
+================================================================================
+
+fun x -> x + 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (lambda_expression
+    (parameter
+      (identifier))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal))))
+
+================================================================================
+Match on char literal
+================================================================================
+
+match c with
+| 'a' -> 1
+| _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (literal_pattern
+          (char_literal)))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
+
+================================================================================
+Application expression simple
+================================================================================
+
+f x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Application expression multi-arg left associative
+================================================================================
+
+f x y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Application expression with string argument
+================================================================================
+
+printfn "hello"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier))
+    (string_literal)))
+
+================================================================================
+Application expression in let binding
+================================================================================
+
+let r = List.length xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Parenthesized expression
+================================================================================
+
+(1 + 2)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (parenthesized_expression
+    (binary_expression
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Empty list expression
+================================================================================
+
+[]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (list_expression))
+
+================================================================================
+List expression with elements
+================================================================================
+
+[1; 2; 3]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (list_expression
+    (int_literal)
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Empty array expression
+================================================================================
+
+[||]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (array_expression))
+
+================================================================================
+Array expression with elements
+================================================================================
+
+[| 1; 2 |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (array_expression
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Tuple expression two elements
+================================================================================
+
+1, 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_expression
+    (int_literal)
+    (int_literal)))
+
+================================================================================
+Tuple expression three elements
+================================================================================
+
+1, 2, 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_expression
+    (tuple_expression
+      (int_literal)
+      (int_literal))
+    (int_literal)))
+
+================================================================================
+Index expression single element
+================================================================================
+
+let x = arr.[0]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (int_literal))))
+
+================================================================================
+Index expression full range
+================================================================================
+
+let x = arr.[1..2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (binary_expression
+        (int_literal)
+        (int_literal)))))
+
+================================================================================
+Index expression open-end slice
+================================================================================
+
+let x = arr.[1..]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (index_slice
+        (int_literal)))))
+
+================================================================================
+Index expression open-start slice
+================================================================================
+
+let x = arr.[..2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (index_slice
+        (int_literal)))))
+
+================================================================================
+Index expression string key
+================================================================================
+
+let x = dict.["key"]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (string_literal))))
+
+================================================================================
+Index expression multi-dimensional
+================================================================================
+
+let x = matrix.[0, 1]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (index_expression
+      object: (long_identifier
+        (identifier))
+      index: (tuple_expression
+        (int_literal)
+        (int_literal)))))
+
+================================================================================
+Object expression basic
+================================================================================
+
+let x = { new IFoo with member this.Bar() = 42 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (object_expression
+      type: (long_identifier
+        (identifier))
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        parameters: (parameter
+          (unit))
+        body: (int_literal)))))
+
+================================================================================
+Object expression with constructor args
+================================================================================
+
+let x = { new Base(42) with override this.Name = "x" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (object_expression
+      type: (long_identifier
+        (identifier))
+      (int_literal)
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        body: (string_literal)))))
+
+================================================================================
+Object expression with interface implementation
+================================================================================
+
+let x =
+    { new IFoo with
+        member this.Bar() = 1
+      interface IBaz with
+        member this.Qux() = 2 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (object_expression
+      type: (long_identifier
+        (identifier))
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        parameters: (parameter
+          (unit))
+        body: (int_literal))
+      (interface_impl
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        parameters: (parameter
+          (unit))
+        body: (int_literal)))))
+
+================================================================================
+Dot expression after index
+================================================================================
+
+let x = arr.[0].Length
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (index_expression
+        object: (long_identifier
+          (identifier))
+        index: (int_literal))
+      member: (identifier))))
+
+================================================================================
+Dot expression after parens
+================================================================================
+
+let x = ("hello").Length
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (parenthesized_expression
+        (string_literal))
+      member: (identifier))))
+
+================================================================================
+Dot expression chained
+================================================================================
+
+let x = arr.[0..1].Length.ToString()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (dot_expression
+          object: (index_expression
+            object: (long_identifier
+              (identifier))
+            index: (binary_expression
+              (int_literal)
+              (int_literal)))
+          member: (identifier))
+        member: (identifier))
+      (unit))))
+
+================================================================================
+Lazy expression
+================================================================================
+
+let x = lazy (1 + 2)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (prefix_keyword_expression
+      (parenthesized_expression
+        (binary_expression
+          (int_literal)
+          (int_literal))))))
+
+================================================================================
+Assert expression
+================================================================================
+
+let x = assert (n > 0)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (prefix_keyword_expression
+      (parenthesized_expression
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (int_literal))))))
+
+================================================================================
+Function expression
+================================================================================
+
+let f = function | 0 -> "zero" | _ -> "other"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (function_expression
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (string_literal)))))
+
+================================================================================
+For range to expression
+================================================================================
+
+for i = 1 to 5 do printfn "x"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_expression
+    (identifier)
+    (int_literal)
+    (int_literal)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))))
+
+================================================================================
+For range downto expression
+================================================================================
+
+for i = 5 downto 1 do printfn "x"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_expression
+    (identifier)
+    (int_literal)
+    (int_literal)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))))
+
+================================================================================
+Begin end expression
+================================================================================
+
+let x = begin 1 + 2 end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (begin_end_expression
+      (binary_expression
+        (int_literal)
+        (int_literal)))))
+
+================================================================================
+Nameof simple identifier
+================================================================================
+
+let n = nameof x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (nameof_expression
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Nameof qualified name
+================================================================================
+
+let n = nameof System.Math
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (nameof_expression
+      (long_identifier
+        (identifier)
+        (identifier)))))
+
+================================================================================
+Nameof parenthesized expression
+================================================================================
+
+let n = nameof (Some x)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (nameof_expression
+      (parenthesized_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
