@@ -10,19 +10,24 @@
 // indentation to delimit several constructs that have no syntactic terminator.
 // The scanner emits zero-width tokens to bracket those constructs.
 //
-//   BODY_INDENT/BODY_DEDENT — wrap module-level let_binding bodies.
-//   INDENT/DEDENT           — wrap indented let_decl_indented bodies inside
-//                             let_expression.
+//   BODY_INDENT/BODY_DEDENT  — wrap indented bodies: module-level let_binding
+//                              bodies, class-style type_decl/module_decl
+//                              bodies, record-type/record-expression field
+//                              lists, and if/elif/else body branches.
+//   INDENT/DEDENT            — wrap indented let_decl_indented bodies inside
+//                              let_expression.
 //   INLINE_OPEN/INLINE_CLOSE — wrap same-line let_decl_indented bodies. The
-//                             scanner records the body's start column on OPEN
-//                             and emits CLOSE at the first line whose column
-//                             is <= that recorded column.
-//   VIRTUAL_SEMI                 — virtual semicolon between sibling expressions on
-//                             separate lines (F#'s implicit sequence). Emitted
-//                             whenever the parser would accept it AND the
-//                             upcoming token sits on a new line. GLR sorts out
-//                             whether a newline is a sibling boundary or a
-//                             continuation of the previous expression.
+//                              scanner records the body's start column on OPEN
+//                              and emits CLOSE at the first line whose column
+//                              is <= that recorded column.
+//   VIRTUAL_SEMI             — virtual semicolon between sibling expressions on
+//                              separate lines (F#'s implicit sequence). Emitted
+//                              when the parser accepts it AND the next line
+//                              sits at the current body column AND its first
+//                              significant token isn't a blocker keyword (see
+//                              `blockers[]` below). GLR sorts out the
+//                              sequence-vs-continuation ambiguity for the
+//                              cases the scanner can't fully disambiguate.
 //
 // The enum order must match the externals: array in grammar.js.
 typedef enum {
@@ -337,15 +342,25 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                 lexer->advance(lexer, true);
                 look = lexer->lookahead;
             }
+            // Any keyword that either continues the enclosing construct
+            // (else/elif/with/then/etc.), closes a block (end), or starts a
+            // sibling declaration inside a class/module body (member/let/
+            // type/etc.) must NOT trigger a virtual_semi — otherwise the
+            // parser would commit to an expression-sequence continuation it
+            // can't recover from.
+            //
+            // Keep this list in sync with the grammar: every string-literal
+            // keyword that begins a class_body_member or _token belongs here.
             static const char *blockers[] = {
                 // Continuation keywords for the enclosing construct
                 "else", "elif", "with", "then", "do", "in", "and", "finally", "of",
                 // Closes a `class`/`struct`/`interface` block
                 "end",
-                // Class-body / module-body sibling declaration starters
-                "let", "member", "abstract", "override", "default", "inherit",
+                // Class-body sibling declaration starters
+                "member", "abstract", "override", "default", "inherit",
                 "interface", "val", "new", "static",
-                "type", "module", "namespace", "exception", "open", "and",
+                // Module-body / top-level declaration starters
+                "let", "type", "module", "namespace", "exception", "open",
                 NULL,
             };
             for (const char **k = blockers; *k; k++) {
