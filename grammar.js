@@ -59,13 +59,17 @@ export default grammar({
 
     word: $ => $.identifier,
 
-    // Reserved word sets. `global` is empty — every keyword the grammar uses is
-    // already a string literal in some rule, and tree-sitter's default keyword
-    // extraction makes those literals win over `$.identifier`. The `query_ce` set
-    // is activated only inside `computation_expression` bodies (via `reserved(…)`)
-    // so query custom operators like `where`/`select` become their own tokens there
-    // while staying plain identifiers everywhere else (e.g. `List.where`,
-    // `let take n = …`).
+    // Reserved word sets. `global` is intentionally empty — every keyword the
+    // grammar uses is a string literal in some rule, and the parser only ever
+    // accepts those positions. Since this is a syntax-highlighter-focused
+    // grammar, accepting nonsense like `let else = 1` (which the F# compiler
+    // rejects) is a fine trade-off for not maintaining an enumeration of every
+    // F# keyword.
+    //
+    // `query_ce` is activated only inside `computation_expression` bodies (via
+    // `reserved('query_ce', …)`) so query custom operators like `where`/`select`
+    // become their own tokens there while staying plain identifiers everywhere
+    // else (e.g. `List.where`, `let take n = …`).
     reserved: {
         global: _ => [],
         query_ce: _ => [
@@ -90,6 +94,8 @@ export default grammar({
         $._dedent,
         $._inline_open,    // delimits same-line let_decl_indented bodies
         $._inline_close,
+        $._virtual_semi,        // virtual semicolon between sibling expressions on
+                           // separate lines (F# implicit sequence operator)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -532,6 +538,17 @@ export default grammar({
             $.optional_named_arg,
             $.address_of_expression,
             $.type_keyword_expression,
+            $.sequence_expression,
+        )),
+
+        // F#'s implicit sequence — multiple expressions at the same indent inside
+        // a body (function, if/then/else, for, while, lambda, …). The scanner
+        // emits a zero-width `_virtual_semi` between expressions when a newline
+        // crosses an offside-rule boundary; GLR exploration sorts out sequences
+        // vs continuations.
+        sequence_expression: $ => prec.left(PREC.SEQ_EXPR, seq(
+            $._expression,
+            repeat1(seq($._virtual_semi, $._expression)),
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -601,6 +618,14 @@ export default grammar({
             $.null_literal,
             $.long_identifier,
             $.object_expression,
+            // Accept `async { … }` / `task { … }` etc. as application arguments.
+            // Without this, a body that sequences a CE after another statement
+            // (`printfn "a"; async { … } |> ignore`) hits a parse error because
+            // `{ return … }` doesn't fit as a record_expression. Including
+            // computation_expression here lets the parser fall back to a chained
+            // application (semantically wrong but free of ERROR) — the proper
+            // fix is sequence-expression support, tracked separately.
+            $.computation_expression,
         ),
 
         // All infix operations in one rule (one rule keeps post-_expression state bloat down).
@@ -718,20 +743,41 @@ export default grammar({
             repeat(seq(",", $._expression)),
         )),
 
-        // Branch bodies (after `then`/`else`) are `optional` so that mid-edit shapes like
-        // `if cond then` (with no body typed yet) still parse as a real `if_expression`
-        // rather than collapsing into an ERROR — Helix's indent algorithm walks the tree
-        // from the end of the previous line, and only sees @indent when this node exists.
-        if_expression: $ => prec.right(PREC.IF_EXPR,
-            seq(
+        // Two explicit branches (like `let_binding`):
+        //   prec(2) — bodies present (`if cond then expr [elif … then expr]* [else expr]`)
+        //   prec(1) — incomplete shape (`if cond then`) so mid-edit input still parses
+        //             as a real `if_expression` and Helix's indent walk has a node to
+        //             anchor `@extend` against.
+        // The previous unified `optional(body)` form made the parser prefer the shorter
+        // parse, which broke `if a then "a" else if b then "b" elif c then "c" else "x"`
+        // — the inner `if b then "b" elif c then` ended early and `then "c"` was orphaned.
+        // `_indented_or_inline_body`: the body of if-then/elif/else/for/while/lambda.
+        // Wrapped with `_body_indent`/`_body_dedent` (scanner externals) when the body
+        // sits on its own line — that pushes the body column onto the scanner's indent
+        // stack, which is what `_virtual_semi` uses to recognise sibling expressions at the
+        // same indent (F#'s implicit sequence operator). When the body is inline (same
+        // line as `then`/`do`/`->`), no indent token fires and the body is a single
+        // _expression.
+        _indented_or_inline_body: $ => choice(
+            seq($._body_indent, $._expression, $._body_dedent),
+            $._expression,
+        ),
+
+        if_expression: $ => prec.right(PREC.IF_EXPR, choice(
+            prec(2, seq(
                 "if",
                 $._expression,
                 "then",
-                optional($._expression),
-                repeat(seq("elif", $._expression, "then", optional($._expression))),
-                optional(seq("else", optional($._expression))),
-            ),
-        ),
+                $._indented_or_inline_body,
+                repeat(seq("elif", $._expression, "then", $._indented_or_inline_body)),
+                optional(seq("else", $._indented_or_inline_body)),
+            )),
+            prec(1, seq(
+                "if",
+                $._expression,
+                "then",
+            )),
+        )),
 
         // `(>>=)` `(+)` `(|>)` — operator name wrapper. The single-char alternatives
         // (`+`, `-`, etc.) are listed explicitly because symbolic_op requires 2+ chars.

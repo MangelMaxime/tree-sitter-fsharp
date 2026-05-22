@@ -3295,16 +3295,16 @@ let f () =
       (unit))
     body: (use_expression
       name: (identifier)
-      (application_expression
+      (sequence_expression
         (application_expression
-          (application_expression
-            (long_identifier
-              (identifier))
-            (unit))
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
           (long_identifier
             (identifier)
-            (identifier)))
-        (unit)))))
+            (identifier))
+          (unit))))))
 
 ================================================================================
 Use expression in member body

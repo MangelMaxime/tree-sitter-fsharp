@@ -1612,3 +1612,20 @@ type Empty =
 
 type IEmpty =
     interface end
+
+type Runner =
+
+    static member runTestsWith() =
+        let duplicates = ()
+
+        if not true then
+            ()
+
+            for dup in [] do
+                ()
+
+            async { return 1 } |> ignore
+        else
+
+            let test = ()
+            ()

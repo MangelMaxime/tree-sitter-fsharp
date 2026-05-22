@@ -17,6 +17,12 @@
 //                             scanner records the body's start column on OPEN
 //                             and emits CLOSE at the first line whose column
 //                             is <= that recorded column.
+//   VIRTUAL_SEMI                 — virtual semicolon between sibling expressions on
+//                             separate lines (F#'s implicit sequence). Emitted
+//                             whenever the parser would accept it AND the
+//                             upcoming token sits on a new line. GLR sorts out
+//                             whether a newline is a sibling boundary or a
+//                             continuation of the previous expression.
 //
 // The enum order must match the externals: array in grammar.js.
 typedef enum {
@@ -26,6 +32,7 @@ typedef enum {
     DEDENT,
     INLINE_OPEN,
     INLINE_CLOSE,
+    VIRTUAL_SEMI,
 } TokenType;
 
 typedef struct {
@@ -155,9 +162,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_dedent = valid_symbols[DEDENT];
     bool want_inline_open = valid_symbols[INLINE_OPEN];
     bool want_inline_close = valid_symbols[INLINE_CLOSE];
+    bool want_virtual_semi = valid_symbols[VIRTUAL_SEMI];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
-        && !want_inline_open && !want_inline_close) return false;
+        && !want_inline_open && !want_inline_close && !want_virtual_semi) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's start column so INLINE_CLOSE can compare.
@@ -296,6 +304,59 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         if (want_body_dedent) {
             stack_pop(&s->indents);
             lexer->result_symbol = BODY_DEDENT;
+            return true;
+        }
+    }
+
+    // VIRTUAL_SEMI: lowest priority — fires only when no INLINE_CLOSE / INDENT /
+    // DEDENT applied. Emitted when the next line sits at exactly the current
+    // body column (the top of the indents stack — which is pushed by
+    // BODY_INDENT when we enter any indented body, let or if-then or
+    // for/while/lambda etc.). Top-level _token siblings have an empty stack
+    // so this naturally skips them.
+    //
+    // We also block emission when the next char can't start a new expression
+    // (`|`, `)`, `]`, `}`, or continuation keywords like `else`/`elif`/`with`).
+    // Without those guards the parser commits to a sequence path that fails
+    // once it reaches the closer.
+    if (want_virtual_semi && col == current && s->indents.size > 0) {
+        int32_t c = lexer->lookahead;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
+        if (!blocked && (c == 'e' || c == 'w' || c == 't' || c == 'd' ||
+                          c == 'i' || c == 'a' || c == 'f' || c == 'o')) {
+            const char *match = NULL;
+            if (c == 'e') match = "else";
+            else if (c == 'w') match = "with";
+            else if (c == 't') match = "then";
+            else if (c == 'd') match = "do";
+            else if (c == 'i') match = "in";
+            else if (c == 'a') match = "and";
+            else if (c == 'f') match = "finally";
+            else if (c == 'o') match = "of";
+            int32_t buf[16];
+            size_t i = 0;
+            int32_t look = lexer->lookahead;
+            while (i < 15 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                              (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+                buf[i++] = look;
+                lexer->advance(lexer, true);
+                look = lexer->lookahead;
+            }
+            const char *cands[3] = { match, NULL, NULL };
+            if (match && match[0] == 'e') cands[1] = "elif";
+            for (int ci = 0; ci < 3 && cands[ci]; ci++) {
+                const char *k = cands[ci];
+                size_t kl = strlen(k);
+                if (kl != i) continue;
+                bool eq = true;
+                for (size_t j = 0; j < kl; j++) {
+                    if (buf[j] != (int32_t)k[j]) { eq = false; break; }
+                }
+                if (eq) { blocked = true; break; }
+            }
+        }
+        if (!blocked) {
+            lexer->result_symbol = VIRTUAL_SEMI;
             return true;
         }
     }
