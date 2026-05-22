@@ -1190,11 +1190,13 @@ export default grammar({
         // correctly leaves the body empty and treats them as `query_operator`
         // siblings in the CE.
         //
-        // Trade-off: a non-CE `for` with a multi-statement body parses as a
-        // single chained application instead of `sequence_expression`. The
-        // existing test corpus only exercises single-statement for-bodies and
-        // this matches the pre-change behavior; revisit only if multi-statement
-        // for-bodies become important.
+        // Trade-off documented in LIMITATIONS.md: a non-CE `for` with a
+        // multi-statement body parses as a single chained application instead
+        // of `sequence_expression`. Attempted fix via a separate
+        // `_ce_for_clause` rule (aliased to `for_expression`) didn't work —
+        // tree-sitter prefers the longest match, so even with high precedence
+        // on the body-less form, the body-present form wins when both can
+        // match. See the LIMITATIONS.md entry for the next thing to try.
         for_expression: $ => prec.right(PREC.IF_EXPR, seq(
             "for",
             choice(

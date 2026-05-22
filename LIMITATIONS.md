@@ -36,10 +36,31 @@ chain (the second `printfn` becomes an "argument" of the first), not a
 for-body because the `query_ce` reserved keyword set doesn't propagate
 through `_body_indent`. The blast radius is documented in `grammar.js`.
 
-**Fixable by:** introducing a private `_ce_for_clause` rule (no body)
-aliased to `for_expression`, used only inside `_ce_statement`. Then
-`for_expression` can switch to `_indented_or_inline_body`. ~30 grammar
-lines, low risk. See the "Cleanup #1" thread in the session notes.
+**Attempted fix:** a private `_ce_for_clause` rule (body-less, aliased
+to `for_expression`) inside `_ce_statement`, with `for_expression`
+switched to the symmetric `_indented_or_inline_body` form. **Did not
+work.** Tree-sitter's parser prefers the longest match, so even with
+very high static precedence on the body-less form, the body-present
+`for_expression` won when both could match. Declaring an explicit
+conflict between `_ce_for_clause` and `for_expression` made tree-sitter
+report it as "unnecessary" (the LR table generator didn't see them
+sharing a state), so `prec.dynamic` had no effect either.
+
+**Possible future approaches:**
+1. Define a separate `_ce_expression` rule for CE-statement bodies that
+   omits the `for_expression` alternative. Then `_ce_for_clause` is
+   the only way for `for` to be matched inside a CE. Cost: duplicate
+   the `_expression` choice list (large) or factor it.
+2. Make the scanner CE-context-aware via a new external token that
+   blocks `_body_indent` when inside a query CE. Complex.
+3. Replicate the `query_ce` reserved keyword set into the `for_expression`
+   body parse path. Requires understanding why the reserved set doesn't
+   propagate through `_body_indent`'s state boundary.
+
+None of these are quick wins. The chained-application parse is the
+"least wrong" current state — `body:` field still captures the right
+range, textobjects work, only expand-selection sees the wrong internal
+structure.
 
 ---
 

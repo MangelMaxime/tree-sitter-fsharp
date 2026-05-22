@@ -176,6 +176,41 @@
   (parameter
     (identifier) @variable.parameter)*)
 
+; Capitalized non-last identifier in a long_identifier — likely a module or
+; type segment in a dotted chain (e.g., `Async.FromContinuations`, where
+; `Async` is the module). `#match?` ensures only PascalCase identifiers
+; match, so `s.ToUpper` doesn't tint `s` as a type. Anchors: first child,
+; immediately followed by another identifier (so the captured identifier is
+; NOT last).
+((long_identifier . (identifier) @type . (identifier))
+ (#match? @type "^[A-Z]"))
+
+; Last segment of a multi-segment long_identifier is a member access — e.g.
+; `s.ToUpper` parses as long_identifier(s, ToUpper), and `ToUpper` is the
+; member. Leading `.` says the first identifier must be the FIRST child;
+; trailing `.` says the second identifier must be the LAST child. Between
+; them, no anchor — so the second identifier can be at any position after
+; the first, which is what catches 3+ segment chains like `Lib.Math.Integer`
+; (captures only `Integer`). Single-identifier long_identifiers don't match
+; because the pattern requires two identifiers.
+;
+; This rule sits BEFORE the type/namespace/attribute long_identifier
+; captures. Those parent captures cover the whole long_identifier as
+; @type/@namespace/@attribute, but tree-sitter's last-in-source-order
+; resolution means the inner @variable.other.member here wins for the
+; trailing identifier unless a more-specific override re-captures it.
+; The explicit overrides further down re-apply @type / @namespace /
+; @attribute to the trailing identifier in those contexts.
+(long_identifier . (identifier) (identifier) @variable.other.member .)
+
+; PascalCase receiver in dot_expression chains — `System.Threading.Interlocked`
+; in `System.Threading.Interlocked.Increment(...)`. The OBJECT of a
+; dot_expression is the receiver path, so capitalized identifiers in it are
+; module/namespace/type segments rather than members. (The @type override
+; for the nested member case is further down, after the @member captures.)
+((dot_expression object: (long_identifier (identifier) @type))
+ (#match? @type "^[A-Z]"))
+
 ; Named types anywhere in a type expression
 (type_expression (long_identifier) @type)
 (generic_type (long_identifier) @type)
@@ -200,6 +235,28 @@
 
 (module_decl
   name: (long_identifier) @namespace)
+
+; Override: in type/namespace/attribute contexts, the previous rules tinted
+; individual identifiers as @variable.other.member or @type (PascalCase
+; heuristic). Re-capture EACH identifier as the more-specific @type /
+; @namespace / @attribute so the whole long_identifier matches its
+; containing context, not the expression-context heuristics.
+; (Helix's highlight resolution picks the LAST capture in source order.)
+(type_expression (long_identifier (identifier) @type))
+(generic_type (long_identifier (identifier) @type))
+(postfix_type (long_identifier (identifier) @type))
+(measure_power_type (long_identifier (identifier) @type))
+(measure_expression (long_identifier (identifier) @type))
+(type_check_pattern (long_identifier (identifier) @type))
+(attribute_target name: (long_identifier (identifier) @attribute))
+(namespace_decl name: (long_identifier (identifier) @namespace))
+(module_decl name: (long_identifier (identifier) @namespace))
+(module_decl abbrev: (long_identifier (identifier) @namespace))
+(import_decl (long_identifier (identifier) @namespace))
+(new_expression (long_identifier (identifier) @type))
+(new_expression (generic_type (long_identifier (identifier) @type)))
+(object_expression type: (long_identifier (identifier) @type))
+(object_expression type: (generic_type (long_identifier (identifier) @type)))
 
 ; module M = Lib  /  module M = Lib.Math.Integer  — abbreviation target
 (module_decl abbrev: (long_identifier) @namespace)
@@ -265,6 +322,16 @@
 
 ; Member access on non-identifier expressions: arr.[0].Length, (f x).Name
 (dot_expression member: (identifier) @variable.other.member)
+
+; Override: when the dot_expression is itself the OBJECT of another
+; dot_expression (i.e., NOT the outermost call), the captured member is a
+; type/namespace segment, not the called method. PascalCase filter avoids
+; tinting lowercase fields. For `System.Threading.Interlocked.Increment(...)`,
+; this re-tints `Interlocked` as @type after the previous rule made it
+; @variable.other.member.
+((dot_expression
+   object: (dot_expression member: (identifier) @type))
+ (#match? @type "^[A-Z]"))
 
 ; DU constructors and active-pattern cases in match patterns.
 ; Capitalized identifier in identifier_pattern position = constructor (F# convention).

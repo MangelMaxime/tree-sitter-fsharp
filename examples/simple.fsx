@@ -1695,6 +1695,3 @@ type Runner =
 
             let test = ()
             ()
-
-[<Obsolete("use newAdd instead")>]
-let oldAdd x y = x + y
