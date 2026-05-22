@@ -297,6 +297,13 @@
 (query_left_outer_join_operator
   ["leftOuterJoin" "in" "on" "into"] @keyword.control)
 
+; Type name inside `nameof` — `nameof System.Math` highlights `System.Math` as
+; a type, while `nameof xxx` (camelCase value) stays plain. Same `^[A-Z]` guard
+; as the raise rule below.
+((nameof_expression
+   (long_identifier) @type)
+ (#match? @type "^[A-Z]"))
+
 ; Exception type after `raise`/`reraise`. Three shapes:
 ;   raise (MyError args)           — constructor call inside parens
 ;   raise (MyError)                — no-arg constructor in parens
