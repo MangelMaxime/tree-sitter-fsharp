@@ -4,42 +4,35 @@
 ; `mia`/`maa` (argument), `mic`/`mac` (comment) — `mi…` for "inside",
 ; `ma…` for "around".
 ;
-; The `.inside` captures use positional anchoring (`"=" . (_)` or
-; `"->" . (_)`) to grab the body without requiring the grammar to expose
-; a `body:` field on every rule.
+; `.inside` captures use the `body:` field where the grammar exposes it.
+; Rules without a body field (`type_decl`, `type_and_decl`) fall back to
+; positional anchoring (`"=" . (_)`).
 
 ; ── Functions ────────────────────────────────────────────────────────────────
 ; let foo x = body
-(let_binding
-  "=" . (_) @function.inside) @function.around
+(let_binding body: (_) @function.inside) @function.around
 
 ; Nested `let foo = body` inside an enclosing expression
-(let_decl_indented
-  "=" . (_) @function.inside) @function.around
+(let_decl_indented body: (_) @function.inside) @function.around
 
 ; `and foo = body` (mutual-recursion continuation)
-(let_and_binding
-  "=" . (_) @function.inside) @function.around
+(let_and_binding body: (_) @function.inside) @function.around
 
 ; member this.Foo x = body  /  static member Foo x = body  /
 ; member val Auto = expr [with get [, set]]
-(member_defn
-  "=" . (_) @function.inside) @function.around
+(member_defn body: (_) @function.inside) @function.around
 
 ; abstract member Foo: int  — no body, so no .inside
 (abstract_member_defn) @function.around
 
 ; with get () = body  /  with set v = body
-(property_accessor
-  "=" . (_) @function.inside) @function.around
+(property_accessor body: (_) @function.inside) @function.around
 
 ; new (args) = body [then expr]
-(secondary_constructor
-  "=" . (_) @function.inside) @function.around
+(secondary_constructor body: (_) @function.inside) @function.around
 
 ; fun x -> body
-(lambda_expression
-  "->" . (_) @function.inside) @function.around
+(lambda_expression body: (_) @function.inside) @function.around
 
 ; function | pat -> expr | pat -> expr  — body is a list of arms, capture as a whole
 (function_expression) @function.around

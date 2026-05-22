@@ -180,7 +180,7 @@ let s = List.take 3 ys
           (lambda_expression
             (parameter
               (identifier))
-            (binary_expression
+            body: (binary_expression
               (long_identifier
                 (identifier))
               (int_literal)))))

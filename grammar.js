@@ -322,7 +322,7 @@ export default grammar({
             "new",
             field('parameters', $.tuple_params),
             "=",
-            $._expression,
+            field('body', $._expression),
             optional(seq("then", $._expression)),
         )),
 
@@ -745,7 +745,7 @@ export default grammar({
                 "fun",
                 repeat1($.parameter),
                 "->",
-                $._expression,
+                field('body', $._expression),
             ),
         ),
 

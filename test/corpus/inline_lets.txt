@@ -232,7 +232,7 @@ let f =
         (lambda_expression
           (parameter
             (identifier))
-          (let_expression
+          body: (let_expression
             binding: (let_decl_indented
               name: (identifier)
               body: (int_literal))
@@ -421,4 +421,3 @@ let f x =
         (pattern
           (wildcard_pattern))
         (string_literal)))))
-
