@@ -1,5 +1,20 @@
+#!/usr/bin/env -S dotnet fsi
+
+// ── F# Interactive directives (typically used in .fsx scripts) ───────────────
+
+#load "helper.fsx"
+#r "nuget: Newtonsoft.Json"
+#I "/path/to/lib"
+#nowarn "25"
+#nowarn 42
+#time
+#time on
+#time off
+// #help
+// #quit
+
 // File-level module declaration (no = sign, rest of file is its body)
-module ScriptHelpers
+// module ScriptHelpers
 
 open System
 open System.Text.RegularExpressions
@@ -1660,3 +1675,6 @@ type Runner =
 
             let test = ()
             ()
+
+type Test () =
+    member this.A () = ""

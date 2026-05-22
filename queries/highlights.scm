@@ -121,6 +121,7 @@
 (preproc_elif_kw) @keyword.directive
 (preproc_else_kw) @keyword.directive
 (preproc_endif_kw) @keyword.directive
+(shebang) @keyword.directive
 
 (line_comment) @comment.line
 (xml_doc_comment) @comment.line.documentation

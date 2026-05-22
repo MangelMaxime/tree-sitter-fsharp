@@ -6969,6 +6969,10 @@
       "members": [
         {
           "type": "SYMBOL",
+          "name": "shebang"
+        },
+        {
+          "type": "SYMBOL",
           "name": "preproc_if"
         },
         {
@@ -8188,6 +8192,22 @@
                 "type": "BLANK"
               }
             ]
+          }
+        ]
+      }
+    },
+    "shebang": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "#!"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[^\\n\\r]*"
           }
         ]
       }

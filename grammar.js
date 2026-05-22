@@ -1555,6 +1555,7 @@ export default grammar({
         )),
 
         _token: $ => choice(
+            $.shebang,
             $.preproc_if,
             $.preproc_directive,
             $.attribute,
@@ -1802,6 +1803,12 @@ export default grammar({
             field('name', $.preproc_keyword),
             optional(field('argument', choice($.string_literal, $.int_literal, $.long_identifier))),
         )),
+
+        // Unix-style shebang at the top of an `.fsx` script — `#!/usr/bin/env -S dotnet fsi`.
+        // Matches `#!` followed by anything up to (but not including) the newline.
+        // `#!` doesn't conflict with `preproc_keyword` (which requires an identifier
+        // after `#`) or with `#if`/`#elif`/etc.
+        shebang: _ => token(seq("#!", /[^\n\r]*/)),
 
         // Structural directives — prec(1) > preproc_keyword's prec 0 when both match
         // the same string. Longer matches still win, so `#ifdef` falls to preproc_keyword.
