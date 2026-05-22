@@ -463,13 +463,34 @@ export default grammar({
             "|}",
         ),
 
+        // Two body forms:
+        //   Multi-line:  `{` then `_body_indent` (scanner pushes the field column)
+        //                then fields separated by `_virtual_semi` (or explicit `;`)
+        //                then `_body_dedent` then `}`.
+        //   Inline:      `{ X = 1; Y = 2 }` — single line, explicit `;` only.
+        // The indented form prevents the previous field's type from greedily
+        // consuming the next field's name across a newline (e.g. `unit -> unit`
+        // followed by `A : 'A` was parsed as `unit -> (unit A)` via postfix_type,
+        // erroring on the trailing `:`).
         record_type_defn: $ => seq(
             "{",
-            $.record_type_field,
-            // prec.dynamic > POSTFIX: prefer starting a new field over extending the
-            // previous field's type via postfix_type.
-            repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(optional(";"), $.record_type_field))),
-            optional(";"),
+            choice(
+                seq(
+                    $._body_indent,
+                    $.record_type_field,
+                    repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(
+                        choice(";", $._virtual_semi),
+                        $.record_type_field,
+                    ))),
+                    optional(choice(";", $._virtual_semi)),
+                    $._body_dedent,
+                ),
+                seq(
+                    $.record_type_field,
+                    repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(";", $.record_type_field))),
+                    optional(";"),
+                ),
+            ),
             "}",
         ),
 

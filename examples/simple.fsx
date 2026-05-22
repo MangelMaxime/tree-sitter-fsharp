@@ -372,6 +372,7 @@ type Rect =
 
 type Wrapper<'A, 'B> =
     {
+        Z : unit -> unit
         A : 'A
         B : 'A
     }
