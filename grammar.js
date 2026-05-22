@@ -116,6 +116,15 @@ export default grammar({
         // After `module M =`, the identifier is either a module abbreviation target
         // or the first declaration of a nested module body.
         [$.module_decl],
+        // Attribute / doc-comment prefix: at top level the same `[<…>]` or `///`
+        // token could be a standalone `_token` child OR the start of a
+        // decl's decoration prefix. GLR explores both; we bias toward
+        // attachment via `prec.dynamic` on the decl branch.
+        [$._token, $.let_binding, $.module_decl, $.exception_decl],
+        // Same situation inside a class/type body — `[<…>]` or `///` could be
+        // a standalone `_class_body_member` or the start of any decoratable
+        // member's prefix.
+        [$._class_body_member, $.member_defn, $.let_binding, $.abstract_member_defn, $.secondary_constructor],
     ],
 
 
@@ -139,7 +148,8 @@ export default grammar({
         //
         // After `=` we choose between an abbreviation target (inline
         // long_identifier) and an indented body (declarations as children).
-        module_decl: $ => seq(
+        module_decl: $ => prec.dynamic(1, seq(
+            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             "module",
             optional($.access_modifier),
             optional("rec"),
@@ -152,7 +162,7 @@ export default grammar({
                     $._body_dedent,
                 ),
             )))),
-        ),
+        )),
 
         access_modifier: _ => choice("private", "internal", "public"),
 
@@ -316,14 +326,15 @@ export default grammar({
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
         // Distinct from new_expression: that one requires a type name between `new` and `(`.
-        secondary_constructor: $ => prec.right(seq(
+        secondary_constructor: $ => prec.right(prec.dynamic(1, seq(
+            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             optional($.access_modifier),
             "new",
             field('parameters', $.tuple_params),
             "=",
             field('body', $._expression),
             optional(seq("then", $._expression)),
-        )),
+        ))),
 
         // `: TypeExpr` return-type annotation. Shared by let_binding, let_and_binding,
         // let_decl_indented, let_expression Branch B, _method_body, and auto-properties.
@@ -373,13 +384,30 @@ export default grammar({
         //   override this.ToString() = expr
         //   member this.Prop with get() = e [and set(v) = e]
         //   [static] member val AutoProp = expr [with get [, set]]
+        // `prec.dynamic(1, …)` on every branch biases toward attaching leading
+        // `[<…>]` and `///` to the member rather than leaving them as
+        // standalone `_class_body_member` siblings (which is the competing
+        // reading at the choice point).
         member_defn: $ => choice(
-            seq($._instance_member_prefix, $._method_body),
-            seq($._static_member_prefix, $._method_body),
-            seq($._instance_member_prefix, $._accessor_body),
-            seq($._static_member_prefix, $._accessor_body),
+            prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                $._instance_member_prefix, $._method_body,
+            )),
+            prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                $._static_member_prefix, $._method_body,
+            )),
+            prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                $._instance_member_prefix, $._accessor_body,
+            )),
+            prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                $._static_member_prefix, $._accessor_body,
+            )),
             // Auto-property — instance/static differ only by the `static` prefix.
-            seq(
+            prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
                 optional("static"),
                 "member",
                 "val",
@@ -388,7 +416,7 @@ export default grammar({
                 "=",
                 $._expression,
                 optional($.auto_property_accessors),
-            ),
+            )),
         ),
 
         // get() = expr  or  set(v) = expr  (inside a property definition)
@@ -410,14 +438,15 @@ export default grammar({
 
         // abstract member Name: TypeExpr
         // abstract member Prop: int with get, set
-        abstract_member_defn: $ => seq(
+        abstract_member_defn: $ => prec.dynamic(1, seq(
+            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             optional("static"),
             "abstract",
             optional("member"),
             field('name', $.identifier),
             ":",
             $.type_expression,
-        ),
+        )),
 
         // inherit BaseClass(arg1, arg2)
         inherit_decl: $ => prec.right(seq(
@@ -950,7 +979,8 @@ export default grammar({
         // `let_binding` node so Helix's indent walk has something to anchor on,
         // and the `!body` field-absence predicate in `indents.scm` targets it.
         let_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq(
+            prec(2, prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
                 optional("static"),
                 "let",
                 optional("rec"),
@@ -961,15 +991,16 @@ export default grammar({
                     field('body', $._expression),
                 ),
                 repeat($.let_and_binding),
-            )),
-            prec(1, seq(
+            ))),
+            prec(1, prec.dynamic(1, seq(
+                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
                 optional("static"),
                 "let",
                 optional("rec"),
                 $._let_signature,
                 "=",
                 repeat($.let_and_binding),
-            )),
+            ))),
         )),
 
         // and name params [: type] = expr  (mutual recursion continuation)
@@ -1113,11 +1144,12 @@ export default grammar({
         // ── Exceptions ────────────────────────────────────────────────────────
 
         // exception MyErr  or  exception MyErr of string * int
-        exception_decl: $ => seq(
+        exception_decl: $ => prec.dynamic(1, seq(
+            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             "exception",
             field('name', $.identifier),
             optional(seq("of", $.type_expression)),
-        ),
+        )),
 
         // try expr with | pat -> expr …   /   try expr finally expr
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(

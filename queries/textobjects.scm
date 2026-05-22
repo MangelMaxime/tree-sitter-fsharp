@@ -71,3 +71,9 @@
   (block_comment)
   (block_doc_comment)
 ] @comment.inside @comment.around
+
+; Note: there is no query-level way to make `maf` / `mat` extend over an
+; adjacent doc comment or attribute from inside the function body. Captures
+; bound ranges, and tree-sitter queries can't union them across siblings.
+; The fix is grammar-level (make the comment/attribute a child of the decl).
+; See LIMITATIONS.md.

@@ -15,11 +15,23 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
+          "named": true
+        },
+        {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -3605,11 +3617,23 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
+          "named": true
+        },
+        {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -6688,11 +6712,23 @@
       "required": false,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
+          "named": true
+        },
+        {
           "type": "let_and_binding",
           "named": true
         },
         {
           "type": "type_parameter_list",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -8583,6 +8619,10 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "auto_property_accessors",
           "named": true
         },
@@ -8592,6 +8632,10 @@
         },
         {
           "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
           "named": true
         },
         {
@@ -8776,6 +8820,10 @@
         },
         {
           "type": "while_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -13718,11 +13766,19 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "begin_end_expression",
           "named": true
         },
         {
           "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "block_doc_comment",
           "named": true
         },
         {
@@ -13903,6 +13959,10 @@
         },
         {
           "type": "while_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]

@@ -364,6 +364,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     if (want_virtual_semi && col == current && s->indents.size > 0) {
         int32_t c = lexer->lookahead;
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
+        // Punctuation/sigil blockers — non-identifier sequences that ALSO start
+        // a new declaration rather than continuing an expression. Peeking two
+        // characters: `[<` opens an attribute, `//` opens a `///` doc comment.
+        if (!blocked && (c == '[' || c == '/')) {
+            int32_t first = c;
+            lexer->advance(lexer, true);
+            int32_t second = lexer->lookahead;
+            if (first == '[' && second == '<') blocked = true;
+            else if (first == '/' && second == '/') blocked = true;
+        }
         // Read the next identifier-shaped word so we can match against a list
         // of "blocker" keywords. Any keyword that starts a sibling declaration
         // inside a class/module/let body, OR continues the enclosing construct
