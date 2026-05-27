@@ -637,13 +637,42 @@
         }
       ]
     },
-    "_class_body_member": {
+    "_decl_or_comment": {
       "type": "CHOICE",
       "members": [
         {
           "type": "SYMBOL",
           "name": "attribute"
         },
+        {
+          "type": "SYMBOL",
+          "name": "let_binding"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "do_stmt"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "xml_doc_comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "line_comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "block_comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "block_doc_comment"
+        }
+      ]
+    },
+    "_class_body_member": {
+      "type": "CHOICE",
+      "members": [
         {
           "type": "SYMBOL",
           "name": "inherit_decl"
@@ -670,27 +699,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "do_stmt"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "let_binding"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "xml_doc_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "line_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "block_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "block_doc_comment"
+          "name": "_decl_or_comment"
         }
       ]
     },
@@ -7529,10 +7538,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "attribute"
-        },
-        {
-          "type": "SYMBOL",
           "name": "namespace_decl"
         },
         {
@@ -7557,31 +7562,11 @@
         },
         {
           "type": "SYMBOL",
-          "name": "let_binding"
-        },
-        {
-          "type": "SYMBOL",
           "name": "use_binding"
         },
         {
           "type": "SYMBOL",
-          "name": "do_stmt"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "xml_doc_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "line_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "block_comment"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "block_doc_comment"
+          "name": "_decl_or_comment"
         },
         {
           "type": "SYMBOL",
@@ -9036,15 +9021,15 @@
       "module_decl"
     ],
     [
-      "_token",
+      "_decl_or_comment",
       "let_binding",
       "module_decl",
       "exception_decl"
     ],
     [
-      "_class_body_member",
-      "member_defn",
+      "_decl_or_comment",
       "let_binding",
+      "member_defn",
       "abstract_member_defn",
       "secondary_constructor"
     ]

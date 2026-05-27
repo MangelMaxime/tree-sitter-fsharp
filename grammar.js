@@ -146,14 +146,14 @@ export default grammar({
         // or the first declaration of a nested module body.
         [$.module_decl],
         // Attribute / doc-comment prefix: at top level the same `[<…>]` or `///`
-        // token could be a standalone `_token` child OR the start of a
-        // decl's decoration prefix. GLR explores both; we bias toward
+        // token could be a standalone `_decl_or_comment` child OR the start of
+        // a decl's decoration prefix. GLR explores both; we bias toward
         // attachment via `prec.dynamic` on the decl branch.
-        [$._token, $.let_binding, $.module_decl, $.exception_decl],
+        [$._decl_or_comment, $.let_binding, $.module_decl, $.exception_decl],
         // Same situation inside a class/type body — `[<…>]` or `///` could be
-        // a standalone `_class_body_member` or the start of any decoratable
-        // member's prefix.
-        [$._class_body_member, $.member_defn, $.let_binding, $.abstract_member_defn, $.secondary_constructor],
+        // a standalone `_class_body_member` (via `_decl_or_comment`) or the
+        // start of any decoratable member's prefix.
+        [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor],
     ],
 
 
@@ -299,21 +299,31 @@ export default grammar({
             ),
         ),
 
+        // Choice alternatives shared by `_token` (source-level / module body)
+        // and `_class_body_member` (type body). Both contexts allow attributes,
+        // top-level value declarations (let/do), and comments. Tree-sitter
+        // inlines hidden rules in choice positions, so the parent's children
+        // still appear directly as `attribute`, `let_binding`, etc. — no extra
+        // wrapping node.
+        _decl_or_comment: $ => choice(
+            $.attribute,
+            $.let_binding,
+            $.do_stmt,
+            $.xml_doc_comment,
+            $.line_comment,
+            $.block_comment,
+            $.block_doc_comment,
+        ),
+
         // Everything legal inside a class or type-extension body.
         _class_body_member: $ => choice(
-            $.attribute,
             $.inherit_decl,
             $.member_defn,
             $.abstract_member_defn,
             $.interface_impl,
             $.secondary_constructor,
             $.val_field,
-            $.do_stmt,
-            $.let_binding,
-            $.xml_doc_comment,
-            $.line_comment,
-            $.block_comment,
-            $.block_doc_comment,
+            $._decl_or_comment,
         ),
 
         type_extension_name: $ => choice(
@@ -1731,9 +1741,6 @@ export default grammar({
             $.preproc_if,
             $.preproc_directive,
 
-            // Attribute attached to the following declaration
-            $.attribute,
-
             // Scope declarations
             $.namespace_decl,
             $.module_decl,
@@ -1744,17 +1751,12 @@ export default grammar({
             $.type_extension,
             $.exception_decl,
 
-            // Value-level declarations
-            $.let_binding,
+            // Value-level declarations not shared with class bodies
             $.use_binding,
-            $.do_stmt,
 
-            // Comments (also extras, but listed so they can stand as a child
-            // of source_file / module body when surrounded by other tokens)
-            $.xml_doc_comment,
-            $.line_comment,
-            $.block_comment,
-            $.block_doc_comment,
+            // attribute + let_binding + do_stmt + the four comment forms
+            // (shared with `_class_body_member` via `_decl_or_comment`).
+            $._decl_or_comment,
 
             // Bare expression statements (last so all the above forms win
             // when their leading keyword/punctuation is unambiguous)
