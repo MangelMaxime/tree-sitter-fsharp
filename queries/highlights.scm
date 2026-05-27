@@ -179,10 +179,12 @@
 ; Capitalized non-last identifier in a long_identifier — likely a module or
 ; type segment in a dotted chain (e.g., `Async.FromContinuations`, where
 ; `Async` is the module). `#match?` ensures only PascalCase identifiers
-; match, so `s.ToUpper` doesn't tint `s` as a type. Anchors: first child,
-; immediately followed by another identifier (so the captured identifier is
-; NOT last).
-((long_identifier . (identifier) @type . (identifier))
+; match, so `s.ToUpper` doesn't tint `s` as a type. The `.` after `@type`
+; requires an immediately-following identifier sibling, so the captured
+; identifier is NEVER the last child. Without a leading `.` anchor, this
+; matches at any non-last position — so EVERY non-last segment in chains
+; like `System.Threading.Interlocked.Increment` gets the @type tint.
+((long_identifier (identifier) @type . (identifier))
  (#match? @type "^[A-Z]"))
 
 ; Last segment of a multi-segment long_identifier is a member access — e.g.
@@ -203,13 +205,12 @@
 ; @attribute to the trailing identifier in those contexts.
 (long_identifier . (identifier) (identifier) @variable.other.member .)
 
-; PascalCase receiver in dot_expression chains — `System.Threading.Interlocked`
-; in `System.Threading.Interlocked.Increment(...)`. The OBJECT of a
-; dot_expression is the receiver path, so capitalized identifiers in it are
-; module/namespace/type segments rather than members. (The @type override
-; for the nested member case is further down, after the @member captures.)
-((dot_expression object: (long_identifier (identifier) @type))
- (#match? @type "^[A-Z]"))
+; (Previous PascalCase rule for `dot_expression object: long_identifier` was
+; removed — `dot_expression`'s object can no longer be a long_identifier
+; after the long_identifier/dot_expression unification refactor, so the
+; pattern is impossible. The PascalCase-non-last rule on long_identifier
+; above now handles the equivalent case in pure-identifier chains like
+; `System.Threading.Interlocked.Increment` directly.)
 
 ; Named types anywhere in a type expression
 (type_expression (long_identifier) @type)
@@ -321,17 +322,13 @@
   name: (long_identifier) @variable.other.member)
 
 ; Member access on non-identifier expressions: arr.[0].Length, (f x).Name
+; After the long_identifier/dot_expression unification, dot_expression only
+; fires for compound LHS (index, application, parens, …). In those chains
+; every segment is a member access, never a type — so we DON'T re-tint
+; nested-member-of-receiver as @type (the previous override rule was
+; correct pre-unification when `System.Threading.Interlocked.Increment`
+; was nested dot_expressions; that case is now a single long_identifier).
 (dot_expression member: (identifier) @variable.other.member)
-
-; Override: when the dot_expression is itself the OBJECT of another
-; dot_expression (i.e., NOT the outermost call), the captured member is a
-; type/namespace segment, not the called method. PascalCase filter avoids
-; tinting lowercase fields. For `System.Threading.Interlocked.Increment(...)`,
-; this re-tints `Interlocked` as @type after the previous rule made it
-; @variable.other.member.
-((dot_expression
-   object: (dot_expression member: (identifier) @type))
- (#match? @type "^[A-Z]"))
 
 ; DU constructors and active-pattern cases in match patterns.
 ; Capitalized identifier in identifier_pattern position = constructor (F# convention).

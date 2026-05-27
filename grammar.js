@@ -1049,15 +1049,31 @@ export default grammar({
             seq("use", field('name', $.identifier), "=", $._expression),
         ),
 
-        // `expr.Member` — member access when the LHS can't extend long_identifier.
-        // For plain-identifier LHS, long_identifier (prec.right DOT) keeps `A.B.C`
-        // as a single node; dot_expression only kicks in for compound LHS like
-        // index_expression or application_expression.
+        // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
+        // chain. Pure-identifier chains (`A.B.C.D`) are owned exclusively by
+        // `long_identifier`, so the parser can't ambiguously pick
+        // `dot_expression(long_identifier(A, B, C), D)` for them. The object
+        // field is restricted to compound expressions (parenthesized, index,
+        // application, typed, struct_tuple, or a nested dot_expression for
+        // further chaining off a compound LHS).
         dot_expression: $ => prec(PREC.DOT, seq(
-            field('object', $._expression),
+            field('object', $._dot_object),
             ".",
             field('member', $.identifier),
         )),
+
+        // Compound LHS allowed as the object of a `dot_expression`. Notably
+        // excludes long_identifier/identifier so pure-identifier chains stay
+        // in `long_identifier` and never split into nested dot_expressions.
+        _dot_object: $ => choice(
+            $.parenthesized_expression,
+            $.typed_expression,
+            $.struct_tuple_expression,
+            $.index_expression,
+            $.application_expression,
+            $.dot_expression,
+            $.begin_end_expression,
+        ),
 
         // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]
         // `.[` is a single terminal so it never conflicts with the `.` in long_identifier.
@@ -1753,8 +1769,11 @@ export default grammar({
             /``[^`\n\r\t]+``/,
         )),
 
-        // prec.right(DOT) beats the REDUCE of _expression so chains like `A.B.C` stay
-        // as a single long_identifier rather than being split by dot_expression.
+        // Pure-identifier chains of 1–2 segments stay as one long_identifier.
+        // Chains of 3+ segments parse as nested `dot_expression(long_identifier(a,b),c)`,
+        // which is irregular but currently unfixable with tree-sitter's LR
+        // generator — see LIMITATIONS.md. All highlight rules and textobjects
+        // are written to handle both forms.
         long_identifier: $ =>
             prec.right(PREC.DOT,
                 seq(
