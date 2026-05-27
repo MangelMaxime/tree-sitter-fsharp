@@ -1012,6 +1012,20 @@ type SpecialThing(name: string) =
     inherit NamedThing(name)
     override this.ToString() = "Special: " + base.ToString()
 
+// ── `as this` on primary constructor ────────────────────────────────────────
+
+// Names the constructed instance so members can refer back to it (e.g. when
+// the type captures itself in an event handler or a back-reference).
+type Watcher(label: string) as this =
+    member _.Label = label
+    member _.Describe () = sprintf "Watcher %s sees %A" label this
+
+// Identifier is conventional `this` but any name works.
+type Counter4(initial: int) as self =
+    let mutable n = initial
+    member _.Bump () = n <- n + 1
+    member _.Snapshot () = (n, self)
+
 // ── Active patterns ───────────────────────────────────────────────────────────
 
 // Complete multi-case

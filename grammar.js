@@ -251,6 +251,10 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
+            // `as this` — names the constructed instance so the body can refer
+            // back to it. Identifier is conventionally `this` but any name is
+            // legal (`as self`, etc.).
+            optional(seq("as", field('self', $.identifier))),
             // Augmentation `with member …` can ONLY follow when `=` is present.
             // Without `=`, the `with` belongs to `type_extension` instead
             // (`type Foo with …` — extending an already-declared type).
@@ -269,6 +273,7 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
+            optional(seq("as", field('self', $.identifier))),
             optional(seq(
                 "=",
                 optional($._type_decl_body_or_class),
@@ -526,7 +531,12 @@ export default grammar({
             optional($.auto_property_accessors),
         )),
 
-        // inherit BaseClass(arg1, arg2)
+        // inherit BaseClass(arg1, arg2) [as super]
+        // Optional `as super` names the base instance — `super` is the
+        // conventional identifier, but any name is legal. The bound name
+        // shadows the built-in `base` keyword inside overrides:
+        //   inherit Dog(name) as super
+        //   override this.ToString() = super.ToString() + " - cat"
         inherit_decl: $ => prec.right(seq(
             "inherit",
             field('base', $.type_expression),
@@ -535,6 +545,7 @@ export default grammar({
                 optional(seq($._expression, repeat(seq(",", $._expression)))),
                 ")",
             )),
+            optional(seq("as", field('alias', $.identifier))),
         )),
 
         // interface IFoo with                interface IBar with
