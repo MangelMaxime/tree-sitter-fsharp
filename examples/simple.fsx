@@ -572,6 +572,32 @@ type Wrapper2<'T>(value: 'T) =
     member this.Value = value
     member this.Map (f: 'T -> 'T) = Wrapper2(f value)
 
+// ── Generic methods ──────────────────────────────────────────────────────────
+
+// Member with its OWN type parameters (separate from the class's). Common in
+// real F# code — was previously parsing as ERROR.
+type GenericMethods() =
+    // Single type parameter
+    member this.Identity<'T> (x: 'T) : 'T = x
+
+    // Multiple type parameters + return type
+    member this.Cast<'T, 'U> (x: 'T) : 'U = failwith "todo"
+
+    // Generic static member
+    static member Single<'T> (x: 'T) = [ x ]
+
+    // Static + inline + constraint
+    static member inline Add<'T when 'T : (static member (+): 'T * 'T -> 'T)> (a: 'T) (b: 'T) : 'T =
+        a + b
+
+    // Generic method on a generic class (its own 'U is independent of class's 'T)
+    // (Already supported via Wrapper2, but worth a dedicated example.)
+    member this.AsList<'U> (x: 'U) = [ x ]
+
+// Generic method on a generic type
+type Container<'T>(value: 'T) =
+    member this.Map<'U> (f: 'T -> 'U) : Container<'U> = Container(f value)
+
 type MathHelperClass =
     static member Square x = x * x
     static member Cube x = x * x * x

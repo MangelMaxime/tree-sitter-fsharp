@@ -8611,6 +8611,10 @@
           "named": true
         },
         {
+          "type": "type_parameter_list",
+          "named": true
+        },
+        {
           "type": "typecast_expression",
           "named": true
         },

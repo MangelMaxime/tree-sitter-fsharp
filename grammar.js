@@ -379,21 +379,27 @@ export default grammar({
         // let_decl_indented, let_expression Branch B, _method_body, and auto-properties.
         _return_type_annot: $ => seq(":", field('return_type', $.type_expression)),
 
-        // `member/override/default [inline] self.Name` — shared by method and property forms.
+        // `member/override/default [inline] self.Name[<'T,…>]` — shared by
+        // method and property forms. Optional `type_parameter_list` lets generic
+        // methods like `member this.Map<'T>(x: 'T) = x` parse.
         _instance_member_prefix: $ => seq(
             choice("member", "override", "default"),
             optional("inline"),
             field('self', $.member_self_ident),
             ".",
             field('name', $.identifier),
+            optional($.type_parameter_list),
         ),
 
-        // `static [inline] member Name` — shared by method and property forms.
+        // `static member [inline] Name[<'T,…>]` — shared by method and property
+        // forms. F# accepts `inline` between `member` and the name (the typical
+        // placement, e.g. `static member inline Add x y = x + y`).
         _static_member_prefix: $ => seq(
             "static",
-            optional("inline"),
             "member",
+            optional("inline"),
             field('name', $.identifier),
+            optional($.type_parameter_list),
         ),
 
         // `params [:return-type] = expr` — shared by instance and static method members.
