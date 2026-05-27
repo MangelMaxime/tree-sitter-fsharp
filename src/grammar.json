@@ -2540,173 +2540,169 @@
       ]
     },
     "_expression": {
-      "type": "PREC",
-      "value": 3,
-      "content": {
-        "type": "CHOICE",
-        "members": [
-          {
-            "type": "SYMBOL",
-            "name": "parenthesized_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "typed_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "application_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "binary_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "unary_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "list_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "array_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "record_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "anonymous_record_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "tuple_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "_literal"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "long_identifier"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "if_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "match_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "lambda_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "let_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "use_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "computation_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "for_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "while_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "dot_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "index_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "try_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "prefix_keyword_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "begin_end_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "function_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "typecast_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "keyword_cast_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "srtp_call_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "nameof_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "new_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "object_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "ce_result_expr"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "struct_tuple_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "typed_quotation"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "untyped_quotation"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "optional_named_arg"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "address_of_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "type_keyword_expression"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "sequence_expression"
-          }
-        ]
-      }
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "parenthesized_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typed_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "application_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "binary_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unary_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "list_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "array_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "if_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "match_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "lambda_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "let_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "use_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "computation_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "for_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "while_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "dot_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "index_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "try_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "prefix_keyword_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "begin_end_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "function_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typecast_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "keyword_cast_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "srtp_call_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "nameof_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "new_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "object_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "ce_result_expr"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_tuple_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typed_quotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "untyped_quotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "optional_named_arg"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "address_of_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_keyword_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "sequence_expression"
+        }
+      ]
     },
     "sequence_expression": {
       "type": "PREC_LEFT",

@@ -29,7 +29,6 @@ const PREC = {
     TUPLE_EXPR:     1,   // below BOOL_OR so `||` binds tighter than `,`
 
     BOOL_OR:        2,   // ||
-    RARROW:         3,   // dispatch wrapper for _expression
     BOOL_AND:       3,   // &&
     INFIX_OP:       4,   // = <> < > <= >= :: and custom symbolic
     ADDITIVE:       5,   // + -
@@ -716,7 +715,7 @@ export default grammar({
             $.null_literal,
         ),
 
-        _expression: $ => prec(PREC.RARROW, choice(
+        _expression: $ => choice(
             $.parenthesized_expression,
             $.typed_expression,
             $.application_expression,
@@ -758,7 +757,7 @@ export default grammar({
             $.address_of_expression,
             $.type_keyword_expression,
             $.sequence_expression,
-        )),
+        ),
 
         // F#'s implicit sequence — multiple expressions at the same indent inside
         // a body (function, if/then/else, for, while, lambda, …). The scanner
