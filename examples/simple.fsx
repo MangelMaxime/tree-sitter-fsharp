@@ -546,6 +546,26 @@ type IShape =
     abstract member Area: float
     abstract member Perimeter: float
 
+// Abstract property accessors and generic abstract members.
+type IFooBar =
+    // Read-write abstract property
+    abstract member ReadWrite : int with get, set
+
+    // Read-only abstract property
+    abstract member ReadOnly : string with get
+
+    // Write-only abstract property
+    abstract member WriteOnly : float with set
+
+    // Generic abstract method
+    abstract member Map<'T> : 'T -> 'T
+
+    // Generic abstract method with constraint
+    abstract member Cast<'T, 'U when 'T : comparison> : 'T -> 'U
+
+    // `abstract` without the `member` keyword (legal in F#)
+    abstract Short : int with get, set
+
 type Dog(name: string, breed: string) =
     member this.Name = name
     member this.Breed = breed

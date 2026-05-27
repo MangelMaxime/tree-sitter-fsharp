@@ -1584,12 +1584,36 @@
             }
           },
           {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "type_parameter_list"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
             "type": "STRING",
             "value": ":"
           },
           {
             "type": "SYMBOL",
             "name": "type_expression"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "auto_property_accessors"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }

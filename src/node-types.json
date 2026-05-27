@@ -23,11 +23,19 @@
           "named": true
         },
         {
+          "type": "auto_property_accessors",
+          "named": true
+        },
+        {
           "type": "block_doc_comment",
           "named": true
         },
         {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "type_parameter_list",
           "named": true
         },
         {

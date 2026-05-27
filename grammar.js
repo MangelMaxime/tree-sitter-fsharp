@@ -481,16 +481,21 @@ export default grammar({
 
         member_self_ident: $ => $.identifier,
 
-        // abstract member Name: TypeExpr
-        // abstract member Prop: int with get, set
+        // abstract member Name: TypeExpr                     — method or read-only property
+        // abstract member Prop: int with get, set             — read-write property
+        // abstract member F<'T>: 'T -> 'T                     — generic method
+        // Reuses `auto_property_accessors` for the `with get [, set]` clause —
+        // the syntax is identical to the one on member-val auto-properties.
         abstract_member_defn: $ => prec.dynamic(1, seq(
             repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
             optional("static"),
             "abstract",
             optional("member"),
             field('name', $.identifier),
+            optional($.type_parameter_list),
             ":",
             $.type_expression,
+            optional($.auto_property_accessors),
         )),
 
         // inherit BaseClass(arg1, arg2)
