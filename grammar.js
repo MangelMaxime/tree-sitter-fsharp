@@ -251,7 +251,14 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
-            optional(seq("=", optional($._type_decl_body_or_class))),
+            // Augmentation `with member …` can ONLY follow when `=` is present.
+            // Without `=`, the `with` belongs to `type_extension` instead
+            // (`type Foo with …` — extending an already-declared type).
+            optional(seq(
+                "=",
+                optional($._type_decl_body_or_class),
+                optional($._type_augmentation),
+            )),
             repeat($.type_and_decl),
         )),
 
@@ -262,8 +269,29 @@ export default grammar({
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.primary_constructor),
-            optional(seq("=", optional($._type_decl_body_or_class))),
+            optional(seq(
+                "=",
+                optional($._type_decl_body_or_class),
+                optional($._type_augmentation),
+            )),
         )),
+
+        // Trailing `with member …` after a type definition body — F#'s
+        // "type augmentation" form, adding members at the point of declaration:
+        //   type Point = { X: int; Y: int } with
+        //       member this.Magnitude = …
+        // The class-body member list is wrapped with `_body_indent`/`_body_dedent`
+        // so the members become children of `type_decl` (same as the regular
+        // class body). Distinct from `type_extension` (`type Foo with …` with no
+        // `=`), which augments an already-declared type from outside.
+        _type_augmentation: $ => seq(
+            "with",
+            optional(seq(
+                $._body_indent,
+                repeat($._class_body_member),
+                $._body_dedent,
+            )),
+        ),
 
         // Intrinsic or external type extension. The body — extension members —
         // follows the `with` and is wrapped by `_body_indent`/`_body_dedent` so

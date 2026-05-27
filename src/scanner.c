@@ -397,6 +397,37 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
+    // Same-column BODY_DEDENT for type-augmentation: `type T = body \n    with`.
+    // The `with` continues the enclosing `type_decl`, so the inner body's
+    // BODY_DEDENT must fire before the parser can match the `with`. The
+    // standard "col < current" rule wouldn't trigger because the `with` sits
+    // at the body column. Only when the parser already wants BODY_DEDENT.
+    if (col == current && want_body_dedent && s->indents.size > 0 &&
+        lexer->lookahead == 'w') {
+        // Peek `with` as a complete keyword.
+        lexer->advance(lexer, true);
+        if (lexer->lookahead == 'i') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 't') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == 'h') {
+                    lexer->advance(lexer, true);
+                    int32_t after = lexer->lookahead;
+                    bool word_continues =
+                        (after >= 'a' && after <= 'z') ||
+                        (after >= 'A' && after <= 'Z') ||
+                        (after >= '0' && after <= '9') ||
+                        after == '_' || after == '\'';
+                    if (!word_continues) {
+                        stack_pop(&s->indents);
+                        lexer->result_symbol = BODY_DEDENT;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
     // VIRTUAL_SEMI: lowest priority — fires only when no INLINE_CLOSE / INDENT /
     // DEDENT applied. Emitted when the next line sits at exactly the current
     // body column (the top of the indents stack — which is pushed by

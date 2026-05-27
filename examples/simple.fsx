@@ -1289,6 +1289,43 @@ type Factory<'T when 'T : (new : unit -> 'T)> = { create: unit -> 'T }
 type Container<'T, 'U when 'T : comparison and 'U : equality> =
     { key: 'T; value: 'U }
 
+// ── Type augmentations (members declared with the type) ─────────────────────
+
+// `with member …` appended to a type definition — different from a type
+// extension (`type Foo with …` with no `=`).
+
+// Record with augmentation, `with` on same line as body
+type AugRecord = { X: int; Y: int } with
+    member this.Sum = this.X + this.Y
+
+// DU with augmentation, `with` at body column
+type Direction2 =
+    | North
+    | South
+    | West
+    | East
+    with
+        member this.Opposite =
+            match this with
+            | North -> South
+            | South -> North
+            | East -> West
+            | West -> East
+
+// DU with augmentation, `with` at outer column
+type Color2 =
+    | Red
+    | Green
+    | Blue
+with
+    member this.IsPrimary = true
+
+// Class with primary constructor + augmentation
+type Box2(value: int) =
+    member _.Value = value
+with
+    member this.IsZero = this.Value = 0
+
 // ── Type extensions ───────────────────────────────────────────────────────────
 
 // Intrinsic extension — adds members to a type defined in the same module
