@@ -427,7 +427,7 @@ type Foo() =
       ) = x
 
 // Caller info attributes
-type Logger() =
+type Logger1() =
   member this.Log(
       msg: string,
       [<System.Runtime.CompilerServices.CallerMemberName>] ?memberName: string,

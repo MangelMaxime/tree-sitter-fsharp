@@ -53,6 +53,35 @@ const PREC = {
     NEW_OBJ:        24,  // `new T(…)`
 };
 
+// "Indented or inline" field list — a record-like body that's either:
+//   - multi-line: `_body_indent` (scanner pushes the field column) + fields
+//     separated by `_virtual_semi` (or explicit `;`) + `_body_dedent`;
+//   - single-line: explicit `;` only.
+// Used by both `_record_fields` (record / anonymous-record EXPRESSIONS,
+// containing `record_field`s) and `record_type_defn`'s body (record TYPE
+// declarations, containing `record_type_field`s). The shared structure
+// prevents drift; the two callers pass their own field rule and the
+// dynamic-prec used to break the field-vs-postfix-application conflict.
+function indentedOrInlineFieldList($, field, sepPrec) {
+    return choice(
+        seq(
+            $._body_indent,
+            field,
+            repeat(prec.dynamic(sepPrec, seq(
+                choice(";", $._virtual_semi),
+                field,
+            ))),
+            optional(choice(";", $._virtual_semi)),
+            $._body_dedent,
+        ),
+        seq(
+            field,
+            repeat(prec.dynamic(sepPrec, seq(";", field))),
+            optional(";"),
+        ),
+    );
+}
+
 export default grammar({
     name: "fsharp",
 
@@ -580,34 +609,14 @@ export default grammar({
             "|}",
         ),
 
-        // Two body forms:
-        //   Multi-line:  `{` then `_body_indent` (scanner pushes the field column)
-        //                then fields separated by `_virtual_semi` (or explicit `;`)
-        //                then `_body_dedent` then `}`.
-        //   Inline:      `{ X = 1; Y = 2 }` — single line, explicit `;` only.
-        // The indented form prevents the previous field's type from greedily
-        // consuming the next field's name across a newline (e.g. `unit -> unit`
-        // followed by `A : 'A` was parsed as `unit -> (unit A)` via postfix_type,
-        // erroring on the trailing `:`).
+        // Body of `type Foo = { … }`. Two forms (indented or inline) via the
+        // `indentedOrInlineFieldList` helper — the indented form prevents a
+        // field's type from greedily absorbing the next field's name across
+        // a newline (e.g. `unit -> unit` followed by `A : 'A` was parsed as
+        // `unit -> (unit A)` via postfix_type, erroring on the trailing `:`).
         record_type_defn: $ => seq(
             "{",
-            choice(
-                seq(
-                    $._body_indent,
-                    $.record_type_field,
-                    repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(
-                        choice(";", $._virtual_semi),
-                        $.record_type_field,
-                    ))),
-                    optional(choice(";", $._virtual_semi)),
-                    $._body_dedent,
-                ),
-                seq(
-                    $.record_type_field,
-                    repeat(prec.dynamic(TYPE_PREC.POSTFIX + 1, seq(";", $.record_type_field))),
-                    optional(";"),
-                ),
-            ),
+            indentedOrInlineFieldList($, $.record_type_field, TYPE_PREC.POSTFIX + 1),
             "}",
         ),
 
@@ -871,23 +880,8 @@ export default grammar({
         ),
 
         // Shared field-list body for record/anonymous-record expressions.
-        _record_fields: $ => choice(
-            seq(
-                $._body_indent,
-                $.record_field,
-                repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(
-                    choice(";", $._virtual_semi),
-                    $.record_field,
-                ))),
-                optional(choice(";", $._virtual_semi)),
-                $._body_dedent,
-            ),
-            seq(
-                $.record_field,
-                repeat(prec.dynamic(PREC.APP_EXPR + 1, seq(";", $.record_field))),
-                optional(";"),
-            ),
-        ),
+        // Uses the same indented-or-inline helper as `record_type_defn`.
+        _record_fields: $ => indentedOrInlineFieldList($, $.record_field, PREC.APP_EXPR + 1),
 
         // prec(APP_EXPR) lets prec.dynamic in record_expression/anonymous_record_expression
         // prefer starting a new field over extending the value via application_expression.
