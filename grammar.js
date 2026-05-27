@@ -53,6 +53,17 @@ const PREC = {
     NEW_OBJ:        24,  // `new T(…)`
 };
 
+// Optional prefix accepted by every decoratable declaration — zero or more
+// attributes (`[<…>]`), XML doc comments (`///`), block doc comments
+// (`(** … *)`). Used at the top of `let_binding`, `module_decl`,
+// `member_defn` (each branch), `abstract_member_defn`, `exception_decl`,
+// `secondary_constructor`. Tree-sitter inlines the resulting `repeat(choice)`
+// directly into the caller, so the parent's children still appear as
+// `attribute` / `xml_doc_comment` / `block_doc_comment` — no extra node.
+function decoration($) {
+    return repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment));
+}
+
 // "Indented or inline" field list — a record-like body that's either:
 //   - multi-line: `_body_indent` (scanner pushes the field column) + fields
 //     separated by `_virtual_semi` (or explicit `;`) + `_body_dedent`;
@@ -178,7 +189,7 @@ export default grammar({
         // After `=` we choose between an abbreviation target (inline
         // long_identifier) and an indented body (declarations as children).
         module_decl: $ => seq(
-            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+            decoration($),
             "module",
             optional($.access_modifier),
             optional("rec"),
@@ -399,7 +410,7 @@ export default grammar({
         // Secondary class constructor: `new(args) = expr [then expr]`.
         // Distinct from new_expression: that one requires a type name between `new` and `(`.
         secondary_constructor: $ => prec.right(prec.dynamic(1, seq(
-            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+            decoration($),
             optional($.access_modifier),
             "new",
             field('parameters', $.tuple_params),
@@ -468,24 +479,24 @@ export default grammar({
         // reading at the choice point).
         member_defn: $ => choice(
             prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 $._instance_member_prefix, $._method_body,
             )),
             prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 $._static_member_prefix, $._method_body,
             )),
             prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 $._instance_member_prefix, $._accessor_body,
             )),
             prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 $._static_member_prefix, $._accessor_body,
             )),
             // Auto-property — instance/static differ only by the `static` prefix.
             prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 optional("static"),
                 "member",
                 "val",
@@ -520,7 +531,7 @@ export default grammar({
         // Reuses `auto_property_accessors` for the `with get [, set]` clause —
         // the syntax is identical to the one on member-val auto-properties.
         abstract_member_defn: $ => prec.dynamic(1, seq(
-            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+            decoration($),
             optional("static"),
             "abstract",
             optional("member"),
@@ -1034,7 +1045,7 @@ export default grammar({
         // and the `!body` field-absence predicate in `indents.scm` targets it.
         let_binding: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 optional("static"),
                 "let",
                 optional("rec"),
@@ -1047,7 +1058,7 @@ export default grammar({
                 repeat($.let_and_binding),
             ))),
             prec(1, prec.dynamic(1, seq(
-                repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+                decoration($),
                 optional("static"),
                 "let",
                 optional("rec"),
@@ -1215,7 +1226,7 @@ export default grammar({
 
         // exception MyErr  or  exception MyErr of string * int
         exception_decl: $ => prec.dynamic(1, seq(
-            repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment)),
+            decoration($),
             "exception",
             field('name', $.identifier),
             optional(seq("of", $.type_expression)),
