@@ -1,0 +1,374 @@
+================================================================================
+Regression: generic instance member
+================================================================================
+
+type Foo() =
+    member this.Map<'T> (x: 'T) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (parameter
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Regression: generic static member
+================================================================================
+
+type Foo() =
+    static member Single<'T> (x: 'T) = [ x ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (parameter
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (list_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Regression: generic static inline member with constraint
+================================================================================
+
+type Foo() =
+    static member inline Add<'T when 'T : comparison> (a: 'T) (b: 'T) = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter)
+        (type_constraint
+          (type_parameter)))
+      (parameter
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (parameter
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Regression: generic member on generic type
+================================================================================
+
+type Container<'T>(value: 'T) =
+    member this.Map<'U> (f: 'T -> 'U) = Container(f value)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (type_parameter))))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (parameter
+        (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (type_parameter))
+            (type_expression
+              (type_parameter)))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Regression: abstract property with get and set
+================================================================================
+
+type IFoo =
+    abstract member P : int with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))))
+
+================================================================================
+Regression: abstract property with get only
+================================================================================
+
+type IFoo =
+    abstract member P : int with get
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))))
+
+================================================================================
+Regression: abstract property with set only
+================================================================================
+
+type IFoo =
+    abstract member P : int with set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))))
+
+================================================================================
+Regression: generic abstract method
+================================================================================
+
+type IFoo =
+    abstract member Map<'T> : 'T -> 'T
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (type_expression
+        (function_type
+          (type_expression
+            (type_parameter))
+          (type_expression
+            (type_parameter)))))))
+
+================================================================================
+Regression: abstract without member keyword
+================================================================================
+
+type IFoo =
+    abstract Short : int with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))))
+
+================================================================================
+Regression: type augmentation on record
+================================================================================
+
+type Point = { X: int; Y: int } with
+    member this.Sum = this.X + this.Y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (record_type_defn
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier)
+          (identifier))))))
+
+================================================================================
+Regression: type augmentation on DU with `with` at body column
+================================================================================
+
+type Color =
+    | Red
+    | Green
+    with
+        member this.IsRed = true
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier)))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (bool_literal))))
+
+================================================================================
+Regression: type augmentation on DU with `with` at outer column
+================================================================================
+
+type Color =
+    | Red
+    | Green
+with
+    member this.IsRed = true
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier)))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (bool_literal))))
+
+================================================================================
+Regression: `as this` on primary constructor
+================================================================================
+
+type Watcher(label: string) as this =
+    member _.Label = label
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (identifier)
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Regression: `as super` on inherit
+================================================================================
+
+type Puppy(name: string) =
+    inherit Dog(name) as super
+    member _.Hello = super.ToString()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (inherit_decl
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))
+      (identifier))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (unit)))))

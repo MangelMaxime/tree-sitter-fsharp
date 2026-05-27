@@ -1,0 +1,195 @@
+================================================================================
+Preprocessor if endif
+================================================================================
+
+#if DEBUG
+let x = 1
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (identifier))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if else endif
+================================================================================
+
+#if DEBUG
+let x = 1
+#else
+let x = 2
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (identifier))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_else_clause
+      (preproc_else_kw)
+      (let_binding
+        (identifier)
+        (int_literal)))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if elif else endif
+================================================================================
+
+#if DEBUG
+let x = 1
+#elif TRACE
+let x = 2
+#else
+let x = 3
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (identifier))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_elif_clause
+      (preproc_elif_kw)
+      (preproc_expression
+        (identifier))
+      (let_binding
+        (identifier)
+        (int_literal)))
+    (preproc_else_clause
+      (preproc_else_kw)
+      (let_binding
+        (identifier)
+        (int_literal)))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if with logical and
+================================================================================
+
+#if DEBUG && TRACE
+let x = 1
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (preproc_expression
+        (identifier))
+      (preproc_expression
+        (identifier)))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if with logical or
+================================================================================
+
+#if DEBUG || TRACE
+let x = 1
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (preproc_expression
+        (identifier))
+      (preproc_expression
+        (identifier)))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if with negation
+================================================================================
+
+#if !DEBUG
+let x = 1
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (preproc_expression
+        (identifier)))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor if with parens
+================================================================================
+
+#if (DEBUG || TRACE) && !RELEASE
+let x = 1
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression
+      (preproc_expression
+        (preproc_expression
+          (preproc_expression
+            (identifier))
+          (preproc_expression
+            (identifier))))
+      (preproc_expression
+        (preproc_expression
+          (identifier))))
+    (let_binding
+      (identifier)
+      (int_literal))
+    (preproc_endif_kw)))
+
+================================================================================
+Preprocessor nowarn
+================================================================================
+
+#nowarn "25"
+
+let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_directive
+    (preproc_keyword)
+    (string_literal))
+  (let_binding
+    (identifier)
+    (int_literal)))

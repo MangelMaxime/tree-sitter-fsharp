@@ -1,0 +1,239 @@
+================================================================================
+Basic interpolation
+================================================================================
+
+let s = $"Hello, {name}!"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (long_identifier
+          (identifier)))
+      (string_content))))
+
+================================================================================
+Interpolation with expression
+================================================================================
+
+let s = $"Sum: {1 + 2}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (binary_expression
+          (int_literal)
+          (int_literal))))))
+
+================================================================================
+Interpolation with format specifier
+================================================================================
+
+let s = $"Price: {price:F2}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (long_identifier
+          (identifier))
+        (format_string)))))
+
+================================================================================
+Interpolation with multiple holes
+================================================================================
+
+let s = $"Name: {firstName} {lastName}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (long_identifier
+          (identifier)))
+      (interpolation
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Interpolation with escaped braces
+================================================================================
+
+let s = $"Braces: {{not a hole}}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content))))
+
+================================================================================
+Verbatim interpolation
+================================================================================
+
+let s = $@"File at: {path}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_verbatim_string
+      (string_content)
+      (interpolation
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Triple-quoted interpolation
+================================================================================
+
+let s =
+    $"""
+    Hello {firstName}!
+    """
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_triple_string
+      (string_content)
+      (interpolation
+        (long_identifier
+          (identifier)))
+      (string_content))))
+
+================================================================================
+Interpolation with nested if expression
+================================================================================
+
+let s = $"""Status: {if price > 5.0 then "expensive" else "cheap"}"""
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_triple_string
+      (string_content)
+      (interpolation
+        (if_expression
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (float_literal))
+          (string_literal)
+          (string_literal))))))
+
+================================================================================
+Interpolation printf-style float
+================================================================================
+
+let s = $"%0.3f{System.Math.PI}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (interpolation
+        (printf_format_string)
+        (long_identifier
+          (identifier)
+          (identifier)
+          (identifier))))))
+
+================================================================================
+Interpolation printf-style hex
+================================================================================
+
+let s = $"0x%08x{43962}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (printf_format_string)
+        (int_literal)))))
+
+================================================================================
+Interpolation printf-style %A
+================================================================================
+
+let s = $"The data is %A{[0..4]}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (interpolation
+        (printf_format_string)
+        (list_expression
+          (binary_expression
+            (int_literal)
+            (int_literal)))))))
+
+================================================================================
+Interpolation literal percent
+================================================================================
+
+let s = $"Progress: 100%% complete"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (string_content)
+      (string_content)
+      (string_content)
+      (string_content))))
+
+================================================================================
+Interpolation NET-style format with backticks
+================================================================================
+
+let s = $"{System.DateTime.UtcNow:``yyyy-MM-dd``}"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (interpolated_string
+      (interpolation
+        (long_identifier
+          (identifier)
+          (identifier)
+          (identifier))
+        (format_string)))))

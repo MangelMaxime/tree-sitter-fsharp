@@ -1,0 +1,401 @@
+================================================================================
+Attribute on let binding
+================================================================================
+
+[<Obsolete>]
+let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (identifier)
+    (int_literal)))
+
+================================================================================
+Attribute with string argument
+================================================================================
+
+[<Obsolete("use newAdd instead")>]
+let oldAdd x y = x + y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)))
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Multiple attributes in separate brackets
+================================================================================
+
+[<AutoOpen>]
+[<RequireQualifiedAccess>]
+type Foo = | A
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)))))
+
+================================================================================
+Multiple attributes in single bracket
+================================================================================
+
+[<AutoOpen; RequireQualifiedAccess>]
+module M =
+    let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier)))
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (int_literal))))
+
+================================================================================
+Qualified attribute name
+================================================================================
+
+[<System.Obsolete>]
+let z = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier)
+          (identifier))))
+    (identifier)
+    (int_literal)))
+
+================================================================================
+Attribute on type declaration
+================================================================================
+
+[<Sealed>]
+type Foo = | X
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)))))
+
+================================================================================
+Attribute on module declaration
+================================================================================
+
+[<AutoOpen>]
+module Utils =
+    let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (int_literal))))
+
+================================================================================
+Attribute on exception declaration
+================================================================================
+
+[<Sealed>]
+exception MyError of string
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (exception_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (identifier)
+    (type_expression
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Attribute on DU case
+================================================================================
+
+type AttributedUnion =
+    | [<DefaultValue>] X
+    | Y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (attribute
+          (attribute_target
+            (long_identifier
+              (identifier))))
+        (identifier))
+      (union_case
+        (identifier)))))
+
+================================================================================
+Attribute on member
+================================================================================
+
+type Foo() =
+    [<Obsolete>]
+    member _.X = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (int_literal))))
+
+================================================================================
+Attribute on abstract member
+================================================================================
+
+type IFoo =
+    [<DefaultValue>]
+    abstract member X : int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Attribute on secondary constructor
+================================================================================
+
+type Foo(x: int) =
+    [<Obsolete>]
+    new () = Foo(0)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (secondary_constructor
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (tuple_params)
+      (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (int_literal))))))
+
+================================================================================
+Attribute on val mutable
+================================================================================
+
+type Holder() =
+    [<DefaultValue>]
+    val mutable data: int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Attribute on val mutable inline
+================================================================================
+
+type Holder() =
+    [<DefaultValue>] val mutable A: int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Attribute on parameter (ParamArray)
+================================================================================
+
+let format ([<System.ParamArray>] args: obj[]) = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier)
+            (identifier))))
+      (identifier)
+      (type_expression
+        (array_type
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (unit)))
+
+================================================================================
+Attribute on parameter with args
+================================================================================
+
+type Foo() =
+    member _.Bar([<DefaultParameterValue(42)>] x: int) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (attribute
+          (attribute_target
+            (long_identifier
+              (identifier))
+            (int_literal)))
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Attribute targeting type
+================================================================================
+
+type [<Sealed>] Foo = | X
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)))))
