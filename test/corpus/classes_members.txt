@@ -237,7 +237,7 @@ type Wrapper<'T when 'T : comparison> with
           (identifier))))))
 
 ================================================================================
-Use expression in member body
+Regression: use expression in member body
 ================================================================================
 
 type T(x: int) =
@@ -276,7 +276,7 @@ type T(x: int) =
           (unit))))))
 
 ================================================================================
-Inline let inside member body
+Regression: inline let inside member body
 ================================================================================
 
 type Foo() =

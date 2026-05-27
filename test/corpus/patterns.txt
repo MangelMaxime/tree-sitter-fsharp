@@ -426,7 +426,7 @@ let (|DivisibleBy|_|) d n = n
       (identifier))))
 
 ================================================================================
-Operator definition not broken by active pattern token
+Regression: operator definition vs active-pattern token
 ================================================================================
 
 let (|>) a f = f a

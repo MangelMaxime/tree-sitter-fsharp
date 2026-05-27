@@ -114,7 +114,7 @@ fun (x: int) -> x
       (identifier))))
 
 ================================================================================
-Lambda expression body consumes operators
+Regression: lambda body consumes trailing operators
 ================================================================================
 
 fun x -> x + 1

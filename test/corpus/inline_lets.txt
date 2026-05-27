@@ -1,5 +1,5 @@
 ================================================================================
-Use expression in function body
+Regression: use expression in function body
 ================================================================================
 
 let f () =
@@ -173,7 +173,7 @@ let f x =
             (identifier)))))))
 
 ================================================================================
-Inline let inside nested function
+Regression: inline let inside nested function
 ================================================================================
 
 let f x =
@@ -210,7 +210,7 @@ let f x =
           (identifier))))))
 
 ================================================================================
-Inline let inside lambda body
+Regression: inline let inside lambda body
 ================================================================================
 
 let f =
@@ -250,7 +250,7 @@ let f =
                   (identifier))))))))))
 
 ================================================================================
-Inline let inside match arm body
+Regression: inline let inside match arm body
 ================================================================================
 
 let f x =
@@ -294,7 +294,7 @@ let f x =
         (int_literal)))))
 
 ================================================================================
-Inline let inside if-then-else branch
+Regression: inline let inside if-then-else branch
 ================================================================================
 
 let f x =
@@ -333,7 +333,7 @@ let f x =
       (int_literal))))
 
 ================================================================================
-Inline let inside try-with body
+Regression: inline let inside try-with body
 ================================================================================
 
 let f x =
@@ -371,7 +371,7 @@ let f x =
         (int_literal)))))
 
 ================================================================================
-Try-with single arm without leading pipe
+Regression: try-with single arm without leading pipe
 ================================================================================
 
 let f x =
@@ -394,7 +394,7 @@ let f x =
         (int_literal)))))
 
 ================================================================================
-Match expression first arm without leading pipe
+Regression: match expression first arm without leading pipe
 ================================================================================
 
 let f x =

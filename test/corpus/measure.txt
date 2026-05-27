@@ -145,7 +145,7 @@ let s = 55.0<miles/hour>
             (identifier)))))))
 
 ================================================================================
-Comparison expression not broken by measure literal
+Regression: comparison expression vs measure literal
 ================================================================================
 
 let b = 1.0 < x
