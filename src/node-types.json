@@ -203,6 +203,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -543,6 +547,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -755,6 +763,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -1048,6 +1060,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -1268,6 +1284,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -1480,6 +1500,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -1742,6 +1766,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -1996,6 +2024,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -2215,6 +2247,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -2427,6 +2463,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -2653,6 +2693,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -2981,6 +3025,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -3269,6 +3317,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -3629,6 +3681,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -3845,6 +3901,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -4143,6 +4203,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -4381,6 +4445,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -4588,6 +4656,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -4804,6 +4876,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -5040,6 +5116,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -5465,6 +5545,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -5680,6 +5764,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -5892,6 +5980,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -6118,6 +6210,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -6414,6 +6510,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -6729,6 +6829,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -7035,6 +7139,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -7316,6 +7424,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -7532,6 +7644,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -7827,6 +7943,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -8043,6 +8163,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -8338,6 +8462,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -8602,6 +8730,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -8917,6 +9049,10 @@
         },
         {
           "type": "shebang",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -9341,6 +9477,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -9617,6 +9757,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -9932,6 +10076,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -10251,6 +10399,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -10567,6 +10719,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -10851,6 +11007,10 @@
         },
         {
           "type": "shebang",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -11183,6 +11343,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -11433,6 +11597,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -11669,6 +11837,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -11882,6 +12054,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -12105,6 +12281,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -12318,6 +12498,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -12548,6 +12732,10 @@
           },
           {
             "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
             "named": true
           },
           {
@@ -12879,6 +13067,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -13217,6 +13409,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -13515,6 +13711,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -13748,6 +13948,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -13964,6 +14168,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -14235,6 +14443,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -14308,6 +14520,260 @@
         },
         {
           "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "srtp_call_expression",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "address_of_expression",
+            "named": true
+          },
+          {
+            "type": "anonymous_record_expression",
+            "named": true
+          },
+          {
+            "type": "application_expression",
+            "named": true
+          },
+          {
+            "type": "array_expression",
+            "named": true
+          },
+          {
+            "type": "begin_end_expression",
+            "named": true
+          },
+          {
+            "type": "binary_expression",
+            "named": true
+          },
+          {
+            "type": "bool_literal",
+            "named": true
+          },
+          {
+            "type": "ce_result_expr",
+            "named": true
+          },
+          {
+            "type": "char_literal",
+            "named": true
+          },
+          {
+            "type": "computation_expression",
+            "named": true
+          },
+          {
+            "type": "dot_expression",
+            "named": true
+          },
+          {
+            "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "for_expression",
+            "named": true
+          },
+          {
+            "type": "function_expression",
+            "named": true
+          },
+          {
+            "type": "if_expression",
+            "named": true
+          },
+          {
+            "type": "index_expression",
+            "named": true
+          },
+          {
+            "type": "int_literal",
+            "named": true
+          },
+          {
+            "type": "interpolated_string",
+            "named": true
+          },
+          {
+            "type": "interpolated_triple_string",
+            "named": true
+          },
+          {
+            "type": "interpolated_verbatim_string",
+            "named": true
+          },
+          {
+            "type": "keyword_cast_expression",
+            "named": true
+          },
+          {
+            "type": "lambda_expression",
+            "named": true
+          },
+          {
+            "type": "let_expression",
+            "named": true
+          },
+          {
+            "type": "list_expression",
+            "named": true
+          },
+          {
+            "type": "long_identifier",
+            "named": true
+          },
+          {
+            "type": "match_expression",
+            "named": true
+          },
+          {
+            "type": "measure_literal",
+            "named": true
+          },
+          {
+            "type": "nameof_expression",
+            "named": true
+          },
+          {
+            "type": "new_expression",
+            "named": true
+          },
+          {
+            "type": "null_literal",
+            "named": true
+          },
+          {
+            "type": "object_expression",
+            "named": true
+          },
+          {
+            "type": "optional_named_arg",
+            "named": true
+          },
+          {
+            "type": "parenthesized_expression",
+            "named": true
+          },
+          {
+            "type": "prefix_keyword_expression",
+            "named": true
+          },
+          {
+            "type": "record_expression",
+            "named": true
+          },
+          {
+            "type": "sequence_expression",
+            "named": true
+          },
+          {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          },
+          {
+            "type": "struct_tuple_expression",
+            "named": true
+          },
+          {
+            "type": "triple_quoted_string",
+            "named": true
+          },
+          {
+            "type": "try_expression",
+            "named": true
+          },
+          {
+            "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_keyword_expression",
+            "named": true
+          },
+          {
+            "type": "typecast_expression",
+            "named": true
+          },
+          {
+            "type": "typed_expression",
+            "named": true
+          },
+          {
+            "type": "typed_quotation",
+            "named": true
+          },
+          {
+            "type": "unary_expression",
+            "named": true
+          },
+          {
+            "type": "unit",
+            "named": true
+          },
+          {
+            "type": "untyped_quotation",
+            "named": true
+          },
+          {
+            "type": "use_expression",
+            "named": true
+          },
+          {
+            "type": "verbatim_string",
+            "named": true
+          },
+          {
+            "type": "while_expression",
+            "named": true
+          }
+        ]
+      },
+      "member_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "operator_name",
+            "named": true
+          }
+        ]
+      },
+      "member_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "type_parameter",
           "named": true
         }
       ]
@@ -14473,6 +14939,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -14788,6 +15258,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -15000,6 +15474,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -15823,6 +16301,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -16039,6 +16521,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -16280,6 +16766,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -16492,6 +16982,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -16885,6 +17379,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -17111,6 +17609,10 @@
           "named": true
         },
         {
+          "type": "srtp_call_expression",
+          "named": true
+        },
+        {
           "type": "string_literal",
           "named": true
         },
@@ -17334,6 +17836,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {
@@ -17583,6 +18089,10 @@
             "named": true
           },
           {
+            "type": "srtp_call_expression",
+            "named": true
+          },
+          {
             "type": "string_literal",
             "named": true
           },
@@ -17791,6 +18301,10 @@
         },
         {
           "type": "sequence_expression",
+          "named": true
+        },
+        {
+          "type": "srtp_call_expression",
           "named": true
         },
         {

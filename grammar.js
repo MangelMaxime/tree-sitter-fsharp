@@ -745,6 +745,7 @@ export default grammar({
             $.function_expression,
             $.typecast_expression,
             $.keyword_cast_expression,
+            $.srtp_call_expression,
             $.nameof_expression,
             $.new_expression,
             $.object_expression,
@@ -1180,6 +1181,30 @@ export default grammar({
 
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),
+
+        // SRTP call-site:
+        //   ( ^T : (member X: int) a )
+        //   ( ^T : (static member (+): ^T * ^T -> ^T) (a, b) )
+        // The outer parens delimit the whole expression. Inside, a type
+        // parameter is followed by an SRTP member signature (same shape as
+        // the SRTP `type_constraint` form) and one argument expression
+        // (which can itself be a parenthesized tuple for static / multi-arg
+        // calls). prec(PAREN_EXPR) so it wins over `parenthesized_expression`
+        // when the first child is a `^T`-shaped `type_parameter`.
+        srtp_call_expression: $ => prec(PREC.PAREN_EXPR, seq(
+            "(",
+            $.type_parameter,
+            ":",
+            "(",
+            optional("static"),
+            "member",
+            field('member_name', choice($.identifier, $.operator_name)),
+            ":",
+            field('member_type', $.type_expression),
+            ")",
+            field('argument', $._expression),
+            ")",
+        )),
 
         // nameof expr  — returns the string name of the identifier/member at compile time
         nameof_expression: $ => seq("nameof", $._simple_expression),

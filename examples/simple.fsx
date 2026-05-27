@@ -1685,6 +1685,21 @@ let inline combined< ^T when ^T : (member Name: string) and ^T : (member Age: in
 let inline add2< ^T when ^T : (static member op_Addition: ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
     failwith "srtp"
 
+// ── SRTP call-sites ──────────────────────────────────────────────────────────
+
+// Calling an SRTP-constrained member. The `(^T : (member …) arg)` form lets
+// inline functions actually invoke a statically resolved member.
+let inline getX< ^T when ^T : (member X: int)> (a: ^T) : int =
+    (^T : (member X: int) a)
+
+// Static-member SRTP call: argument is a parenthesized tuple.
+let inline addThem< ^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    (^T : (static member (+): ^T * ^T -> ^T) (a, b))
+
+// Method call with parens-tuple argument.
+let inline setIt< ^T when ^T : (member Set: int -> unit)> (a: ^T) (v: int) =
+    (^T : (member Set: int -> unit) (a, v))
+
 // ── Code quotations ────────────────────────────────────────────────────────────
 
 // Typed quotation: Expr<'T>

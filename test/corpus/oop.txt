@@ -372,3 +372,91 @@ type Puppy(name: string) =
           (identifier)
           (identifier))
         (unit)))))
+
+================================================================================
+Regression: SRTP call-site instance member
+================================================================================
+
+let inline getX< ^T when ^T : (member X: int)> (a: ^T) =
+    (^T : (member X: int) a)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (srtp_call_expression
+      (type_parameter)
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Regression: SRTP call-site static member with operator name
+================================================================================
+
+let inline add< ^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+    (^T : (static member (+): ^T * ^T -> ^T) (a, b))
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (operator_name)
+        (type_expression
+          (function_type
+            (type_expression
+              (tuple_type
+                (type_expression
+                  (type_parameter))
+                (type_expression
+                  (type_parameter))))
+            (type_expression
+              (type_parameter))))))
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (srtp_call_expression
+      (type_parameter)
+      (operator_name)
+      (type_expression
+        (function_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (type_parameter))
+              (type_expression
+                (type_parameter))))
+          (type_expression
+            (type_parameter))))
+      (parenthesized_expression
+        (tuple_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
