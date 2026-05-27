@@ -3,6 +3,9 @@
   "license": "APACHE 2",
   "author": "Mangel Maxime",
   "type": "module",
+  "scripts": {
+    "check-blockers": "node scripts/check-blockers.js"
+  },
   "devDependencies": {
     "tree-sitter-cli": "^0.26.8"
   }
