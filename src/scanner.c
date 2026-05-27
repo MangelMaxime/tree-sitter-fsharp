@@ -136,10 +136,15 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
         if (lexer->lookahead == '\r') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n') lexer->advance(lexer, true);
 
-        // Count leading spaces/tabs.
+        // Count leading whitespace chars. Each space or tab counts as 1 — we
+        // don't try to model visual tab width. Indent comparisons only need to
+        // be consistent WITHIN a file, so as long as the file uses a single
+        // indentation style (all spaces or all tabs), the offside rule works
+        // correctly regardless of how an editor visualises tabs. F# style is
+        // spaces anyway; this just avoids guessing on tab-indented files.
         uint32_t indent = 0;
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
-            indent += (lexer->lookahead == '\t') ? 4 : 1;
+            indent++;
             lexer->advance(lexer, true);
         }
 
