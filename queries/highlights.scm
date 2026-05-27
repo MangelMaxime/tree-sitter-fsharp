@@ -25,7 +25,6 @@
   "exception"
   "let!" "do!" "use!" "and!"
   "get" "set" "and"
-  "lazy" "assert"
   "begin" "end"
   "function"
   "delegate"
@@ -39,7 +38,10 @@
   "public"
 ] @keyword.control.access
 
-["not" "upcast" "downcast" "nameof" "sizeof" "typeof" "typedefof"] @keyword.operator
+; Unary prefix operators on a single expression — same semantic role as
+; `not`/`nameof`/etc., so they share the @keyword.operator slot rather
+; than the generic @keyword used for declaration/control keywords.
+["not" "upcast" "downcast" "nameof" "sizeof" "typeof" "typedefof" "lazy" "assert"] @keyword.operator
 
 (address_of_expression "&" @operator)
 (optional_named_arg "?" @operator)
@@ -267,7 +269,10 @@
     (long_identifier) @namespace
   ])
 
-(member_self_ident) @variable
+; `this` / `self` / `_` self identifier on instance members. @variable.builtin
+; gives themes the option to tint it distinctly from regular bindings (most
+; themes pick a slightly off-hue colour for built-in receivers).
+(member_self_ident) @variable.builtin
 
 (member_defn
   name: (identifier) @function)
