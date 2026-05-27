@@ -374,7 +374,8 @@
    (long_identifier (identifier) @type))
  (#match? @type "^[A-Z]"))
 
-; Exception type after `raise`/`reraise`. Three shapes:
+; Exception type after `raise`/`reraise`. Three argument shapes folded
+; into one pattern via `[…]` alternatives:
 ;   raise (MyError args)           — constructor call inside parens
 ;   raise (MyError)                — no-arg constructor in parens
 ;   raise MyError                  — no parens
@@ -382,28 +383,19 @@
 ; `raise myVar` (variable holding an exception). A PascalCase-named variable
 ; would still false-positive, but that fights F# naming convention.
 ;
-; These patterns come BEFORE the @function.builtin pattern below so the
+; This pattern comes BEFORE the @function.builtin pattern below so the
 ; `raise` long_identifier ends up with @function.builtin colour — Helix
 ; uses the last matching capture, and capturing `raise` here as
 ; @function.builtin (no theme colour) would otherwise wipe out the builtin tint.
 ((application_expression
    (long_identifier) @function.builtin
-   (parenthesized_expression
-     (application_expression
-       (long_identifier) @type)))
- (#match? @function.builtin "^(raise|reraise)$")
- (#match? @type "^[A-Z]"))
-
-((application_expression
-   (long_identifier) @function.builtin
-   (parenthesized_expression
-     (long_identifier) @type))
- (#match? @function.builtin "^(raise|reraise)$")
- (#match? @type "^[A-Z]"))
-
-((application_expression
-   (long_identifier) @function.builtin
-   (long_identifier) @type)
+   [
+     (long_identifier) @type
+     (parenthesized_expression (long_identifier) @type)
+     (parenthesized_expression
+       (application_expression
+         (long_identifier) @type))
+   ])
  (#match? @function.builtin "^(raise|reraise)$")
  (#match? @type "^[A-Z]"))
 
