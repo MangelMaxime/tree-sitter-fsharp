@@ -117,6 +117,12 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
 // Skip to the next non-blank, non-comment line and return its indent column in
 // *col. Returns false on EOF. Advances the lexer; the caller must have already
 // called mark_end at the position where the token should appear.
+//
+// "Comment" here means line comments (`// …`) AND block comments (`(* … *)`),
+// including F#'s nested-block-comment form. Without this, an outdented block
+// comment between two declarations would be reported as the next significant
+// line and (for inside-an-indented-body scanner calls) trigger a spurious
+// BODY_DEDENT that closes the surrounding block.
 static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
     // Skip the rest of the current line (non-newline chars).
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
@@ -151,6 +157,42 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
             // Single slash — treat as content at `indent` columns.
             *col = indent;
             return true;
+        }
+        // Skip block comments (* ... *)  — supports F#'s nested form.
+        if (lexer->lookahead == '(') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '*') {
+                // Lone `(` — significant content at `indent`.
+                *col = indent;
+                return true;
+            }
+            lexer->advance(lexer, true);
+            int depth = 1;
+            while (depth > 0) {
+                if (lexer->lookahead == 0) return false;
+                if (lexer->lookahead == '(') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == '*') {
+                        depth++;
+                        lexer->advance(lexer, true);
+                    }
+                } else if (lexer->lookahead == '*') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == ')') {
+                        depth--;
+                        lexer->advance(lexer, true);
+                    }
+                } else {
+                    lexer->advance(lexer, true);
+                }
+            }
+            // Block comment consumed. Skip any trailing content on this line
+            // (e.g. `(* foo *) more`) and let the loop iterate to the next.
+            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+                lexer->advance(lexer, true);
+            }
+            if (lexer->lookahead == 0) return false;
+            continue;
         }
         if (lexer->lookahead == 0) return false; // EOF after blank lines
 

@@ -64,6 +64,41 @@ structure.
 
 ---
 
+---
+
+## Nested block comments parse as ERROR
+
+**What:** F# supports nested block comments: `(* outer (* inner *) outer *)`.
+The grammar's `block_comment` token uses a regex that doesn't track
+nesting depth — it stops at the FIRST `*)`:
+
+```fsharp
+(* outer (* inner *) outer *)
+```
+
+Parses as `(block_comment "(* outer (* inner *)")` followed by the
+unparsed garbage ` outer *)`.
+
+**User-visible effects:**
+- Nested block comments produce ERROR nodes after the inner `*)`.
+- If the nested comment is between two declarations, the surrounding
+  scope (module body, class body) can close prematurely because the
+  garbage tokens are at lower indent.
+
+**Workaround?** Don't use nested block comments. They're rare in F#
+practice — most block comments are non-nested.
+
+**Why we accepted it:** tree-sitter's regex tokens can't express
+recursive structure. Fixing this requires moving `block_comment` to the
+external scanner (`scanner.c`), which can do its own depth tracking
+(`next_line_indent` already does this internally).
+
+**Fixable by:** adding a new external token (e.g. `_block_comment`)
+emitted by the scanner with proper depth tracking, then replacing the
+regex-based `block_comment` rule with a wrapper around it.
+
+---
+
 ## Pattern for adding new entries
 
 Each entry follows the same shape:
