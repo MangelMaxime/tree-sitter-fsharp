@@ -126,14 +126,16 @@ export default grammar({
     // Externals are zero-width tokens emitted by src/scanner.c. See that file for
     // details of the offside-rule scanner state.
     externals: $ => [
-        $._body_indent,    // delimits let_binding bodies
+        $._body_indent,    // delimits let_binding multi-line bodies
         $._body_dedent,
         $._indent,         // delimits indented let_decl_indented bodies
         $._dedent,
         $._inline_open,    // delimits same-line let_decl_indented bodies
         $._inline_close,
-        $._virtual_semi,        // virtual semicolon between sibling expressions on
+        $._virtual_semi,   // virtual semicolon between sibling expressions on
                            // separate lines (F# implicit sequence operator)
+        $._let_body_open,  // delimits same-line let_binding bodies; offside
+        $._let_body_close, //   col is the enclosing indent (approx. LET's col)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1057,7 +1059,19 @@ export default grammar({
                 $._let_signature,
                 "=",
                 choice(
+                    // Multi-line body: scanner pushes col onto indents stack
+                    // via _body_indent, pops via _body_dedent.
                     seq($._body_indent, field('body', $._expression), $._body_dedent),
+                    // Inline body: scanner pushes the ENCLOSING indent column
+                    // (approximating LET's col) onto its own let_body_cols
+                    // stack via _let_body_open, pops via _let_body_close when
+                    // the next line returns to or below that column. Stops
+                    // `let x = expr1` from absorbing the next-line `expr2`.
+                    seq($._let_body_open, field('body', $._expression), $._let_body_close),
+                    // Fallback: scanner suppresses _let_body_open when the
+                    // rest of the line contains an `in` keyword, signalling
+                    // `let x = expr in expr` (let_expression Branch B). In
+                    // that case the body is matched without offside tracking.
                     field('body', $._expression),
                 ),
                 repeat($.let_and_binding),

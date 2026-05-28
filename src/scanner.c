@@ -20,6 +20,15 @@
 //                              scanner records the body's start column on OPEN
 //                              and emits CLOSE at the first line whose column
 //                              is <= that recorded column.
+//   LET_BODY_OPEN/CLOSE      — wrap same-line let_binding bodies. Like
+//                              INLINE_OPEN/CLOSE but pushes the ENCLOSING
+//                              indent column (`stack_top(&s->indents)`),
+//                              which approximates the LET keyword's column.
+//                              Stops `let x = expr1\nexpr2` at top level from
+//                              absorbing the next-line expression as a chained
+//                              application. Tracked on its own stack so it
+//                              doesn't interfere with INLINE_OPEN's offside
+//                              tracking for let_decl_indented.
 //   VIRTUAL_SEMI             — virtual semicolon between sibling expressions on
 //                              separate lines (F#'s implicit sequence). Emitted
 //                              when the parser accepts it AND the next line
@@ -38,6 +47,8 @@ typedef enum {
     INLINE_OPEN,
     INLINE_CLOSE,
     VIRTUAL_SEMI,
+    LET_BODY_OPEN,
+    LET_BODY_CLOSE,
 } TokenType;
 
 typedef struct {
@@ -63,8 +74,9 @@ static void stack_pop(IndentStack *s) {
 }
 
 typedef struct {
-    IndentStack indents;      // pushed by BODY_INDENT / INDENT, popped by their DEDENT
-    IndentStack inline_cols;  // pushed by INLINE_OPEN, popped by INLINE_CLOSE
+    IndentStack indents;        // pushed by BODY_INDENT / INDENT, popped by their DEDENT
+    IndentStack inline_cols;    // pushed by INLINE_OPEN, popped by INLINE_CLOSE
+    IndentStack let_body_cols;  // pushed by LET_BODY_OPEN, popped by LET_BODY_CLOSE
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -75,6 +87,7 @@ void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     Scanner *s = payload;
     free(s->indents.data);
     free(s->inline_cols.data);
+    free(s->let_body_cols.data);
     free(s);
 }
 
@@ -104,6 +117,7 @@ unsigned tree_sitter_fsharp_external_scanner_serialize(void *payload, char *buf)
     unsigned n = 0;
     n = serialize_stack(&s->indents, buf, n);
     n = serialize_stack(&s->inline_cols, buf, n);
+    n = serialize_stack(&s->let_body_cols, buf, n);
     return n;
 }
 
@@ -112,6 +126,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
     unsigned n = 0;
     n = deserialize_stack(&s->indents, buf, length, n);
     n = deserialize_stack(&s->inline_cols, buf, length, n);
+    n = deserialize_stack(&s->let_body_cols, buf, length, n);
 }
 
 // Skip to the next non-blank, non-comment line and return its indent column in
@@ -206,6 +221,56 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
     }
 }
 
+// Shared check for INLINE_OPEN and LET_BODY_OPEN: skip horizontal whitespace,
+// verify same-line content (not newline/EOF), then peek the rest of the line
+// for the `in` keyword (the `let x = expr in expr` form).
+//
+// Returns:
+//    1 — same-line body present and no `in`. `*body_col` is set to the body's
+//        first-token column. Caller pushes onto its own stack, sets
+//        result_symbol, and returns true.
+//   -1 — `in` was found on the rest of the line. Caller should return false
+//        so let_expression Branch B can match.
+//    0 — body is on the next line. Caller falls through to BODY_INDENT etc.
+//
+// `mark_end` is called at the body's first-token position when 1 is returned.
+static int check_inline_body_open(TSLexer *lexer, uint32_t *body_col) {
+    // Skip horizontal whitespace to find the start of the body.
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+        lexer->advance(lexer, true);
+    }
+    if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
+        return 0;
+    }
+    *body_col = lexer->get_column(lexer);
+    lexer->mark_end(lexer);
+
+    // Peek for `in` on the rest of the current line.
+    bool prev_word = false;
+    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+        int32_t c = lexer->lookahead;
+        bool c_word = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                      (c >= '0' && c <= '9') || c == '_' || c == '\'';
+        if (!prev_word && c == 'i') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 'n') {
+                lexer->advance(lexer, true);
+                int32_t n = lexer->lookahead;
+                bool n_word = (n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') ||
+                              (n >= '0' && n <= '9') || n == '_' || n == '\'';
+                if (!n_word) return -1;
+                prev_word = true;
+            } else {
+                prev_word = c_word;
+            }
+        } else {
+            lexer->advance(lexer, true);
+            prev_word = c_word;
+        }
+    }
+    return 1;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *s = payload;
     bool want_body_indent = valid_symbols[BODY_INDENT];
@@ -215,12 +280,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_inline_open = valid_symbols[INLINE_OPEN];
     bool want_inline_close = valid_symbols[INLINE_CLOSE];
     bool want_virtual_semi = valid_symbols[VIRTUAL_SEMI];
+    bool want_let_body_open = valid_symbols[LET_BODY_OPEN];
+    bool want_let_body_close = valid_symbols[LET_BODY_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
-        && !want_inline_open && !want_inline_close && !want_virtual_semi) return false;
+        && !want_inline_open && !want_inline_close && !want_virtual_semi
+        && !want_let_body_open && !want_let_body_close) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
-    // the same line. Pushes the body's start column so INLINE_CLOSE can compare.
+    // the same line. Pushes the body's first-token column onto `inline_cols`
+    // so INLINE_CLOSE can compare and fire at the first line whose column is
+    // <= that column.
     //
     // Suppressed in two cases:
     //   1. BODY_INDENT is also valid — let_binding owns this position; we want it
@@ -229,49 +299,36 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     //      let_expression Branch B (explicit `let ... = expr in expr`) is intended,
     //      and committing to inline here would dead-end the parse.
     if (want_inline_open && !want_body_indent) {
-        // Skip horizontal whitespace to find the start of the body.
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
-            lexer->advance(lexer, true);
+        uint32_t body_col = 0;
+        int r = check_inline_body_open(lexer, &body_col);
+        if (r == 1) {
+            stack_push(&s->inline_cols, body_col);
+            lexer->result_symbol = INLINE_OPEN;
+            return true;
         }
-        // Same-line body? (Not newline / EOF.)
-        if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
-            uint32_t body_col = lexer->get_column(lexer);
-            lexer->mark_end(lexer);
+        if (r == -1) return false; // `in` found — let Branch B match.
+        // r == 0: body on next line — fall through; INDENT will handle it.
+    }
 
-            // Peek for `in` on the rest of the current line.
-            bool prev_word = false;
-            bool found_in = false;
-            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
-                int32_t c = lexer->lookahead;
-                bool c_word = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                              (c >= '0' && c <= '9') || c == '_' || c == '\'';
-                if (!prev_word && c == 'i') {
-                    lexer->advance(lexer, true);
-                    if (lexer->lookahead == 'n') {
-                        lexer->advance(lexer, true);
-                        int32_t n = lexer->lookahead;
-                        bool n_word = (n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') ||
-                                      (n >= '0' && n <= '9') || n == '_' || n == '\'';
-                        if (!n_word) { found_in = true; break; }
-                        prev_word = true;
-                    } else {
-                        prev_word = c_word;
-                    }
-                } else {
-                    lexer->advance(lexer, true);
-                    prev_word = c_word;
-                }
-            }
-
-            if (!found_in) {
-                stack_push(&s->inline_cols, body_col);
-                lexer->result_symbol = INLINE_OPEN;
-                return true;
-            }
-            // `in` found on rest of line — let Branch B match. Fall through.
-            return false;
+    // LET_BODY_OPEN: emitted right after `=` when a let_binding body starts
+    // on the same line. Same scaffolding as INLINE_OPEN (via the shared
+    // helper above) but uses its OWN stack (`let_body_cols`) and pushes the
+    // ENCLOSING indent column rather than the body's first-token column.
+    // The enclosing indent approximates the LET keyword's column — F#
+    // terminates an inline let-binding body when the next line returns to
+    // (or below) that column. Using the body's column instead would
+    // prematurely close `function`/`match` arms that sit at lower indent
+    // than the keyword itself.
+    if (want_let_body_open) {
+        uint32_t body_col = 0; // unused for LET_BODY_OPEN
+        int r = check_inline_body_open(lexer, &body_col);
+        if (r == 1) {
+            stack_push(&s->let_body_cols, stack_top(&s->indents));
+            lexer->result_symbol = LET_BODY_OPEN;
+            return true;
         }
-        // Body on next line — fall through; INDENT will handle it.
+        if (r == -1) return false; // `in` found
+        // r == 0: body on next line — fall through; BODY_INDENT will handle it.
     }
 
     // From here we're handling BODY_INDENT / BODY_DEDENT / INDENT / DEDENT /
@@ -330,8 +387,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     uint32_t col = 0;
     if (!next_line_indent(lexer, &col)) {
-        // EOF: close any open block. INLINE_CLOSE first so inline-bodied lets
-        // close before any surrounding BODY_/INDENT blocks.
+        // EOF: close any open block. LET_BODY_CLOSE / INLINE_CLOSE first so
+        // inline-bodied lets close before any surrounding BODY_/INDENT blocks.
+        if (want_let_body_close && s->let_body_cols.size > 0) {
+            stack_pop(&s->let_body_cols);
+            lexer->result_symbol = LET_BODY_CLOSE;
+            return true;
+        }
         if (want_inline_close && s->inline_cols.size > 0) {
             stack_pop(&s->inline_cols);
             lexer->result_symbol = INLINE_CLOSE;
@@ -353,6 +415,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     uint32_t current = stack_top(&s->indents);
+
+    // LET_BODY_CLOSE: any line at column <= the recorded enclosing indent
+    // ends the inline let-binding body. Same shape as INLINE_CLOSE but
+    // separate stack (and a different pushed value — enclosing indent, not
+    // body's first-token column).
+    if (want_let_body_close && s->let_body_cols.size > 0) {
+        uint32_t body_col = stack_top(&s->let_body_cols);
+        if (col <= body_col) {
+            stack_pop(&s->let_body_cols);
+            lexer->result_symbol = LET_BODY_CLOSE;
+            return true;
+        }
+    }
 
     // INLINE_CLOSE: any line at column <= the recorded body column ends the inline
     // body (sibling let, continuation expression, or end of enclosing block).

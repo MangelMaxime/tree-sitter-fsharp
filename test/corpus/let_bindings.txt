@@ -225,3 +225,106 @@ let x = List.map
       (identifier)
       (identifier))))
 
+================================================================================
+Regression: inline let body doesn't absorb next-line expression
+================================================================================
+
+let squares = [ 1; 4; 9 ]
+printfn "N^2 = %A" squares
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (list_expression
+      (int_literal)
+      (int_literal)
+      (int_literal)))
+  (application_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Regression: inline let body doesn't absorb next-line let
+================================================================================
+
+let x = 1
+let y = 2
+let z = 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (int_literal))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (let_binding
+    (identifier)
+    (int_literal)))
+
+================================================================================
+Regression: inline let with function expression body
+================================================================================
+
+let parity_pattern = function
+    | 0 -> "even digit"
+    | 1 -> "odd digit"
+    | _ -> "not a digit"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (function_expression
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (string_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (string_literal)))))
+
+================================================================================
+Regression: inline let with match expression body across lines
+================================================================================
+
+let area shape =
+    match shape with
+    | 1 -> 1.0
+    | _ -> 0.0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (float_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (float_literal)))))
