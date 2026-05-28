@@ -1913,3 +1913,12 @@ let testRecordColoration =
 
 let test () =
     Map.empty<string, _>
+
+type FancyClass(thing:int, var2 : string -> string, ``ddzdz``: string list, extra) as xxx =
+
+    static member (>) (v1 : int, v2 : int) = v1 > v2
+    static member (<) (v1 : int, v2 : int) = v2 < v2
+    static member (< ) (v1 : int, v2 : int) = v2 < v2
+    static member (<|>) (v1 : int, v2 : int) = v2 < v2
+
+    member inline _.Q () = 3

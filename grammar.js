@@ -204,6 +204,13 @@ export default grammar({
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
         [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor],
+        // `expr <` may begin a `type_application_expression`
+        // (`Map.empty<string, int>`) or a `<` comparison in
+        // `binary_expression`. GLR explores both; type_application only
+        // succeeds when `<…>` contains `type_expression , type_expression
+        // … >`, otherwise binary wins.
+        [$.type_application_expression, $._expression],
+        [$.type_application_expression, $._simple_expression],
     ],
 
 
@@ -510,18 +517,22 @@ export default grammar({
             optional("inline"),
             field('self', $.member_self_ident),
             ".",
-            field('name', $.identifier),
+            field('name', choice($.identifier, $.operator_name)),
             optional($.type_parameter_list),
         ),
 
         // `static member [inline] Name[<'T,…>]` — shared by method and property
         // forms. F# accepts `inline` between `member` and the name (the typical
         // placement, e.g. `static member inline Add x y = x + y`).
+        //
+        // `operator_name` is accepted as the name so operator overloads like
+        // `static member (>) (a, b) = …` parse as members instead of
+        // generating cascading errors that break downstream highlighting.
         _static_member_prefix: $ => seq(
             "static",
             "member",
             optional("inline"),
-            field('name', $.identifier),
+            field('name', choice($.identifier, $.operator_name)),
             optional($.type_parameter_list),
         ),
 
@@ -895,10 +906,13 @@ export default grammar({
         // contains type-expressions.
         // Requires at least one comma inside the `<…>` so the grammar can
         // tell this apart from `expr < x > y` (binary comparisons). The
-        // single-arg form `f<T>` is ambiguous with two consecutive `<`/`>`
-        // comparisons and isn't supported here — use `f<T, _>` or write
-        // the type elsewhere.
-        type_application_expression: $ => prec.dynamic(100, prec(PREC.PAREN_EXPR, seq(
+        // single-arg form `f<T>` is ambiguous and not supported.
+        //
+        // Low static prec so simple `x < 0` comparisons aren't drawn into
+        // this rule and dead-end on the missing comma. A declared
+        // conflict lets GLR explore both — binary wins when no comma
+        // appears in the `<…>`, this rule wins when it does.
+        type_application_expression: $ => seq(
             $.long_identifier,
             "<",
             $.type_expression,
@@ -906,7 +920,7 @@ export default grammar({
             $.type_expression,
             repeat(seq(",", $.type_expression)),
             ">",
-        ))),
+        ),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
