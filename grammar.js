@@ -509,12 +509,15 @@ export default grammar({
             )),
         ),
 
-        // `member/override/default [inline] self.Name[<'T,…>]` — shared by
-        // method and property forms. Optional `type_parameter_list` lets generic
-        // methods like `member this.Map<'T>(x: 'T) = x` parse.
+        // `member/override/default [inline] [access] self.Name[<'T,…>]` —
+        // shared by method and property forms. Optional `type_parameter_list`
+        // lets generic methods like `member this.Map<'T>(x: 'T) = x` parse.
+        // `access_modifier` (`member inline internal _.P () = …`) controls
+        // the member's visibility independently of the type's.
         _instance_member_prefix: $ => seq(
             choice("member", "override", "default"),
             optional("inline"),
+            optional($.access_modifier),
             field('self', $.member_self_ident),
             ".",
             field('name', choice($.identifier, $.operator_name)),
@@ -532,6 +535,7 @@ export default grammar({
             "static",
             "member",
             optional("inline"),
+            optional($.access_modifier),
             field('name', choice($.identifier, $.operator_name)),
             optional($.type_parameter_list),
         ),

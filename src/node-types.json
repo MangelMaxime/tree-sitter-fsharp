@@ -8730,6 +8730,10 @@
       "required": false,
       "types": [
         {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
           "type": "address_of_expression",
           "named": true
         },
