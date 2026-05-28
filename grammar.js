@@ -262,7 +262,17 @@ export default grammar({
             repeat($.attribute),
             field('name', $.identifier),
             optional($.type_parameter_list),
-            optional($.primary_constructor),
+            // `type Foo private (...)` — F# allows an access modifier between
+            // the type-parameter list and the primary constructor (controls
+            // who can call the constructor, not visibility of the type).
+            // Group with primary_constructor so the `(` lookahead sees a
+            // single optional alternative (high prec) rather than two
+            // independent optionals — helps when extras (comments) sit
+            // between the name and the constructor.
+            optional(prec(20, seq(
+                optional($.access_modifier),
+                $.primary_constructor,
+            ))),
             // `as this` — names the constructed instance so the body can refer
             // back to it. Identifier is conventionally `this` but any name is
             // legal (`as self`, etc.).
@@ -284,6 +294,7 @@ export default grammar({
             repeat($.attribute),
             field('name', $.identifier),
             optional($.type_parameter_list),
+            optional($.access_modifier),
             optional($.primary_constructor),
             optional(seq("as", field('self', $.identifier))),
             optional(seq(
@@ -345,18 +356,27 @@ export default grammar({
         ),
 
         // Choice alternatives shared by `_token` (source-level / module body)
-        // and `_class_body_member` (type body). Both contexts allow attributes,
-        // top-level value declarations (let/do), and comments. Tree-sitter
-        // inlines hidden rules in choice positions, so the parent's children
-        // still appear directly as `attribute`, `let_binding`, etc. — no extra
+        // and `_class_body_member` (type body). Both contexts allow attributes
+        // and top-level value declarations (let/do). Tree-sitter inlines
+        // hidden rules in choice positions, so the parent's children still
+        // appear directly as `attribute`, `let_binding`, etc. — no extra
         // wrapping node.
+        //
+        // `line_comment` / `block_comment` are deliberately NOT listed here
+        // even though they used to be: when listed, a comment sitting between
+        // two tokens of an enclosing rule (e.g. `type Foo (* c *) (a: int)`)
+        // competed with extras-absorption and the parser would end the rule
+        // and take the comment as a standalone child — breaking the
+        // primary_constructor parse. Leaving comments in `extras` only means
+        // they still show up in the tree, attached to the enclosing rule
+        // rather than terminating it. `xml_doc_comment` / `block_doc_comment`
+        // are kept because they need to attach as a `decoration()` prefix on
+        // the following decl, which `_decl_or_comment` enables.
         _decl_or_comment: $ => choice(
             $.attribute,
             $.let_binding,
             $.do_stmt,
             $.xml_doc_comment,
-            $.line_comment,
-            $.block_comment,
             $.block_doc_comment,
         ),
 

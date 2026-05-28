@@ -2792,10 +2792,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -2813,10 +2809,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -5231,10 +5223,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -5252,10 +5240,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -5294,10 +5278,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -5315,10 +5295,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -8897,10 +8873,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -8986,10 +8958,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -9621,10 +9589,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -9710,10 +9674,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -10564,10 +10524,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -10653,10 +10609,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -10855,10 +10807,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -10944,10 +10892,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -11176,10 +11120,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -11265,10 +11205,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -14296,10 +14232,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -14385,10 +14317,6 @@
         },
         {
           "type": "let_expression",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -15076,10 +15004,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -15097,10 +15021,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -15680,11 +15600,11 @@
           "named": true
         },
         {
-          "type": "attribute",
+          "type": "access_modifier",
           "named": true
         },
         {
-          "type": "block_comment",
+          "type": "attribute",
           "named": true
         },
         {
@@ -15721,10 +15641,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -15897,11 +15813,11 @@
           "named": true
         },
         {
-          "type": "attribute",
+          "type": "access_modifier",
           "named": true
         },
         {
-          "type": "block_comment",
+          "type": "attribute",
           "named": true
         },
         {
@@ -15938,10 +15854,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
@@ -16070,10 +15982,6 @@
           "named": true
         },
         {
-          "type": "block_comment",
-          "named": true
-        },
-        {
           "type": "block_doc_comment",
           "named": true
         },
@@ -16091,10 +15999,6 @@
         },
         {
           "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "line_comment",
           "named": true
         },
         {
