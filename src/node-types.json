@@ -2763,6 +2763,11 @@
     }
   },
   {
+    "type": "char_literal",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "class_type_defn",
     "named": true,
     "fields": {},
@@ -18611,10 +18616,6 @@
     "type": "block_doc_comment",
     "named": true,
     "extra": true
-  },
-  {
-    "type": "char_literal",
-    "named": true
   },
   {
     "type": "class",

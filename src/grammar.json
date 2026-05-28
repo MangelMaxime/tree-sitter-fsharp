@@ -7978,6 +7978,14 @@
         "members": [
           {
             "type": "STRING",
+            "value": "lf"
+          },
+          {
+            "type": "STRING",
+            "value": "LF"
+          },
+          {
+            "type": "STRING",
             "value": "uy"
           },
           {
@@ -8179,6 +8187,42 @@
                 "members": [
                   {
                     "type": "PATTERN",
+                    "value": "[0-9][0-9_]*"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "."
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[eE]"
+                  },
+                  {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "PATTERN",
+                        "value": "[+-]"
+                      },
+                      {
+                        "type": "BLANK"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[0-9]+"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TOKEN",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "PATTERN",
                     "value": "[0-9]+"
                   },
                   {
@@ -8221,6 +8265,27 @@
       ]
     },
     "char_literal": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_char_content"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_char_byte_suffix"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "_char_content": {
       "type": "TOKEN",
       "content": {
         "type": "SEQ",
@@ -8277,6 +8342,13 @@
             "value": "'"
           }
         ]
+      }
+    },
+    "_char_byte_suffix": {
+      "type": "IMMEDIATE_TOKEN",
+      "content": {
+        "type": "STRING",
+        "value": "B"
       }
     },
     "_string_content": {

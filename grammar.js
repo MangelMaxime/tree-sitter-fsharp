@@ -1885,7 +1885,10 @@ export default grammar({
         // Number suffixes (immediate = no whitespace before suffix). `m`/`M`/`f`/`F`
         // are accepted as integer suffixes too so that `3f` and `42m` work as
         // dot-less float / decimal literals; themes rarely distinguish them anyway.
-        _int_suffix: _ => token.immediate(choice("uy", "us", "uL", "UL", "Ul", "ul", "un", "u", "y", "s", "l", "L", "n", "I", "m", "M", "f", "F")),
+        // `lf` (`0x…lf`, hex-bits-to-float32) and `LF` (`0x…LF`,
+        // hex-bits-to-float64) are listed FIRST so tree-sitter's longest-match
+        // wins over the single-char `l` / `L` alternatives.
+        _int_suffix: _ => token.immediate(choice("lf", "LF", "uy", "us", "uL", "UL", "Ul", "ul", "un", "u", "y", "s", "l", "L", "n", "I", "m", "M", "f", "F")),
         _float_suffix: _ => token.immediate(choice("f", "F", "m", "M")),
 
         int_literal: $ => seq(
@@ -1893,17 +1896,28 @@ export default grammar({
             optional($._int_suffix),
         ),
 
-        // The decimal-point form requires digits on both sides so that `1..10` lexes
-        // as `int + .. + int` rather than `float(1.) + . + int(10)`.
+        // Three forms (must keep `1..10` lexing as `int + .. + int`, not
+        // `float(1.) + . + int(10)`):
+        //   `digits . digits [exp]`   — `1.23`, `1.23e5`, `3.14f`
+        //   `digits . exp`            — `180.e5`, `180.e5f` (no digits after `.`)
+        //   `digits exp`              — `180e5`
+        // The `digits . exp` form lets the `[eE][+-]?[0-9]+` after the dot
+        // disambiguate from `..` (which has no `e`/`E` next).
         float_literal: $ => seq(
             choice(
                 token(seq(/[0-9][0-9_]*/, ".", /[0-9][0-9_]*/, optional(seq(/[eE]/, optional(/[+-]/), /[0-9]+/)))),
+                token(seq(/[0-9][0-9_]*/, ".", /[eE]/, optional(/[+-]/), /[0-9]+/)),
                 token(seq(/[0-9]+/, /[eE]/, optional(/[+-]/), /[0-9]+/)),
             ),
             optional($._float_suffix),
         ),
 
-        char_literal: _ => token(
+        // Char literal: `'x'`, escape sequences, plus optional `B` byte
+        // suffix (`'F'B` produces a `byte` value). Same suffix-as-immediate-
+        // token pattern as `string_literal` / `_string_byte_suffix`.
+        char_literal: $ => seq($._char_content, optional($._char_byte_suffix)),
+
+        _char_content: _ => token(
             seq(
                 "'",
                 choice(
@@ -1919,6 +1933,8 @@ export default grammar({
                 "'",
             )
         ),
+
+        _char_byte_suffix: _ => token.immediate("B"),
 
         _string_content: _ => token(
             seq(
