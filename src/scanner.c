@@ -51,6 +51,7 @@ typedef enum {
     LET_BODY_CLOSE,
     RECORD_BODY_OPEN,
     RECORD_BODY_CLOSE,
+    RECORD_FIELD_SEMI,
 } TokenType;
 
 typedef struct {
@@ -290,11 +291,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_let_body_close = valid_symbols[LET_BODY_CLOSE];
     bool want_record_body_open = valid_symbols[RECORD_BODY_OPEN];
     bool want_record_body_close = valid_symbols[RECORD_BODY_CLOSE];
+    bool want_record_field_semi = valid_symbols[RECORD_FIELD_SEMI];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
         && !want_let_body_open && !want_let_body_close
-        && !want_record_body_open && !want_record_body_close) return false;
+        && !want_record_body_open && !want_record_body_close
+        && !want_record_field_semi) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's first-token column onto `inline_cols`
@@ -367,28 +370,64 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                                 lexer->lookahead != '}');
         if (same_line_field) {
             uint32_t col = lexer->get_column(lexer);
-            // Peek `new` as a complete keyword — if so, this is an
-            // object_expression, not a record.
-            bool is_new_keyword = false;
-            if (lexer->lookahead == 'n') {
-                lexer->advance(lexer, true);
-                if (lexer->lookahead == 'e') {
+            // Mark the token end NOW (zero-width at the field column) so
+            // the look-ahead advance() calls below only peek and don't
+            // extend the emitted token.
+            lexer->mark_end(lexer);
+            // Peek the rest of the line to confirm this looks like a
+            // record field (identifier followed by `=` or `:`), not:
+            //   - `{ new IFoo … }`          object expression
+            //   - `{ base with field }`     record copy-update
+            //   - `{| base with field |}`   anonymous-record copy-update
+            // For those forms we want the grammar's other branches to
+            // match — pushing onto record_cols would break them.
+            //
+            // Walk one identifier-shaped word, then skip whitespace, then
+            // check the next non-whitespace char. Only emit if it's `=`
+            // (record_field) or `:` (record_type_field).
+            bool looks_like_field = false;
+            int32_t c = lexer->lookahead;
+            bool word_start = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                              c == '_' || c == '`';
+            if (word_start) {
+                // Consume the identifier-shaped word (allow `` `…` `` form).
+                if (c == '`') {
                     lexer->advance(lexer, true);
-                    if (lexer->lookahead == 'w') {
+                    if (lexer->lookahead == '`') {
                         lexer->advance(lexer, true);
-                        int32_t after = lexer->lookahead;
-                        bool word_continues =
-                            (after >= 'a' && after <= 'z') ||
-                            (after >= 'A' && after <= 'Z') ||
-                            (after >= '0' && after <= '9') ||
-                            after == '_' || after == '\'';
-                        if (!word_continues) is_new_keyword = true;
+                        while (lexer->lookahead != '`' &&
+                               lexer->lookahead != '\n' &&
+                               lexer->lookahead != '\r' &&
+                               lexer->lookahead != 0) {
+                            lexer->advance(lexer, true);
+                        }
+                        if (lexer->lookahead == '`') {
+                            lexer->advance(lexer, true);
+                            if (lexer->lookahead == '`') lexer->advance(lexer, true);
+                        }
+                    }
+                } else {
+                    while (1) {
+                        int32_t ch = lexer->lookahead;
+                        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') {
+                            lexer->advance(lexer, true);
+                        } else break;
                     }
                 }
+                // Skip horizontal whitespace.
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+                    lexer->advance(lexer, true);
+                }
+                // Field separator: `=` (record_field) or `:` (record_type_field).
+                // `:` could also be `::` (cons) or `:>` / `:?` (casts) — those
+                // don't appear right after a field name, so a bare `:` is fine
+                // as a field marker for our purposes.
+                int32_t sep = lexer->lookahead;
+                if (sep == '=' || sep == ':') looks_like_field = true;
             }
-            if (!is_new_keyword) {
+            if (looks_like_field) {
                 stack_push(&s->record_cols, col);
-                lexer->mark_end(lexer); // zero-width emit at the field col.
                 lexer->result_symbol = RECORD_BODY_OPEN;
                 return true;
             }
@@ -626,8 +665,27 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // (`|`, `)`, `]`, `}`, or continuation keywords like `else`/`elif`/`with`).
     // Without those guards the parser commits to a sequence path that fails
     // once it reaches the closer.
-    bool semi_col_match = (s->indents.size > 0 && col == current) ||
-                          (s->record_cols.size > 0 && col == stack_top(&s->record_cols));
+    // Inside an inline record body (`{ F1\n   F2 }`), emit RECORD_FIELD_SEMI
+    // at the field column INSTEAD of VIRTUAL_SEMI. RECORD_FIELD_SEMI is only
+    // consumable by the field-list repeat — a `sequence_expression` nested
+    // inside a field's value (e.g. a lambda body) can't shift it, so it
+    // reduces all the way out and lets the next field start. Without this,
+    // the lambda body would absorb subsequent field names via the
+    // sequence's VIRTUAL_SEMI consumption.
+    bool at_record_field_col = s->record_cols.size > 0 &&
+                               col == stack_top(&s->record_cols);
+    if (want_record_field_semi && at_record_field_col) {
+        // Apply the same blocker checks as VIRTUAL_SEMI (closing delimiters
+        // and continuation keywords must NOT trigger a separator).
+        int32_t c = lexer->lookahead;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
+        if (!blocked) {
+            lexer->result_symbol = RECORD_FIELD_SEMI;
+            return true;
+        }
+    }
+
+    bool semi_col_match = (s->indents.size > 0 && col == current);
     if (want_virtual_semi && semi_col_match) {
         int32_t c = lexer->lookahead;
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');

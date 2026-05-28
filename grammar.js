@@ -92,10 +92,10 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
             $._record_body_open,
             field,
             repeat(prec.dynamic(sepPrec, seq(
-                choice(";", $._virtual_semi),
+                choice(";", $._record_field_semi),
                 field,
             ))),
-            optional(choice(";", $._virtual_semi)),
+            optional(choice(";", $._record_field_semi)),
             $._record_body_close,
         )] : []),
         // `{\n   F1\n   F2\n   }` — `{` on previous line, fields indented
@@ -168,6 +168,12 @@ export default grammar({
         $._record_body_close, //   the first field's column so _virtual_semi
                               //   can fire at matching-col line boundaries
                               //   between fields
+        $._record_field_semi, // virtual `;` between record fields. Fires
+                              //   at col == record_cols.top INSTEAD of
+                              //   `_virtual_semi`, so nested `sequence_expression`
+                              //   bodies (e.g. inside a lambda) can't absorb
+                              //   the next field — they reduce when they
+                              //   can't shift this token.
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1021,7 +1027,7 @@ export default grammar({
 
         // Shared field-list body for record/anonymous-record expressions.
         // Uses the same indented-or-inline helper as `record_type_defn`.
-        _record_fields: $ => indentedOrInlineFieldList($, $.record_field, PREC.APP_EXPR + 1),
+        _record_fields: $ => indentedOrInlineFieldList($, $.record_field, PREC.APP_EXPR + 1, { sameLineBraceForm: true }),
 
         // prec(APP_EXPR) lets prec.dynamic in record_expression/anonymous_record_expression
         // prefer starting a new field over extending the value via application_expression.

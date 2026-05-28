@@ -1903,3 +1903,21 @@ type NestedRecord =
 
 type private FancyClass2 (?thing:int) =
     class end
+
+let testRecordColoration =
+    { Firstname = "string" // Comments should work here
+      Surname = ""
+    }
+
+let testRecordColoration =
+    { Firstname = "string" // Comments should work here
+      Lastname = "string"
+      Age = 10
+      Notify = fun _ -> ()
+      Notify2 = fun s -> ()
+      Notify3 = fun _ -> ()
+      Notify4 = fun _ -> ()
+      Callback = fun (a, (*b) comments should works here too*) b) -> unbox null
+      TypeWithSpace = null
+      Nested = fun func -> unbox null
+      Mutable = null }
