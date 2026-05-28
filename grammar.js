@@ -292,6 +292,10 @@ export default grammar({
         type_decl: $ => prec.right(seq(
             "type",
             repeat($.attribute),
+            // `type private Foo = …` — visibility of the TYPE itself, before
+            // the name. Distinct from the slot below (which controls
+            // visibility of the primary CONSTRUCTOR).
+            optional($.access_modifier),
             field('name', $.identifier),
             optional($.type_parameter_list),
             // `type Foo private (...)` — F# allows an access modifier between
@@ -324,6 +328,7 @@ export default grammar({
         type_and_decl: $ => prec.right(seq(
             "and",
             repeat($.attribute),
+            optional($.access_modifier),
             field('name', $.identifier),
             optional($.type_parameter_list),
             optional($.access_modifier),

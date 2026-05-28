@@ -1901,3 +1901,5 @@ type NestedRecord =
     { Nested : NestedRecord
       PropB : string }
 
+type private FancyClass2 (?thing:int) =
+    class end
