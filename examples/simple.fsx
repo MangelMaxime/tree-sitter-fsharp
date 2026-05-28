@@ -1127,6 +1127,19 @@ let b =
     else
         ()
 
+// ── Unicode identifiers ──────────────────────────────────────────────────────
+
+// F# allows Unicode letters and digits in identifiers.
+let π = 3.1415
+let accentué = "accentué"
+let café = "espresso"
+let 数学 = 42
+let Σ x y = x + y
+
+// Unicode also legal inside member/type names
+type Café() =
+    member _.Boisson = "noisette"
+
 // ── Anonymous record types ────────────────────────────────────────────────────
 
 type NamedPoint =

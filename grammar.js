@@ -1851,8 +1851,15 @@ export default grammar({
         // Plain identifiers and `` `any text` ``-quoted form, unified in one terminal.
         // `word: $.identifier` still drives keyword detection; backtick forms never
         // match keywords because the regex requires the backticks.
+        // F# identifiers follow the Unicode rules: first char is any Unicode
+        // letter (categories Lu/Ll/Lt/Lm/Lo/Nl) or underscore; subsequent
+        // chars add Unicode digits (Nd) and apostrophe. Using \p{L} / \p{Nd}
+        // is a good practical approximation that covers `π`, `accentué`,
+        // `café`, `数学`, etc. without enumerating script ranges by hand.
+        // The backtick form `` `…` `` accepts almost anything between the
+        // delimiters and is unchanged.
         identifier: _ => token(choice(
-            /[a-zA-Z_][a-zA-Z0-9_']*/,
+            /[\p{L}_][\p{L}\p{Nd}_']*/,
             /``[^`\n\r\t]+``/,
         )),
 
