@@ -399,3 +399,35 @@ type [<Sealed>] Foo = | X
     (union_type_defn
       (union_case
         (identifier)))))
+
+================================================================================
+Regression: attribute between let and name
+================================================================================
+
+let [<Literal>] X = 11
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (identifier)
+    (int_literal)))
+
+================================================================================
+Regression: doc comment between let and name
+================================================================================
+
+let /// doc
+    foo = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (xml_doc_comment)
+    (identifier)
+    (int_literal)))

@@ -1043,12 +1043,17 @@ export default grammar({
         // The body-absent branch lets mid-edit `let x =` parse as a real
         // `let_binding` node so Helix's indent walk has something to anchor on,
         // and the `!body` field-absence predicate in `indents.scm` targets it.
+        // Attributes / doc comments may appear EITHER before `let` or between
+        // `let [rec]` and the binding name. Both forms are equivalent:
+        //   [<Literal>] let X = 11
+        //   let [<Literal>] X = 11
         let_binding: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, prec.dynamic(1, seq(
                 decoration($),
                 optional("static"),
                 "let",
                 optional("rec"),
+                decoration($),
                 $._let_signature,
                 "=",
                 choice(
@@ -1062,6 +1067,7 @@ export default grammar({
                 optional("static"),
                 "let",
                 optional("rec"),
+                decoration($),
                 $._let_signature,
                 "=",
                 repeat($.let_and_binding),
