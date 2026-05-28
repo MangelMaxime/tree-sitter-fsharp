@@ -6347,6 +6347,10 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_parameter_list",
           "named": true
         }
@@ -6663,6 +6667,10 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_parameter_list",
           "named": true
         },
@@ -6968,6 +6976,10 @@
       "types": [
         {
           "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -7450,6 +7462,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -8759,6 +8775,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -14734,9 +14754,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "long_identifier",
+          "named": true
+        },
         {
           "type": "type_parameter",
           "named": true
@@ -15770,6 +15794,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "long_identifier",
+          "named": true
+        },
         {
           "type": "type_expression",
           "named": true
@@ -18816,6 +18844,10 @@
   },
   {
     "type": "open",
+    "named": false
+  },
+  {
+    "type": "or",
     "named": false
   },
   {

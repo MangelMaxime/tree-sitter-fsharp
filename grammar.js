@@ -485,7 +485,22 @@ export default grammar({
 
         // `: TypeExpr` return-type annotation. Shared by let_binding, let_and_binding,
         // let_decl_indented, let_expression Branch B, _method_body, and auto-properties.
-        _return_type_annot: $ => seq(":", field('return_type', $.type_expression)),
+        //
+        // F# allows a trailing `when …` constraints clause after the return
+        // type — used in inline SRTP functions to attach member constraints
+        // outside an explicit `<…>` type-parameter list, e.g.
+        //   let inline replace (a: ^a) : ^b
+        //       when (CFunctor or ^b) : (static member replace: ^a * ^b -> ^b)
+        //       = …
+        _return_type_annot: $ => seq(
+            ":",
+            field('return_type', $.type_expression),
+            optional(seq(
+                "when",
+                $.type_constraint,
+                repeat(seq("and", $.type_constraint)),
+            )),
+        ),
 
         // `member/override/default [inline] self.Name[<'T,…>]` — shared by
         // method and property forms. Optional `type_parameter_list` lets generic
@@ -1289,19 +1304,42 @@ export default grammar({
         // (which can itself be a parenthesized tuple for static / multi-arg
         // calls). prec(PAREN_EXPR) so it wins over `parenthesized_expression`
         // when the first child is a `^T`-shaped `type_parameter`.
-        srtp_call_expression: $ => prec(PREC.PAREN_EXPR, seq(
-            "(",
-            $.type_parameter,
-            ":",
-            "(",
-            optional("static"),
-            "member",
-            field('member_name', choice($.identifier, $.operator_name)),
-            ":",
-            field('member_type', $.type_expression),
-            ")",
-            field('argument', $._expression),
-            ")",
+        srtp_call_expression: $ => prec(PREC.PAREN_EXPR, choice(
+            // Single-parameter SRTP call: `(^T : (member …) arg)`
+            seq(
+                "(",
+                $.type_parameter,
+                ":",
+                "(",
+                optional("static"),
+                "member",
+                field('member_name', choice($.identifier, $.operator_name)),
+                ":",
+                field('member_type', $.type_expression),
+                ")",
+                field('argument', $._expression),
+                ")",
+            ),
+            // Heterogeneous SRTP call: `((^a or ^b) : (member …) arg)`
+            // The LHS is its own parenthesised list; each term is either a
+            // type_parameter or a concrete type identifier, joined by `or`.
+            seq(
+                "(",
+                "(",
+                choice($.type_parameter, $.long_identifier),
+                repeat1(seq("or", choice($.type_parameter, $.long_identifier))),
+                ")",
+                ":",
+                "(",
+                optional("static"),
+                "member",
+                field('member_name', choice($.identifier, $.operator_name)),
+                ":",
+                field('member_type', $.type_expression),
+                ")",
+                field('argument', $._expression),
+                ")",
+            ),
         )),
 
         // nameof expr  — returns the string name of the identifier/member at compile time
@@ -1896,6 +1934,25 @@ export default grammar({
                 ":",
                 field('member_type', $.type_expression),
                 ")"),
+            // Heterogeneous SRTP member constraint:
+            //   (^a or ^b) : (static member fmap: (^c -> ^d) * ^b -> ^e)
+            //   (CFunctor or ^b) : (static member replace: ^a * ^b -> ^c)
+            // Each LHS term is either a type_parameter (`^a`) or a concrete
+            // type identifier (`CFunctor`), joined by `or`.
+            seq(
+                "(",
+                choice($.type_parameter, $.long_identifier),
+                repeat1(seq("or", choice($.type_parameter, $.long_identifier))),
+                ")",
+                ":",
+                "(",
+                optional("static"),
+                "member",
+                field('member_name', choice($.identifier, $.operator_name)),
+                ":",
+                field('member_type', $.type_expression),
+                ")",
+            ),
         ),
 
         // `(|Even|Odd|)` `(|Integer|_|)` `(|Single|)` — single terminal so the lexer

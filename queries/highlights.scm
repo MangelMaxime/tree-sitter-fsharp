@@ -48,6 +48,16 @@
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)
+; `or` keyword in heterogeneous SRTP constraints / call-sites:
+;   (^a or ^b) : (static member fmap: ^a -> ^b)
+;   ((CFunctor or ^b) : (member replace: …) arg)
+(type_constraint "or" @keyword)
+(srtp_call_expression "or" @keyword)
+; Concrete type identifier on the LHS of a heterogeneous constraint /
+; call-site (e.g. `CFunctor` in `(CFunctor or ^b)`) — match the
+; rest-of-grammar convention of highlighting type names as `@type`.
+(type_constraint (long_identifier) @type)
+(srtp_call_expression (long_identifier (identifier) @type))
 
 [
   "|"
