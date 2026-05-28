@@ -1931,6 +1931,13 @@ export default grammar({
                         /x[0-9a-fA-F]{2}/,
                         /u[0-9a-fA-F]{4}/,
                         /U[0-9a-fA-F]{8}/,
+                        // Fallback: any other char after `\`. Real F# rejects
+                        // unknown escape sequences (FS1157), but a syntax-
+                        // highlighting grammar should still parse the string
+                        // so a single bad escape doesn't cascade an ERROR
+                        // through the rest of the file. The longer specific
+                        // alternatives above still win for valid escapes.
+                        /./,
                     )),
                 )),
                 '"',
@@ -1946,7 +1953,9 @@ export default grammar({
         ),
 
         // Body chunks of interpolated strings. `%` is excluded so printf-style
-        // `%fmt{` specifiers tokenise separately.
+        // `%fmt{` specifiers tokenise separately. Final `\\./` fallback accepts
+        // unknown escape sequences so they don't cascade an ERROR (same as
+        // `_string_content`).
         _interp_string_text: _ => token.immediate(repeat1(choice(
             /[^"\\{}%]+/,
             /\\[\\'"abfnrtv0]/,
@@ -1954,6 +1963,7 @@ export default grammar({
             /\\x[0-9a-fA-F]{2}/,
             /\\u[0-9a-fA-F]{4}/,
             /\\U[0-9a-fA-F]{8}/,
+            /\\./,
             '{{',
             '}}',
         ))),
