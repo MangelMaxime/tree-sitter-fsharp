@@ -837,6 +837,9 @@ export default grammar({
             $.unit,
             $.null_literal,
             $.long_identifier,
+            // `(+)`, `(>>=)`, `(!//!)` — operator as a first-class function value.
+            // Used as application heads (`(+) 1 2`) or arguments (`x (!//!) y`).
+            $.operator_name,
             $.object_expression,
             // Accept `async { … }` / `task { … }` etc. as application arguments.
             // Without this, a body that sequences a CE after another statement
@@ -891,12 +894,16 @@ export default grammar({
         )),
 
         // Custom operators: `@` (list append) or any sequence of 2+ symbolic chars.
-        // Restricted to 2+ chars and `@` excluded as a start char so that quotation
-        // delimiters `@>` and `@@>` stay as their own tokens. Single-char operators
-        // like `+`/`-`/`*` are tokens of their own elsewhere in the grammar.
+        // Restricted to 2+ chars; single-char operators like `+`/`-`/`*` are
+        // tokens of their own elsewhere in the grammar. The char class covers
+        // the full F# operator alphabet (op-char-first / op-char) so that
+        // names like `(!//!)`, `(.//.)`, `(-//-)`, `(@//@)` parse as operators
+        // rather than `//` being mis-tokenized as a line comment. Quotation
+        // delimiters `<@`/`@>`/`<@@`/`@@>` are explicit string tokens — they
+        // win over `symbolic_op` at the lexer.
         symbolic_op: _ => token(choice(
             "@",
-            /[!$%&*+\-\/<=>?^|][!$%&*+\/<=>?@^|~]+/,
+            /[!$%&*+\-.\/<=>?@^|~][!$%&*+\-.\/<=>?@^|~]+/,
         )),
 
         list_expression: $ => seq(

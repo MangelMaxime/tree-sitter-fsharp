@@ -1700,14 +1700,14 @@ let inline combined< ^T when ^T : (member Name: string) and ^T : (member Age: in
     failwith "srtp"
 
 // Operator constraint
-let inline add2< ^T when ^T : (static member op_Addition: ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
+let inline add4< ^T when ^T : (static member op_Addition: ^T * ^T -> ^T)> (a: ^T) (b: ^T) =
     failwith "srtp"
 
 // ── SRTP call-sites ──────────────────────────────────────────────────────────
 
 // Calling an SRTP-constrained member. The `(^T : (member …) arg)` form lets
 // inline functions actually invoke a statically resolved member.
-let inline getX< ^T when ^T : (member X: int)> (a: ^T) : int =
+let inline getXX< ^T when ^T : (member X: int)> (a: ^T) : int =
     (^T : (member X: int) a)
 
 // Static-member SRTP call: argument is a parenthesized tuple.
@@ -1825,3 +1825,70 @@ type Runner =
 
             let test = ()
             ()
+
+// See https://github.com/ionide/ionide-fsgrammar/issues/177
+// Check that custom operators definition that use any number of `/` are not captured as a comment
+let (!//!) x y = x + y
+let (%//%) x y = x + y
+let (&//&) x y = x + y
+let (+//+) x y = x + y
+let (-//-) x y = x + y
+let (.//.) x y = x + y
+let (<//<) x y = x + y
+let (=//=) x y = x + y
+let (>//>) x y = x + y
+let (?//?) x y = x + y
+let (@//@) x y = x + y
+let (^//^) x y = x + y
+let (|//|) x y = x + y
+let (<//>) x y = x + y
+
+let (!///!) x y = x + y
+let (%///%) x y = x + y
+let (&///&) x y = x + y
+let (+///+) x y = x + y
+let (-///-) x y = x + y
+let (.///.) x y = x + y
+let (<///<) x y = x + y
+let (=///=) x y = x + y
+let (>///>) x y = x + y
+let (?///?) x y = x + y
+let (@///@) x y = x + y
+let (^///^) x y = x + y
+let (|///|) x y = x + y
+let (<///>) x y = x + y
+// Works for any number of `/`
+let (</////////>) x y = x + y
+
+// // Check that custom operators usage that use `//` is not captured as a comment
+let add1 x y = x (!//!) y
+let add2 x y = x (%//%) y
+let add3_ x y = x (&//&) y
+let add4_ x y = x (+//+) y
+let add5 x y = x (-//-) y
+let add6 x y = x (.//.) y
+let add7 x y = x (<//<) y
+let add8 x y = x (=//=) y
+let add9 x y = x (>//>) y
+let add10 x y = x (?//?) y
+let add11 x y = x (@//@) y
+let add12 x y = x (^//^) y
+let add13 x y = x (|//|) y
+let add14 x y = x (<//>) y
+
+let add15 x y = x (!///!) y
+let add16 x y = x (%///%) y
+let add17 x y = x (&///&) y
+let add18 x y = x (+///+) y
+let add19 x y = x (-///-) y
+let add20 x y = x (.///.) y
+let add21 x y = x (<///<) y
+let add22 x y = x (=///=) y
+let add23 x y = x (>///>) y
+let add24 x y = x (?///?) y
+let add25 x y = x (@///@) y
+let add26 x y = x (^///^) y
+let add27 x y = x (|///|) y
+let add28 x y = x (<///>) y
+// Works for any number of `/`
+let add29 x y = x (</////////>) y
