@@ -72,8 +72,35 @@ function decoration($) {
 // declarations, containing `record_type_field`s). The shared structure
 // prevents drift; the two callers pass their own field rule and the
 // dynamic-prec used to break the field-vs-postfix-application conflict.
-function indentedOrInlineFieldList($, field, sepPrec) {
+function indentedOrInlineFieldList($, field, sepPrec, opts) {
+    const sameLineBraceForm = opts && opts.sameLineBraceForm;
     return choice(
+        // `{ F1\n   F2 }` — `{` on the same line as the first field,
+        // subsequent fields aligned to F1's column, `}` on the same line
+        // as the last field (or a new line). Scanner captures F1's column
+        // on _record_body_open, emits _virtual_semi at matching-col line
+        // boundaries between fields, and pops on _record_body_close.
+        //
+        // Listed first and at a higher prec.dynamic so the parser commits
+        // to this branch when RECORD_BODY_OPEN is available, rather than
+        // exploring the block branch in parallel and letting its
+        // BODY_INDENT push absorb the next-line field name into a
+        // postfix_type. Only enabled for `record_type_defn` — expression
+        // records keep their existing shapes (`base with field` and
+        // `{ new IFoo … }` make an early scanner-side commit fragile).
+        ...(sameLineBraceForm ? [seq(
+            $._record_body_open,
+            field,
+            repeat(prec.dynamic(sepPrec, seq(
+                choice(";", $._virtual_semi),
+                field,
+            ))),
+            optional(choice(";", $._virtual_semi)),
+            $._record_body_close,
+        )] : []),
+        // `{\n   F1\n   F2\n   }` — `{` on previous line, fields indented
+        // under it, `}` on a new line. Scanner emits _body_indent at the
+        // fields' column and _body_dedent at `}`.
         seq(
             $._body_indent,
             field,
@@ -84,6 +111,7 @@ function indentedOrInlineFieldList($, field, sepPrec) {
             optional(choice(";", $._virtual_semi)),
             $._body_dedent,
         ),
+        // `{ F1; F2; F3 }` — single line, explicit `;` separators only.
         seq(
             field,
             repeat(prec.dynamic(sepPrec, seq(";", field))),
@@ -136,6 +164,10 @@ export default grammar({
                            // separate lines (F# implicit sequence operator)
         $._let_body_open,  // delimits same-line let_binding bodies; offside
         $._let_body_close, //   col is the enclosing indent (approx. LET's col)
+        $._record_body_open,  // delimits `{ F1\n   F2 }` records — captures
+        $._record_body_close, //   the first field's column so _virtual_semi
+                              //   can fire at matching-col line boundaries
+                              //   between fields
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -708,7 +740,7 @@ export default grammar({
         // `unit -> (unit A)` via postfix_type, erroring on the trailing `:`).
         record_type_defn: $ => seq(
             "{",
-            indentedOrInlineFieldList($, $.record_type_field, TYPE_PREC.POSTFIX + 1),
+            indentedOrInlineFieldList($, $.record_type_field, TYPE_PREC.POSTFIX + 1, { sameLineBraceForm: true }),
             "}",
         ),
 
@@ -1059,6 +1091,12 @@ export default grammar({
         // call sites since they differ per rule.
         _let_signature: $ => seq(
             optional(choice("inline", "mutable")),
+            // `let private foo = ...` / `let public foo = ...` /
+            // `let internal foo = ...`. Without this, `private` would be
+            // parsed as the binding name and `foo` as a parameter — which
+            // already cascades into ERROR nodes downstream when the body
+            // is a tuple or the name pattern uses comma-separated bindings.
+            optional($.access_modifier),
             field('name', $._let_name_pattern),
             optional($.type_parameter_list),
             field('parameters', repeat($.parameter)),

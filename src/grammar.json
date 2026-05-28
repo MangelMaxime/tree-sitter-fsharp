@@ -2355,6 +2355,73 @@
               "members": [
                 {
                   "type": "SYMBOL",
+                  "name": "_record_body_open"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "record_type_field"
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "PREC_DYNAMIC",
+                    "value": 4,
+                    "content": {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "CHOICE",
+                          "members": [
+                            {
+                              "type": "STRING",
+                              "value": ";"
+                            },
+                            {
+                              "type": "SYMBOL",
+                              "name": "_virtual_semi"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "record_type_field"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": ";"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "_virtual_semi"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_record_body_close"
+                }
+              ]
+            },
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
                   "name": "_body_indent"
                 },
                 {
@@ -4079,6 +4146,18 @@
                   "value": "mutable"
                 }
               ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "access_modifier"
             },
             {
               "type": "BLANK"
@@ -9511,6 +9590,14 @@
     {
       "type": "SYMBOL",
       "name": "_let_body_close"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_record_body_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_record_body_close"
     }
   ],
   "inline": [],

@@ -6339,9 +6339,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
         {
           "type": "type_parameter_list",
           "named": true
@@ -6642,6 +6646,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
         {
           "type": "attribute",
           "named": true
@@ -6955,9 +6963,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
         {
           "type": "type_parameter_list",
           "named": true
@@ -7268,6 +7280,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
         {
           "type": "address_of_expression",
           "named": true

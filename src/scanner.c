@@ -49,6 +49,8 @@ typedef enum {
     VIRTUAL_SEMI,
     LET_BODY_OPEN,
     LET_BODY_CLOSE,
+    RECORD_BODY_OPEN,
+    RECORD_BODY_CLOSE,
 } TokenType;
 
 typedef struct {
@@ -77,6 +79,7 @@ typedef struct {
     IndentStack indents;        // pushed by BODY_INDENT / INDENT, popped by their DEDENT
     IndentStack inline_cols;    // pushed by INLINE_OPEN, popped by INLINE_CLOSE
     IndentStack let_body_cols;  // pushed by LET_BODY_OPEN, popped by LET_BODY_CLOSE
+    IndentStack record_cols;    // pushed by RECORD_BODY_OPEN, popped by RECORD_BODY_CLOSE
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -88,6 +91,7 @@ void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     free(s->indents.data);
     free(s->inline_cols.data);
     free(s->let_body_cols.data);
+    free(s->record_cols.data);
     free(s);
 }
 
@@ -118,6 +122,7 @@ unsigned tree_sitter_fsharp_external_scanner_serialize(void *payload, char *buf)
     n = serialize_stack(&s->indents, buf, n);
     n = serialize_stack(&s->inline_cols, buf, n);
     n = serialize_stack(&s->let_body_cols, buf, n);
+    n = serialize_stack(&s->record_cols, buf, n);
     return n;
 }
 
@@ -127,6 +132,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
     n = deserialize_stack(&s->indents, buf, length, n);
     n = deserialize_stack(&s->inline_cols, buf, length, n);
     n = deserialize_stack(&s->let_body_cols, buf, length, n);
+    n = deserialize_stack(&s->record_cols, buf, length, n);
 }
 
 // Skip to the next non-blank, non-comment line and return its indent column in
@@ -282,10 +288,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_virtual_semi = valid_symbols[VIRTUAL_SEMI];
     bool want_let_body_open = valid_symbols[LET_BODY_OPEN];
     bool want_let_body_close = valid_symbols[LET_BODY_CLOSE];
+    bool want_record_body_open = valid_symbols[RECORD_BODY_OPEN];
+    bool want_record_body_close = valid_symbols[RECORD_BODY_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
-        && !want_let_body_open && !want_let_body_close) return false;
+        && !want_let_body_open && !want_let_body_close
+        && !want_record_body_open && !want_record_body_close) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's first-token column onto `inline_cols`
@@ -331,6 +340,62 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // r == 0: body on next line — fall through; BODY_INDENT will handle it.
     }
 
+    // RECORD_BODY_OPEN: emitted right after `{` when the first field starts
+    // on the SAME line. Captures the field's column onto `record_cols` so
+    // VIRTUAL_SEMI (below) can fire at subsequent line boundaries that sit
+    // at that column — supporting the F# convention
+    //   { Firstname : string
+    //     Surname  : string }
+    // where `{` and the first field share a line, subsequent fields align
+    // under the first field's column, and `}` may sit on the last field's
+    // line. The block form `{\n  X\n  Y\n}` is left alone — _body_indent
+    // already handles it.
+    //
+    // Suppressed when the first same-line word is `new` — `{` then opens an
+    // `object_expression` (`{ new IFoo with … }`), not a record. Committing
+    // to a record body here would break that parse.
+    if (want_record_body_open) {
+        // Skip horizontal whitespace.
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+            lexer->advance(lexer, true);
+        }
+        // Fall through (don't return false) when this isn't a same-line
+        // first-field — let BODY_INDENT handle the block form.
+        bool same_line_field = (lexer->lookahead != '\n' &&
+                                lexer->lookahead != '\r' &&
+                                lexer->lookahead != 0 &&
+                                lexer->lookahead != '}');
+        if (same_line_field) {
+            uint32_t col = lexer->get_column(lexer);
+            // Peek `new` as a complete keyword — if so, this is an
+            // object_expression, not a record.
+            bool is_new_keyword = false;
+            if (lexer->lookahead == 'n') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == 'e') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == 'w') {
+                        lexer->advance(lexer, true);
+                        int32_t after = lexer->lookahead;
+                        bool word_continues =
+                            (after >= 'a' && after <= 'z') ||
+                            (after >= 'A' && after <= 'Z') ||
+                            (after >= '0' && after <= '9') ||
+                            after == '_' || after == '\'';
+                        if (!word_continues) is_new_keyword = true;
+                    }
+                }
+            }
+            if (!is_new_keyword) {
+                stack_push(&s->record_cols, col);
+                lexer->mark_end(lexer); // zero-width emit at the field col.
+                lexer->result_symbol = RECORD_BODY_OPEN;
+                return true;
+            }
+        }
+        // Fall through.
+    }
+
     // From here we're handling BODY_INDENT / BODY_DEDENT / INDENT / DEDENT /
     // INLINE_CLOSE — these normally only fire at a line boundary, with one
     // exception: BODY_DEDENT also fires inline when the next non-whitespace
@@ -348,6 +413,26 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->advance(lexer, true);
         }
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            // Mid-line `}` (or `|}` for anonymous records) and a record
+            // body is open — RECORD_BODY_CLOSE pops record_cols and lets
+            // the grammar consume the closing delimiter next. Goes before
+            // BODY_DEDENT so a record's inline close beats a pending
+            // BODY_DEDENT (the close is the more specific shape).
+            if (want_record_body_close && s->record_cols.size > 0) {
+                if (lexer->lookahead == '}') {
+                    stack_pop(&s->record_cols);
+                    lexer->result_symbol = RECORD_BODY_CLOSE;
+                    return true;
+                }
+                if (lexer->lookahead == '|') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == '}') {
+                        stack_pop(&s->record_cols);
+                        lexer->result_symbol = RECORD_BODY_CLOSE;
+                        return true;
+                    }
+                }
+            }
             // Mid-line non-whitespace ahead. If it's a recognised closing
             // delimiter and the parser is expecting BODY_DEDENT (i.e. we are
             // inside an indented body that needs to close before the
@@ -399,6 +484,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->result_symbol = INLINE_CLOSE;
             return true;
         }
+        if (want_record_body_close && s->record_cols.size > 0) {
+            stack_pop(&s->record_cols);
+            lexer->result_symbol = RECORD_BODY_CLOSE;
+            return true;
+        }
         if (s->indents.size > 0) {
             if (want_dedent) {
                 stack_pop(&s->indents);
@@ -426,6 +516,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             stack_pop(&s->let_body_cols);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
+        }
+    }
+
+    // RECORD_BODY_CLOSE: next-line `}` or `|}` (possibly at lower indent)
+    // closes the inline record body. The mid-line case is handled above.
+    if (want_record_body_close && s->record_cols.size > 0) {
+        if (lexer->lookahead == '}') {
+            stack_pop(&s->record_cols);
+            lexer->result_symbol = RECORD_BODY_CLOSE;
+            return true;
+        }
+        if (lexer->lookahead == '|') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '}') {
+                stack_pop(&s->record_cols);
+                lexer->result_symbol = RECORD_BODY_CLOSE;
+                return true;
+            }
         }
     }
 
@@ -510,11 +618,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // for/while/lambda etc.). Top-level _token siblings have an empty stack
     // so this naturally skips them.
     //
+    // Also fires at the top of `record_cols` when the next line matches the
+    // captured first-field column of an inline `{ F1\n   F2 }` record — that
+    // column isn't on the indents stack but is the field separator there.
+    //
     // We also block emission when the next char can't start a new expression
     // (`|`, `)`, `]`, `}`, or continuation keywords like `else`/`elif`/`with`).
     // Without those guards the parser commits to a sequence path that fails
     // once it reaches the closer.
-    if (want_virtual_semi && col == current && s->indents.size > 0) {
+    bool semi_col_match = (s->indents.size > 0 && col == current) ||
+                          (s->record_cols.size > 0 && col == stack_top(&s->record_cols));
+    if (want_virtual_semi && semi_col_match) {
         int32_t c = lexer->lookahead;
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
         // Punctuation/sigil blockers — non-identifier sequences that ALSO start

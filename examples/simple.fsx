@@ -1892,3 +1892,12 @@ let add27 x y = x (|///|) y
 let add28 x y = x (<///>) y
 // Works for any number of `/`
 let add29 x y = x (</////////>) y
+
+type NameRecord =
+    { Firstname : string
+      Surname : string }
+
+type NestedRecord =
+    { Nested : NestedRecord
+      PropB : string }
+
