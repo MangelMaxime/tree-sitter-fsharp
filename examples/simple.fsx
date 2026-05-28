@@ -1895,7 +1895,8 @@ let add29 x y = x (</////////>) y
 
 type NameRecord =
     { Firstname : string
-      Surname : string }
+      Surname : string
+      Notify : unit -> unit }
 
 type NestedRecord =
     { Nested : NestedRecord
@@ -1907,17 +1908,8 @@ type private FancyClass2 (?thing:int) =
 let testRecordColoration =
     { Firstname = "string" // Comments should work here
       Surname = ""
+      Notify = fun _ -> ()
     }
 
-let testRecordColoration =
-    { Firstname = "string" // Comments should work here
-      Lastname = "string"
-      Age = 10
-      Notify = fun _ -> ()
-      Notify2 = fun s -> ()
-      Notify3 = fun _ -> ()
-      Notify4 = fun _ -> ()
-      Callback = fun (a, (*b) comments should works here too*) b) -> unbox null
-      TypeWithSpace = null
-      Nested = fun func -> unbox null
-      Mutable = null }
+let test () =
+    Map.empty<string, _>

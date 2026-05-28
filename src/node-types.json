@@ -227,6 +227,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -355,6 +359,10 @@
           },
           {
             "type": "triple_quoted_string",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -579,6 +587,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -795,6 +807,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -1092,6 +1108,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -1316,6 +1336,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -1536,6 +1560,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -1798,6 +1826,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -2056,6 +2088,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -2279,6 +2315,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -2495,6 +2535,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -2725,6 +2769,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -3054,6 +3102,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -3346,6 +3398,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -3710,6 +3766,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -3934,6 +3994,10 @@
         },
         {
           "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -4232,6 +4296,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -4474,6 +4542,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -4685,6 +4757,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -4905,6 +4981,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -5145,6 +5225,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -5558,6 +5642,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -5777,6 +5865,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -5993,6 +6085,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -6223,6 +6319,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -6531,6 +6631,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -6858,6 +6962,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -7176,6 +7284,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -7465,6 +7577,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_constraint",
           "named": true
         },
@@ -7689,6 +7805,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -7988,6 +8108,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -8208,6 +8332,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -8507,6 +8635,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -8775,6 +8907,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -9093,6 +9229,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_decl",
           "named": true
         },
@@ -9289,6 +9429,10 @@
         },
         {
           "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -9519,6 +9663,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -9794,6 +9942,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -10113,6 +10265,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -10436,6 +10592,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -10748,6 +10908,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_decl",
           "named": true
         },
@@ -11028,6 +11192,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -11356,6 +11524,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_decl",
           "named": true
         },
@@ -11610,6 +11782,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -11850,6 +12026,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -12067,6 +12247,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -12294,6 +12478,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -12511,6 +12699,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -12745,6 +12937,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -13083,6 +13279,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -13211,6 +13411,10 @@
           },
           {
             "type": "triple_quoted_string",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -13423,6 +13627,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -13728,6 +13936,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -13965,6 +14177,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -14185,6 +14401,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -14452,6 +14672,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_decl",
           "named": true
         },
@@ -14684,6 +14908,10 @@
           },
           {
             "type": "tuple_expression",
+            "named": true
+          },
+          {
+            "type": "type_application_expression",
             "named": true
           },
           {
@@ -14952,6 +15180,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -15263,6 +15495,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -15479,6 +15715,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -15717,6 +15957,25 @@
         },
         {
           "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_application_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "type_expression",
           "named": true
         }
       ]
@@ -16294,6 +16553,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         },
@@ -16514,6 +16777,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -16759,6 +17026,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -16975,6 +17246,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -17372,6 +17647,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -17602,6 +17881,10 @@
           "named": true
         },
         {
+          "type": "type_application_expression",
+          "named": true
+        },
+        {
           "type": "type_keyword_expression",
           "named": true
         },
@@ -17829,6 +18112,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {
@@ -18082,6 +18369,10 @@
             "named": true
           },
           {
+            "type": "type_application_expression",
+            "named": true
+          },
+          {
             "type": "type_keyword_expression",
             "named": true
           },
@@ -18294,6 +18585,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "type_application_expression",
           "named": true
         },
         {

@@ -261,6 +261,20 @@
 (measure_power_type (long_identifier (identifier) @type))
 (measure_expression (long_identifier (identifier) @type))
 (type_check_pattern (long_identifier (identifier) @type))
+
+; In an explicit type-argument application (`Map.empty<string, _>`),
+; the `_` is the inference placeholder, not a real type. Re-capture
+; with a non-themed name so the @type captures above lose to this
+; later match (Helix resolution: last capture in source order) and
+; the wildcard renders with the editor's default text color.
+; Limited to this construct — `_` in other type positions (e.g.
+; `typedefof<_ list>`) keeps the existing @type styling.
+((type_application_expression
+   (type_expression (long_identifier (identifier) @wildcard)))
+  (#eq? @wildcard "_"))
+((type_application_expression
+   (type_expression (long_identifier) @wildcard))
+  (#eq? @wildcard "_"))
 (attribute_target name: (long_identifier (identifier) @attribute))
 (namespace_decl name: (long_identifier (identifier) @namespace))
 (module_decl name: (long_identifier (identifier) @namespace))

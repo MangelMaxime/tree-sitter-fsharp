@@ -803,6 +803,11 @@ export default grammar({
             $.typed_expression,
             $.application_expression,
             $.binary_expression,
+            // `Map.empty<string, _>` — explicit type-argument application
+            // on a value/function. Same lexical shape as binary `<` `>`
+            // comparisons, so static prec(PAREN_EXPR) biases this form
+            // when the `<…>` contains type-expressions with a comma.
+            $.type_application_expression,
             $.unary_expression,
             $.list_expression,
             $.array_expression,
@@ -883,6 +888,26 @@ export default grammar({
             ">",
         ),
 
+        // `Map.empty<string, int>`  `f<int>` — explicit type-argument
+        // application on a value/function. Same lexical shape as a `<` /
+        // `>` comparison chain, so we bias via static `prec` (high) plus a
+        // declared conflict to commit to this form when the `<…>` actually
+        // contains type-expressions.
+        // Requires at least one comma inside the `<…>` so the grammar can
+        // tell this apart from `expr < x > y` (binary comparisons). The
+        // single-arg form `f<T>` is ambiguous with two consecutive `<`/`>`
+        // comparisons and isn't supported here — use `f<T, _>` or write
+        // the type elsewhere.
+        type_application_expression: $ => prec.dynamic(100, prec(PREC.PAREN_EXPR, seq(
+            $.long_identifier,
+            "<",
+            $.type_expression,
+            ",",
+            $.type_expression,
+            repeat(seq(",", $.type_expression)),
+            ">",
+        ))),
+
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
         // (expr : type)  — inline type annotation, always parenthesised.
@@ -918,6 +943,8 @@ export default grammar({
             $.unit,
             $.null_literal,
             $.long_identifier,
+            // `Map.empty<string, int>` — generic type-argument application.
+            $.type_application_expression,
             // `(+)`, `(>>=)`, `(!//!)` — operator as a first-class function value.
             // Used as application heads (`(+) 1 2`) or arguments (`x (!//!) y`).
             $.operator_name,
