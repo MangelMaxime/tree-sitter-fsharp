@@ -561,8 +561,11 @@ export default grammar({
             )),
         ),
 
-        // get() = expr  or  set(v) = expr  (inside a property definition)
+        // get() = expr  or  set(v) = expr  (inside a property definition).
+        // `inline` may precede the accessor keyword
+        // (`with inline get () = …` / `and inline set v = …`).
         property_accessor: $ => seq(
+            optional("inline"),
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
             "=",
