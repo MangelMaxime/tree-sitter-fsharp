@@ -477,7 +477,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // inside an indented body that needs to close before the
             // delimiter), pop one indent level and emit BODY_DEDENT.
             if (want_body_dedent && s->indents.size > 0) {
-                if (lexer->lookahead == '}') {
+                if (lexer->lookahead == '}' || lexer->lookahead == ')') {
                     stack_pop(&s->indents);
                     lexer->result_symbol = BODY_DEDENT;
                     return true;

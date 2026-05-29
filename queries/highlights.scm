@@ -188,6 +188,12 @@
   (parameter
     (identifier) @variable.parameter)*)
 
+; `tuple_param` is the parameter shape used by `primary_constructor` and
+; `secondary_constructor` (e.g. `type C(x: int, y: int)` and `new (b)`).
+; Highlight the identifier as a parameter — without this it falls through
+; to plain text.
+(tuple_param (identifier) @variable.parameter)
+
 ; Capitalized non-last identifier in a long_identifier — likely a module or
 ; type segment in a dotted chain (e.g., `Async.FromContinuations`, where
 ; `Async` is the module). `#match?` ensures only PascalCase identifiers
@@ -355,9 +361,17 @@
 
 (record_field
   name: (long_identifier) @variable.other.member)
+; Capture the inner identifier too — Helix's resolution prefers the
+; deepest capture, and without this the @variable.other.member tint on
+; the wrapping long_identifier can be lost behind broader @type / etc.
+; captures matching the same identifier node.
+(record_field
+  name: (long_identifier (identifier) @variable.other.member))
 
 (record_field_pattern
   name: (long_identifier) @variable.other.member)
+(record_field_pattern
+  name: (long_identifier (identifier) @variable.other.member))
 
 ; Member access on non-identifier expressions: arr.[0].Length, (f x).Name
 ; After the long_identifier/dot_expression unification, dot_expression only
