@@ -1929,3 +1929,10 @@ type MyType<'``Generic type with spaces``, 'T>() =
     [<DefaultValue>] static val mutable private myInt2 : int
     [<DefaultValue>] val mutable myString : '``Generic type with spaces``
     [<DefaultValue>] val mutable myString2 : 'T
+
+let parensFoo2 = ( )
+let parensFoo3 = (1)
+
+type ParensBaz1() = class end
+type ParensBaz2( ) = class end
+type ParensBaz3(x) = class end

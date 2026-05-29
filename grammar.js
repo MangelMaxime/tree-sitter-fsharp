@@ -2292,7 +2292,11 @@ export default grammar({
 
         bool_literal: _ => choice("true", "false"),
 
-        unit: _ => token(seq("(", ")")),
+        // `()` or `( )` (any amount of horizontal whitespace) — F# treats
+        // both as the unit literal. token() with a regex so whitespace
+        // INSIDE the literal is part of the token rather than being
+        // absorbed as `extras`.
+        unit: _ => token(/\([ \t]*\)/),
 
         null_literal: _ => token("null"),
 

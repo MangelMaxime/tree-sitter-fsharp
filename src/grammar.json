@@ -9578,17 +9578,8 @@
     "unit": {
       "type": "TOKEN",
       "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "STRING",
-            "value": "("
-          },
-          {
-            "type": "STRING",
-            "value": ")"
-          }
-        ]
+        "type": "PATTERN",
+        "value": "\\([ \\t]*\\)"
       }
     },
     "null_literal": {
