@@ -8,6 +8,8 @@ for use inside the [Helix editor](https://helix-editor.com/).
 >
 > If you prefer to use the grammar from this repo for neovim, PRs are welcome
 
+![Showcase of the grammar in action](./assets/showcase.png)
+
 ## Installation
 
 There are two paths depending on whether you want to **try the grammar**
