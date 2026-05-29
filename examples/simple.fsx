@@ -1936,16 +1936,3 @@ let parensFoo3 = (1)
 type ParensBaz1() = class end
 type ParensBaz2( ) = class end
 type ParensBaz3(x) = class end
-
-
-type FancyClass() as xxx =
-
-    member __.ReadAndWriteWithSignature
-        with get (count : int) : string = string count
-        and set (value : int) : unit = failwith ""
-
-type Program<'arg, 'model, 'msg, 'view> =
-    { Arg : 'arg
-      Model : 'model
-      Msg : 'msg
-      View : 'view }
