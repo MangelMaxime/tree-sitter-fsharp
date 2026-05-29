@@ -605,10 +605,13 @@ export default grammar({
         // get() = expr  or  set(v) = expr  (inside a property definition).
         // `inline` may precede the accessor keyword
         // (`with inline get () = …` / `and inline set v = …`).
+        // A return-type annotation is allowed after the parameters
+        // (`with get (count : int) : string = …`).
         property_accessor: $ => seq(
             optional("inline"),
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
+            optional($._return_type_annot),
             "=",
             field('body', $._expression),
         ),
