@@ -48,3 +48,6 @@ zig-out/
 *.jar
 
 .sisyphus/
+
+# Idea
+.idea/
