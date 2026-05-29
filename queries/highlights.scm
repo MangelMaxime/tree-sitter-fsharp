@@ -188,10 +188,10 @@
   (parameter
     (identifier) @variable.parameter)*)
 
-; `tuple_param` is the parameter shape used by `primary_constructor` and
-; `secondary_constructor` (e.g. `type C(x: int, y: int)` and `new (b)`).
-; Highlight the identifier as a parameter — without this it falls through
-; to plain text.
+; `tuple_param` is the per-element parameter shape inside `primary_constructor`
+; and (via `tuple_params`) `secondary_constructor` — e.g. `type C(x: int, y: int)`
+; and `new (b)`. Highlight the identifier as a parameter — without this it
+; falls through to plain text.
 (tuple_param (identifier) @variable.parameter)
 
 ; Capitalized non-last identifier in a long_identifier — likely a module or
@@ -361,15 +361,17 @@
 
 (record_field
   name: (long_identifier) @variable.other.member)
-; Capture the inner identifier too — Helix's resolution prefers the
-; deepest capture, and without this the @variable.other.member tint on
-; the wrapping long_identifier can be lost behind broader @type / etc.
-; captures matching the same identifier node.
+; Capture the inner identifier too. This rule comes later in source order
+; than the broad @type captures around line 258, so on Helix's last-capture
+; resolution the @variable.other.member tint wins for record field names
+; instead of falling through to @type via the wrapping long_identifier.
 (record_field
   name: (long_identifier (identifier) @variable.other.member))
 
 (record_field_pattern
   name: (long_identifier) @variable.other.member)
+; Same inner-identifier override as `record_field` above — last capture in
+; source order wins.
 (record_field_pattern
   name: (long_identifier (identifier) @variable.other.member))
 
@@ -403,9 +405,11 @@
 (computation_expression
   builder: (long_identifier) @keyword)
 
-; Query CE custom operators (select/where/groupBy/join/...). The leading keyword
-; is captured by `op:` on the simple query_operator; compound forms use literal
-; keywords inside the rule, so we color them by the literal text.
+; Query CE custom operators (select/where/groupBy/join/leftOuterJoin/…).
+; The leading keyword on simple query_operators is captured via `op:`;
+; compound forms list the literal keywords inside the rule. Tagged
+; `@keyword.control` because they direct query progression — same
+; semantic role as `for`/`match`/`if` above.
 (query_operator op: _ @keyword.control)
 (query_join_operator
   ["join" "in" "on"] @keyword.control)
