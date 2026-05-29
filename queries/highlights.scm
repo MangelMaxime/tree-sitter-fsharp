@@ -304,14 +304,16 @@
 ; themes pick a slightly off-hue colour for built-in receivers).
 (member_self_ident) @variable.builtin
 
-; `_` as the member-self identifier (`member _.Foo = …`) is just a
-; placeholder — strip the @variable.builtin styling so it renders
-; with the editor's default text color. Re-capture with a non-themed
-; name so it wins on Helix's last-capture-in-source-order resolution.
+; Underscore-only member-self identifiers (`member _.Foo = …`,
+; `member __.Foo = …`, etc.) are placeholders — strip the
+; @variable.builtin styling so they render with the editor's default
+; text color. `#match?` covers `_`, `__`, `___`, … in one rule.
+; Re-capture with a non-themed name so it wins on Helix's
+; last-capture-in-source-order resolution.
 ((member_self_ident (identifier) @wildcard)
-  (#eq? @wildcard "_"))
+  (#match? @wildcard "^_+$"))
 ((member_self_ident) @wildcard
-  (#eq? @wildcard "_"))
+  (#match? @wildcard "^_+$"))
 
 (member_defn
   name: (identifier) @function)
