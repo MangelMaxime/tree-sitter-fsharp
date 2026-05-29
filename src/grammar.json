@@ -2060,6 +2060,38 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "attribute"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "xml_doc_comment"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "block_doc_comment"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "static"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "STRING",
           "value": "val"
         },
@@ -2069,6 +2101,18 @@
             {
               "type": "STRING",
               "value": "mutable"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "access_modifier"
             },
             {
               "type": "BLANK"
@@ -7890,8 +7934,17 @@
             ]
           },
           {
-            "type": "PATTERN",
-            "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+              },
+              {
+                "type": "PATTERN",
+                "value": "``[^`\\n\\r\\t]+``"
+              }
+            ]
           }
         ]
       }
@@ -10022,7 +10075,8 @@
       "let_binding",
       "member_defn",
       "abstract_member_defn",
-      "secondary_constructor"
+      "secondary_constructor",
+      "val_field"
     ],
     [
       "type_application_expression",

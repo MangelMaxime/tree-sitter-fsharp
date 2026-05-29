@@ -1922,3 +1922,10 @@ type FancyClass(thing:int, var2 : string -> string, ``ddzdz``: string list, extr
     static member (<|>) (v1 : int, v2 : int) = v2 < v2
 
     member inline _.Q () = 3
+
+type MyType<'``Generic type with spaces``, 'T>() =
+    let mutable myInt1 = 10
+    static let mutable myInt3 = 3
+    [<DefaultValue>] static val mutable private myInt2 : int
+    [<DefaultValue>] val mutable myString : '``Generic type with spaces``
+    [<DefaultValue>] val mutable myString2 : 'T

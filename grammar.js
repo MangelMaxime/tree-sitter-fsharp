@@ -203,7 +203,7 @@ export default grammar({
         // Same situation inside a class/type body — `[<…>]` or `///` could be
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
-        [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor],
+        [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor, $.val_field],
         // `expr <` may begin a `type_application_expression`
         // (`Map.empty<string, int>`) or a `<` comparison in
         // `binary_expression`. GLR explores both; type_application only
@@ -680,10 +680,16 @@ export default grammar({
         // static do runs once at type initialization time
         do_stmt: $ => seq(optional("static"), "do", $._expression),
 
-        // val mutable field: int  (explicit field in class)
+        // Explicit field in a class:
+        //   val mutable field: int
+        //   [<DefaultValue>] val mutable field : int
+        //   [<DefaultValue>] static val mutable private field : int
         val_field: $ => seq(
+            decoration($),
+            optional("static"),
             "val",
             optional("mutable"),
+            optional($.access_modifier),
             field('name', $.identifier),
             ":",
             $.type_expression,
@@ -1939,10 +1945,15 @@ export default grammar({
         // (int -> string)
         parenthesized_type: $ => seq("(", $.type_expression, ")"),
 
-        // 'a  ^T
+        // 'a  ^T  '``Generic type with spaces``
+        // Backtick-quoted identifier form is also accepted so that type
+        // parameters with spaces or other non-word chars parse.
         type_parameter: _ => token(seq(
             choice("'", "^"),
-            /[a-zA-Z_][a-zA-Z0-9_']*/,
+            choice(
+                /[a-zA-Z_][a-zA-Z0-9_']*/,
+                /``[^`\n\r\t]+``/,
+            ),
         )),
 
         // <'T, 'U when 'T :> IFoo and 'U : comparison>

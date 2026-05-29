@@ -291,11 +291,11 @@ type Holder() =
     (identifier)
     (primary_constructor
       (unit))
-    (attribute
-      (attribute_target
-        (long_identifier
-          (identifier))))
     (val_field
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
       (identifier)
       (type_expression
         (long_identifier
@@ -315,11 +315,11 @@ type Holder() =
     (identifier)
     (primary_constructor
       (unit))
-    (attribute
-      (attribute_target
-        (long_identifier
-          (identifier))))
     (val_field
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
       (identifier)
       (type_expression
         (long_identifier
