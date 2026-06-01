@@ -264,16 +264,16 @@ type T(x: int) =
         (unit))
       body: (use_expression
         name: (identifier)
-        (application_expression
+        (sequence_expression
           (application_expression
-            (application_expression
-              (long_identifier
-                (identifier))
-              (unit))
+            (long_identifier
+              (identifier))
+            (unit))
+          (application_expression
             (long_identifier
               (identifier)
-              (identifier)))
-          (unit))))))
+              (identifier))
+            (unit)))))))
 
 ================================================================================
 Regression: inline let inside member body
@@ -311,4 +311,42 @@ type Foo() =
               (identifier))
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Regression: statement before if/then/else in member body
+================================================================================
+
+type Foo() =
+    member this.Run() =
+        Npm.install ()
+
+        if cond then
+            1
+        else
+            0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (unit))
+      body: (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (unit))
+        (if_expression
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (int_literal))))))
 

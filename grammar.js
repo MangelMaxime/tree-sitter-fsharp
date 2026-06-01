@@ -550,7 +550,16 @@ export default grammar({
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
             "=",
-            optional(field('body', $._expression)),
+            optional(choice(
+                // Multi-line body: `_body_indent` pushes the body column so
+                // `_virtual_semi` can separate sibling statements into a
+                // `sequence_expression`. Without this, a member body like
+                // `Foo.bar ()\nif … then … else …` glues both statements
+                // into one chained application_expression and the
+                // `if`/`then`/`else` keywords get mis-lexed as identifiers.
+                seq($._body_indent, field('body', $._expression), $._body_dedent),
+                field('body', $._expression),
+            )),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
