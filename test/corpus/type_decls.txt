@@ -173,6 +173,32 @@ type Shape =
                 (identifier)))))))))
 
 ================================================================================
+Union with members (augmentation without with)
+================================================================================
+
+type Project =
+    | A
+    | B
+    static member ofString s = A
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (union_case
+        name: (identifier)))
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      body: (long_identifier
+        (identifier)))))
+
+================================================================================
 Mutual type recursion union
 ================================================================================
 

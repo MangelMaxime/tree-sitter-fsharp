@@ -398,7 +398,14 @@ export default grammar({
             seq(
                 $._body_indent,
                 choice(
-                    $._type_decl_body,
+                    // Record / union / enum / etc. body, OPTIONALLY followed
+                    // by augmentation members in the same indented block
+                    // (no `with` keyword). Valid F#:
+                    //   type Project =
+                    //       | A
+                    //       | B
+                    //       static member ofString s = …
+                    seq($._type_decl_body, repeat($._class_body_member)),
                     repeat1($._class_body_member),
                 ),
                 $._body_dedent,
