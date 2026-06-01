@@ -44,6 +44,28 @@ curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/mai
 
 The script above copies the queries into `~/.config/helix/runtime/queries/fsharp/` or `$HELIX_RUNTIME/queries/fsharp/` if you have a custom runtime directory.
 
+## Uninstall
+
+The installation touches two places: the compiled grammar (managed by
+Helix) and the query files (copied by the script above). Both live under
+Helix's runtime directory — `~/.config/helix/runtime` by default, or
+`$HELIX_RUNTIME` if you set a custom one. Remove both:
+
+```bash
+RUNTIME="${HELIX_RUNTIME:-$HOME/.config/helix/runtime}"
+
+# 1. Remove the queries installed by the script
+rm -rf "$RUNTIME/queries/fsharp"
+
+# 2. Remove the compiled grammar + its cloned source
+rm -f  "$RUNTIME/grammars/fsharp.so"
+rm -rf "$RUNTIME/grammars/sources/fsharp"
+```
+
+Then drop the `[[grammar]]` and `[[language]]` `fsharp` entries you added to `~/.config/helix/languages.toml`.
+
+After that, Helix falls back to its built-in F# grammar (if any) on the next launch.
+
 ## Development workflow
 
 1. Edit `grammar.js` and/or `src/scanner.c`.
