@@ -1682,7 +1682,7 @@ export default grammar({
             repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),
             "->",
-            $._expression,
+            field('body', $._indented_or_inline_body),
         ),
 
         pattern: $ => choice(

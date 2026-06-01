@@ -131,7 +131,7 @@ match p with
               (identifier_pattern
                 (long_identifier
                   (identifier)))))))
-      (long_identifier
+      body: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -163,11 +163,11 @@ match p with
             value: (pattern
               (literal_pattern
                 (int_literal))))))
-      (bool_literal))
+      body: (bool_literal))
     (match_arm
       (pattern
         (wildcard_pattern))
-      (bool_literal))))
+      body: (bool_literal))))
 
 ================================================================================
 Record pattern with wildcard value
@@ -190,7 +190,7 @@ match p with
               (identifier))
             value: (pattern
               (wildcard_pattern)))))
-      (int_literal))))
+      body: (int_literal))))
 
 ================================================================================
 Record pattern nested
@@ -225,7 +225,7 @@ match r with
                   value: (pattern
                     (literal_pattern
                       (int_literal)))))))))
-      (bool_literal))))
+      body: (bool_literal))))
 
 ================================================================================
 Named DU field pattern single field
@@ -251,7 +251,7 @@ match s with
               (identifier_pattern
                 (long_identifier
                   (identifier)))))))
-      (long_identifier
+      body: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -284,7 +284,7 @@ match s with
               (identifier_pattern
                 (long_identifier
                   (identifier)))))))
-      (binary_expression
+      body: (binary_expression
         (long_identifier
           (identifier))
         (long_identifier
@@ -312,7 +312,7 @@ match s with
             name: (identifier)
             value: (pattern
               (wildcard_pattern)))))
-      (int_literal))))
+      body: (int_literal))))
 
 ================================================================================
 Positional DU pattern still works
@@ -579,4 +579,3 @@ match t with
       (pattern
         (wildcard_pattern))
       (int_literal))))
-

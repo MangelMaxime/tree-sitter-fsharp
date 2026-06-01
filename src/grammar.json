@@ -6740,8 +6740,12 @@
           "value": "->"
         },
         {
-          "type": "SYMBOL",
-          "name": "_expression"
+          "type": "FIELD",
+          "name": "body",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_indented_or_inline_body"
+          }
         }
       ]
     },

@@ -275,7 +275,7 @@ let f x =
         (pattern
           (literal_pattern
             (int_literal)))
-        (let_expression
+        body: (let_expression
           binding: (let_decl_indented
             name: (identifier)
             body: (int_literal))
@@ -291,7 +291,7 @@ let f x =
       (match_arm
         (pattern
           (wildcard_pattern))
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Regression: inline let inside if-then-else branch
@@ -368,7 +368,7 @@ let f x =
       (match_arm
         (pattern
           (wildcard_pattern))
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Regression: try-with single arm without leading pipe
@@ -391,7 +391,7 @@ let f x =
       (match_arm
         (pattern
           (wildcard_pattern))
-        (int_literal)))))
+        body: (int_literal)))))
 
 ================================================================================
 Regression: match expression first arm without leading pipe
@@ -416,8 +416,8 @@ let f x =
         (pattern
           (literal_pattern
             (int_literal)))
-        (string_literal))
+        body: (string_literal))
       (match_arm
         (pattern
           (wildcard_pattern))
-        (string_literal)))))
+        body: (string_literal)))))
