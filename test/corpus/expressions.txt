@@ -17,6 +17,48 @@ match x with
       (int_literal))))
 
 ================================================================================
+Match with inline arm bodies does not absorb trailing statement
+================================================================================
+
+let f x =
+    match x with
+    | A -> doA ()
+    | B -> doB ()
+
+    0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (sequence_expression
+      (match_expression
+        (long_identifier
+          (identifier))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          body: (application_expression
+            (long_identifier
+              (identifier))
+            (unit)))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          body: (application_expression
+            (long_identifier
+              (identifier))
+            (unit))))
+      (int_literal))))
+
+================================================================================
 Match with own-line arm bodies does not absorb trailing statement
 ================================================================================
 

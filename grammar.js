@@ -174,6 +174,14 @@ export default grammar({
                               //   bodies (e.g. inside a lambda) can't absorb
                               //   the next field — they reduce when they
                               //   can't shift this token.
+        $._match_body_open,   // delimits same-line match-arm bodies
+                              //   (`| pat -> body`). Offside col is the
+                              //   enclosing indent (≈ the `match` column);
+                              //   _match_body_close fires when the next line
+                              //   returns to or below it, so an inline arm
+                              //   body stops absorbing a trailing dedented
+                              //   statement (e.g. a final `0`).
+        $._match_body_close,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1682,7 +1690,23 @@ export default grammar({
             repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),
             "->",
-            field('body', $._indented_or_inline_body),
+            field('body', $._match_arm_body),
+        ),
+
+        // Body of a match/try/function arm. Three shapes:
+        //   1. Own line, indented: `_body_indent` pushes the body column so
+        //      `_virtual_semi` sequences multi-statement bodies and a
+        //      dedented trailing statement closes the arm.
+        //   2. Inline (`| pat -> body`): `_match_body_open` captures the
+        //      enclosing indent (≈ the `match` column) and `_match_body_close`
+        //      fires when the next line returns to or below it — keeps a
+        //      trailing dedented statement (e.g. a final `0` at the `match`
+        //      column) out of the last arm's body.
+        //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
+        _match_arm_body: $ => choice(
+            seq($._body_indent, $._expression, $._body_dedent),
+            seq($._match_body_open, $._expression, $._match_body_close),
+            $._expression,
         ),
 
         pattern: $ => choice(

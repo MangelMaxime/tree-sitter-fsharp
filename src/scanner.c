@@ -52,6 +52,8 @@ typedef enum {
     RECORD_BODY_OPEN,
     RECORD_BODY_CLOSE,
     RECORD_FIELD_SEMI,
+    MATCH_BODY_OPEN,
+    MATCH_BODY_CLOSE,
 } TokenType;
 
 typedef struct {
@@ -81,6 +83,7 @@ typedef struct {
     IndentStack inline_cols;    // pushed by INLINE_OPEN, popped by INLINE_CLOSE
     IndentStack let_body_cols;  // pushed by LET_BODY_OPEN, popped by LET_BODY_CLOSE
     IndentStack record_cols;    // pushed by RECORD_BODY_OPEN, popped by RECORD_BODY_CLOSE
+    IndentStack match_body_cols;// pushed by MATCH_BODY_OPEN, popped by MATCH_BODY_CLOSE
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -93,6 +96,7 @@ void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     free(s->inline_cols.data);
     free(s->let_body_cols.data);
     free(s->record_cols.data);
+    free(s->match_body_cols.data);
     free(s);
 }
 
@@ -124,6 +128,7 @@ unsigned tree_sitter_fsharp_external_scanner_serialize(void *payload, char *buf)
     n = serialize_stack(&s->inline_cols, buf, n);
     n = serialize_stack(&s->let_body_cols, buf, n);
     n = serialize_stack(&s->record_cols, buf, n);
+    n = serialize_stack(&s->match_body_cols, buf, n);
     return n;
 }
 
@@ -134,6 +139,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
     n = deserialize_stack(&s->inline_cols, buf, length, n);
     n = deserialize_stack(&s->let_body_cols, buf, length, n);
     n = deserialize_stack(&s->record_cols, buf, length, n);
+    n = deserialize_stack(&s->match_body_cols, buf, length, n);
 }
 
 // Skip to the next non-blank, non-comment line and return its indent column in
@@ -292,12 +298,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_record_body_open = valid_symbols[RECORD_BODY_OPEN];
     bool want_record_body_close = valid_symbols[RECORD_BODY_CLOSE];
     bool want_record_field_semi = valid_symbols[RECORD_FIELD_SEMI];
+    bool want_match_body_open = valid_symbols[MATCH_BODY_OPEN];
+    bool want_match_body_close = valid_symbols[MATCH_BODY_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
         && !want_let_body_open && !want_let_body_close
         && !want_record_body_open && !want_record_body_close
-        && !want_record_field_semi) return false;
+        && !want_record_field_semi
+        && !want_match_body_open && !want_match_body_close) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's first-token column onto `inline_cols`
@@ -341,6 +350,32 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
         if (r == -1) return false; // `in` found
         // r == 0: body on next line — fall through; BODY_INDENT will handle it.
+    }
+
+    // MATCH_BODY_OPEN: emitted right after `->` when a match/try/function arm
+    // body starts on the SAME line. Pushes the ENCLOSING indent column (≈ the
+    // `match` keyword's column) onto `match_body_cols`; MATCH_BODY_CLOSE fires
+    // when a later line returns to or below it, so an inline arm body
+    //   | pat -> expr
+    //   nextStatement        (at the match column)
+    // stops absorbing `nextStatement` into the arm's sequence_expression.
+    //
+    // No `in` suppression (unlike LET_BODY_OPEN): an arm body may legitimately
+    // contain `in` (`| x -> for i in xs do …`, `| x -> let y = z in …`), so
+    // we only check for same-line content.
+    if (want_match_body_open) {
+        // Skip horizontal whitespace to the body's first token.
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+            lexer->advance(lexer, true);
+        }
+        // Same-line body present? (Not newline / EOF.)
+        if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            stack_push(&s->match_body_cols, stack_top(&s->indents));
+            lexer->mark_end(lexer); // zero-width — emit at the body's column.
+            lexer->result_symbol = MATCH_BODY_OPEN;
+            return true;
+        }
+        // Body on next line — fall through; BODY_INDENT handles it.
     }
 
     // RECORD_BODY_OPEN: emitted right after `{` when the first field starts
@@ -472,6 +507,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                     }
                 }
             }
+            // Mid-line MATCH_BODY_CLOSE before a new `| …` arm on the SAME
+            // line — e.g. single-line `function | 0 -> "a" | _ -> "b"`. A
+            // bare `|` that ISN'T `|>` (pipe), `||` (or), or `|}` (anon-record
+            // close) starts the next arm, so the inline arm body must close
+            // first. The `}` case (anon-record) is handled by RECORD above.
+            if (want_match_body_close && s->match_body_cols.size > 0 &&
+                lexer->lookahead == '|') {
+                lexer->advance(lexer, true);
+                int32_t after = lexer->lookahead;
+                if (after != '>' && after != '|' && after != '}') {
+                    stack_pop(&s->match_body_cols);
+                    lexer->result_symbol = MATCH_BODY_CLOSE;
+                    return true;
+                }
+            }
             // Mid-line non-whitespace ahead. If it's a recognised closing
             // delimiter and the parser is expecting BODY_DEDENT (i.e. we are
             // inside an indented body that needs to close before the
@@ -518,6 +568,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
         }
+        if (want_match_body_close && s->match_body_cols.size > 0) {
+            stack_pop(&s->match_body_cols);
+            lexer->result_symbol = MATCH_BODY_CLOSE;
+            return true;
+        }
         if (want_inline_close && s->inline_cols.size > 0) {
             stack_pop(&s->inline_cols);
             lexer->result_symbol = INLINE_CLOSE;
@@ -554,6 +609,31 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         if (col <= body_col) {
             stack_pop(&s->let_body_cols);
             lexer->result_symbol = LET_BODY_CLOSE;
+            return true;
+        }
+    }
+
+    // MATCH_BODY_CLOSE (line boundary): close the inline arm body when either
+    //   (a) the next line dedents to <= the recorded enclosing indent (≈ the
+    //       `match` column) — a trailing statement or lower-indent
+    //       continuation ends the whole match, OR
+    //   (b) the next line starts a new `| …` arm (not `|>` / `||` / `|}`),
+    //       regardless of column — covers `function`/`match` whose arms are
+    //       indented DEEPER than the enclosing `let`/`match` keyword, where
+    //       the column test alone would never fire.
+    // The grammar's `repeat1(match_arm)` consumes the following arm in case
+    // (b); in case (a) the match reduces and the next token is a sibling.
+    if (want_match_body_close && s->match_body_cols.size > 0) {
+        uint32_t body_col = stack_top(&s->match_body_cols);
+        bool new_arm = false;
+        if (lexer->lookahead == '|') {
+            lexer->advance(lexer, true); // peek past `|` (skip=true: no token extend)
+            int32_t after = lexer->lookahead;
+            if (after != '>' && after != '|' && after != '}') new_arm = true;
+        }
+        if (col <= body_col || new_arm) {
+            stack_pop(&s->match_body_cols);
+            lexer->result_symbol = MATCH_BODY_CLOSE;
             return true;
         }
     }
