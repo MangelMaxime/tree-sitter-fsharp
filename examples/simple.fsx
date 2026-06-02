@@ -1936,3 +1936,14 @@ let parensFoo3 = (1)
 type ParensBaz1() = class end
 type ParensBaz2( ) = class end
 type ParensBaz3(x) = class end
+
+let toString = function
+| North -> "North"
+| South -> "South"
+| _ -> "Horizontal"
+
+module Direction =
+    let toString = function
+    | North -> "North"
+    | South -> "South"
+    | _ -> "Horizontal"

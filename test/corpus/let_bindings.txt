@@ -328,3 +328,30 @@ let area shape =
         (pattern
           (wildcard_pattern))
         (float_literal)))))
+
+================================================================================
+Regression: non-indented function arms at let column
+================================================================================
+
+let f = function
+| A -> "a"
+| B -> "b"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (function_expression
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        body: (string_literal))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        body: (string_literal)))))

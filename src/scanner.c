@@ -686,9 +686,22 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // ends the inline let-binding body. Same shape as INLINE_CLOSE but
     // separate stack (and a different pushed value — enclosing indent, not
     // body's first-token column).
+    //
+    // EXCEPT a new `| …` arm (not `|>` / `||` / `|}`): when the inline body
+    // is a `match`/`function` whose arms sit at the LET column (non-indented,
+    // `let f = function\n| A -> …\n| B -> …`), each arm's `|` is a
+    // continuation of the body, not the end of it — so don't close here.
+    // The function/match keeps consuming arms; the let body closes later at
+    // a non-`|` line (or EOF).
     if (want_let_body_close && s->let_body_cols.size > 0) {
         uint32_t body_col = stack_top(&s->let_body_cols);
-        if (col <= body_col) {
+        bool new_arm = false;
+        if (lexer->lookahead == '|') {
+            lexer->advance(lexer, true);
+            int32_t after = lexer->lookahead;
+            if (after != '>' && after != '|' && after != '}') new_arm = true;
+        }
+        if (col <= body_col && !new_arm) {
             stack_pop(&s->let_body_cols);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
