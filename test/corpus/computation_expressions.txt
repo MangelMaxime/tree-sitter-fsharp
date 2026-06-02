@@ -196,3 +196,38 @@ let s = List.take 3 ys
         (int_literal))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Regular let followed by let! inside a computation expression
+================================================================================
+
+let f x =
+    job {
+        let a = g ()
+        let! b = h
+        return a
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (let_binding
+        name: (identifier)
+        body: (application_expression
+          (long_identifier
+            (identifier))
+          (unit)))
+      (ce_let_bang_expr
+        name: (identifier)
+        (long_identifier
+          (identifier)))
+      (ce_result_expr
+        (long_identifier
+          (identifier))))))

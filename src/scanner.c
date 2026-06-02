@@ -350,6 +350,28 @@ static bool next_word_blocks_for_body(TSLexer *lexer) {
     return false;
 }
 
+// Peek (no token extend) whether the next line starts with a computation-
+// expression "bang" binding: `let!` / `use!` / `and!` / `do!` / `match!`.
+// Such a line ALWAYS begins a new CE statement — it can never continue a
+// preceding `let … = value` body — so the scanner must close that body before
+// it. Assumes the lexer sits on the line's first non-whitespace char.
+static bool next_line_starts_with_ce_bang(TSLexer *lexer) {
+    char buf[8];
+    size_t i = 0;
+    int32_t look = lexer->lookahead;
+    while (i < sizeof(buf) - 1 &&
+           ((look >= 'a' && look <= 'z'))) {
+        buf[i++] = (char)look;
+        lexer->advance(lexer, true); // peek only
+        look = lexer->lookahead;
+    }
+    buf[i] = '\0';
+    return look == '!' &&
+           (strcmp(buf, "let") == 0 || strcmp(buf, "use") == 0 ||
+            strcmp(buf, "and") == 0 || strcmp(buf, "do") == 0 ||
+            strcmp(buf, "match") == 0);
+}
+
 // Match a trailing-dot float literal (`1.`, `20.`) at the current position.
 // Skips leading horizontal whitespace (the scanner is often called on the
 // space before an application argument / binary operand). The `.` forms a
@@ -785,6 +807,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // binary expression (`let f = function | A -> a |> g`), so don't close.
         if (pipe_op) return false;
         if (col <= body_col && !bar_arm) {
+            stack_pop(&s->let_body_cols);
+            lexer->result_symbol = LET_BODY_CLOSE;
+            return true;
+        }
+        // Inside a computation expression the CE body's column isn't tracked,
+        // so `body_col` (the enclosing indent) under-shoots the real statement
+        // column and the column test above can miss. A `let!`/`use!`/`and!`/
+        // `do!`/`match!` line always starts a NEW CE binding, never continues
+        // this `let … = value`, so close the body before it regardless of
+        // column. (Only peeked when la0 is a letter — the precompute didn't
+        // advance the lexer, so it still sits on the first char.)
+        if (col > body_col && la0 >= 'a' && la0 <= 'z' &&
+            next_line_starts_with_ce_bang(lexer)) {
             stack_pop(&s->let_body_cols);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
