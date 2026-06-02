@@ -899,13 +899,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             }
             // Any keyword that either continues the enclosing construct
             // (else/elif/with/then/etc.), closes a block (end), or starts a
-            // sibling declaration inside a class/module body (member/let/
-            // type/etc.) must NOT trigger a virtual_semi — otherwise the
-            // parser would commit to an expression-sequence continuation it
-            // can't recover from.
+            // sibling declaration inside a class/module body (member/type/
+            // etc.) must NOT trigger a virtual_semi — otherwise the parser
+            // would commit to an expression-sequence continuation it can't
+            // recover from.
             //
-            // Keep this list in sync with the grammar: every string-literal
-            // keyword that begins a class_body_member or _token belongs here.
+            // `let` is deliberately NOT a blocker: inside an expression body
+            // (`foo ()` then `let x = …`), the `let` starts a sequence
+            // continuation (a `let_expression` whose continuation is the rest
+            // of the body), so virtual_semi MUST fire before it. In a
+            // class/module body the lets are separate declarations that don't
+            // go through virtual_semi at all (they're `_token` /
+            // `_class_body_member` repeats), so omitting `let` here is safe —
+            // confirmed by the corpus.
             static const char *blockers[] = {
                 // Continuation keywords for the enclosing construct
                 "else", "elif", "with", "then", "do", "in", "and", "finally", "of",
@@ -915,7 +921,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                 "member", "abstract", "override", "default", "inherit",
                 "interface", "val", "new", "static",
                 // Module-body / top-level declaration starters
-                "let", "type", "module", "namespace", "exception", "open",
+                "type", "module", "namespace", "exception", "open",
                 NULL,
             };
             for (const char **k = blockers; *k; k++) {

@@ -421,3 +421,31 @@ let f x =
         (pattern
           (wildcard_pattern))
         body: (string_literal)))))
+
+================================================================================
+Regression: let binding after a non-let statement sequences
+================================================================================
+
+let f () =
+    foo ()
+    let x = 1
+    x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (sequence_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit))
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (int_literal))
+        continuation: (long_identifier
+          (identifier))))))
