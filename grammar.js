@@ -182,6 +182,16 @@ export default grammar({
                               //   body stops absorbing a trailing dedented
                               //   statement (e.g. a final `0`).
         $._match_body_close,
+        $._match_arm_sep,     // zero-width separator emitted before a
+                              //   continuation `| …` arm of a match / try /
+                              //   function. Lets the arm list stay open
+                              //   across a line whose `|` sits at (or below)
+                              //   an enclosing offside column — e.g. a
+                              //   non-indented `let f = function` inside a
+                              //   module, where the arm column collides with
+                              //   the module body indent. Emitted in
+                              //   preference to any close token when the next
+                              //   line starts a `|` arm.
         $._for_body_open,     // delimits a real `for … do BODY` loop body
                               //   (own line, indented). Pushes the body column
                               //   onto the indent stack so `_virtual_semi`
@@ -1482,10 +1492,19 @@ export default grammar({
         )),
 
         // try expr with | pat -> expr …   /   try expr finally expr
+        // Arm list shared by match / try-with / function. Arms after the
+        // first may be preceded by `_match_arm_sep` (scanner-emitted before a
+        // continuation `|`), which keeps the list open even when the arm's
+        // `|` sits at or below an enclosing offside column.
+        _match_arms: $ => prec.right(seq(
+            $.match_arm,
+            repeat(seq(optional($._match_arm_sep), $.match_arm)),
+        )),
+
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
             "try", $._expression,
             choice(
-                seq("with", repeat1($.match_arm)),
+                seq("with", $._match_arms),
                 seq("finally", $._expression),
             ),
         )),
@@ -1500,7 +1519,7 @@ export default grammar({
 
         // function | pat -> expr …  — shorthand for fun x -> match x with
         function_expression: $ => prec.right(PREC.MATCH_EXPR,
-            seq("function", repeat1($.match_arm)),
+            seq("function", $._match_arms),
         ),
 
         // ── For / While ───────────────────────────────────────────────────────
@@ -1701,7 +1720,7 @@ export default grammar({
                 "match",
                 $._expression,
                 "with",
-                repeat1($.match_arm),
+                $._match_arms,
             ),
         ),
 

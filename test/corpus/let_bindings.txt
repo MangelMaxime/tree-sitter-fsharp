@@ -355,3 +355,34 @@ let f = function
             (long_identifier
               (identifier))))
         body: (string_literal)))))
+
+================================================================================
+Regression: non-indented function arms inside a module
+================================================================================
+
+module M =
+    let f = function
+    | A -> 1
+    | B -> 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    name: (long_identifier
+      (identifier))
+    (let_binding
+      name: (identifier)
+      body: (function_expression
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          body: (int_literal))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          body: (int_literal))))))

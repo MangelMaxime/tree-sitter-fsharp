@@ -5722,6 +5722,43 @@
         ]
       }
     },
+    "_match_arms": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "match_arm"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SYMBOL",
+                      "name": "_match_arm_sep"
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "match_arm"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
     "try_expression": {
       "type": "PREC_RIGHT",
       "value": 8,
@@ -5747,11 +5784,8 @@
                     "value": "with"
                   },
                   {
-                    "type": "REPEAT1",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "match_arm"
-                    }
+                    "type": "SYMBOL",
+                    "name": "_match_arms"
                   }
                 ]
               },
@@ -5831,11 +5865,8 @@
             "value": "function"
           },
           {
-            "type": "REPEAT1",
-            "content": {
-              "type": "SYMBOL",
-              "name": "match_arm"
-            }
+            "type": "SYMBOL",
+            "name": "_match_arms"
           }
         ]
       }
@@ -6709,11 +6740,8 @@
             "value": "with"
           },
           {
-            "type": "REPEAT1",
-            "content": {
-              "type": "SYMBOL",
-              "name": "match_arm"
-            }
+            "type": "SYMBOL",
+            "name": "_match_arms"
           }
         ]
       }
@@ -10284,6 +10312,10 @@
     {
       "type": "SYMBOL",
       "name": "_match_body_close"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_match_arm_sep"
     },
     {
       "type": "SYMBOL",

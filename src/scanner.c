@@ -54,6 +54,7 @@ typedef enum {
     RECORD_FIELD_SEMI,
     MATCH_BODY_OPEN,
     MATCH_BODY_CLOSE,
+    MATCH_ARM_SEP,
     FOR_BODY_OPEN,
     FOR_BODY_CLOSE,
 } TokenType;
@@ -364,6 +365,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_record_field_semi = valid_symbols[RECORD_FIELD_SEMI];
     bool want_match_body_open = valid_symbols[MATCH_BODY_OPEN];
     bool want_match_body_close = valid_symbols[MATCH_BODY_CLOSE];
+    bool want_match_arm_sep = valid_symbols[MATCH_ARM_SEP];
     bool want_for_body_open = valid_symbols[FOR_BODY_OPEN];
     bool want_for_body_close = valid_symbols[FOR_BODY_CLOSE];
 
@@ -372,7 +374,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         && !want_let_body_open && !want_let_body_close
         && !want_record_body_open && !want_record_body_close
         && !want_record_field_semi
-        && !want_match_body_open && !want_match_body_close
+        && !want_match_body_open && !want_match_body_close && !want_match_arm_sep
         && !want_for_body_open && !want_for_body_close) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
@@ -681,6 +683,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     uint32_t current = stack_top(&s->indents);
+
+    // MATCH_ARM_SEP: next line starts a continuation `| …` arm (not `|>` /
+    // `||` / `|}`) and the grammar is mid arm-list (so MATCH_ARM_SEP is a
+    // valid symbol — it only is right after a COMPLETE arm). Emit it BEFORE
+    // any close token: a `|` continues the match/function, so the enclosing
+    // let body / indented block must NOT close here. This keeps a
+    // non-indented `let f = function` (arms at the enclosing column, e.g.
+    // inside a module) open across all its arms. The grammar's validity gate
+    // means this never fires mid-arm-body (an own-line arm body's BODY_DEDENT
+    // closes first; only then is the arm complete and MATCH_ARM_SEP valid).
+    if (want_match_arm_sep && lexer->lookahead == '|') {
+        lexer->advance(lexer, true);
+        int32_t after = lexer->lookahead;
+        if (after != '>' && after != '|' && after != '}') {
+            lexer->result_symbol = MATCH_ARM_SEP;
+            return true;
+        }
+    }
 
     // LET_BODY_CLOSE: any line at column <= the recorded enclosing indent
     // ends the inline let-binding body. Same shape as INLINE_CLOSE but
