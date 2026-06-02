@@ -460,3 +460,26 @@ type IExtended =
           (long_identifier
             (identifier)))))))
 
+
+================================================================================
+Union case mixing a named field with an anonymous tuple field
+================================================================================
+
+type T = | ChartPreview of printSectionId: Id * ProgressIndicator.Progress
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier)))
+          fields: (long_identifier
+            (identifier)
+            (identifier)))))))

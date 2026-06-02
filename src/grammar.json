@@ -2280,8 +2280,21 @@
                 "value": "*"
               },
               {
-                "type": "SYMBOL",
-                "name": "union_case_field"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "union_case_field"
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "fields",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "_union_field_type"
+                    }
+                  }
+                ]
               }
             ]
           }
