@@ -877,6 +877,8 @@ export default grammar({
             // when the `<…>` contains type-expressions with a comma.
             $.type_application_expression,
             $.unary_expression,
+            // `not` as a first-class function value (`not >> g`, `not |> f`).
+            $.not_function,
             $.list_expression,
             $.array_expression,
             $.record_expression,
@@ -1019,6 +1021,8 @@ export default grammar({
             // `(+)`, `(>>=)`, `(!//!)` — operator as a first-class function value.
             // Used as application heads (`(+) 1 2`) or arguments (`x (!//!) y`).
             $.operator_name,
+            // `not` as a first-class function value (`not >> g`, `f not`).
+            $.not_function,
             $.object_expression,
             // Accept `async { … }` / `task { … }` etc. as application arguments.
             // Without this, a body that sequences a CE after another statement
@@ -1071,6 +1075,14 @@ export default grammar({
             choice("not", "~~~", "-", "!"),
             $._expression,
         )),
+
+        // `not` used as a first-class function value — it's an ordinary
+        // FSharp.Core function, not a reserved operator: `not >> g`,
+        // `xs |> List.map not`, `f not`. Low prec so `not x` still parses as
+        // the prefix-application `unary_expression` above; this form only wins
+        // when `not` can't take an operand (followed by a binary operator, or
+        // sitting as a bare argument).
+        not_function: _ => prec(-1, "not"),
 
         // Custom operators: `@` (list append) or any sequence of 2+ symbolic chars.
         // Restricted to 2+ chars; single-char operators like `+`/`-`/`*` are

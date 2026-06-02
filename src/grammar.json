@@ -2869,6 +2869,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "not_function"
+        },
+        {
+          "type": "SYMBOL",
           "name": "list_expression"
         },
         {
@@ -3390,6 +3394,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "not_function"
+        },
+        {
+          "type": "SYMBOL",
           "name": "object_expression"
         },
         {
@@ -3774,6 +3782,14 @@
             "name": "_expression"
           }
         ]
+      }
+    },
+    "not_function": {
+      "type": "PREC",
+      "value": -1,
+      "content": {
+        "type": "STRING",
+        "value": "not"
       }
     },
     "symbolic_op": {

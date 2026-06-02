@@ -857,3 +857,19 @@ let n = nameof (Some x)
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+not as a first-class function value (composition)
+================================================================================
+
+let f = not >> g
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (not_function)
+      (long_identifier
+        (identifier)))))
