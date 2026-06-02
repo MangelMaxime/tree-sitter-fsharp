@@ -1884,11 +1884,30 @@ export default grammar({
             prec.right(1, seq($.long_identifier, $.pattern)),
         ),
 
+        // Inside a parenthesised tuple pattern, an element AFTER the first may
+        // carry a type annotation WITHOUT its own parens — the tuple's parens
+        // suffice:  (Key3(_, _, r: RevUtc), s: State)   (a, b: int).
+        // The first element stays a plain pattern so the single-element forms
+        // `(Some x)` / `(x: T)` keep matching tuple_pattern / typed_pattern
+        // unambiguously (no comma → no typed-item branch).
         tuple_pattern: $ => seq(
             "(",
             $.pattern,
-            repeat(seq(",", $.pattern)),
+            repeat(seq(",", $._tuple_pattern_item)),
             ")",
+        ),
+
+        _tuple_pattern_item: $ => choice(
+            $.pattern,
+            $.tuple_typed_pattern,
+        ),
+
+        // `name : type` element of a parenthesised tuple pattern (the tuple's
+        // own parens stand in for the per-element parens `typed_pattern` needs).
+        tuple_typed_pattern: $ => seq(
+            field('pattern', choice($.long_identifier, $.wildcard_pattern)),
+            ":",
+            field('type', $.type_expression),
         ),
 
         // Elements of unparenthesized_tuple_pattern. Excludes identifier_pattern's

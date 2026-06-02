@@ -579,3 +579,40 @@ match t with
       (pattern
         (wildcard_pattern))
       (int_literal))))
+
+================================================================================
+Typed elements inside a parenthesised tuple pattern
+================================================================================
+
+let f = fun (Key3(_, r: RevUtc), s: State) -> r
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (lambda_expression
+      (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))
+              (pattern
+                (tuple_pattern
+                  (pattern
+                    (wildcard_pattern))
+                  (tuple_typed_pattern
+                    pattern: (long_identifier
+                      (identifier))
+                    type: (type_expression
+                      (long_identifier
+                        (identifier))))))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (long_identifier
+        (identifier)))))

@@ -7412,7 +7412,7 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "pattern"
+                "name": "_tuple_pattern_item"
               }
             ]
           }
@@ -7420,6 +7420,53 @@
         {
           "type": "STRING",
           "value": ")"
+        }
+      ]
+    },
+    "_tuple_pattern_item": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_typed_pattern"
+        }
+      ]
+    },
+    "tuple_typed_pattern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "pattern",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "wildcard_pattern"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ":"
+        },
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "SYMBOL",
+            "name": "type_expression"
+          }
         }
       ]
     },
