@@ -873,3 +873,88 @@ let f = not >> g
       (not_function)
       (long_identifier
         (identifier)))))
+
+================================================================================
+Leading pipe operator continues expression below body indent
+================================================================================
+
+let f =
+        a
+    |> h
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Leading pipe at the arm column pipes the whole match
+================================================================================
+
+let icon =
+    match x with
+    | true -> a
+    | false -> b
+    |> g
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (bool_literal)))
+        body: (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (bool_literal)))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Leading pipe at the arm column after function
+================================================================================
+
+let icon =
+    function
+    | true -> a
+    | false -> b
+    |> g
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (function_expression
+      (match_arm
+        (pattern
+          (literal_pattern
+            (bool_literal)))
+        body: (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (bool_literal)))
+        body: (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

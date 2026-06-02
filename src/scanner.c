@@ -684,6 +684,29 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     uint32_t current = stack_top(&s->indents);
 
+    // Peek the next line's leading 1-2 significant chars ONCE. The lexer can't
+    // rewind, so every `|`/pipe-op based decision below reads these flags
+    // rather than re-advancing (a re-peek would consume the `|` and corrupt the
+    // checks that follow). Two classifications:
+    //   bar_arm — a real `| pat` arm separator: a `|` that ISN'T part of `|>`
+    //             (pipe), `||` (or), or `|}` (anon-record close).
+    //   pipe_op — a leading `|>` / `<|` / `>>` / `<<` that CONTINUES the
+    //             previous expression (binds it as a binary left operand).
+    int32_t la0 = lexer->lookahead;
+    bool bar_arm = false, pipe_op = false;
+    if (la0 == '|' || la0 == '<' || la0 == '>') {
+        lexer->advance(lexer, true);
+        int32_t la1 = lexer->lookahead;
+        if (la0 == '|') {
+            if (la1 == '>') pipe_op = true;                       // |>
+            else if (la1 != '|' && la1 != '}') bar_arm = true;    // | pat
+        } else if (la0 == '<') {
+            if (la1 == '|' || la1 == '<') pipe_op = true;         // <|  <<
+        } else { // '>'
+            if (la1 == '>') pipe_op = true;                       // >>
+        }
+    }
+
     // MATCH_ARM_SEP: next line starts a continuation `| …` arm (not `|>` /
     // `||` / `|}`) and the grammar is mid arm-list (so MATCH_ARM_SEP is a
     // valid symbol — it only is right after a COMPLETE arm). Emit it BEFORE
@@ -693,13 +716,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // inside a module) open across all its arms. The grammar's validity gate
     // means this never fires mid-arm-body (an own-line arm body's BODY_DEDENT
     // closes first; only then is the arm complete and MATCH_ARM_SEP valid).
-    if (want_match_arm_sep && lexer->lookahead == '|') {
-        lexer->advance(lexer, true);
-        int32_t after = lexer->lookahead;
-        if (after != '>' && after != '|' && after != '}') {
-            lexer->result_symbol = MATCH_ARM_SEP;
-            return true;
-        }
+    if (want_match_arm_sep && bar_arm) {
+        lexer->result_symbol = MATCH_ARM_SEP;
+        return true;
     }
 
     // LET_BODY_CLOSE: any line at column <= the recorded enclosing indent
@@ -715,13 +734,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // a non-`|` line (or EOF).
     if (want_let_body_close && s->let_body_cols.size > 0) {
         uint32_t body_col = stack_top(&s->let_body_cols);
-        bool new_arm = false;
-        if (lexer->lookahead == '|') {
-            lexer->advance(lexer, true);
-            int32_t after = lexer->lookahead;
-            if (after != '>' && after != '|' && after != '}') new_arm = true;
-        }
-        if (col <= body_col && !new_arm) {
+        // A leading pipe/composition operator continues the inline body as a
+        // binary expression (`let f = function | A -> a |> g`), so don't close.
+        if (pipe_op) return false;
+        if (col <= body_col && !bar_arm) {
             stack_pop(&s->let_body_cols);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
@@ -740,13 +756,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // (b); in case (a) the match reduces and the next token is a sibling.
     if (want_match_body_close && s->match_body_cols.size > 0) {
         uint32_t body_col = stack_top(&s->match_body_cols);
-        bool new_arm = false;
-        if (lexer->lookahead == '|') {
-            lexer->advance(lexer, true); // peek past `|` (skip=true: no token extend)
-            int32_t after = lexer->lookahead;
-            if (after != '>' && after != '|' && after != '}') new_arm = true;
-        }
-        if (col <= body_col || new_arm) {
+        // A leading pipe/composition operator (`|>` `<|` `>>` `<<`) at or below
+        // the arm column continues the LAST arm body as a binary expression
+        // rather than closing the match — e.g.
+        //   match x with
+        //   | A -> a
+        //   | B -> b
+        //   |> g            (at the arm column → pipes the whole result)
+        // Closing here would strand the `|>` with no left operand. Letting the
+        // arm body absorb it keeps the parse valid (and the highlighting
+        // correct); a genuine non-pipe dedent still closes the match below.
+        if (pipe_op) return false;
+        if (col <= body_col || bar_arm) {
             stack_pop(&s->match_body_cols);
             lexer->result_symbol = MATCH_BODY_CLOSE;
             return true;
@@ -814,6 +835,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     // Dedent — pop. DEDENT is preferred over BODY_DEDENT so inner let_decl_indented
     // bodies close before the outer let_binding body.
+    //
+    // BUT: a line that starts with a leading pipe/composition operator
+    // (`|>` `<|` `>>` `<<`) continues the previous expression — F# allows it
+    // to sit at a lower indent than the expression body. Don't close the body
+    // here; fall through so the operator is lexed and the binary_expression
+    // extends. The body closes later at a line that genuinely dedents without
+    // a leading operator. Only suppress while a virtual-semi / close is what
+    // we'd otherwise emit (an expression context), never the for-body close.
+    if (col < current && !want_for_body_close &&
+        (want_dedent || want_body_dedent) &&
+        pipe_op) {
+        return false;
+    }
     if (col < current) {
         // FOR_BODY_CLOSE mirrors FOR_BODY_OPEN: pop the for-body indent when a
         // line dedents below it. Checked first so a `for` body closes before
@@ -892,9 +926,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                                col == stack_top(&s->record_cols);
     if (want_record_field_semi && at_record_field_col) {
         // Apply the same blocker checks as VIRTUAL_SEMI (closing delimiters
-        // and continuation keywords must NOT trigger a separator).
-        int32_t c = lexer->lookahead;
-        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
+        // and continuation keywords must NOT trigger a separator). `la0` is the
+        // original first char (the precompute above already advanced the lexer
+        // past it); `pipe_op` covers a leading `<|`/`>>`/`<<` continuation.
+        int32_t c = la0;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || pipe_op);
         if (!blocked) {
             lexer->result_symbol = RECORD_FIELD_SEMI;
             return true;
@@ -903,8 +939,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     bool semi_col_match = (s->indents.size > 0 && col == current);
     if (want_virtual_semi && semi_col_match) {
-        int32_t c = lexer->lookahead;
-        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}');
+        // `la0` is the original first char (the precompute above already
+        // advanced the lexer past it for `|`/`<`/`>` lines); `pipe_op` blocks a
+        // leading `<|`/`>>`/`<<` that continues the previous expression.
+        int32_t c = la0;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || pipe_op);
         // Punctuation/sigil blockers — non-identifier sequences that ALSO start
         // a new declaration rather than continuing an expression. Peeking two
         // characters: `[<` opens an attribute, `//` opens a `///` doc comment.
