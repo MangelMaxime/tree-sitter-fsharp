@@ -534,3 +534,32 @@ let f = 0x0000000000000000LF
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Trailing-dot float literals (and range disambiguation)
+================================================================================
+
+let a = 1.
+let b = min 1. 2.
+let c = [1..2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (float_literal))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (float_literal))
+      (float_literal)))
+  (let_binding
+    name: (identifier)
+    body: (list_expression
+      (binary_expression
+        (int_literal)
+        (int_literal)))))

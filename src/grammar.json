@@ -9134,6 +9134,10 @@
                   }
                 ]
               }
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_float_trailing_dot"
             }
           ]
         },
@@ -10340,6 +10344,10 @@
     {
       "type": "SYMBOL",
       "name": "_for_body_close"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_float_trailing_dot"
     }
   ],
   "inline": [],

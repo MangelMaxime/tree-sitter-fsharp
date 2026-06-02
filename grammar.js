@@ -202,6 +202,7 @@ export default grammar({
                               //   keeps the for body EMPTY and the operators
                               //   stay as `query_operator` siblings.
         $._for_body_close,
+        $._float_trailing_dot,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -2222,6 +2223,7 @@ export default grammar({
                 token(seq(/[0-9][0-9_]*/, ".", /[0-9][0-9_]*/, optional(seq(/[eE]/, optional(/[+-]/), /[0-9]+/)))),
                 token(seq(/[0-9][0-9_]*/, ".", /[eE]/, optional(/[+-]/), /[0-9]+/)),
                 token(seq(/[0-9]+/, /[eE]/, optional(/[+-]/), /[0-9]+/)),
+                $._float_trailing_dot,
             ),
             optional($._float_suffix),
         ),

@@ -57,6 +57,7 @@ typedef enum {
     MATCH_ARM_SEP,
     FOR_BODY_OPEN,
     FOR_BODY_CLOSE,
+    FLOAT_TRAILING_DOT,
 } TokenType;
 
 typedef struct {
@@ -349,6 +350,34 @@ static bool next_word_blocks_for_body(TSLexer *lexer) {
     return false;
 }
 
+// Match a trailing-dot float literal (`1.`, `20.`) at the current position.
+// Skips leading horizontal whitespace (the scanner is often called on the
+// space before an application argument / binary operand). The `.` forms a
+// float ONLY when it is NOT followed by another `.` (so `1..2` stays a range)
+// nor by a digit / `e` / `E` (those are ordinary float regex alternatives in
+// the grammar). Returns true and sets the result symbol on a match.
+static bool scan_trailing_dot_float(TSLexer *lexer) {
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+        lexer->advance(lexer, true);
+    }
+    if (lexer->lookahead < '0' || lexer->lookahead > '9') return false;
+    lexer->advance(lexer, false); // integer part: digit, then digits / `_`
+    while ((lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+           lexer->lookahead == '_') {
+        lexer->advance(lexer, false);
+    }
+    if (lexer->lookahead != '.') return false;
+    lexer->advance(lexer, false);
+    int32_t after = lexer->lookahead;
+    if (after == '.' || (after >= '0' && after <= '9') ||
+        after == 'e' || after == 'E') {
+        return false;
+    }
+    lexer->mark_end(lexer);
+    lexer->result_symbol = FLOAT_TRAILING_DOT;
+    return true;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *s = payload;
     bool want_body_indent = valid_symbols[BODY_INDENT];
@@ -375,7 +404,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         && !want_record_body_open && !want_record_body_close
         && !want_record_field_semi
         && !want_match_body_open && !want_match_body_close && !want_match_arm_sep
-        && !want_for_body_open && !want_for_body_close) return false;
+        && !want_for_body_open && !want_for_body_close) {
+        // No offside token applies here. The only remaining external is the
+        // trailing-dot float (`1.`, `20.`). Handled at this point — AFTER the
+        // offside-open tokens are ruled out — so that `let x = 2.` still emits
+        // LET_BODY_OPEN first (the scanner is re-invoked at the same position
+        // once that zero-width token is consumed, and only then is the float
+        // the sole valid symbol).
+        if (valid_symbols[FLOAT_TRAILING_DOT]) return scan_trailing_dot_float(lexer);
+        return false;
+    }
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's first-token column onto `inline_cols`
@@ -633,6 +671,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                         }
                     }
                 }
+            }
+            // Mid-line trailing-dot float as an application argument / binary
+            // operand (`f 2.`, `x + 2.`): here an offside CLOSE token (e.g.
+            // LET_BODY_CLOSE) is also valid, so the early-out above was skipped
+            // — but mid-line none of those fire, so the float is the real next
+            // token. (The whitespace before the literal was already consumed
+            // above; the helper re-skips defensively.)
+            if (valid_symbols[FLOAT_TRAILING_DOT] && scan_trailing_dot_float(lexer)) {
+                return true;
             }
             return false;
         }
