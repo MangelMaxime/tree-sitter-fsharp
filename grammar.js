@@ -182,6 +182,16 @@ export default grammar({
                               //   body stops absorbing a trailing dedented
                               //   statement (e.g. a final `0`).
         $._match_body_close,
+        $._for_body_open,     // delimits a real `for … do BODY` loop body
+                              //   (own line, indented). Pushes the body column
+                              //   onto the indent stack so `_virtual_semi`
+                              //   sequences multi-statement bodies. Suppressed
+                              //   when the next significant token is a query-CE
+                              //   operator (`where`/`select`/… or a chained
+                              //   `for`), so `query { for x in xs do where … }`
+                              //   keeps the for body EMPTY and the operators
+                              //   stay as `query_operator` siblings.
+        $._for_body_close,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1517,17 +1527,35 @@ export default grammar({
         // tree-sitter prefers the longest match, so even with high precedence
         // on the body-less form, the body-present form wins when both can
         // match. See the LIMITATIONS.md entry for the next thing to try.
+        // Body shape (`_for_body`): a real loop body uses `_for_body_open` /
+        // `_for_body_close` (scanner-emitted) so the body column is pushed onto
+        // the indent stack and `_virtual_semi` sequences multi-statement
+        // bodies. The scanner does NOT emit `_for_body_open` when the next
+        // significant token is a query-CE operator (`where`/`select`/… or a
+        // chained `for`), so the `query { for x in xs do where … select … }`
+        // form keeps the for body EMPTY and the operators stay `query_operator`
+        // siblings. The bare `optional($._expression)` fallback covers that
+        // empty-body CE case, inline single-line bodies, and mid-edit. Inlined
+        // (not a named rule) so the empty alternative only appears inside the
+        // non-empty `for … do` sequence.
         for_expression: $ => prec.right(PREC.IF_EXPR, seq(
             "for",
             choice(
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
-                    "in", $._expression, "do", optional(field('body', $._expression)),
+                    "in", $._expression, "do",
+                    choice(
+                        seq($._for_body_open, field('body', $._expression), $._for_body_close),
+                        optional(field('body', $._expression)),
+                    ),
                 ),
                 seq(
                     $.identifier,
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
-                    optional(field('body', $._expression)),
+                    choice(
+                        seq($._for_body_open, field('body', $._expression), $._for_body_close),
+                        optional(field('body', $._expression)),
+                    ),
                 ),
             ),
         )),

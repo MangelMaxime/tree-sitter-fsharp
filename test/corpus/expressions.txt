@@ -730,6 +730,69 @@ for i = 5 downto 1 do printfn "x"
       (string_literal))))
 
 ================================================================================
+For loop multi-statement body sequences
+================================================================================
+
+let f () =
+    for i in xs do
+        a ()
+        b ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (for_expression
+      (identifier)
+      (long_identifier
+        (identifier))
+      body: (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))))))
+
+================================================================================
+Query for-clause keeps for body empty (not a loop)
+================================================================================
+
+let q =
+    query {
+        for x in xs do
+        where (x > 5)
+        select x
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier
+          (identifier)))
+      (query_operator
+        (parenthesized_expression
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (int_literal))))
+      (query_operator
+        (long_identifier
+          (identifier))))))
+
+================================================================================
 Begin end expression
 ================================================================================
 

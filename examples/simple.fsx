@@ -777,11 +777,11 @@ let while_multi () =
         printfn "done"
         n <- n + 1
 
-// Multi-statement body — `for_expression`'s body still parses as a single
-// chained `application_expression` (second `printfn` is treated as an arg of
-// the first). Expand-selection walks through invented application nodes
-// instead of statement siblings. Asymmetric with the `while_multi` case above
-// — a known trade-off to keep query-CE parsing working (see grammar.js).
+// Multi-statement body — parses as `sequence_expression` (each statement is
+// its own child), symmetric with `while_multi` above. The scanner emits
+// `_for_body_open` only when the body's first token isn't a query-CE operator
+// or a CE result/bang keyword, so this real loop sequences while
+// `query { for x in xs do where … }` keeps the for body empty (see grammar.js).
 let for_multi () =
     for i in [ 1; 2; 3 ] do
         printfn "item: %d" i

@@ -54,6 +54,8 @@ typedef enum {
     RECORD_FIELD_SEMI,
     MATCH_BODY_OPEN,
     MATCH_BODY_CLOSE,
+    FOR_BODY_OPEN,
+    FOR_BODY_CLOSE,
 } TokenType;
 
 typedef struct {
@@ -284,6 +286,68 @@ static int check_inline_body_open(TSLexer *lexer, uint32_t *body_col) {
     return 1;
 }
 
+// Peek the identifier-shaped word at the current lexer position (assumes the
+// lexer is already past leading whitespace) WITHOUT extending the token, and
+// return true if it is a token that means "this `for … do` is NOT a plain
+// imperative loop body we should sequence." Two families:
+//
+//   1. Query-CE operators (`where`/`select`/… and a chained `for`): only
+//      follow `do` inside a `query { … }` CE — suppress so the for-body stays
+//      empty and the operators parse as `query_operator` siblings.
+//   2. CE result / bang forms (`yield`/`return` and `do!`/`let!`/`use!`/
+//      `and!`/`match!`): the `for` is the iteration of a seq/async/task CE,
+//      whose body has CE-specific handling — suppress so that existing path
+//      stays intact rather than forcing the body through plain `_expression`.
+//      `yield`/`return` are CE-only keywords (invalid in a non-CE for body),
+//      so suppressing them is harmless outside CEs. The bang forms are
+//      detected by a trailing `!`, so plain `let`/`do`/`match` in an ordinary
+//      loop body still sequence.
+static bool next_word_blocks_for_body(TSLexer *lexer) {
+    char buf[24];
+    size_t i = 0;
+    int32_t look = lexer->lookahead;
+    while (i < sizeof(buf) - 1 &&
+           ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+            (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+        buf[i++] = (char)look;
+        lexer->advance(lexer, true); // skip=true: peek only, don't extend token
+        look = lexer->lookahead;
+    }
+    buf[i] = '\0';
+
+    // (1) Query operators — keep in sync with grammar.js query_operator op set
+    // + join / groupBy / leftOuterJoin + `for` (chained from-clause).
+    static const char *query_ops[] = {
+        "select", "where", "sortBy", "sortByDescending",
+        "thenBy", "thenByDescending", "take", "skip",
+        "takeWhile", "skipWhile", "distinct", "count",
+        "head", "last", "exactlyOne",
+        "minBy", "maxBy", "sumBy", "averageBy",
+        "find", "exists", "all", "contains", "nth",
+        "headOrDefault", "lastOrDefault", "exactlyOneOrDefault",
+        "join", "groupBy", "groupValBy", "groupJoin",
+        "leftOuterJoin", "for",
+        NULL,
+    };
+    for (const char **k = query_ops; *k; k++) {
+        if (strcmp(buf, *k) == 0) return true;
+    }
+
+    // (2a) CE result keywords (yield / return) — CE-only, suppress always.
+    if (strcmp(buf, "yield") == 0 || strcmp(buf, "return") == 0) return true;
+
+    // (2b) CE bang forms (do! / let! / use! / and! / match!) — the `!` after
+    // the keyword marks the CE construct; bare let/do/match keep sequencing.
+    if (look == '!' &&
+        (strcmp(buf, "do") == 0 || strcmp(buf, "let") == 0 ||
+         strcmp(buf, "use") == 0 || strcmp(buf, "and") == 0 ||
+         strcmp(buf, "match") == 0)) {
+        return true;
+    }
+
+    return false;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *s = payload;
     bool want_body_indent = valid_symbols[BODY_INDENT];
@@ -300,13 +364,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_record_field_semi = valid_symbols[RECORD_FIELD_SEMI];
     bool want_match_body_open = valid_symbols[MATCH_BODY_OPEN];
     bool want_match_body_close = valid_symbols[MATCH_BODY_CLOSE];
+    bool want_for_body_open = valid_symbols[FOR_BODY_OPEN];
+    bool want_for_body_close = valid_symbols[FOR_BODY_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
         && !want_let_body_open && !want_let_body_close
         && !want_record_body_open && !want_record_body_close
         && !want_record_field_semi
-        && !want_match_body_open && !want_match_body_close) return false;
+        && !want_match_body_open && !want_match_body_close
+        && !want_for_body_open && !want_for_body_close) return false;
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
     // the same line. Pushes the body's first-token column onto `inline_cols`
@@ -522,6 +589,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                     return true;
                 }
             }
+            // Mid-line FOR_BODY_CLOSE before a closing `}`/`)` — e.g.
+            // `seq { for x in xs do yield x }` with the `}` on the same line
+            // as the last body statement. Goes before BODY_DEDENT so the for
+            // body's own close fires first.
+            if (want_for_body_close && s->indents.size > 0 &&
+                (lexer->lookahead == '}' || lexer->lookahead == ')')) {
+                stack_pop(&s->indents);
+                lexer->result_symbol = FOR_BODY_CLOSE;
+                return true;
+            }
             // Mid-line non-whitespace ahead. If it's a recognised closing
             // delimiter and the parser is expecting BODY_DEDENT (i.e. we are
             // inside an indented body that needs to close before the
@@ -571,6 +648,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         if (want_match_body_close && s->match_body_cols.size > 0) {
             stack_pop(&s->match_body_cols);
             lexer->result_symbol = MATCH_BODY_CLOSE;
+            return true;
+        }
+        if (want_for_body_close && s->indents.size > 0) {
+            stack_pop(&s->indents);
+            lexer->result_symbol = FOR_BODY_CLOSE;
             return true;
         }
         if (want_inline_close && s->inline_cols.size > 0) {
@@ -672,6 +754,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // module-level let_binding, the parser commits to let_binding rather than
     // exploring let_decl_indented (which would fail without _indent).
     if (col > current) {
+        // FOR_BODY_OPEN: a real `for … do` loop body on the next, more-indented
+        // line. Pushes the body column onto `indents` (like BODY_INDENT) so
+        // `_virtual_semi` sequences multi-statement bodies. Suppressed when the
+        // body's first word is a query-CE operator (`where`/`select`/… or a
+        // chained `for`) — then this isn't a loop body, it's a query clause, so
+        // we fall through and the for_expression's empty-body branch lets the
+        // operator parse as a `query_operator` sibling. Checked before
+        // BODY_INDENT so the for body commits to the sequencing form.
+        if (want_for_body_open && !next_word_blocks_for_body(lexer)) {
+            stack_push(&s->indents, col);
+            lexer->result_symbol = FOR_BODY_OPEN;
+            return true;
+        }
         if (want_body_indent) {
             stack_push(&s->indents, col);
             lexer->result_symbol = BODY_INDENT;
@@ -687,6 +782,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // Dedent — pop. DEDENT is preferred over BODY_DEDENT so inner let_decl_indented
     // bodies close before the outer let_binding body.
     if (col < current) {
+        // FOR_BODY_CLOSE mirrors FOR_BODY_OPEN: pop the for-body indent when a
+        // line dedents below it. Checked first so a `for` body closes before
+        // any enclosing BODY_/INDENT block at the same boundary.
+        if (want_for_body_close) {
+            stack_pop(&s->indents);
+            lexer->result_symbol = FOR_BODY_CLOSE;
+            return true;
+        }
         if (want_dedent) {
             stack_pop(&s->indents);
             lexer->result_symbol = DEDENT;
