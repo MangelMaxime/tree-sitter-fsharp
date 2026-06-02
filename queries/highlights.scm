@@ -157,6 +157,16 @@
 (unit) @constant.builtin
 (null_literal) @constant.builtin
 
+; `()` as an empty parameter list (constructor / method / function /
+; lambda) isn't the unit *value* — it's just the empty arg-list
+; delimiters. Re-capture as @punctuation.bracket so it renders like the
+; `(` `)` of `(x)` rather than the unit-literal colour. These come after
+; the `(unit)` rule above, so last-capture-in-source-order wins for
+; these declaration sites; `()` in value position (`let v = ()`, `f ()`)
+; keeps @constant.builtin.
+(primary_constructor (unit) @punctuation.bracket)
+(parameter (unit) @punctuation.bracket)
+
 (let_binding
   name: (active_pattern_name) @function)
 
