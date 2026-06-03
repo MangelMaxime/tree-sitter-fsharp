@@ -193,6 +193,23 @@
 (let_decl_indented
   name: (operator_name) @function)
 
+; Tuple-destructured binding names — `let a, b, c = …` (and `let (a, b) = …`).
+; Colour them like the single-name binding form so destructured bindings don't
+; render uncoloured. The unparenthesized form holds the names as direct
+; long_identifiers; the parenthesized form nests them in identifier_pattern.
+(let_binding
+  name: (unparenthesized_tuple_pattern (long_identifier (identifier) @function)))
+(let_decl_indented
+  name: (unparenthesized_tuple_pattern (long_identifier (identifier) @function)))
+; Parenthesized form nests each element in identifier_pattern; the lowercase
+; guard keeps a constructor element (`let (Some a, b) = …`) from being recoloured.
+(let_binding
+  name: (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @function))))
+  (#match? @function "^[a-z_]"))
+(let_decl_indented
+  name: (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @function))))
+  (#match? @function "^[a-z_]"))
+
 (let_and_binding
   name: (identifier) @function
   parameters: (parameter
