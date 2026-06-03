@@ -170,6 +170,10 @@
 (let_binding
   name: (active_pattern_name) @function)
 
+; Active pattern used as a value expression: `(|Foo|)` / `Module.(|Foo|)`.
+(active_pattern_expression (active_pattern_name) @function)
+(active_pattern_expression (active_pattern_member) @function)
+
 (let_binding
   name: (identifier) @function
   parameters: (parameter
@@ -232,6 +236,14 @@
 ; The explicit overrides further down re-apply @type / @namespace /
 ; @attribute to the trailing identifier in those contexts.
 (long_identifier . (identifier) (identifier) @variable.other.member .)
+
+; In `Module.Path.(|Foo|)` the WHOLE long_identifier is the module/type path
+; (the real member is the separate `active_pattern_member`), so EVERY
+; capitalised segment is @type — including the last, overriding the
+; member-access rule just above. Placed here so last-in-source-order wins.
+(active_pattern_expression
+  (long_identifier (identifier) @type)
+  (#match? @type "^[A-Z]"))
 
 ; (Previous PascalCase rule for `dot_expression object: long_identifier` was
 ; removed — `dot_expression`'s object can no longer be a long_identifier

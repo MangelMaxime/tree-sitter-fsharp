@@ -958,3 +958,30 @@ let icon =
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Active pattern name as a value expression (qualified and unqualified)
+================================================================================
+
+let f = snd >> M.(|Foo|) >> g
+let u = (|Bar|)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (active_pattern_expression
+          (long_identifier
+            (identifier))
+          (active_pattern_member)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    name: (identifier)
+    body: (active_pattern_expression
+      (active_pattern_name))))

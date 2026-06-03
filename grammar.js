@@ -886,6 +886,8 @@ export default grammar({
             // when the `<…>` contains type-expressions with a comma.
             $.type_application_expression,
             $.unary_expression,
+            // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value (`snd >> M.(|Foo|) >> g`).
+            $.active_pattern_expression,
             // `not` as a first-class function value (`not >> g`, `not |> f`).
             $.not_function,
             $.list_expression,
@@ -1030,6 +1032,8 @@ export default grammar({
             // `(+)`, `(>>=)`, `(!//!)` — operator as a first-class function value.
             // Used as application heads (`(+) 1 2`) or arguments (`x (!//!) y`).
             $.operator_name,
+            // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value.
+            $.active_pattern_expression,
             // `not` as a first-class function value (`not >> g`, `f not`).
             $.not_function,
             $.object_expression,
@@ -1226,6 +1230,28 @@ export default grammar({
             ),
             ")",
         ),
+
+        // `(|Name|)` or `Module.Path.(|Name|)` — an active-pattern function used
+        // as a first-class value (`Seq.sumBy (M.(|Foo|))`, `snd >> M.(|Foo|) >> g`).
+        // The qualified tail `.(|Name|)` is ONE token (`active_pattern_member`) so
+        // the lexer munches it as a unit — it never competes with a
+        // `long_identifier`'s own `.` (a plain `.Sub` has no `(|`), which keeps
+        // ordinary dotted access (`obj.A.B`) conflict-free.
+        active_pattern_expression: $ => choice(
+            $.active_pattern_name,
+            seq($.long_identifier, $.active_pattern_member),
+        ),
+
+        // The qualified-active-pattern tail: `.(|Even|Odd|)` etc. Same shape as
+        // `active_pattern_name` with a leading `.`, kept a single token on purpose.
+        active_pattern_member: _ => token(seq(
+            ".",
+            "(|",
+            /[a-zA-Z_][a-zA-Z0-9_']*/,
+            repeat(seq("|", /[a-zA-Z_][a-zA-Z0-9_']*/)),
+            optional(seq("|", "_")),
+            "|)",
+        )),
 
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
