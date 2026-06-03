@@ -764,12 +764,19 @@ export default grammar({
         )),
 
         // | Circle of radius: float  or  | Rect of width: float * height: float
-        // F# allows MIXING named and anonymous fields once the first is named:
-        // `| C of printSectionId: Id * ProgressIndicator.Progress` is a named
-        // field `printSectionId: Id` followed by an anonymous field of type
-        // `ProgressIndicator.Progress`. `_union_field_type` excludes tuple_type,
-        // so the `*` is always a field separator, never a tuple inside a field.
+        // F# allows freely MIXING named and anonymous fields in any order, as
+        // long as at least one is named (all-anonymous goes through the
+        // `type_expression` tuple branch in `union_case` instead):
+        //   | StepThumb of int * inProgress: bool * outcome: Outcome
+        //                  ^anon   ^named            ^named
+        // The leading `repeat` is the optional ANONYMOUS prefix before the first
+        // named field; the required `union_case_field` anchors this rule to "has
+        // a named field" (so it doesn't overlap the all-anonymous branch); the
+        // trailing `repeat` is the mixed remainder. `_union_field_type` excludes
+        // tuple_type, so each `*` is a field separator, never a tuple inside a
+        // field.
         union_case_named_fields: $ => seq(
+            repeat(seq(field('fields', $._union_field_type), "*")),
             $.union_case_field,
             repeat(seq("*", choice(
                 $.union_case_field,

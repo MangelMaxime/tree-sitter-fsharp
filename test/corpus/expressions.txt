@@ -1010,3 +1010,34 @@ let f x =
           (identifier)))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Leading operator closes a deeper body and continues the outer chain
+================================================================================
+
+let f =
+    x
+    >> fun y ->
+        a
+        |> b
+    >> g
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (lambda_expression
+          (parameter
+            (identifier))
+          body: (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier)))))

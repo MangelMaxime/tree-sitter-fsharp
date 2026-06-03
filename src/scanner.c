@@ -125,6 +125,19 @@ static void idx_pop(IndentStack *s, uint8_t kind) {
     s->size--;
 }
 
+// True if some open indented body (K_INDENT) sits at column <= col. Used by the
+// leading-infix-operator dedent rule: when an enclosing body is at/left of the
+// operator's column, the operator continues THAT body, so the deeper bodies
+// above it must dedent/close normally. Only when NO body is at <= col does the
+// operator sit to the left of every body and continue the innermost one from
+// below — the one case where we suppress the dedent.
+static bool has_indent_le(const IndentStack *s, uint32_t col) {
+    for (uint32_t i = 0; i < s->size; i++) {
+        if (s->kinds[i] == K_INDENT && s->cols[i] <= col) return true;
+    }
+    return false;
+}
+
 typedef struct {
     IndentStack stk;
 } Scanner;
@@ -978,7 +991,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // we'd otherwise emit (an expression context), never the for-body close.
     if (col < current && !want_for_body_close &&
         (want_dedent || want_body_dedent) &&
-        infix_continue) {
+        infix_continue && !has_indent_le(&s->stk, col)) {
         return false;
     }
     if (col < current) {
