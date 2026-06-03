@@ -1161,7 +1161,14 @@ export default grammar({
             "{",
             choice(
                 seq(
-                    field('base', $._simple_expression),
+                    // Base may be an application (`{ Foo.bar [] x with F = y }`),
+                    // not only a simple value — disambiguated by `with` (Ionide
+                    // parses the full expression before `with`). Restricted to
+                    // the INLINE branch: the block branch keeps a simple base so
+                    // a generic-call base like `Default<_>()` (which our grammar
+                    // mis-reads as a `<`/`>` comparison) fails cleanly instead of
+                    // cascading.
+                    field('base', choice($._simple_expression, $.application_expression)),
                     "with",
                     $._record_fields,
                 ),

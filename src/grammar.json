@@ -4001,8 +4001,17 @@
                   "type": "FIELD",
                   "name": "base",
                   "content": {
-                    "type": "SYMBOL",
-                    "name": "_simple_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_simple_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "application_expression"
+                      }
+                    ]
                   }
                 },
                 {

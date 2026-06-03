@@ -14025,6 +14025,10 @@
             "named": true
           },
           {
+            "type": "application_expression",
+            "named": true
+          },
+          {
             "type": "array_expression",
             "named": true
           },

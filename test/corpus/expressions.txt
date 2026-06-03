@@ -1071,3 +1071,29 @@ let p = {
           (identifier))
         value: (long_identifier
           (identifier))))))
+
+================================================================================
+Record copy-update with an application base
+================================================================================
+
+let p = { Paginator.createEx [] doQuery with Header = h }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      base: (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (list_expression))
+        (long_identifier
+          (identifier)))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier))))))
