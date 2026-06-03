@@ -116,11 +116,6 @@ FSharp.TooltipShowDocumentationLink = false
 # FSharp.generateBinlog = true
 
 [[language]]
-name = "toml"
-auto-format = true
-language-servers = ["tombi"]
-
-[[language]]
 name = "fsharp"
 auto-format = false
 comment-tokens = ["//", "///"] # Will be the default in next Helix release
