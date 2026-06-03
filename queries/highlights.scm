@@ -238,6 +238,15 @@
 ((long_identifier (identifier) @type . (identifier))
  (#match? @type "^[A-Z]"))
 
+; …but a VALUE-rooted chain overrides that: when the first segment is a lowercase
+; value (`this`, `s`, `myVar`), the following segments are member/property
+; accesses, NOT types — e.g. `this.SuffixDelimStart.Length`. Placed AFTER the
+; @type rule so Helix's last-capture-in-source-order makes @variable.other.member
+; win for these chains. Capitalised-rooted paths (`System.Threading.Foo`) don't
+; match here (the root `#match?` fails), so they keep their @type segments.
+((long_identifier . (identifier) @_root (identifier) @variable.other.member)
+ (#match? @_root "^[a-z_]"))
+
 ; Last segment of a multi-segment long_identifier is a member access — e.g.
 ; `s.ToUpper` parses as long_identifier(s, ToUpper), and `ToUpper` is the
 ; member. Leading `.` says the first identifier must be the FIRST child;
