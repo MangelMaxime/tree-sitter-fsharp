@@ -993,8 +993,6 @@ export default grammar({
             $.long_identifier,
             "<",
             $.type_expression,
-            ",",
-            $.type_expression,
             repeat(seq(",", $.type_expression)),
             ">",
         ),
@@ -1161,13 +1159,10 @@ export default grammar({
             "{",
             choice(
                 seq(
-                    // Base may be an application (`{ Foo.bar [] x with F = y }`),
-                    // not only a simple value — disambiguated by `with` (Ionide
-                    // parses the full expression before `with`). Restricted to
-                    // the INLINE branch: the block branch keeps a simple base so
-                    // a generic-call base like `Default<_>()` (which our grammar
-                    // mis-reads as a `<`/`>` comparison) fails cleanly instead of
-                    // cascading.
+                    // Base may be an application (`{ Foo.bar [] x with F = y }`)
+                    // or a generic call (`{ Default<_>() with … }`), not only a
+                    // simple value — disambiguated by `with` (Ionide parses the
+                    // full expression before `with`).
                     field('base', choice($._simple_expression, $.application_expression)),
                     "with",
                     $._record_fields,
@@ -1179,7 +1174,7 @@ export default grammar({
                 // field list consumes that indent, and `base with` errors.
                 seq(
                     $._body_indent,
-                    field('base', $._simple_expression),
+                    field('base', choice($._simple_expression, $.application_expression)),
                     "with",
                     $._record_fields,
                     $._body_dedent,

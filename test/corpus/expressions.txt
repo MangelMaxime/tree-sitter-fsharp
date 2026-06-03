@@ -1097,3 +1097,35 @@ let p = { Paginator.createEx [] doQuery with Header = h }
           (identifier))
         value: (long_identifier
           (identifier))))))
+
+================================================================================
+Single-arg generic application vs comparison disambiguation
+================================================================================
+
+let a = f<int>
+let b = x < y && y > z
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (type_application_expression
+      (long_identifier
+        (identifier))
+      (type_expression
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

@@ -3250,14 +3250,6 @@
           "name": "type_expression"
         },
         {
-          "type": "STRING",
-          "value": ","
-        },
-        {
-          "type": "SYMBOL",
-          "name": "type_expression"
-        },
-        {
           "type": "REPEAT",
           "content": {
             "type": "SEQ",
@@ -4035,8 +4027,17 @@
                   "type": "FIELD",
                   "name": "base",
                   "content": {
-                    "type": "SYMBOL",
-                    "name": "_simple_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_simple_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "application_expression"
+                      }
+                    ]
                   }
                 },
                 {
