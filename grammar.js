@@ -1165,6 +1165,18 @@ export default grammar({
                     "with",
                     $._record_fields,
                 ),
+                // Block form with the base on its OWN line after `{`:
+                //   { ⏎ base with ⏎ field … ⏎ }
+                // The scanner emits `_body_indent` at the base's column (`{` had
+                // no same-line content); without this branch only the no-base
+                // field list consumes that indent, and `base with` errors.
+                seq(
+                    $._body_indent,
+                    field('base', $._simple_expression),
+                    "with",
+                    $._record_fields,
+                    $._body_dedent,
+                ),
                 $._record_fields,
             ),
             "}",

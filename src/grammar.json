@@ -4016,6 +4016,35 @@
               ]
             },
             {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "_body_indent"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "base",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "_simple_expression"
+                  }
+                },
+                {
+                  "type": "STRING",
+                  "value": "with"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_record_fields"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_body_dedent"
+                }
+              ]
+            },
+            {
               "type": "SYMBOL",
               "name": "_record_fields"
             }

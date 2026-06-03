@@ -1041,3 +1041,33 @@ let f =
               (identifier)))))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Record copy-update in block form (base on its own line)
+================================================================================
+
+let p = {
+    Foo.empty with
+        Size = x
+        Other = y
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      base: (long_identifier
+        (identifier)
+        (identifier))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier)))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier))))))
