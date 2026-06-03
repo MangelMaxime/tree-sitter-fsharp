@@ -133,8 +133,8 @@
 (preproc_elif_kw) @keyword.directive
 (preproc_else_kw) @keyword.directive
 (preproc_endif_kw) @keyword.directive
-; the `#if`/`#elif` condition (a whole-line token) — colour it like the directive
-(preproc_expression) @keyword.directive
+; the `#if`/`#elif` condition (`FABLE_COMPILER || …`) is left UNCOLOURED (default)
+; — only the directive keyword is highlighted, not the symbols in the condition.
 (shebang) @keyword.directive
 
 (line_comment) @comment.line

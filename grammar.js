@@ -2592,11 +2592,11 @@ export default grammar({
         preproc_else_kw: _ => token(prec(1, seq("#else", /[ \t]*/))),
         preproc_endif_kw: _ => token(prec(1, seq("#endif", /[ \t]*/))),
 
-        // The `#if`/`#elif` condition — the rest of the directive line as a single
-        // token. (It used to be a structured boolean expression, but `preproc_if`
-        // is now an `extra`, and extras must have an UNAMBIGUOUS ending — the `&&`/
-        // `||` recursion didn't. A whole-line token ends unambiguously at the
-        // newline, and is fine for highlighting.)
+        // The `#if`/`#elif` condition — the rest of the directive line as a SINGLE
+        // token. It must be one atomic token: `preproc_if` is an `extra`, extras must
+        // have an unambiguous ending, and any structured (multi-token) condition —
+        // even a flat `A || B || …` — fails that check. So the operators/symbols
+        // inside the condition cannot be sub-coloured; the whole condition is neutral.
         preproc_expression: _ => token(/[^\n\r]+/),
 
         // Conditional-compilation directives. Modelled as standalone, body-LESS
