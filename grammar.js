@@ -216,7 +216,9 @@ export default grammar({
         $._ce_body_close,  // pops the CE body column at `}`
     ],
 
-    extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
+    extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
+        // Conditional-compilation directives are skippable anywhere (see preproc_if).
+        $.preproc_if, $.preproc_elif, $.preproc_else_kw, $.preproc_endif_kw],
 
     // Conflict declarations enable GLR exploration where LALR(1) is insufficient.
     // Without them, prec.dynamic is silently ignored.
@@ -2252,8 +2254,9 @@ export default grammar({
             // Script-only header
             $.shebang,
 
-            // Preprocessor directives (conditional + non-structural)
-            $.preproc_if,
+            // `#nowarn`/`#load`/`#r`/… non-conditional directives. The conditional
+            // ones (`#if`/`#elif`/`#else`/`#endif`) are `extras` now, so they're not
+            // listed here.
             $.preproc_directive,
 
             // Scope declarations
@@ -2555,36 +2558,21 @@ export default grammar({
         preproc_else_kw: _ => token(prec(1, seq("#else", /[ \t]*/))),
         preproc_endif_kw: _ => token(prec(1, seq("#endif", /[ \t]*/))),
 
-        // Boolean condition for `#if`/`#elif`. `&&` binds tighter than `||`.
-        preproc_expression: $ => choice(
-            $.identifier,
-            "true",
-            "false",
-            seq("!", $.preproc_expression),
-            seq("(", $.preproc_expression, ")"),
-            prec.left(2, seq($.preproc_expression, "&&", $.preproc_expression)),
-            prec.left(1, seq($.preproc_expression, "||", $.preproc_expression)),
-        ),
+        // The `#if`/`#elif` condition — the rest of the directive line as a single
+        // token. (It used to be a structured boolean expression, but `preproc_if`
+        // is now an `extra`, and extras must have an UNAMBIGUOUS ending — the `&&`/
+        // `||` recursion didn't. A whole-line token ends unambiguously at the
+        // newline, and is fine for highlighting.)
+        preproc_expression: _ => token(/[^\n\r]+/),
 
-        // #if COND  body  [#elif COND  body]  [#else  body]  #endif
-        preproc_if: $ => seq(
-            $.preproc_if_kw,
-            field('condition', $.preproc_expression),
-            repeat($._token),
-            repeat($.preproc_elif_clause),
-            optional($.preproc_else_clause),
-            $.preproc_endif_kw,
-        ),
-
-        preproc_elif_clause: $ => seq(
-            $.preproc_elif_kw,
-            field('condition', $.preproc_expression),
-            repeat($._token),
-        ),
-
-        preproc_else_clause: $ => seq(
-            $.preproc_else_kw,
-            repeat($._token),
-        ),
+        // Conditional-compilation directives. Modelled as standalone, body-LESS
+        // nodes and added to `extras` (like comments) so they can appear in ANY
+        // context — between list/array elements, CE statements, record fields, or
+        // top-level decls — without breaking the surrounding parse. The content
+        // they guard is just parsed in place (both `#if` and `#else` branches as
+        // siblings); for a highlighting grammar that's exactly what we want, and it
+        // avoids the cascade of errors a body-wrapping form caused inside `[ … ]`.
+        preproc_if: $ => seq($.preproc_if_kw, field('condition', $.preproc_expression)),
+        preproc_elif: $ => seq($.preproc_elif_kw, field('condition', $.preproc_expression)),
     }
 });

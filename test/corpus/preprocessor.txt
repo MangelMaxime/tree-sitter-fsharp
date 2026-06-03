@@ -11,12 +11,11 @@ let x = 1
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (identifier))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if else endif
@@ -33,17 +32,15 @@ let x = 2
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (identifier))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_else_clause
-      (preproc_else_kw)
-      (let_binding
-        (identifier)
-        (int_literal)))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_else_kw)
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if elif else endif
@@ -62,24 +59,21 @@ let x = 3
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (identifier))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_elif_clause
-      (preproc_elif_kw)
-      (preproc_expression
-        (identifier))
-      (let_binding
-        (identifier)
-        (int_literal)))
-    (preproc_else_clause
-      (preproc_else_kw)
-      (let_binding
-        (identifier)
-        (int_literal)))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_elif
+    (preproc_elif_kw)
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_else_kw)
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if with logical and
@@ -94,15 +88,11 @@ let x = 1
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (preproc_expression
-        (identifier))
-      (preproc_expression
-        (identifier)))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if with logical or
@@ -117,15 +107,11 @@ let x = 1
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (preproc_expression
-        (identifier))
-      (preproc_expression
-        (identifier)))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if with negation
@@ -140,13 +126,11 @@ let x = 1
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (preproc_expression
-        (identifier)))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if with parens
@@ -161,20 +145,11 @@ let x = 1
 (source_file
   (preproc_if
     (preproc_if_kw)
-    (preproc_expression
-      (preproc_expression
-        (preproc_expression
-          (preproc_expression
-            (identifier))
-          (preproc_expression
-            (identifier))))
-      (preproc_expression
-        (preproc_expression
-          (identifier))))
-    (let_binding
-      (identifier)
-      (int_literal))
-    (preproc_endif_kw)))
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor nowarn

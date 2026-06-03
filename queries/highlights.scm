@@ -133,6 +133,8 @@
 (preproc_elif_kw) @keyword.directive
 (preproc_else_kw) @keyword.directive
 (preproc_endif_kw) @keyword.directive
+; the `#if`/`#elif` condition (a whole-line token) — colour it like the directive
+(preproc_expression) @keyword.directive
 (shebang) @keyword.directive
 
 (line_comment) @comment.line
