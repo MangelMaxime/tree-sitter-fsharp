@@ -1493,6 +1493,10 @@ export default grammar({
             $.application_expression,
             $.dot_expression,
             $.begin_end_expression,
+            // `'T.StaticMember` / `^T.StaticMember` — modern F# SRTP member access,
+            // where a (statically-resolved) type parameter is the root of a member
+            // chain, e.g. `'a.suffixFormat.SuffixDelimStart`.
+            $.type_parameter,
         ),
 
         // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]
@@ -2189,13 +2193,18 @@ export default grammar({
         // 'a  ^T  '``Generic type with spaces``
         // Backtick-quoted identifier form is also accepted so that type
         // parameters with spaces or other non-word chars parse.
-        type_parameter: _ => token(seq(
+        // `prec(-1)`: a `'a'` lexes as BOTH a type_parameter (ident `a'`) and a
+        // char literal — same length — and now that type_parameter is valid in
+        // expression position (SRTP `'T.Member`), they compete. Lower precedence
+        // lets `char_literal` win for `'a'`; `'a` (no closing quote, e.g. `'a.X`)
+        // still lexes as a type_parameter since char needs the closing `'`.
+        type_parameter: _ => token(prec(-1, seq(
             choice("'", "^"),
             choice(
                 /[a-zA-Z_][a-zA-Z0-9_']*/,
                 /``[^`\n\r\t]+``/,
             ),
-        )),
+        ))),
 
         // <'T, 'U when 'T :> IFoo and 'U : comparison>
         type_parameter_list: $ => seq(

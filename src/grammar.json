@@ -5560,6 +5560,10 @@
         {
           "type": "SYMBOL",
           "name": "begin_end_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_parameter"
         }
       ]
     },
@@ -8600,35 +8604,39 @@
     "type_parameter": {
       "type": "TOKEN",
       "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "'"
-              },
-              {
-                "type": "STRING",
-                "value": "^"
-              }
-            ]
-          },
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "PATTERN",
-                "value": "[a-zA-Z_][a-zA-Z0-9_']*"
-              },
-              {
-                "type": "PATTERN",
-                "value": "``[^`\\n\\r\\t]+``"
-              }
-            ]
-          }
-        ]
+        "type": "PREC",
+        "value": -1,
+        "content": {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "'"
+                },
+                {
+                  "type": "STRING",
+                  "value": "^"
+                }
+              ]
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "PATTERN",
+                  "value": "[a-zA-Z_][a-zA-Z0-9_']*"
+                },
+                {
+                  "type": "PATTERN",
+                  "value": "``[^`\\n\\r\\t]+``"
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     "type_parameter_list": {

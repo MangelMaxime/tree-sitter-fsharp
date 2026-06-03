@@ -2885,6 +2885,10 @@
             "named": true
           },
           {
+            "type": "type_parameter",
+            "named": true
+          },
+          {
             "type": "typed_expression",
             "named": true
           }
