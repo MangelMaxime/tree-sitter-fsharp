@@ -305,11 +305,32 @@ export default grammar({
 
         attribute_target: $ => seq(
             field('name', $.long_identifier),
-            optional(seq(
-                "(",
-                optional(seq($._expression, repeat(seq(",", $._expression)))),
-                ")",
+            optional(choice(
+                // `[<Foo(args)>]` — parenthesised constructor arguments. The `( )`
+                // boundary lets these be ARBITRARY expressions (named args `X=y`,
+                // arithmetic, arrays, `typeof<…>`, several comma-separated args).
+                seq(
+                    "(",
+                    optional(seq($._expression, repeat(seq(",", $._expression)))),
+                    ")",
+                ),
+                // `[<Direct @"…">]` / `[<Foo "x">]` — bare single-argument form
+                field('argument', $._attribute_arg),
             )),
+        ),
+
+        // Atomic argument for the bare (no-parens) attribute form. Deliberately
+        // narrower than `_expression`: only forms that neither start with `(`
+        // (would clash with the parenthesised attribute form) nor contain `>`
+        // (would clash with the `>]` that closes the attribute). `unit`, `measure`,
+        // and the bracket/paren/type-application expressions are excluded for that
+        // reason. See `attribute_target` for why this can't be unified with the
+        // parenthesised branch.
+        _attribute_arg: $ => choice(
+            $.int_literal, $.float_literal, $.char_literal,
+            $.string_literal, $.verbatim_string, $.triple_quoted_string,
+            $.interpolated_string, $.interpolated_verbatim_string,
+            $.interpolated_triple_string, $.bool_literal, $.long_identifier,
         ),
 
 
