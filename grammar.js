@@ -208,6 +208,12 @@ export default grammar({
         $._bracket_sep,    // dedicated separator between newline-aligned elements
                            //   (a nested sequence can't steal it, unlike _virtual_semi)
         $._bracket_close,  // pops the element column at `]`/`|]`
+        $._ce_body_open,   // after `builder {` with body on next line: pushes the
+                           //   statement column (as a K_INDENT) so every body-close
+                           //   tracks it; statement separation is via _ce_sep
+        $._ce_sep,         // dedicated separator between newline-aligned CE statements
+                           //   (a binding's trailing expression can't steal it)
+        $._ce_body_close,  // pops the CE body column at `}`
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1345,6 +1351,7 @@ export default grammar({
                 decoration($),
                 optional("static"),
                 "let",
+                optional(token.immediate("!")),
                 optional("rec"),
                 decoration($),
                 $._let_signature,
@@ -1371,6 +1378,7 @@ export default grammar({
                 decoration($),
                 optional("static"),
                 "let",
+                optional(token.immediate("!")),
                 optional("rec"),
                 decoration($),
                 $._let_signature,
@@ -1381,8 +1389,8 @@ export default grammar({
 
         // and name params [: type] = expr  (mutual recursion continuation)
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq("and", $._let_signature, "=", field('body', $._expression))),
-            prec(1, seq("and", $._let_signature, "=")),
+            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=", field('body', $._expression))),
+            prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
         )),
 
         // A let binding inside let_expression. Two body forms, chosen by the scanner
@@ -1394,6 +1402,7 @@ export default grammar({
         // rule for sibling lets and continuation expressions.
         let_decl_indented: ($) => seq(
             "let",
+            optional(token.immediate("!")),
             optional("rec"),
             $._let_signature,
             "=",
@@ -1428,7 +1437,7 @@ export default grammar({
 
         // `use r = resource` — auto-disposes r at end of enclosing scope.
         use_expression: $ => prec.right(PREC.LET_EXPR,
-            seq("use", field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), field('name', $.identifier), "=", $._expression),
         ),
 
         // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
@@ -1700,7 +1709,25 @@ export default grammar({
             seq(
                 field('builder', $.long_identifier),
                 "{",
-                repeat(reserved('query_ce', $._ce_statement)),
+                optional(choice(
+                    // Multi-line `builder {`⏎ statements ⏎`}`. `reserved('query_ce')`
+                    // wraps only the STATEMENTS (so query operators activate) and not
+                    // the external `_ce_body_*`/`_ce_sep` tokens. `_ce_sep` is the
+                    // dedicated separator (a binding's trailing expression can't steal
+                    // it); `_ce_body_close` pops at `}`.
+                    seq(
+                        $._ce_body_open,
+                        reserved('query_ce', $._ce_statement),
+                        repeat(seq(choice(";", $._ce_sep), reserved('query_ce', $._ce_statement))),
+                        optional(choice(";", $._ce_sep)),
+                        $._ce_body_close,
+                    ),
+                    // Single line: `builder { return x }` / `seq { x; y }`.
+                    seq(
+                        reserved('query_ce', $._ce_statement),
+                        repeat(seq(";", reserved('query_ce', $._ce_statement))),
+                    ),
+                )),
                 "}",
             ),
         ),
@@ -1711,9 +1738,7 @@ export default grammar({
         // keywords are in the `query_ce` reserved set, which is activated by the
         // `reserved('query_ce', …)` wrap in `computation_expression`.
         _ce_statement: $ => choice(
-            $.ce_let_bang_expr,
             $.use_binding,
-            $.ce_use_bang_expr,
             $.ce_match_bang_expr,
             $.let_binding,
             $.do_stmt,
@@ -1774,30 +1799,9 @@ export default grammar({
 
         // Bindable names for `let!` / `and!` — narrower than _let_name_pattern
         // (no operator names, active patterns, lists, or arrays).
-        _ce_bang_name_pattern: $ => choice(
-            $.identifier, $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.wildcard_pattern,
-        ),
-
-        // let! x = expr [and! y = expr ...]  — parallel applicative binding
-        ce_let_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("let!", field('name', $._ce_bang_name_pattern), "=", $._expression,
-            repeat($.ce_and_bang_expr),
-            ),
-        ),
-
-        // and! y = expr  — continuation of a parallel let! group
-        ce_and_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("and!", field('name', $._ce_bang_name_pattern), "=", $._expression),
-        ),
-
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
-            seq("use", field('name', $.identifier), "=", $._expression),
-        ),
-
-        // use! x = expr
-        ce_use_bang_expr: $ => prec.right(PREC.LET_DECL,
-            seq("use!", field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), field('name', $.identifier), "=", $._expression),
         ),
 
         // match! expr with | pat -> expr …

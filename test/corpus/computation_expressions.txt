@@ -224,9 +224,9 @@ let f x =
           (long_identifier
             (identifier))
           (unit)))
-      (ce_let_bang_expr
+      (let_binding
         name: (identifier)
-        (long_identifier
+        body: (long_identifier
           (identifier)))
       (ce_result_expr
         (long_identifier

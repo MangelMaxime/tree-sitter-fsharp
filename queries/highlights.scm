@@ -23,7 +23,7 @@
   "use"
   "new"
   "exception"
-  "let!" "do!" "use!" "and!"
+  "do!"
   "get" "set" "and"
   "begin" "end"
   "function"
@@ -500,8 +500,14 @@
 ; base and fixed are reserved keywords but appear as plain identifiers in the tree
 ((identifier) @keyword (#match? @keyword "^(base|fixed)$"))
 
-; CE bang-binding names
-(ce_let_bang_expr name: (identifier) @variable)
-(ce_use_bang_expr name: (identifier) @variable)
+; CE bang bindings (`let!`/`use!`/`and!`) are now plain `let`/`use`/`and` + an
+; immediate `!`, so their bound names are coloured by the `let_binding` /
+; `use_binding` rules (no dedicated bang nodes anymore). Colour the trailing `!`
+; like the keyword so `let!`/`use!`/`and!` render as a single keyword.
+(let_binding "!" @keyword)
+(let_decl_indented "!" @keyword)
+(let_and_binding "!" @keyword)
+(use_binding "!" @keyword)
+(use_expression "!" @keyword)
 (use_binding name: (identifier) @variable)
 (use_expression name: (identifier) @variable)

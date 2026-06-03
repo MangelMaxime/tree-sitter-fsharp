@@ -64,6 +64,15 @@ typedef enum {
                     //   DEDICATED token (a nested sequence_expression can't steal
                     //   it, unlike VIRTUAL_SEMI), so elements never chain
     BRACKET_CLOSE,  // pops the K_BRACKET column at `]`/`|]`
+    CE_BODY_OPEN,   // after `builder {` with the body on the next line: pushes the
+                    //   statement column as a normal K_INDENT (so `current`, the
+                    //   indent/dedent logic, and every body-close — LET_BODY_CLOSE,
+                    //   MATCH_BODY_CLOSE — track the CE statement column correctly)
+    CE_SEP,         // separator between newline-aligned CE statements — DEDICATED
+                    //   like BRACKET_SEP (checked before VIRTUAL_SEMI), so a
+                    //   binding's trailing `$._expression` can't absorb the next
+                    //   statement into a sequence_expression
+    CE_BODY_CLOSE,  // pops the CE body's K_INDENT at `}`
 } TokenType;
 
 // One unified offside stack. Each entry is a column plus a KIND tag recording
@@ -88,6 +97,11 @@ typedef enum {
                    //   BRACKET_SEP/BRACKET_CLOSE; deliberately NOT consulted by
                    //   `current`/VIRTUAL_SEMI or any other construct, so it can't
                    //   ripple or corrupt unrelated code if left dangling by an error.
+    K_CE,          // computation-expression statement column (CE_BODY_OPEN). Like
+                   //   K_BRACKET it drives ONLY CE_SEP/CE_BODY_CLOSE and is NOT fed
+                   //   into `current`/VIRTUAL_SEMI — so a dangling entry can't ripple,
+                   //   and statement separation never competes with the generic
+                   //   sequence machinery (the bug that broke the K_INDENT approach).
 } IndentKind;
 
 typedef struct {
@@ -148,6 +162,19 @@ static bool has_indent_le(const IndentStack *s, uint32_t col) {
     return false;
 }
 
+// Current offside baseline: innermost open indented body, counting K_INDENT AND
+// K_CE. K_CE is included so that inside a CE body `current` is the CE statement
+// column — otherwise a multi-line application/let-body in a CE statement treats
+// the next statement (deeper than the OUTER indent) as an indented continuation
+// and chains it, lexing if/then/return as identifiers. CE_SEP fires before
+// VIRTUAL_SEMI, so this does not yield stray virtual-semis.
+static uint32_t cur_col(const IndentStack *s) {
+    for (int i = (int)s->size - 1; i >= 0; i--) {
+        if (s->kinds[i] == K_INDENT || s->kinds[i] == K_CE) return s->cols[i];
+    }
+    return 0;
+}
+
 typedef struct {
     IndentStack stk;
 } Scanner;
@@ -163,7 +190,7 @@ void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     free(s);
 }
 
-#define IDX_KIND_COUNT 6
+#define IDX_KIND_COUNT 7
 
 // Serialize GROUPED BY KIND (one length-prefixed run per kind, in kind order).
 // Critically, the bytes then depend ONLY on each kind's column list and NOT on
@@ -481,6 +508,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_bracket_open = valid_symbols[BRACKET_OPEN];
     bool want_bracket_sep = valid_symbols[BRACKET_SEP];
     bool want_bracket_close = valid_symbols[BRACKET_CLOSE];
+    bool want_ce_body_open = valid_symbols[CE_BODY_OPEN];
+    bool want_ce_sep = valid_symbols[CE_SEP];
+    bool want_ce_body_close = valid_symbols[CE_BODY_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
@@ -489,7 +519,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         && !want_record_field_semi
         && !want_match_body_open && !want_match_body_close && !want_match_arm_sep
         && !want_for_body_open && !want_for_body_close
-        && !want_bracket_open && !want_bracket_sep && !want_bracket_close) {
+        && !want_bracket_open && !want_bracket_sep && !want_bracket_close
+        && !want_ce_body_open && !want_ce_sep && !want_ce_body_close) {
         // No offside token applies here. The only remaining external is the
         // trailing-dot float (`1.`, `20.`). Handled at this point — AFTER the
         // offside-open tokens are ruled out — so that `let x = 2.` still emits
@@ -524,6 +555,32 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             return false;
         }
         // Same-line content: inline list/array. Fall through.
+    }
+
+    // CE_BODY_OPEN: emitted right after `builder {` when the computation-expression
+    // body is on the next line(s). Records the statement column as a K_CE entry so
+    // CE_SEP can fire between newline-aligned statements. EXACTLY like BRACKET_OPEN:
+    // K_CE does NOT feed `current` (the VIRTUAL_SEMI baseline), so the dedicated
+    // CE_SEP is the only thing that separates statements — a binding's trailing
+    // `$._expression` can't steal it, and there's no VIRTUAL_SEMI competition (which
+    // is what broke the K_INDENT approach). Same-line content (`builder { return x }`)
+    // is an inline CE — fall through to the grammar's inline branch.
+    if (want_ce_body_open) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+            lexer->advance(lexer, true);
+        }
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            lexer->mark_end(lexer); // zero-width at the `{` line
+            uint32_t bcol = 0;
+            // Don't open for an immediately-closing `}` (empty multi-line CE) or EOF.
+            if (next_line_indent(lexer, &bcol) && lexer->lookahead != '}') {
+                idx_push(&s->stk, bcol, K_CE);
+                lexer->result_symbol = CE_BODY_OPEN;
+                return true;
+            }
+            return false;
+        }
+        // Same-line content: inline CE. Fall through.
     }
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
@@ -757,6 +814,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                     return true;
                 }
             }
+            // Mid-line CE_BODY_CLOSE before a closing `}` on the last statement's
+            // line (`builder {`⏎`  return x }`). Pops the CE body's K_CE column.
+            if (want_ce_body_close && idx_has(&s->stk, K_CE) &&
+                lexer->lookahead == '}') {
+                idx_pop(&s->stk, K_CE);
+                lexer->result_symbol = CE_BODY_CLOSE;
+                return true;
+            }
             // Mid-line FOR_BODY_CLOSE before a closing `}`/`)` — e.g.
             // `seq { for x in xs do yield x }` with the `}` on the same line
             // as the last body statement. Goes before BODY_DEDENT so the for
@@ -845,6 +910,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         if (want_bracket_close && idx_has(&s->stk, K_BRACKET)) {
             idx_pop(&s->stk, K_BRACKET);
             lexer->result_symbol = BRACKET_CLOSE;
+            return true;
+        }
+        if (want_ce_body_close && idx_has(&s->stk, K_CE)) {
+            idx_pop(&s->stk, K_CE);
+            lexer->result_symbol = CE_BODY_CLOSE;
             return true;
         }
         if (idx_has(&s->stk, K_INDENT)) {
@@ -940,15 +1010,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
         }
-        // Inside a computation expression the CE body's column isn't tracked,
-        // so `body_col` (the enclosing indent) under-shoots the real statement
-        // column and the column test above can miss. A `let!`/`use!`/`and!`/
-        // `do!`/`match!` line always starts a NEW CE binding, never continues
-        // this `let … = value`, so close the body before it regardless of
-        // column. (Only peeked when la0 is a letter — the precompute didn't
-        // advance the lexer, so it still sits on the first char.)
-        if (col > body_col && la0 >= 'a' && la0 <= 'z' &&
-            next_line_starts_with_ce_bang(lexer)) {
+        // Inside a computation expression, `body_col` (the enclosing indent)
+        // under-shoots the real statement column, so the test above misses and
+        // the inline let body would greedily absorb the next CE statement. A line
+        // at EXACTLY the CE statement column (K_CE) starts a NEW statement, so
+        // close the let body there — generalising the old `let!`/`do!`-only
+        // band-aid to every statement start (`match`, `if`, a plain expression,
+        // …). `bar_arm` is excluded so an inline `let f = function`'s own arms
+        // (at the CE column) keep extending the body.
+        if (col > body_col && !bar_arm &&
+            idx_has(&s->stk, K_CE) && col == idx_top(&s->stk, K_CE)) {
             idx_pop(&s->stk, K_LET_BODY);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
@@ -983,6 +1054,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->result_symbol = MATCH_BODY_CLOSE;
             return true;
         }
+    }
+
+    // CE_BODY_CLOSE: next-line `}` (possibly at lower indent) closes the
+    // multi-line CE body. Pops the K_CE column. Mirrors BRACKET_CLOSE below.
+    if (want_ce_body_close && idx_has(&s->stk, K_CE) && lexer->lookahead == '}') {
+        idx_pop(&s->stk, K_CE);
+        lexer->result_symbol = CE_BODY_CLOSE;
+        return true;
     }
 
     // RECORD_BODY_CLOSE: next-line `}` or `|}` (possibly at lower indent)
@@ -1036,7 +1115,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // BODY_INDENT is preferred over INDENT so that at the body position of a
     // module-level let_binding, the parser commits to let_binding rather than
     // exploring let_decl_indented (which would fail without _indent).
-    if (col > current) {
+    // Uses cur_col (K_CE-aware) so a multi-line application/body inside a CE
+    // statement stops at the next statement column instead of chaining it in.
+    if (col > cur_col(&s->stk)) {
         // FOR_BODY_OPEN: a real `for … do` loop body on the next, more-indented
         // line. Pushes the body column onto `indents` (like BODY_INDENT) so
         // `_virtual_semi` sequences multi-statement bodies. Suppressed when the
@@ -1179,6 +1260,44 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
         if (!blocked) {
             lexer->result_symbol = BRACKET_SEP;
+            return true;
+        }
+    }
+
+    // CE_SEP: separator between newline-aligned computation-expression statements,
+    // fired at the CE body column (== `current`, since CE_BODY_OPEN pushed it as a
+    // K_INDENT). DEDICATED like BRACKET_SEP and checked BEFORE VIRTUAL_SEMI, so a
+    // binding statement's trailing `$._expression` (e.g. `let! x = e`, `do! e`)
+    // can't absorb the next statement into a sequence_expression — the expression
+    // can't shift CE_SEP, so it reduces and the statement ends. Blocked by `|`
+    // (a `match` arm inside the CE keeps consuming arms), the closers, and a
+    // leading-infix continuation. Reached after the dedent logic, so a statement's
+    // own inner bodies (let/match) close before the separator fires.
+    bool at_ce_col = idx_has(&s->stk, K_CE) && col == idx_top(&s->stk, K_CE);
+    if (want_ce_sep && at_ce_col) {
+        int32_t c = la0;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
+        // Block before `and`/`and!`: it CONTINUES a `let!`/`and!` applicative
+        // group (or a `let … and …` binding), so it isn't a new statement and
+        // must not be separated off. (`la0`/the peeked chars are safe to consume
+        // here — CE_SEP is zero-width and `mark_end` was already set.)
+        if (!blocked && c == 'a') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 'n') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == 'd') {
+                    lexer->advance(lexer, true);
+                    int32_t after = lexer->lookahead;
+                    bool word = (after >= 'a' && after <= 'z') ||
+                                (after >= 'A' && after <= 'Z') ||
+                                (after >= '0' && after <= '9') ||
+                                after == '_' || after == '\'';
+                    if (!word) blocked = true; // `and` (space) or `and!`
+                }
+            }
+        }
+        if (!blocked) {
+            lexer->result_symbol = CE_SEP;
             return true;
         }
     }

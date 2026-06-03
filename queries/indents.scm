@@ -15,9 +15,6 @@
   (let_decl_indented)
   (use_binding)
   (use_expression)
-  (ce_let_bang_expr)
-  (ce_and_bang_expr)
-  (ce_use_bang_expr)
   (secondary_constructor)
 ] @indent
 
