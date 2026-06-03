@@ -483,3 +483,29 @@ type T = | ChartPreview of printSectionId: Id * ProgressIndicator.Progress
           fields: (long_identifier
             (identifier)
             (identifier)))))))
+
+================================================================================
+Union case with anonymous field before named fields
+================================================================================
+
+type T = | StepThumb of int * inProgress: bool * outcome: Outcome
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          fields: (long_identifier
+            (identifier))
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier)))
+          (union_case_field
+            name: (identifier)
+            type: (long_identifier
+              (identifier))))))))
