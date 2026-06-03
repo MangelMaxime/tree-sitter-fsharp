@@ -896,7 +896,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         } else if (la0 == '&') {
             if (la1 == '&') infix_continue = true;                // && (not & address-of)
         } else if (la0 == ':') {
-            if (la1 == ':') infix_continue = true;                // :: cons (not : annotation)
+            // `::` cons, `:>` upcast, `:?>` downcast — all continue the previous
+            // expression on a leading-operator line. A bare `:` (type annotation)
+            // does NOT.
+            if (la1 == ':' || la1 == '>' || la1 == '?') infix_continue = true;
         } else {
             infix_continue = true;  // = < > * / % ^  (unambiguously infix here)
         }
