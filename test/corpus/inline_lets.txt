@@ -13,7 +13,7 @@ let f () =
     name: (identifier)
     parameters: (parameter
       (unit))
-    body: (use_expression
+    body: (use_binding
       name: (identifier)
       (sequence_expression
         (application_expression

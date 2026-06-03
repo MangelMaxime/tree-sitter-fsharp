@@ -919,7 +919,13 @@ export default grammar({
             $.match_expression,
             $.lambda_expression,
             $.let_expression,
-            $.use_expression,
+            // `use_expression` is the expression-position form of `use x = e`; it's
+            // structurally identical to `use_binding` (the declaration form) but kept
+            // a separate rule because the two live in different parse contexts
+            // (expression vs `_token`/`_ce_statement`) with different precedence —
+            // merging the rules creates an `_expression` vs `_token` conflict. Alias
+            // its OUTPUT to `use_binding` so the tree (and queries) see one node type.
+            alias($.use_expression, $.use_binding),
             $.computation_expression,
             $.for_expression,
             $.while_expression,

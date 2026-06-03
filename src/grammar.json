@@ -2953,8 +2953,13 @@
           "name": "let_expression"
         },
         {
-          "type": "SYMBOL",
-          "name": "use_expression"
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "use_expression"
+          },
+          "named": true,
+          "value": "use_binding"
         },
         {
           "type": "SYMBOL",

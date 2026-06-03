@@ -14,7 +14,6 @@
 [
   (let_decl_indented)
   (use_binding)
-  (use_expression)
   (secondary_constructor)
 ] @indent
 

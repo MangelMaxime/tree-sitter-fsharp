@@ -508,6 +508,4 @@
 (let_decl_indented "!" @keyword)
 (let_and_binding "!" @keyword)
 (use_binding "!" @keyword)
-(use_expression "!" @keyword)
 (use_binding name: (identifier) @variable)
-(use_expression name: (identifier) @variable)
