@@ -51,3 +51,5 @@ zig-out/
 
 # Idea
 .idea/
+
+tmp/
