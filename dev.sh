@@ -19,9 +19,11 @@ echo "Building parser.so..."
 tree-sitter build --output "$REPO_DIR/parser.so"
 
 # --- Grammar symlink ---
+# Only touch the F# grammar — never the whole grammars dir (which holds every
+# other language's grammar too).
 echo "Linking grammar..."
-rm -rf "$HELIX_GRAMMARS"
 mkdir -p "$HELIX_GRAMMARS"
+rm -f "$HELIX_GRAMMARS/fsharp.so"
 cp "$REPO_DIR/parser.so" "$HELIX_GRAMMARS/fsharp.so"
 
 # --- Query symlinks ---
