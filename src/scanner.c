@@ -790,25 +790,40 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     uint32_t current = idx_top(&s->stk, K_INDENT);
 
     // Peek the next line's leading 1-2 significant chars ONCE. The lexer can't
-    // rewind, so every `|`/pipe-op based decision below reads these flags
-    // rather than re-advancing (a re-peek would consume the `|` and corrupt the
-    // checks that follow). Two classifications:
-    //   bar_arm — a real `| pat` arm separator: a `|` that ISN'T part of `|>`
-    //             (pipe), `||` (or), or `|}` (anon-record close).
-    //   pipe_op — a leading `|>` / `<|` / `>>` / `<<` that CONTINUES the
-    //             previous expression (binds it as a binary left operand).
+    // rewind, so every decision below reads these flags rather than re-advancing
+    // (a re-peek would consume the char and corrupt the checks that follow). Two
+    // classifications:
+    //   bar_arm        — a real `| pat` arm separator: a `|` that ISN'T part of
+    //                    `|>` (pipe), `||` (or), or `|}` (anon-record close).
+    //   infix_continue — the next line begins with an INFIX operator, so it
+    //                    continues the previous expression (see the block below).
     int32_t la0 = lexer->lookahead;
-    bool bar_arm = false, pipe_op = false;
-    if (la0 == '|' || la0 == '<' || la0 == '>') {
+    bool bar_arm = false, infix_continue = false;
+    // A line that BEGINS with an infix operator continues the previous
+    // expression (F#'s leading-infix rule), so the scanner must not close a
+    // body or start a virtual-semi statement before it. This generalises the
+    // old pipe-only handling (`|>` `<|` `>>` `<<`) to every infix lead:
+    // comparison/boolean (`<` `<=` `>` `>=` `=` `<>` `&&` `||`), arithmetic
+    // (`*` `/` `%` `^`), cons (`::`), and the pipe/compose family.
+    //   - `|` is special: a BARE `|` is a match arm (bar_arm); only `|>`/`||`
+    //     are infix and `|}` closes an anonymous record.
+    //   - `&` and `:` count only DOUBLED (`&&` / `::`) so a leading address-of
+    //     `&x` or type annotation `:` is not mistaken for a continuation.
+    //   - Unary-capable leads (`-` `+` `!` `~` `@`) are deliberately excluded.
+    if (la0 == '|' || la0 == '<' || la0 == '>' || la0 == '=' ||
+        la0 == '*' || la0 == '/' || la0 == '%' || la0 == '^' ||
+        la0 == '&' || la0 == ':') {
         lexer->advance(lexer, true);
         int32_t la1 = lexer->lookahead;
         if (la0 == '|') {
-            if (la1 == '>') pipe_op = true;                       // |>
-            else if (la1 != '|' && la1 != '}') bar_arm = true;    // | pat
-        } else if (la0 == '<') {
-            if (la1 == '|' || la1 == '<') pipe_op = true;         // <|  <<
-        } else { // '>'
-            if (la1 == '>') pipe_op = true;                       // >>
+            if (la1 == '>' || la1 == '|') infix_continue = true;  // |>  ||
+            else if (la1 != '}') bar_arm = true;                  // | pat (not |})
+        } else if (la0 == '&') {
+            if (la1 == '&') infix_continue = true;                // && (not & address-of)
+        } else if (la0 == ':') {
+            if (la1 == ':') infix_continue = true;                // :: cons (not : annotation)
+        } else {
+            infix_continue = true;  // = < > * / % ^  (unambiguously infix here)
         }
     }
 
@@ -841,7 +856,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         uint32_t body_col = idx_top(&s->stk, K_LET_BODY);
         // A leading pipe/composition operator continues the inline body as a
         // binary expression (`let f = function | A -> a |> g`), so don't close.
-        if (pipe_op) return false;
+        if (infix_continue) return false;
         if (col <= body_col && !bar_arm) {
             idx_pop(&s->stk, K_LET_BODY);
             lexer->result_symbol = LET_BODY_CLOSE;
@@ -884,7 +899,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // Closing here would strand the `|>` with no left operand. Letting the
         // arm body absorb it keeps the parse valid (and the highlighting
         // correct); a genuine non-pipe dedent still closes the match below.
-        if (pipe_op) return false;
+        if (infix_continue) return false;
         if (col <= body_col || bar_arm) {
             idx_pop(&s->stk, K_MATCH_BODY);
             lexer->result_symbol = MATCH_BODY_CLOSE;
@@ -963,7 +978,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // we'd otherwise emit (an expression context), never the for-body close.
     if (col < current && !want_for_body_close &&
         (want_dedent || want_body_dedent) &&
-        pipe_op) {
+        infix_continue) {
         return false;
     }
     if (col < current) {
@@ -1046,9 +1061,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // Apply the same blocker checks as VIRTUAL_SEMI (closing delimiters
         // and continuation keywords must NOT trigger a separator). `la0` is the
         // original first char (the precompute above already advanced the lexer
-        // past it); `pipe_op` covers a leading `<|`/`>>`/`<<` continuation.
+        // past it); `infix_continue` covers a leading `<|`/`>>`/`<<` continuation.
         int32_t c = la0;
-        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || pipe_op);
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
         if (!blocked) {
             lexer->result_symbol = RECORD_FIELD_SEMI;
             return true;
@@ -1058,10 +1073,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool semi_col_match = (idx_has(&s->stk, K_INDENT) && col == current);
     if (want_virtual_semi && semi_col_match) {
         // `la0` is the original first char (the precompute above already
-        // advanced the lexer past it for `|`/`<`/`>` lines); `pipe_op` blocks a
+        // advanced the lexer past it for `|`/`<`/`>` lines); `infix_continue` blocks a
         // leading `<|`/`>>`/`<<` that continues the previous expression.
         int32_t c = la0;
-        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || pipe_op);
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
         // Punctuation/sigil blockers — non-identifier sequences that ALSO start
         // a new declaration rather than continuing an expression. Peeking two
         // characters: `[<` opens an attribute, `//` opens a `///` doc comment.

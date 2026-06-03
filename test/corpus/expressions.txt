@@ -985,3 +985,28 @@ let u = (|Bar|)
     name: (identifier)
     body: (active_pattern_expression
       (active_pattern_name))))
+
+================================================================================
+Leading infix operators continue the previous line
+================================================================================
+
+let f x =
+    a
+    >= b
+    && c
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (binary_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier)))))
