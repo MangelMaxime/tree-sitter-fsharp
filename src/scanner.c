@@ -241,7 +241,13 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *
 // comment between two declarations would be reported as the next significant
 // line and (for inside-an-indented-body scanner calls) trigger a spurious
 // BODY_DEDENT that closes the surrounding block.
-static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
+// `first` (optional, may be NULL) receives the first SIGNIFICANT char of the
+// reported line. This matters because the comment-probe below advances PAST a
+// lone `(` or `/` (checking for `(*` / `//`), so afterwards `lexer->lookahead`
+// is the SECOND char — e.g. for a line starting `()` it's `)`. Callers that use
+// the next line's leading char for decisions (the offside `la0`) must read
+// `first`, not `lexer->lookahead`, or `()`-led statements look like a `)` blocker.
+static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     // Skip the rest of the current line (non-newline chars).
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
         lexer->advance(lexer, true);
@@ -278,6 +284,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
                 continue;
             }
             // Single slash — treat as content at `indent` columns.
+            if (first) *first = '/';
             *col = indent;
             return true;
         }
@@ -286,6 +293,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
             lexer->advance(lexer, true);
             if (lexer->lookahead != '*') {
                 // Lone `(` — significant content at `indent`.
+                if (first) *first = '(';
                 *col = indent;
                 return true;
             }
@@ -319,6 +327,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col) {
         }
         if (lexer->lookahead == 0) return false; // EOF after blank lines
 
+        if (first) *first = lexer->lookahead;
         *col = indent;
         return true;
     }
@@ -547,7 +556,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // Don't open for an immediately-closing `]` (empty multi-line list)
             // or EOF — let the close/grammar handle it. An empty multi-line
             // array `[|⏎|]` is rare; it falls through harmlessly.
-            if (next_line_indent(lexer, &bcol) && lexer->lookahead != ']') {
+            if (next_line_indent(lexer, &bcol, NULL) && lexer->lookahead != ']') {
                 idx_push(&s->stk, bcol, K_BRACKET);
                 lexer->result_symbol = BRACKET_OPEN;
                 return true;
@@ -573,7 +582,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             lexer->mark_end(lexer); // zero-width at the `{` line
             uint32_t bcol = 0;
             // Don't open for an immediately-closing `}` (empty multi-line CE) or EOF.
-            if (next_line_indent(lexer, &bcol) && lexer->lookahead != '}') {
+            if (next_line_indent(lexer, &bcol, NULL) && lexer->lookahead != '}') {
                 idx_push(&s->stk, bcol, K_CE);
                 lexer->result_symbol = CE_BODY_OPEN;
                 return true;
@@ -879,7 +888,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     uint32_t col = 0;
-    if (!next_line_indent(lexer, &col)) {
+    int32_t line_first = 0; // first SIGNIFICANT char of the next line (see next_line_indent)
+    if (!next_line_indent(lexer, &col, &line_first)) {
         // EOF: close any open block. LET_BODY_CLOSE / INLINE_CLOSE first so
         // inline-bodied lets close before any surrounding BODY_/INDENT blocks.
         if (want_let_body_close && idx_has(&s->stk, K_LET_BODY)) {
@@ -942,7 +952,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     //                    `|>` (pipe), `||` (or), or `|}` (anon-record close).
     //   infix_continue — the next line begins with an INFIX operator, so it
     //                    continues the previous expression (see the block below).
-    int32_t la0 = lexer->lookahead;
+    // `line_first` (from next_line_indent), NOT `lexer->lookahead`: the comment
+    // probe may have advanced past a lone `(` / `/`, so lexer->lookahead can be the
+    // SECOND char (e.g. `)` for a line starting `()`), which would wrongly read as a
+    // separator-blocker. The follow-up la1 peek below only fires for operator leads
+    // (`|`/`&`/`:`), which are never consumed by the probe, so they stay aligned.
+    int32_t la0 = line_first;
     bool bar_arm = false, infix_continue = false;
     // A line that BEGINS with an infix operator continues the previous
     // expression (F#'s leading-infix rule), so the scanner must not close a
