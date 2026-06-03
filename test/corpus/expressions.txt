@@ -1129,3 +1129,28 @@ let b = x < y && y > z
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Newline-separated list elements are separate (not chained)
+================================================================================
+
+let x = [
+    text "a"
+    text "b"
+]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (list_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (string_literal))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (string_literal)))))
+

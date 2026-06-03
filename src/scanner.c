@@ -58,6 +58,12 @@ typedef enum {
     FOR_BODY_OPEN,
     FOR_BODY_CLOSE,
     FLOAT_TRAILING_DOT,
+    BRACKET_OPEN,   // after `[`/`[|` with the body on the next line: captures the
+                    //   element column (kind K_BRACKET)
+    BRACKET_SEP,    // separator between newline-aligned bracket elements — a
+                    //   DEDICATED token (a nested sequence_expression can't steal
+                    //   it, unlike VIRTUAL_SEMI), so elements never chain
+    BRACKET_CLOSE,  // pops the K_BRACKET column at `]`/`|]`
 } TokenType;
 
 // One unified offside stack. Each entry is a column plus a KIND tag recording
@@ -78,6 +84,10 @@ typedef enum {
     K_LET_BODY,    // same-line let_binding body (old `let_body_cols`)
     K_RECORD,      // inline record-expression field list (old `record_cols`)
     K_MATCH_BODY,  // same-line match/try/function arm body (old `match_body_cols`)
+    K_BRACKET,     // list/array element body column (BRACKET_OPEN). Drives ONLY
+                   //   BRACKET_SEP/BRACKET_CLOSE; deliberately NOT consulted by
+                   //   `current`/VIRTUAL_SEMI or any other construct, so it can't
+                   //   ripple or corrupt unrelated code if left dangling by an error.
 } IndentKind;
 
 typedef struct {
@@ -153,7 +163,7 @@ void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     free(s);
 }
 
-#define IDX_KIND_COUNT 5
+#define IDX_KIND_COUNT 6
 
 // Serialize GROUPED BY KIND (one length-prefixed run per kind, in kind order).
 // Critically, the bytes then depend ONLY on each kind's column list and NOT on
@@ -468,6 +478,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_match_arm_sep = valid_symbols[MATCH_ARM_SEP];
     bool want_for_body_open = valid_symbols[FOR_BODY_OPEN];
     bool want_for_body_close = valid_symbols[FOR_BODY_CLOSE];
+    bool want_bracket_open = valid_symbols[BRACKET_OPEN];
+    bool want_bracket_sep = valid_symbols[BRACKET_SEP];
+    bool want_bracket_close = valid_symbols[BRACKET_CLOSE];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
@@ -475,7 +488,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         && !want_record_body_open && !want_record_body_close
         && !want_record_field_semi
         && !want_match_body_open && !want_match_body_close && !want_match_arm_sep
-        && !want_for_body_open && !want_for_body_close) {
+        && !want_for_body_open && !want_for_body_close
+        && !want_bracket_open && !want_bracket_sep && !want_bracket_close) {
         // No offside token applies here. The only remaining external is the
         // trailing-dot float (`1.`, `20.`). Handled at this point — AFTER the
         // offside-open tokens are ruled out — so that `let x = 2.` still emits
@@ -484,6 +498,32 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // the sole valid symbol).
         if (valid_symbols[FLOAT_TRAILING_DOT]) return scan_trailing_dot_float(lexer);
         return false;
+    }
+
+    // BRACKET_OPEN: emitted right after `[` / `[|` when the list/array body is on
+    // the next line(s). Records the first element's column as a K_BRACKET entry
+    // so BRACKET_SEP can fire between newline-aligned elements. K_BRACKET does
+    // NOT feed `current` (the VIRTUAL_SEMI baseline), so it can't ripple into the
+    // separation of inner bodies. Same-line content (`[ a; b ]`) means an inline
+    // list — fall through to the grammar's inline `;`-separated branch.
+    if (want_bracket_open) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+            lexer->advance(lexer, true);
+        }
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            lexer->mark_end(lexer); // zero-width at the `[` line
+            uint32_t bcol = 0;
+            // Don't open for an immediately-closing `]` (empty multi-line list)
+            // or EOF — let the close/grammar handle it. An empty multi-line
+            // array `[|⏎|]` is rare; it falls through harmlessly.
+            if (next_line_indent(lexer, &bcol) && lexer->lookahead != ']') {
+                idx_push(&s->stk, bcol, K_BRACKET);
+                lexer->result_symbol = BRACKET_OPEN;
+                return true;
+            }
+            return false;
+        }
+        // Same-line content: inline list/array. Fall through.
     }
 
     // INLINE_OPEN: emitted right after `=` when a let_decl_indented body starts on
@@ -685,6 +725,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                     }
                 }
             }
+            // Mid-line `]`/`|]` closing a multi-line bracket body whose `]` sits
+            // on the last element's line (`[`⏎`a`⏎`b ]`).
+            if (want_bracket_close && idx_has(&s->stk, K_BRACKET)) {
+                if (lexer->lookahead == ']') {
+                    idx_pop(&s->stk, K_BRACKET);
+                    lexer->result_symbol = BRACKET_CLOSE;
+                    return true;
+                }
+                if (lexer->lookahead == '|') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == ']') {
+                        idx_pop(&s->stk, K_BRACKET);
+                        lexer->result_symbol = BRACKET_CLOSE;
+                        return true;
+                    }
+                }
+            }
             // Mid-line MATCH_BODY_CLOSE before a new `| …` arm on the SAME
             // line — e.g. single-line `function | 0 -> "a" | _ -> "b"`. A
             // bare `|` that ISN'T `|>` (pipe), `||` (or), or `|}` (anon-record
@@ -783,6 +840,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         if (want_record_body_close && idx_has(&s->stk, K_RECORD)) {
             idx_pop(&s->stk, K_RECORD);
             lexer->result_symbol = RECORD_BODY_CLOSE;
+            return true;
+        }
+        if (want_bracket_close && idx_has(&s->stk, K_BRACKET)) {
+            idx_pop(&s->stk, K_BRACKET);
+            lexer->result_symbol = BRACKET_CLOSE;
             return true;
         }
         if (idx_has(&s->stk, K_INDENT)) {
@@ -938,6 +1000,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
+    // BRACKET_CLOSE: next-line `]` (list) or `|]` (array), at the dedented close
+    // of a multi-line bracket body.
+    if (want_bracket_close && idx_has(&s->stk, K_BRACKET)) {
+        if (lexer->lookahead == ']') {
+            idx_pop(&s->stk, K_BRACKET);
+            lexer->result_symbol = BRACKET_CLOSE;
+            return true;
+        }
+        if (lexer->lookahead == '|') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == ']') {
+                idx_pop(&s->stk, K_BRACKET);
+                lexer->result_symbol = BRACKET_CLOSE;
+                return true;
+            }
+        }
+    }
+
     // INLINE_CLOSE: any line at column <= the recorded body column ends the inline
     // body (sibling let, continuation expression, or end of enclosing block).
     if (want_inline_close && idx_has(&s->stk, K_INLINE)) {
@@ -1079,6 +1159,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
         if (!blocked) {
             lexer->result_symbol = RECORD_FIELD_SEMI;
+            return true;
+        }
+    }
+
+    // BRACKET_SEP: separator between newline-aligned list/array elements, fired
+    // at the captured K_BRACKET column. Like RECORD_FIELD_SEMI it is DEDICATED —
+    // a `sequence_expression` nested in an element (e.g. a multi-line lambda
+    // body) cannot shift it, so the element reduces out and the next element
+    // starts instead of chaining. Reached only after the dedent logic above, so
+    // an element's own inner bodies close before the separator fires.
+    bool at_bracket_col = idx_has(&s->stk, K_BRACKET) &&
+                          col == idx_top(&s->stk, K_BRACKET);
+    if (want_bracket_sep && at_bracket_col) {
+        int32_t c = la0;
+        bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
+        if (!blocked) {
+            lexer->result_symbol = BRACKET_SEP;
             return true;
         }
     }

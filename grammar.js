@@ -203,6 +203,11 @@ export default grammar({
                               //   stay as `query_operator` siblings.
         $._for_body_close,
         $._float_trailing_dot,
+        $._bracket_open,   // after `[`/`[|` with body on next line: captures the
+                           //   element column so newline-aligned elements separate
+        $._bracket_sep,    // dedicated separator between newline-aligned elements
+                           //   (a nested sequence can't steal it, unlike _virtual_semi)
+        $._bracket_close,  // pops the element column at `]`/`|]`
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment],
@@ -1117,18 +1122,44 @@ export default grammar({
 
         list_expression: $ => seq(
             "[",
-            optional(seq(
-                $._expression,
-                repeat(seq(";", $._expression)),
+            optional(choice(
+                // Block form `[`⏎ elements ⏎`]`: `_bracket_open` captures the
+                // element column, `_bracket_sep` separates newline-aligned
+                // elements (a dedicated token a nested sequence can't absorb, so
+                // elements never chain into one application), `_bracket_close`
+                // pops at `]`.
+                seq(
+                    $._bracket_open,
+                    $._expression,
+                    repeat(seq(choice(";", $._bracket_sep), $._expression)),
+                    optional(choice(";", $._bracket_sep)),
+                    $._bracket_close,
+                ),
+                // Inline form `[ a; b; c ]`.
+                seq(
+                    $._expression,
+                    repeat(seq(";", $._expression)),
+                ),
             )),
             "]",
         ),
 
         array_expression: $ => seq(
             "[|",
-            optional(seq(
-                $._expression,
-                repeat(seq(";", $._expression)),
+            optional(choice(
+                // Block form `[|`⏎ elements ⏎`|]` (see list_expression).
+                seq(
+                    $._bracket_open,
+                    $._expression,
+                    repeat(seq(choice(";", $._bracket_sep), $._expression)),
+                    optional(choice(";", $._bracket_sep)),
+                    $._bracket_close,
+                ),
+                // Inline form `[| a; b; c |]`.
+                seq(
+                    $._expression,
+                    repeat(seq(";", $._expression)),
+                ),
             )),
             "|]",
         ),
