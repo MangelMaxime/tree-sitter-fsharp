@@ -777,7 +777,9 @@ export default grammar({
             $.type_expression,
         ),
 
-        union_type_defn: $ => repeat1($.union_case),
+        // `optional(access_modifier)`: `type X = private | A | B` — a private (or
+        // internal) union representation, the F# smart-constructor pattern.
+        union_type_defn: $ => seq(optional($.access_modifier), repeat1($.union_case)),
 
         // `repeat($.line_comment)` absorbs trailing comments INTO `union_case`
         // so the next case's `|` becomes the parser's one-token lookahead.
@@ -886,6 +888,8 @@ export default grammar({
         // a newline (e.g. `unit -> unit` followed by `A : 'A` was parsed as
         // `unit -> (unit A)` via postfix_type, erroring on the trailing `:`).
         record_type_defn: $ => seq(
+            // `type X = private { … }` — private record representation.
+            optional($.access_modifier),
             "{",
             indentedOrInlineFieldList($, $.record_type_field, TYPE_PREC.POSTFIX + 1, { sameLineBraceForm: true }),
             "}",

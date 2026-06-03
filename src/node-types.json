@@ -12802,6 +12802,10 @@
       "required": true,
       "types": [
         {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
           "type": "record_type_field",
           "named": true
         }
@@ -16652,6 +16656,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
         {
           "type": "union_case",
           "named": true

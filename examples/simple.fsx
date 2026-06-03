@@ -1948,3 +1948,19 @@ module Direction =
     | South -> "South"
     | _ -> "Horizontal"
 
+
+type RequiredName =
+    private
+    | RequiredName of rn: string
+
+    member this.Value = let (RequiredName v) = this in v
+
+type Email =
+    private { Address: string }
+
+type PrivateColor = private | Red | Green | Blue
+
+type internal Token =
+    internal
+    | Ident of string
+    | Number of int

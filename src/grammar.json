@@ -2250,11 +2250,28 @@
       ]
     },
     "union_type_defn": {
-      "type": "REPEAT1",
-      "content": {
-        "type": "SYMBOL",
-        "name": "union_case"
-      }
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "access_modifier"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "SYMBOL",
+            "name": "union_case"
+          }
+        }
+      ]
     },
     "union_case": {
       "type": "PREC_RIGHT",
@@ -2647,6 +2664,18 @@
     "record_type_defn": {
       "type": "SEQ",
       "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "access_modifier"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
         {
           "type": "STRING",
           "value": "{"
