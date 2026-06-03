@@ -22,7 +22,7 @@
 //                              is <= that recorded column.
 //   LET_BODY_OPEN/CLOSE      — wrap same-line let_binding bodies. Like
 //                              INLINE_OPEN/CLOSE but pushes the ENCLOSING
-//                              indent column (`stack_top(&s->indents)`),
+//                              indent column (`idx_top(&s->stk, K_INDENT)`),
 //                              which approximates the LET keyword's column.
 //                              Stops `let x = expr1\nexpr2` at top level from
 //                              absorbing the next-line expression as a chained
@@ -60,34 +60,73 @@ typedef enum {
     FLOAT_TRAILING_DOT,
 } TokenType;
 
+// One unified offside stack. Each entry is a column plus a KIND tag recording
+// which construct opened it. This replaces the five separate column stacks the
+// scanner used to keep — a single source of truth for "what column am I at", so
+// the per-construct OPEN/CLOSE logic can never disagree about nesting.
+//
+// Operations are kind-scoped: idx_top / idx_has / idx_pop act on the TOPMOST
+// entry of the requested kind. Entries are pushed in nesting order, so the
+// topmost entry of a kind is exactly what that construct's old dedicated stack
+// would have had on top — making this change behaviour-preserving. idx_pop
+// removes that entry wherever it sits (almost always the very top, since inner
+// constructs close first); removing a buried entry preserves the relative order
+// of the rest, and thus every kind's "topmost", intact.
+typedef enum {
+    K_INDENT,      // BODY_INDENT / INDENT / FOR_BODY_OPEN bodies (old `indents`)
+    K_INLINE,      // same-line let_decl_indented body (old `inline_cols`)
+    K_LET_BODY,    // same-line let_binding body (old `let_body_cols`)
+    K_RECORD,      // inline record-expression field list (old `record_cols`)
+    K_MATCH_BODY,  // same-line match/try/function arm body (old `match_body_cols`)
+} IndentKind;
+
 typedef struct {
-    uint32_t *data;
-    uint32_t size;
-    uint32_t capacity;
+    uint32_t *cols;
+    uint8_t  *kinds;
+    uint32_t  size;
+    uint32_t  capacity;
 } IndentStack;
 
-static void stack_push(IndentStack *s, uint32_t val) {
+static void idx_push(IndentStack *s, uint32_t col, uint8_t kind) {
     if (s->size == s->capacity) {
         s->capacity = s->capacity ? s->capacity * 2 : 8;
-        s->data = realloc(s->data, s->capacity * sizeof(uint32_t));
+        s->cols  = realloc(s->cols,  s->capacity * sizeof(uint32_t));
+        s->kinds = realloc(s->kinds, s->capacity * sizeof(uint8_t));
     }
-    s->data[s->size++] = val;
+    s->cols[s->size] = col;
+    s->kinds[s->size] = kind;
+    s->size++;
 }
 
-static uint32_t stack_top(const IndentStack *s) {
-    return s->size > 0 ? s->data[s->size - 1] : 0;
+// Index of the topmost entry of `kind`, or -1 if there is none.
+static int idx_find(const IndentStack *s, uint8_t kind) {
+    for (int i = (int)s->size - 1; i >= 0; i--) {
+        if (s->kinds[i] == kind) return i;
+    }
+    return -1;
 }
 
-static void stack_pop(IndentStack *s) {
-    if (s->size > 0) s->size--;
+static bool idx_has(const IndentStack *s, uint8_t kind) {
+    return idx_find(s, kind) >= 0;
+}
+
+static uint32_t idx_top(const IndentStack *s, uint8_t kind) {
+    int i = idx_find(s, kind);
+    return i >= 0 ? s->cols[i] : 0;
+}
+
+static void idx_pop(IndentStack *s, uint8_t kind) {
+    int i = idx_find(s, kind);
+    if (i < 0) return;
+    for (uint32_t j = (uint32_t)i; j + 1 < s->size; j++) {
+        s->cols[j]  = s->cols[j + 1];
+        s->kinds[j] = s->kinds[j + 1];
+    }
+    s->size--;
 }
 
 typedef struct {
-    IndentStack indents;        // pushed by BODY_INDENT / INDENT, popped by their DEDENT
-    IndentStack inline_cols;    // pushed by INLINE_OPEN, popped by INLINE_CLOSE
-    IndentStack let_body_cols;  // pushed by LET_BODY_OPEN, popped by LET_BODY_CLOSE
-    IndentStack record_cols;    // pushed by RECORD_BODY_OPEN, popped by RECORD_BODY_CLOSE
-    IndentStack match_body_cols;// pushed by MATCH_BODY_OPEN, popped by MATCH_BODY_CLOSE
+    IndentStack stk;
 } Scanner;
 
 void *tree_sitter_fsharp_external_scanner_create(void) {
@@ -96,54 +135,51 @@ void *tree_sitter_fsharp_external_scanner_create(void) {
 
 void tree_sitter_fsharp_external_scanner_destroy(void *payload) {
     Scanner *s = payload;
-    free(s->indents.data);
-    free(s->inline_cols.data);
-    free(s->let_body_cols.data);
-    free(s->record_cols.data);
-    free(s->match_body_cols.data);
+    free(s->stk.cols);
+    free(s->stk.kinds);
     free(s);
 }
 
-static unsigned serialize_stack(const IndentStack *st, char *buf, unsigned n) {
-    uint32_t sz = st->size;
-    if (n + 4 > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) return n;
-    memcpy(buf + n, &sz, 4); n += 4;
-    for (uint32_t i = 0; i < sz && n + 4 <= TREE_SITTER_SERIALIZATION_BUFFER_SIZE; i++) {
-        memcpy(buf + n, &st->data[i], 4); n += 4;
-    }
-    return n;
-}
+#define IDX_KIND_COUNT 5
 
-static unsigned deserialize_stack(IndentStack *st, const char *buf, unsigned length, unsigned n) {
-    st->size = 0;
-    if (n + 4 > length) return n;
-    uint32_t sz; memcpy(&sz, buf + n, 4); n += 4;
-    for (uint32_t i = 0; i < sz && n + 4 <= length; i++) {
-        uint32_t v; memcpy(&v, buf + n, 4); n += 4;
-        stack_push(st, v);
-    }
-    return n;
-}
-
+// Serialize GROUPED BY KIND (one length-prefixed run per kind, in kind order).
+// Critically, the bytes then depend ONLY on each kind's column list and NOT on
+// the cross-kind push interleaving — so two scanner states the scanner can't
+// tell apart (same idx_top/idx_has for every kind) serialize identically, which
+// is what lets tree-sitter merge GLR parse stacks. Encoding the interleaving
+// would make logically-equal states look different and suppress that merging,
+// changing error-recovery behaviour. This format is byte-compatible with the
+// pre-unification five-separate-stacks layout.
 unsigned tree_sitter_fsharp_external_scanner_serialize(void *payload, char *buf) {
     Scanner *s = payload;
     unsigned n = 0;
-    n = serialize_stack(&s->indents, buf, n);
-    n = serialize_stack(&s->inline_cols, buf, n);
-    n = serialize_stack(&s->let_body_cols, buf, n);
-    n = serialize_stack(&s->record_cols, buf, n);
-    n = serialize_stack(&s->match_body_cols, buf, n);
+    for (uint8_t k = 0; k < IDX_KIND_COUNT; k++) {
+        uint32_t cnt = 0;
+        for (uint32_t i = 0; i < s->stk.size; i++) {
+            if (s->stk.kinds[i] == k) cnt++;
+        }
+        if (n + 4 > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) break;
+        memcpy(buf + n, &cnt, 4); n += 4;
+        for (uint32_t i = 0; i < s->stk.size && n + 4 <= TREE_SITTER_SERIALIZATION_BUFFER_SIZE; i++) {
+            if (s->stk.kinds[i] != k) continue;
+            memcpy(buf + n, &s->stk.cols[i], 4); n += 4;
+        }
+    }
     return n;
 }
 
 void tree_sitter_fsharp_external_scanner_deserialize(void *payload, const char *buf, unsigned length) {
     Scanner *s = payload;
+    s->stk.size = 0;
     unsigned n = 0;
-    n = deserialize_stack(&s->indents, buf, length, n);
-    n = deserialize_stack(&s->inline_cols, buf, length, n);
-    n = deserialize_stack(&s->let_body_cols, buf, length, n);
-    n = deserialize_stack(&s->record_cols, buf, length, n);
-    n = deserialize_stack(&s->match_body_cols, buf, length, n);
+    for (uint8_t k = 0; k < IDX_KIND_COUNT; k++) {
+        if (n + 4 > length) break;
+        uint32_t cnt; memcpy(&cnt, buf + n, 4); n += 4;
+        for (uint32_t i = 0; i < cnt && n + 4 <= length; i++) {
+            uint32_t col; memcpy(&col, buf + n, 4); n += 4;
+            idx_push(&s->stk, col, k);
+        }
+    }
 }
 
 // Skip to the next non-blank, non-comment line and return its indent column in
@@ -452,7 +488,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         uint32_t body_col = 0;
         int r = check_inline_body_open(lexer, &body_col);
         if (r == 1) {
-            stack_push(&s->inline_cols, body_col);
+            idx_push(&s->stk, body_col, K_INLINE);
             lexer->result_symbol = INLINE_OPEN;
             return true;
         }
@@ -473,7 +509,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         uint32_t body_col = 0; // unused for LET_BODY_OPEN
         int r = check_inline_body_open(lexer, &body_col);
         if (r == 1) {
-            stack_push(&s->let_body_cols, stack_top(&s->indents));
+            idx_push(&s->stk, idx_top(&s->stk, K_INDENT), K_LET_BODY);
             lexer->result_symbol = LET_BODY_OPEN;
             return true;
         }
@@ -499,7 +535,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
         // Same-line body present? (Not newline / EOF.)
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
-            stack_push(&s->match_body_cols, stack_top(&s->indents));
+            idx_push(&s->stk, idx_top(&s->stk, K_INDENT), K_MATCH_BODY);
             lexer->mark_end(lexer); // zero-width — emit at the body's column.
             lexer->result_symbol = MATCH_BODY_OPEN;
             return true;
@@ -591,7 +627,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                 if (sep == '=' || sep == ':') looks_like_field = true;
             }
             if (looks_like_field) {
-                stack_push(&s->record_cols, col);
+                idx_push(&s->stk, col, K_RECORD);
                 lexer->result_symbol = RECORD_BODY_OPEN;
                 return true;
             }
@@ -621,16 +657,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // the grammar consume the closing delimiter next. Goes before
             // BODY_DEDENT so a record's inline close beats a pending
             // BODY_DEDENT (the close is the more specific shape).
-            if (want_record_body_close && s->record_cols.size > 0) {
+            if (want_record_body_close && idx_has(&s->stk, K_RECORD)) {
                 if (lexer->lookahead == '}') {
-                    stack_pop(&s->record_cols);
+                    idx_pop(&s->stk, K_RECORD);
                     lexer->result_symbol = RECORD_BODY_CLOSE;
                     return true;
                 }
                 if (lexer->lookahead == '|') {
                     lexer->advance(lexer, true);
                     if (lexer->lookahead == '}') {
-                        stack_pop(&s->record_cols);
+                        idx_pop(&s->stk, K_RECORD);
                         lexer->result_symbol = RECORD_BODY_CLOSE;
                         return true;
                     }
@@ -641,12 +677,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // bare `|` that ISN'T `|>` (pipe), `||` (or), or `|}` (anon-record
             // close) starts the next arm, so the inline arm body must close
             // first. The `}` case (anon-record) is handled by RECORD above.
-            if (want_match_body_close && s->match_body_cols.size > 0 &&
+            if (want_match_body_close && idx_has(&s->stk, K_MATCH_BODY) &&
                 lexer->lookahead == '|') {
                 lexer->advance(lexer, true);
                 int32_t after = lexer->lookahead;
                 if (after != '>' && after != '|' && after != '}') {
-                    stack_pop(&s->match_body_cols);
+                    idx_pop(&s->stk, K_MATCH_BODY);
                     lexer->result_symbol = MATCH_BODY_CLOSE;
                     return true;
                 }
@@ -655,9 +691,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // `seq { for x in xs do yield x }` with the `}` on the same line
             // as the last body statement. Goes before BODY_DEDENT so the for
             // body's own close fires first.
-            if (want_for_body_close && s->indents.size > 0 &&
+            if (want_for_body_close && idx_has(&s->stk, K_INDENT) &&
                 (lexer->lookahead == '}' || lexer->lookahead == ')')) {
-                stack_pop(&s->indents);
+                idx_pop(&s->stk, K_INDENT);
                 lexer->result_symbol = FOR_BODY_CLOSE;
                 return true;
             }
@@ -665,9 +701,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
             // delimiter and the parser is expecting BODY_DEDENT (i.e. we are
             // inside an indented body that needs to close before the
             // delimiter), pop one indent level and emit BODY_DEDENT.
-            if (want_body_dedent && s->indents.size > 0) {
+            if (want_body_dedent && idx_has(&s->stk, K_INDENT)) {
                 if (lexer->lookahead == '}' || lexer->lookahead == ')') {
-                    stack_pop(&s->indents);
+                    idx_pop(&s->stk, K_INDENT);
                     lexer->result_symbol = BODY_DEDENT;
                     return true;
                 }
@@ -686,7 +722,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                                 (after >= '0' && after <= '9') ||
                                 after == '_' || after == '\'';
                             if (!word_continues) {
-                                stack_pop(&s->indents);
+                                idx_pop(&s->stk, K_INDENT);
                                 lexer->result_symbol = BODY_DEDENT;
                                 return true;
                             }
@@ -711,39 +747,39 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     if (!next_line_indent(lexer, &col)) {
         // EOF: close any open block. LET_BODY_CLOSE / INLINE_CLOSE first so
         // inline-bodied lets close before any surrounding BODY_/INDENT blocks.
-        if (want_let_body_close && s->let_body_cols.size > 0) {
-            stack_pop(&s->let_body_cols);
+        if (want_let_body_close && idx_has(&s->stk, K_LET_BODY)) {
+            idx_pop(&s->stk, K_LET_BODY);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
         }
-        if (want_match_body_close && s->match_body_cols.size > 0) {
-            stack_pop(&s->match_body_cols);
+        if (want_match_body_close && idx_has(&s->stk, K_MATCH_BODY)) {
+            idx_pop(&s->stk, K_MATCH_BODY);
             lexer->result_symbol = MATCH_BODY_CLOSE;
             return true;
         }
-        if (want_for_body_close && s->indents.size > 0) {
-            stack_pop(&s->indents);
+        if (want_for_body_close && idx_has(&s->stk, K_INDENT)) {
+            idx_pop(&s->stk, K_INDENT);
             lexer->result_symbol = FOR_BODY_CLOSE;
             return true;
         }
-        if (want_inline_close && s->inline_cols.size > 0) {
-            stack_pop(&s->inline_cols);
+        if (want_inline_close && idx_has(&s->stk, K_INLINE)) {
+            idx_pop(&s->stk, K_INLINE);
             lexer->result_symbol = INLINE_CLOSE;
             return true;
         }
-        if (want_record_body_close && s->record_cols.size > 0) {
-            stack_pop(&s->record_cols);
+        if (want_record_body_close && idx_has(&s->stk, K_RECORD)) {
+            idx_pop(&s->stk, K_RECORD);
             lexer->result_symbol = RECORD_BODY_CLOSE;
             return true;
         }
-        if (s->indents.size > 0) {
+        if (idx_has(&s->stk, K_INDENT)) {
             if (want_dedent) {
-                stack_pop(&s->indents);
+                idx_pop(&s->stk, K_INDENT);
                 lexer->result_symbol = DEDENT;
                 return true;
             }
             if (want_body_dedent) {
-                stack_pop(&s->indents);
+                idx_pop(&s->stk, K_INDENT);
                 lexer->result_symbol = BODY_DEDENT;
                 return true;
             }
@@ -751,7 +787,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         return false;
     }
 
-    uint32_t current = stack_top(&s->indents);
+    uint32_t current = idx_top(&s->stk, K_INDENT);
 
     // Peek the next line's leading 1-2 significant chars ONCE. The lexer can't
     // rewind, so every `|`/pipe-op based decision below reads these flags
@@ -801,13 +837,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // continuation of the body, not the end of it — so don't close here.
     // The function/match keeps consuming arms; the let body closes later at
     // a non-`|` line (or EOF).
-    if (want_let_body_close && s->let_body_cols.size > 0) {
-        uint32_t body_col = stack_top(&s->let_body_cols);
+    if (want_let_body_close && idx_has(&s->stk, K_LET_BODY)) {
+        uint32_t body_col = idx_top(&s->stk, K_LET_BODY);
         // A leading pipe/composition operator continues the inline body as a
         // binary expression (`let f = function | A -> a |> g`), so don't close.
         if (pipe_op) return false;
         if (col <= body_col && !bar_arm) {
-            stack_pop(&s->let_body_cols);
+            idx_pop(&s->stk, K_LET_BODY);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
         }
@@ -820,7 +856,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // advance the lexer, so it still sits on the first char.)
         if (col > body_col && la0 >= 'a' && la0 <= 'z' &&
             next_line_starts_with_ce_bang(lexer)) {
-            stack_pop(&s->let_body_cols);
+            idx_pop(&s->stk, K_LET_BODY);
             lexer->result_symbol = LET_BODY_CLOSE;
             return true;
         }
@@ -836,8 +872,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     //       the column test alone would never fire.
     // The grammar's `repeat1(match_arm)` consumes the following arm in case
     // (b); in case (a) the match reduces and the next token is a sibling.
-    if (want_match_body_close && s->match_body_cols.size > 0) {
-        uint32_t body_col = stack_top(&s->match_body_cols);
+    if (want_match_body_close && idx_has(&s->stk, K_MATCH_BODY)) {
+        uint32_t body_col = idx_top(&s->stk, K_MATCH_BODY);
         // A leading pipe/composition operator (`|>` `<|` `>>` `<<`) at or below
         // the arm column continues the LAST arm body as a binary expression
         // rather than closing the match — e.g.
@@ -850,7 +886,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // correct); a genuine non-pipe dedent still closes the match below.
         if (pipe_op) return false;
         if (col <= body_col || bar_arm) {
-            stack_pop(&s->match_body_cols);
+            idx_pop(&s->stk, K_MATCH_BODY);
             lexer->result_symbol = MATCH_BODY_CLOSE;
             return true;
         }
@@ -858,16 +894,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     // RECORD_BODY_CLOSE: next-line `}` or `|}` (possibly at lower indent)
     // closes the inline record body. The mid-line case is handled above.
-    if (want_record_body_close && s->record_cols.size > 0) {
+    if (want_record_body_close && idx_has(&s->stk, K_RECORD)) {
         if (lexer->lookahead == '}') {
-            stack_pop(&s->record_cols);
+            idx_pop(&s->stk, K_RECORD);
             lexer->result_symbol = RECORD_BODY_CLOSE;
             return true;
         }
         if (lexer->lookahead == '|') {
             lexer->advance(lexer, true);
             if (lexer->lookahead == '}') {
-                stack_pop(&s->record_cols);
+                idx_pop(&s->stk, K_RECORD);
                 lexer->result_symbol = RECORD_BODY_CLOSE;
                 return true;
             }
@@ -876,10 +912,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
 
     // INLINE_CLOSE: any line at column <= the recorded body column ends the inline
     // body (sibling let, continuation expression, or end of enclosing block).
-    if (want_inline_close && s->inline_cols.size > 0) {
-        uint32_t body_col = stack_top(&s->inline_cols);
+    if (want_inline_close && idx_has(&s->stk, K_INLINE)) {
+        uint32_t body_col = idx_top(&s->stk, K_INLINE);
         if (col <= body_col) {
-            stack_pop(&s->inline_cols);
+            idx_pop(&s->stk, K_INLINE);
             lexer->result_symbol = INLINE_CLOSE;
             return true;
         }
@@ -899,17 +935,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // operator parse as a `query_operator` sibling. Checked before
         // BODY_INDENT so the for body commits to the sequencing form.
         if (want_for_body_open && !next_word_blocks_for_body(lexer)) {
-            stack_push(&s->indents, col);
+            idx_push(&s->stk, col, K_INDENT);
             lexer->result_symbol = FOR_BODY_OPEN;
             return true;
         }
         if (want_body_indent) {
-            stack_push(&s->indents, col);
+            idx_push(&s->stk, col, K_INDENT);
             lexer->result_symbol = BODY_INDENT;
             return true;
         }
         if (want_indent) {
-            stack_push(&s->indents, col);
+            idx_push(&s->stk, col, K_INDENT);
             lexer->result_symbol = INDENT;
             return true;
         }
@@ -935,17 +971,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         // line dedents below it. Checked first so a `for` body closes before
         // any enclosing BODY_/INDENT block at the same boundary.
         if (want_for_body_close) {
-            stack_pop(&s->indents);
+            idx_pop(&s->stk, K_INDENT);
             lexer->result_symbol = FOR_BODY_CLOSE;
             return true;
         }
         if (want_dedent) {
-            stack_pop(&s->indents);
+            idx_pop(&s->stk, K_INDENT);
             lexer->result_symbol = DEDENT;
             return true;
         }
         if (want_body_dedent) {
-            stack_pop(&s->indents);
+            idx_pop(&s->stk, K_INDENT);
             lexer->result_symbol = BODY_DEDENT;
             return true;
         }
@@ -956,7 +992,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // BODY_DEDENT must fire before the parser can match the `with`. The
     // standard "col < current" rule wouldn't trigger because the `with` sits
     // at the body column. Only when the parser already wants BODY_DEDENT.
-    if (col == current && want_body_dedent && s->indents.size > 0 &&
+    if (col == current && want_body_dedent && idx_has(&s->stk, K_INDENT) &&
         lexer->lookahead == 'w') {
         // Peek `with` as a complete keyword.
         lexer->advance(lexer, true);
@@ -973,7 +1009,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                         (after >= '0' && after <= '9') ||
                         after == '_' || after == '\'';
                     if (!word_continues) {
-                        stack_pop(&s->indents);
+                        idx_pop(&s->stk, K_INDENT);
                         lexer->result_symbol = BODY_DEDENT;
                         return true;
                     }
@@ -1004,8 +1040,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // reduces all the way out and lets the next field start. Without this,
     // the lambda body would absorb subsequent field names via the
     // sequence's VIRTUAL_SEMI consumption.
-    bool at_record_field_col = s->record_cols.size > 0 &&
-                               col == stack_top(&s->record_cols);
+    bool at_record_field_col = idx_has(&s->stk, K_RECORD) &&
+                               col == idx_top(&s->stk, K_RECORD);
     if (want_record_field_semi && at_record_field_col) {
         // Apply the same blocker checks as VIRTUAL_SEMI (closing delimiters
         // and continuation keywords must NOT trigger a separator). `la0` is the
@@ -1019,7 +1055,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
     }
 
-    bool semi_col_match = (s->indents.size > 0 && col == current);
+    bool semi_col_match = (idx_has(&s->stk, K_INDENT) && col == current);
     if (want_virtual_semi && semi_col_match) {
         // `la0` is the original first char (the precompute above already
         // advanced the lexer past it for `|`/`<`/`>` lines); `pipe_op` blocks a
