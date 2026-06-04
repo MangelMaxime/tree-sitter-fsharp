@@ -214,6 +214,13 @@ export default grammar({
         $._ce_sep,         // dedicated separator between newline-aligned CE statements
                            //   (a binding's trailing expression can't steal it)
         $._ce_body_close,  // pops the CE body column at `}`
+        $._type_augment_dedent, // BODY_DEDENT variant emitted when a `with` type
+                           //   augmentation follows the indented type body. Routes
+                           //   the parse into `_type_decl_body_aug` so `type_decl`
+                           //   keeps the augmentation attached even when the `with`
+                           //   aligns with an enclosing indent (the module body
+                           //   column), where a plain BODY_DEDENT would reduce
+                           //   type_decl early and detach the members.
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -394,8 +401,17 @@ export default grammar({
             // (`type Foo with …` — extending an already-declared type).
             optional(seq(
                 "=",
-                optional($._type_decl_body_or_class),
-                optional($._type_augmentation),
+                choice(
+                    seq(
+                        optional($._type_decl_body_or_class),
+                        optional($._type_augmentation),
+                    ),
+                    // Indented body closed by `_type_augment_dedent` → the `with`
+                    // augmentation is REQUIRED (the scanner only emits that token
+                    // when `with` follows). Keeps the members attached when the
+                    // `with` aligns with an enclosing indent column.
+                    seq($._type_decl_body_aug, $._type_augmentation),
+                ),
             )),
             repeat($.type_and_decl),
         )),
@@ -412,8 +428,13 @@ export default grammar({
             optional(seq("as", field('self', $.identifier))),
             optional(seq(
                 "=",
-                optional($._type_decl_body_or_class),
-                optional($._type_augmentation),
+                choice(
+                    seq(
+                        optional($._type_decl_body_or_class),
+                        optional($._type_augmentation),
+                    ),
+                    seq($._type_decl_body_aug, $._type_augmentation),
+                ),
             )),
         )),
 
@@ -473,6 +494,22 @@ export default grammar({
                 ),
                 $._body_dedent,
             ),
+        ),
+
+        // Same indented type body as `_type_decl_body_or_class` above, but closed
+        // by `_type_augment_dedent` instead of `_body_dedent`. The scanner emits
+        // that distinct token (only) when a `with` augmentation follows the body,
+        // and this rule is ALWAYS paired with a required `_type_augmentation` in
+        // `type_decl` — so the routing is deterministic: the close token alone
+        // tells the parser whether the augmentation comes next, without needing a
+        // `with` lookahead at a state where `type_decl` would otherwise reduce.
+        _type_decl_body_aug: $ => seq(
+            $._body_indent,
+            choice(
+                seq($._type_decl_body, repeat($._class_body_member)),
+                repeat1($._class_body_member),
+            ),
+            $._type_augment_dedent,
         ),
 
         // Choice alternatives shared by `_token` (source-level / module body)

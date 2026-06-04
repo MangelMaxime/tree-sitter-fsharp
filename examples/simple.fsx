@@ -1971,3 +1971,21 @@ type Origin = Generated | UserInput | SharedReference
 
 // Single-case union with fields parses as a union (constructor), not an alias.
 type Change = Renamed of Name
+
+    type Reference =
+        | Reference of linkType: RequiredName * id: Id
+        | GlobalReference of linkType: RequiredName * id: Id
+    with
+        interface Index.IKey with member this.SortKey = key2 (Reference.toLinkType(this)) (Reference.toId(this)) |> sortKey
+        static member toId = function | Reference (_,x) | GlobalReference(_,x) -> x
+        static member toLinkType = function | Reference (x,_) | GlobalReference(x,_) -> x
+
+module Augmentation =
+    // Type augmentation `with` aligned at the type column inside a module: the
+    // members must attach to the type (not detach into the module as an error).
+    type Reference =
+        | Reference of id: int
+        | GlobalReference of id: int
+    with
+        static member toId = function | Reference x | GlobalReference x -> x
+        member this.Self = this

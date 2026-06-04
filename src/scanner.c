@@ -73,6 +73,14 @@ typedef enum {
                     //   binding's trailing `$._expression` can't absorb the next
                     //   statement into a sequence_expression
     CE_BODY_CLOSE,  // pops the CE body's K_INDENT at `}`
+    TYPE_AUGMENT_DEDENT, // BODY_DEDENT variant emitted when a `with` type
+                    //   augmentation follows the (indented) type body. Pops the
+                    //   body's K_INDENT exactly like BODY_DEDENT, but is a
+                    //   DISTINCT symbol so the grammar can route the parse into
+                    //   the augmentation branch — without it, `type_decl`
+                    //   reduces early when the `with` sits at an enclosing indent
+                    //   column (e.g. the module body column == the type column)
+                    //   and the augmentation members detach as an error.
 } TokenType;
 
 // One unified offside stack. Each entry is a column plus a KIND tag recording
@@ -445,6 +453,25 @@ static bool next_word_blocks_for_body(TSLexer *lexer) {
     return false;
 }
 
+// Peek (no token extend) whether the lexer sits on a complete `with` keyword —
+// i.e. `with` followed by a non-identifier char. Advances the lexer past the
+// peeked chars; the caller must be at a point where a zero-width token is about
+// to be emitted (so the consumed characters are discarded on the next lex).
+static bool peek_with(TSLexer *lexer) {
+    if (lexer->lookahead != 'w') return false;
+    lexer->advance(lexer, true);
+    if (lexer->lookahead != 'i') return false;
+    lexer->advance(lexer, true);
+    if (lexer->lookahead != 't') return false;
+    lexer->advance(lexer, true);
+    if (lexer->lookahead != 'h') return false;
+    lexer->advance(lexer, true);
+    int32_t after = lexer->lookahead;
+    bool word = (after >= 'a' && after <= 'z') || (after >= 'A' && after <= 'Z') ||
+                (after >= '0' && after <= '9') || after == '_' || after == '\'';
+    return !word;
+}
+
 // Peek (no token extend) whether the next line starts with a computation-
 // expression "bang" binding: `let!` / `use!` / `and!` / `do!` / `match!`.
 // Such a line ALWAYS begins a new CE statement — it can never continue a
@@ -520,6 +547,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_ce_body_open = valid_symbols[CE_BODY_OPEN];
     bool want_ce_sep = valid_symbols[CE_SEP];
     bool want_ce_body_close = valid_symbols[CE_BODY_CLOSE];
+    bool want_type_augment_dedent = valid_symbols[TYPE_AUGMENT_DEDENT];
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
@@ -529,7 +557,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         && !want_match_body_open && !want_match_body_close && !want_match_arm_sep
         && !want_for_body_open && !want_for_body_close
         && !want_bracket_open && !want_bracket_sep && !want_bracket_close
-        && !want_ce_body_open && !want_ce_sep && !want_ce_body_close) {
+        && !want_ce_body_open && !want_ce_sep && !want_ce_body_close
+        && !want_type_augment_dedent) {
         // No offside token applies here. The only remaining external is the
         // trailing-dot float (`1.`, `20.`). Handled at this point — AFTER the
         // offside-open tokens are ruled out — so that `let x = 2.` still emits
@@ -1189,40 +1218,33 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
         if (want_body_dedent) {
             idx_pop(&s->stk, K_INDENT);
-            lexer->result_symbol = BODY_DEDENT;
+            // A `with` type-augmentation following the (indented) body, aligned
+            // BELOW the body column — the common F# style where `with` sits at
+            // the `type` keyword's column. Emit the dedicated TYPE_AUGMENT_DEDENT
+            // so the grammar routes into the augmentation branch; otherwise the
+            // plain BODY_DEDENT lets `type_decl` reduce early and the members
+            // detach (e.g. when `with` lands at the module body column).
+            if (want_type_augment_dedent && peek_with(lexer))
+                lexer->result_symbol = TYPE_AUGMENT_DEDENT;
+            else
+                lexer->result_symbol = BODY_DEDENT;
             return true;
         }
     }
 
-    // Same-column BODY_DEDENT for type-augmentation: `type T = body \n    with`.
-    // The `with` continues the enclosing `type_decl`, so the inner body's
-    // BODY_DEDENT must fire before the parser can match the `with`. The
-    // standard "col < current" rule wouldn't trigger because the `with` sits
-    // at the body column. Only when the parser already wants BODY_DEDENT.
-    if (col == current && want_body_dedent && idx_has(&s->stk, K_INDENT) &&
-        lexer->lookahead == 'w') {
-        // Peek `with` as a complete keyword.
-        lexer->advance(lexer, true);
-        if (lexer->lookahead == 'i') {
-            lexer->advance(lexer, true);
-            if (lexer->lookahead == 't') {
-                lexer->advance(lexer, true);
-                if (lexer->lookahead == 'h') {
-                    lexer->advance(lexer, true);
-                    int32_t after = lexer->lookahead;
-                    bool word_continues =
-                        (after >= 'a' && after <= 'z') ||
-                        (after >= 'A' && after <= 'Z') ||
-                        (after >= '0' && after <= '9') ||
-                        after == '_' || after == '\'';
-                    if (!word_continues) {
-                        idx_pop(&s->stk, K_INDENT);
-                        lexer->result_symbol = BODY_DEDENT;
-                        return true;
-                    }
-                }
-            }
-        }
+    // Same-column type-augmentation: `type T = body \n    with` where the `with`
+    // sits at EXACTLY the body column. The `with` continues the enclosing
+    // `type_decl`, so the inner body's dedent must fire before the parser can
+    // match the `with`. The standard "col < current" rule wouldn't trigger here
+    // because the `with` is at the body column. Emit TYPE_AUGMENT_DEDENT when the
+    // augmentation branch is live (so the members stay attached), else the plain
+    // BODY_DEDENT. Only when the parser already wants one of those dedents.
+    if (col == current && (want_body_dedent || want_type_augment_dedent) &&
+        idx_has(&s->stk, K_INDENT) && peek_with(lexer)) {
+        idx_pop(&s->stk, K_INDENT);
+        lexer->result_symbol = want_type_augment_dedent ? TYPE_AUGMENT_DEDENT
+                                                         : BODY_DEDENT;
+        return true;
     }
 
     // VIRTUAL_SEMI: lowest priority — fires only when no INLINE_CLOSE / INDENT /
