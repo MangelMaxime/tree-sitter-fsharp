@@ -168,3 +168,77 @@ let x = 1
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Preprocessor #if/#else as a function body
+================================================================================
+
+let isEnabled x =
+    #if DEBUG
+    true
+    #else
+    let ids =
+        match x with
+        | A -> [ 1; 2 ]
+    List.contains x ids
+    #endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (preproc_if
+      (preproc_if_kw)
+      (preproc_expression))
+    (sequence_expression
+      (bool_literal)
+      (preproc_else_kw)
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (match_expression
+            (long_identifier
+              (identifier))
+            (match_arm
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (list_expression
+                (int_literal)
+                (int_literal)))))
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier))))))
+  (preproc_endif_kw))
+
+================================================================================
+Preprocessor #if/#endif single-branch body
+================================================================================
+
+let pick x =
+    #if DEBUG
+    true
+    #endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (preproc_if
+      (preproc_if_kw)
+      (preproc_expression))
+    (bool_literal))
+  (preproc_endif_kw))

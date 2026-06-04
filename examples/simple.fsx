@@ -1127,6 +1127,20 @@ let debug_value = false
 let complex_condition = true
 #endif
 
+// `#if`/`#else`/`#endif` wrapping a function BODY (not just declarations): the
+// directive lines are extras and must be transparent to the offside rule, so
+// the body in each branch parses normally instead of detaching.
+let featureEnabled x =
+    #if DEBUG
+    true
+    #else
+    let ids =
+        match x with
+        | A -> [ 1; 2 ]
+        | _ -> []
+    List.contains x ids
+    #endif
+
 // #load "helper.fsx"
 #r "nuget: Newtonsoft.Json"
 

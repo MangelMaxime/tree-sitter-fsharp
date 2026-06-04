@@ -335,6 +335,38 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
         }
         if (lexer->lookahead == 0) return false; // EOF after blank lines
 
+        // Skip conditional-compilation directive lines (`#if` / `#elif` /
+        // `#else` / `#endif`). They are `extras` — transparent to the offside
+        // rule — so the CODE lines in each branch must drive indentation and
+        // statement separation, not the directive lines. Without this, a body
+        // wrapped in `#if … #endif` mis-computes its column (the directive line)
+        // and a stray VIRTUAL_SEMI fires before `#endif`, detaching the body.
+        // Other `#` directives (`#nowarn` / `#load` / `#r` / `#line` / …) are
+        // real declarations — left as significant content at `indent`.
+        if (lexer->lookahead == '#') {
+            lexer->advance(lexer, true);
+            char w[6];
+            size_t wi = 0;
+            while (wi < 5 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
+                w[wi++] = (char)lexer->lookahead;
+                lexer->advance(lexer, true);
+            }
+            w[wi] = '\0';
+            if (strcmp(w, "if") == 0 || strcmp(w, "elif") == 0 ||
+                strcmp(w, "else") == 0 || strcmp(w, "endif") == 0) {
+                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+                       lexer->lookahead != 0) {
+                    lexer->advance(lexer, true);
+                }
+                if (lexer->lookahead == 0) return false;
+                continue;
+            }
+            // A non-conditional `#` directive — significant content at `indent`.
+            if (first) *first = '#';
+            *col = indent;
+            return true;
+        }
+
         if (first) *first = lexer->lookahead;
         *col = indent;
         return true;
