@@ -2005,3 +2005,14 @@ module OperatorAsValue =
     let isUid uid p = ((=) (P.Id uid) >> Option.ofBool) p
     let sum = (+) 1 2
     let folded = List.fold (+) 0 [ 1; 2; 3 ]
+
+module NestedMutualRec =
+    // `and` in a NESTED (expression-position) let must be the `and` keyword
+    // (mutual recursion), not an identifier — so it highlights like `let`.
+    let walkAll x =
+        let rec walkMap p = Map.map walk p
+        and walkList p = List.map walk p
+        and walk = function
+            | A v -> v
+            | B -> 0
+        walk x

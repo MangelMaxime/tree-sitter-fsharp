@@ -1545,6 +1545,26 @@ export default grammar({
                 seq($._indent, field('body', $._expression), $._dedent),
                 seq($._inline_open, field('body', $._expression), $._inline_close),
             ),
+            // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
+            // (expression-position) let, same as the top-level `let_binding`.
+            // Uses `_and_decl_indented` (NOT the top-level `let_and_binding`) so
+            // each `and` body carries the same `_indent`/`_inline` offside wrapper
+            // as the main body — otherwise the bare-`_expression` and-body absorbs
+            // the let_expression's continuation line into a sequence. Without any
+            // of this the `and …` lines parse as a bogus application (`and` lexed
+            // as an identifier) and lose their keyword highlight.
+            repeat(alias($._and_decl_indented, $.let_and_binding)),
+        ),
+
+        _and_decl_indented: ($) => seq(
+            "and",
+            optional(token.immediate("!")),
+            $._let_signature,
+            "=",
+            choice(
+                seq($._indent, field('body', $._expression), $._dedent),
+                seq($._inline_open, field('body', $._expression), $._inline_close),
+            ),
         ),
 
         // Inner let used in expression positions. Two forms:
