@@ -1998,3 +1998,10 @@ module MatchLambdaParen =
             match Map.tryFind k m2 with
             | Some p -> p
             | None -> false)
+
+module OperatorAsValue =
+    // An operator NAME applied to arguments (`(=) x`, `(+) 1 2`) — previously
+    // only parseable as an application argument, not as the head.
+    let isUid uid p = ((=) (P.Id uid) >> Option.ofBool) p
+    let sum = (+) 1 2
+    let folded = List.fold (+) 0 [ 1; 2; 3 ]

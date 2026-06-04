@@ -1012,6 +1012,8 @@ export default grammar({
             $.unary_expression,
             // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value (`snd >> M.(|Foo|) >> g`).
             $.active_pattern_expression,
+            // `(+) 1 2`, `(=) x y` — operator name applied to arguments.
+            $.operator_application,
             // `not` as a first-class function value (`not >> g`, `not |> f`).
             $.not_function,
             $.list_expression,
@@ -1133,6 +1135,27 @@ export default grammar({
             $._expression,
             $._simple_expression,
         )),
+
+        // `(+) 1 2`, `(=) (P.Id uid) y` — an operator NAME applied to arguments.
+        // Kept a DEDICATED rule (rather than letting `operator_name` be a general
+        // application head) so `application_expression` — and the SRTP member
+        // constraints that share the heavily-overloaded `(` — are untouched.
+        // `operator_name` is otherwise only reachable as an application argument
+        // (via `_simple_expression`), so an applied operator had no parse.
+        operator_application: $ => prec.left(PREC.APP_EXPR, seq(
+            alias($._value_operator_name, $.operator_name),
+            repeat1($._simple_expression),
+        )),
+
+        // Operator-name set for the APPLIED form. Excludes the bare `^` / `&` /
+        // `|` (which collide with SRTP `(^T …)` / byref `(& …)` / anon-record
+        // `(| …)` openers that also start with `(` + that char) — those are rare
+        // as applied operators and not worth the parse ambiguity.
+        _value_operator_name: $ => seq(
+            "(",
+            choice($.symbolic_op, "+", "-", "*", "/", "%", "=", "<", ">"),
+            ")",
+        ),
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
