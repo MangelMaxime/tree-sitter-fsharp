@@ -1523,8 +1523,18 @@ export default grammar({
         )),
 
         // and name params [: type] = expr  (mutual recursion continuation)
+        // Body uses the SAME offside wrappers as `let_binding` (`_body_indent` /
+        // `_let_body_open`) — NOT a bare `_expression`. Without the wrapper a
+        // `function` / `match` body whose arms sit at the declaration column
+        // absorbs the FOLLOWING sibling `let` declaration into the and-binding's
+        // body as a `let_expression` continuation (wrong, and an error when that
+        // `let` has no continuation of its own).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=", field('body', $._expression))),
+            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=", choice(
+                seq($._body_indent, field('body', $._expression), $._body_dedent),
+                seq($._let_body_open, field('body', $._expression), $._let_body_close),
+                field('body', $._expression),
+            ))),
             prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
         )),
 

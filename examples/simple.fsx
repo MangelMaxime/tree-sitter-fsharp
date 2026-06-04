@@ -2016,3 +2016,13 @@ module NestedMutualRec =
             | A v -> v
             | B -> 0
         walk x
+
+module AndFunctionBody =
+    // A mutual-recursion `and` whose body is `function`, FOLLOWED by a sibling
+    // `let` — the and-body must not absorb the next declaration, and the `and`
+    // name must highlight as a function.
+    let rec walk a = step a
+    and step = function
+        | A v -> v
+        | B -> 0
+    let after = 1
