@@ -449,18 +449,18 @@ export default grammar({
         // "type augmentation" form, adding members at the point of declaration:
         //   type Point = { X: int; Y: int } with
         //       member this.Magnitude = …
-        // The class-body member list is wrapped with `_body_indent`/`_body_dedent`
-        // so the members become children of `type_decl` (same as the regular
-        // class body). Distinct from `type_extension` (`type Foo with …` with no
-        // `=`), which augments an already-declared type from outside.
-        _type_augmentation: $ => seq(
+        // The members become children of `type_decl` (same as the regular class
+        // body). Two body shapes: INDENTED on the next line(s) (`_body_indent`),
+        // or INLINE on the same line as `with` (`type Index = Index of string with
+        // interface IIndex with member …`). Distinct from `type_extension`
+        // (`type Foo with …` with no `=`), which augments from outside.
+        _type_augmentation: $ => prec.right(seq(
             "with",
-            optional(seq(
-                $._body_indent,
-                repeat($._class_body_member),
-                $._body_dedent,
+            optional(choice(
+                seq($._body_indent, repeat($._class_body_member), $._body_dedent),
+                $._class_body_member,
             )),
-        ),
+        )),
 
         // Intrinsic or external type extension. The body — extension members —
         // follows the `with` and is wrapped by `_body_indent`/`_body_dedent` so
@@ -669,11 +669,11 @@ export default grammar({
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
-        _accessor_body: $ => seq(
+        _accessor_body: $ => prec.right(seq(
             "with",
             $.property_accessor,
             optional(seq("and", $.property_accessor)),
-        ),
+        )),
 
         // Method / property / auto-property forms:
         //   member this.Name = expr
@@ -781,18 +781,19 @@ export default grammar({
         // member impls following `with` become children of the `interface_impl`
         // node, so expand-selection walks identifier → member_defn →
         // interface_impl → enclosing class/object_expression.
-        interface_impl: $ => seq(
+        interface_impl: $ => prec.right(seq(
             "interface",
             field('type', $.type_expression),
+            // `with` members: INDENTED on the next line(s), or INLINE on the same
+            // line (`interface IIndex with member this.X = …`).
             optional(seq(
                 "with",
-                optional(seq(
-                    $._body_indent,
-                    repeat($._class_body_member),
-                    $._body_dedent,
+                optional(choice(
+                    seq($._body_indent, repeat($._class_body_member), $._body_dedent),
+                    $._class_body_member,
                 )),
             )),
-        ),
+        )),
 
         // do expr  (class initializer or module-level side effect)
         // static do runs once at type initialization time

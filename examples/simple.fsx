@@ -1385,6 +1385,15 @@ type Box2(value: int) =
 with
     member this.IsZero = this.Value = 0
 
+// Inline `with` augmentation — members on the SAME line as `with` (not indented
+// below). `with` / `interface` / `member` must stay keyword-colored and attach
+// to the type, including the nested-`with` interface-implementation form.
+type Wrapped =
+    Wrapped of string
+    with interface IThing with member this.Key = match this with Wrapped s -> s
+
+type Tagged = Tagged of int with member this.Value = match this with Tagged n -> n
+
 // ── Type extensions ───────────────────────────────────────────────────────────
 
 // Intrinsic extension — adds members to a type defined in the same module
