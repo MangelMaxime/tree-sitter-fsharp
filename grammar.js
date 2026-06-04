@@ -1,7 +1,7 @@
 /**
  * @file F# tree sitter definition focused on Helix
  * @author Mangel Maxime
- * @license MIT
+ * @license Apache 2.0
  */
 
 /// <reference types="tree-sitter-cli/dsl" />
