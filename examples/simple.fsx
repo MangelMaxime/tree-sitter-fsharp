@@ -2026,3 +2026,12 @@ module AndFunctionBody =
         | A v -> v
         | B -> 0
     let after = 1
+
+module SemicolonSequence =
+    // Explicit `;` statement sequencing in a body (not just newlines) — and it
+    // must NOT clash with the `;` ELEMENT separator inside [ ] / [| |].
+    let touchThenReturn p = visitor.Touch p; p
+    let several () = stepA (); stepB (); stepC ()
+    let xs = [ 1; 2; 3 ]              // three elements, not one (1; 2; 3)
+    let ys = [| a; b |]
+    let withSeqElem = [ (sideEffect (); value); other ]   // 2 elements

@@ -1065,9 +1065,16 @@ export default grammar({
         // emits a zero-width `_virtual_semi` between expressions when a newline
         // crosses an offside-rule boundary; GLR exploration sorts out sequences
         // vs continuations.
+        // Statement sequencing: newline-aligned (`_virtual_semi`, the scanner's
+        // implicit sequence operator) OR an explicit `;` (`expr1; expr2`, e.g.
+        // `visitor.Touch p; p`). `_virtual_semi` is never emitted inside brackets
+        // (the scanner uses `_bracket_sep` there), so it can't clash with
+        // list/array separators — but the literal `;` can, hence the higher
+        // static precedence on the list/array `;` separators (see below) so
+        // `[ a; b ]` stays two ELEMENTS, not one `(a; b)` sequence element.
         sequence_expression: $ => prec.left(PREC.SEQ_EXPR, seq(
             $._expression,
-            repeat1(seq($._virtual_semi, $._expression)),
+            repeat1(seq(choice($._virtual_semi, ";"), $._expression)),
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -1272,14 +1279,17 @@ export default grammar({
                 seq(
                     $._bracket_open,
                     $._expression,
-                    repeat(seq(choice(";", $._bracket_sep), $._expression)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_sep), $._expression))),
                     optional(choice(";", $._bracket_sep)),
                     $._bracket_close,
                 ),
-                // Inline form `[ a; b; c ]`.
+                // Inline form `[ a; b; c ]`. The `;` separator is given a static
+                // precedence above SEQ_EXPR so it binds as an ELEMENT separator
+                // here rather than extending the element into a
+                // `sequence_expression` (`[ a; b ]` = two elements).
                 seq(
                     $._expression,
-                    repeat(seq(";", $._expression)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
                 ),
             )),
             "]",
@@ -1292,14 +1302,14 @@ export default grammar({
                 seq(
                     $._bracket_open,
                     $._expression,
-                    repeat(seq(choice(";", $._bracket_sep), $._expression)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_sep), $._expression))),
                     optional(choice(";", $._bracket_sep)),
                     $._bracket_close,
                 ),
-                // Inline form `[| a; b; c |]`.
+                // Inline form `[| a; b; c |]` (see list_expression).
                 seq(
                     $._expression,
-                    repeat(seq(";", $._expression)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
                 ),
             )),
             "|]",
