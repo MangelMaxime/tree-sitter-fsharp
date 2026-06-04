@@ -2042,8 +2042,8 @@ module TypedFirstTupleElement =
     // its own no-paren annotation, in match/function arms and or-patterns.
     let target =
         function
-        | Added (node: Node, _: Meta)
-        | Replaced (node: Node, _: Meta, _: Meta) -> Some node
+        | One (node: int, _: string)
+        | Two (node: int, _: string, _: string) -> Some node
         | _ -> None
 
     let bothTyped =
@@ -2053,11 +2053,11 @@ module TypedFirstTupleElement =
 
 module MultiArgActivePattern =
     // A parameterised active pattern applied to SEVERAL arguments (here
-    // list-literals) — `Contains [keys] [values]`. Previously only a single
+    // list-literals) — `Pick [keys] [values]`. Previously only a single
     // argument parsed; multiple non-identifier args now stay siblings.
     let lookup p =
         match p with
-        | Contains [ key ] [ value ] -> Some(key, value)
+        | Pick [ key ] [ value ] -> Some(key, value)
         | _ -> None
 
 module InlineBodyWithStaticAugmentation =
@@ -2089,3 +2089,16 @@ module ForValuedLetThenSibling =
     let loop () = for x in [ 1; 2; 3 ] do printfn "%d" x
     let nested = let x = 1 in x
     let after = 42
+
+// Static-member (and nested-type) access on a GENERIC type name —
+// `Type<'T>.Member` / `Type<int>.Member`. Works as a normal `dot_expression`
+// object now, including inside a type augmentation body.
+type Box<'T> =
+    { Value: 'T }
+    with
+        static member wrap x = Box<'T>.create id x
+        static member rewrap x = Box<'T>.wrap x
+        member this.Self = Box<'T>.rewrap this
+
+let genericStaticCall = Foo<int>.Create 1
+let genericStaticChain = Bar<'T>.map id x

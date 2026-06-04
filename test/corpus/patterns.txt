@@ -665,7 +665,7 @@ Active pattern applied to multiple list-literal arguments
 ================================================================================
 
 match p with
-| Contains [ key ] [ value ] -> 1
+| Pick [ key ] [ value ] -> 1
 | _ -> 0
 
 --------------------------------------------------------------------------------

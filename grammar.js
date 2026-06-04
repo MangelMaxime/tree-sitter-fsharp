@@ -1642,6 +1642,12 @@ export default grammar({
             $.struct_tuple_expression,
             $.index_expression,
             $.application_expression,
+            // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
+            // nested-type) access on a generic type name. Without this, the
+            // type_application_expression isn't a valid member-access object, so
+            // the parser only limps through via a MISSING `not` recovery (no
+            // clean tree) or errors outright inside a type augmentation body.
+            $.type_application_expression,
             $.dot_expression,
             $.begin_end_expression,
             // `'T.StaticMember` / `^T.StaticMember` — modern F# SRTP member access,

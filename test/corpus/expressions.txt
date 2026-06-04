@@ -1287,3 +1287,111 @@ let b = for y in ys do ()
       (long_identifier
         (identifier))
       (unit))))
+
+================================================================================
+Static member access on a generic type name
+================================================================================
+
+let a = Foo<int>.Create 1
+let b = Bar<'T>.map id x
+let c = Map.empty<string, int>.Count
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (dot_expression
+        (type_application_expression
+          (long_identifier
+            (identifier))
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (identifier))
+      (int_literal)))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (dot_expression
+          (type_application_expression
+            (long_identifier
+              (identifier))
+            (type_expression
+              (type_parameter)))
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (tuple_expression
+      (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (symbolic_op)
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Generic type static member access inside a type augmentation
+================================================================================
+
+type Box<'T> = { P: int }
+with
+    static member wrap x = Box<'T>.create id x
+    member this.Self = Box<'T>.rewrap this
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (record_type_defn
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (identifier)
+      (parameter
+        (identifier))
+      (application_expression
+        (application_expression
+          (dot_expression
+            (type_application_expression
+              (long_identifier
+                (identifier))
+              (type_expression
+                (type_parameter)))
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier))))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (application_expression
+        (dot_expression
+          (type_application_expression
+            (long_identifier
+              (identifier))
+            (type_expression
+              (type_parameter)))
+          (identifier))
+        (long_identifier
+          (identifier))))))
