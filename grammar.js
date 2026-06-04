@@ -779,7 +779,49 @@ export default grammar({
 
         // `optional(access_modifier)`: `type X = private | A | B` — a private (or
         // internal) union representation, the F# smart-constructor pattern.
-        union_type_defn: $ => seq(optional($.access_modifier), repeat1($.union_case)),
+        // F# allows the FIRST case to omit its `|`: `type X = A | B | C`. That bare
+        // first case (no `|`, no attributes — `union_case_bare`, aliased to
+        // `union_case` so queries see one node type) is followed by the usual
+        // `|`-prefixed cases. The `| A | B` and multi-line `| A`⏎`| B` forms go
+        // straight through `repeat1($.union_case)`. A bare first case is kept
+        // attribute-LESS so it can't be confused with an attributed type member.
+        union_type_defn: $ => seq(
+            optional($.access_modifier),
+            choice(
+                // `| A | B` and multi-line `| A`⏎`| B` (leading-pipe form).
+                repeat1($.union_case),
+                // Bare FIELD-LESS first case: `A | B`. A field-less bare name
+                // alone (`type X = A`) is a type abbreviation, so this form
+                // REQUIRES at least one following `|`-case (the `repeat1`); a
+                // lone bare name falls through to the alias branch.
+                seq(
+                    alias($.union_case_bare, $.union_case),
+                    repeat1($.union_case),
+                ),
+                // Bare first case WITH fields: `A of B` — a valid SINGLE-case
+                // union (no following `|` needed). `prec.dynamic` makes it win
+                // over the alias (`type_expression`), which would otherwise also
+                // match `A of B`.
+                seq(
+                    alias($.union_case_bare_fields, $.union_case),
+                    repeat($.union_case),
+                ),
+            ),
+        ),
+
+        union_case_bare: $ => prec.right(seq(
+            field('name', $.identifier),
+            repeat($.line_comment),
+        )),
+
+        union_case_bare_fields: $ => prec.dynamic(2, prec.right(seq(
+            field('name', $.identifier),
+            "of", choice(
+                $.union_case_named_fields,
+                field('fields', $.type_expression),
+            ),
+            repeat($.line_comment),
+        ))),
 
         // `repeat($.line_comment)` absorbs trailing comments INTO `union_case`
         // so the next case's `|` becomes the parser's one-token lookahead.

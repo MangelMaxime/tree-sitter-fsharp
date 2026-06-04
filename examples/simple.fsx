@@ -1964,3 +1964,10 @@ type internal Token =
     internal
     | Ident of string
     | Number of int
+
+// Bare first union case (omitted leading `|`): `Generated` must color like
+// `UserInput`/`SharedReference`, not land in an ERROR node.
+type Origin = Generated | UserInput | SharedReference
+
+// Single-case union with fields parses as a union (constructor), not an alias.
+type Change = Renamed of Name
