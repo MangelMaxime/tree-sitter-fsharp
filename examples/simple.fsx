@@ -1989,3 +1989,12 @@ module Augmentation =
     with
         static member toId = function | Reference x | GlobalReference x -> x
         member this.Self = this
+
+module MatchLambdaParen =
+    // A `match` as a lambda body inside parens, with the `)` on the last arm —
+    // the inline arm body must close before the mid-line `)`.
+    let pick m2 =
+        Map.forall (fun k v ->
+            match Map.tryFind k m2 with
+            | Some p -> p
+            | None -> false)

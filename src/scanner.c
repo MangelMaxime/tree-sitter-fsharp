@@ -820,6 +820,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                     }
                 }
             }
+            // Mid-line MATCH_BODY_CLOSE before a closing delimiter `)`/`]`/`}`
+            // on the last arm's line — e.g. `(fun k -> match k with | A -> a
+            // | B -> b)` where the `)` closes the enclosing paren right after the
+            // final arm's inline body. The inline arm body (K_MATCH_BODY) is the
+            // innermost open construct, so it must close BEFORE the delimiter (and
+            // before any enclosing bracket / body dedent). Checked ahead of the
+            // bracket/`)` closes below so the arm body unwinds first.
+            if (want_match_body_close && idx_has(&s->stk, K_MATCH_BODY) &&
+                (lexer->lookahead == ')' || lexer->lookahead == ']' ||
+                 lexer->lookahead == '}')) {
+                idx_pop(&s->stk, K_MATCH_BODY);
+                lexer->result_symbol = MATCH_BODY_CLOSE;
+                return true;
+            }
             // Mid-line `]`/`|]` closing a multi-line bracket body whose `]` sits
             // on the last element's line (`[`⏎`a`⏎`b ]`).
             if (want_bracket_close && idx_has(&s->stk, K_BRACKET)) {
