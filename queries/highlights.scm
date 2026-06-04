@@ -331,6 +331,17 @@
 ((type_application_expression
    (type_expression (long_identifier) @wildcard))
   (#eq? @wildcard "_"))
+
+; `Type<'T>.StaticMember` — when a generic type application is the OBJECT of a
+; member access, a Capitalized head is a type (static-member / nested-type
+; access). Restricted to the dot-object position + `^[A-Z]` so generic
+; values/functions (`id<int>`, `Map.empty<…>`, `Unchecked.defaultof<int>.X`)
+; stay as values — they're camelCase and aren't typed here.
+((dot_expression
+   object: (type_application_expression
+             (long_identifier (identifier) @type)))
+  (#match? @type "^[A-Z]"))
+
 (attribute_target name: (long_identifier (identifier) @attribute))
 (namespace_decl name: (long_identifier (identifier) @namespace))
 (module_decl name: (long_identifier (identifier) @namespace))
