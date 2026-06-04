@@ -356,6 +356,19 @@ and JsonArray = JsonValue list
 
 and JsonObject = (string * JsonValue) list
 
+// Documented mutually-recursive types: a `///` doc comment before each `and`
+// clause must NOT detach the `and` (it used to parse as a bogus expression and
+// break coloring for the rest of the block). The doc comments are extras here,
+// so the `and` clauses still parse as type_and_decl.
+/// A binary tree.
+type DocTree =
+    | DocLeaf
+    | DocBranch of DocForest
+/// A forest of trees (function-type alias ending in a tuple, like real code).
+and DocForest = DocTree list
+/// Builds a forest.
+and DocBuilder<'T> = 'T -> DocTree * DocForest
+
 // Named union fields
 type Contact =
     | Email of address: string

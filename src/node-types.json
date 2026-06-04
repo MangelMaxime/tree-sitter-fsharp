@@ -27,19 +27,11 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "type_expression",
           "named": true
         },
         {
           "type": "type_parameter_list",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -2263,10 +2255,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "do_stmt",
           "named": true
         },
@@ -2292,10 +2280,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -3013,15 +2997,7 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "type_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4866,10 +4842,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "do_stmt",
           "named": true
         },
@@ -4895,10 +4867,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4921,10 +4889,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "do_stmt",
           "named": true
         },
@@ -4950,10 +4914,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -6382,10 +6342,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "let_and_binding",
           "named": true
         },
@@ -6395,10 +6351,6 @@
         },
         {
           "type": "type_parameter_list",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -8708,10 +8660,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "bool_literal",
           "named": true
         },
@@ -8918,10 +8866,6 @@
         {
           "type": "while_expression",
           "named": true
-        },
-        {
-          "type": "xml_doc_comment",
-          "named": true
         }
       ]
     }
@@ -9004,10 +8948,6 @@
         },
         {
           "type": "binary_expression",
-          "named": true
-        },
-        {
-          "type": "block_doc_comment",
           "named": true
         },
         {
@@ -9244,10 +9184,6 @@
         },
         {
           "type": "while_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -9764,10 +9700,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "bool_literal",
           "named": true
         },
@@ -9989,10 +9921,6 @@
         },
         {
           "type": "while_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -13459,10 +13387,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "bool_literal",
           "named": true
         },
@@ -13656,10 +13580,6 @@
         },
         {
           "type": "while_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -13942,10 +13862,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "bool_literal",
           "named": true
         },
@@ -14179,10 +14095,6 @@
         },
         {
           "type": "while_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -14754,10 +14666,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "do_stmt",
           "named": true
         },
@@ -14783,10 +14691,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -15443,10 +15347,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "class_type_defn",
           "named": true
         },
@@ -15508,10 +15408,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -15679,10 +15575,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "class_type_defn",
           "named": true
         },
@@ -15748,10 +15640,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -15840,10 +15728,6 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "do_stmt",
           "named": true
         },
@@ -15873,10 +15757,6 @@
         },
         {
           "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -17629,15 +17509,7 @@
           "named": true
         },
         {
-          "type": "block_doc_comment",
-          "named": true
-        },
-        {
           "type": "type_expression",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
           "named": true
         }
       ]

@@ -52,15 +52,17 @@ const PREC = {
     NEW_OBJ:        24,  // `new T(…)`
 };
 
-// Optional prefix accepted by every decoratable declaration — zero or more
-// attributes (`[<…>]`), XML doc comments (`///`), block doc comments
-// (`(** … *)`). Used at the top of `let_binding`, `module_decl`,
-// `member_defn` (each branch), `abstract_member_defn`, `exception_decl`,
-// `secondary_constructor`. Tree-sitter inlines the resulting `repeat(choice)`
-// directly into the caller, so the parent's children still appear as
-// `attribute` / `xml_doc_comment` / `block_doc_comment` — no extra node.
+// Optional prefix on every decoratable declaration — zero or more attributes
+// (`[<…>]`). Used at the top of `let_binding`, `module_decl`, `member_defn`,
+// `abstract_member_defn`, `exception_decl`, `secondary_constructor`.
+//
+// Doc comments (`///` / `(** *)`) are deliberately NOT here: as a regular token
+// a doc was grabbed as a sibling decl and ended the enclosing rule early (e.g.
+// detaching a documented type's `and` clause). They stay EXTRAS-ONLY — still in
+// the tree, but never terminating a rule. Cost: a leading `///` doesn't nest in
+// its decl, so `maf`/`mat` won't select it (attributes still nest).
 function decoration($) {
-    return repeat(choice($.attribute, $.xml_doc_comment, $.block_doc_comment));
+    return repeat($.attribute);
 }
 
 // "Indented or inline" field list — a record-like body that's either:
@@ -524,22 +526,14 @@ export default grammar({
         // appear directly as `attribute`, `let_binding`, etc. — no extra
         // wrapping node.
         //
-        // `line_comment` / `block_comment` are deliberately NOT listed here
-        // even though they used to be: when listed, a comment sitting between
-        // two tokens of an enclosing rule (e.g. `type Foo (* c *) (a: int)`)
-        // competed with extras-absorption and the parser would end the rule
-        // and take the comment as a standalone child — breaking the
-        // primary_constructor parse. Leaving comments in `extras` only means
-        // they still show up in the tree, attached to the enclosing rule
-        // rather than terminating it. `xml_doc_comment` / `block_doc_comment`
-        // are kept because they need to attach as a `decoration()` prefix on
-        // the following decl, which `_decl_or_comment` enables.
+        // No comment forms here, INCLUDING doc comments — see `decoration()`:
+        // a comment as a regular token terminates the enclosing rule early
+        // (detaches `type … and …`, breaks primary_constructor). Doc comments
+        // stay extras-only.
         _decl_or_comment: $ => choice(
             $.attribute,
             $.let_binding,
             $.do_stmt,
-            $.xml_doc_comment,
-            $.block_doc_comment,
         ),
 
         // Everything legal inside a class or type-extension body.

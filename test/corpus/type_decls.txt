@@ -548,3 +548,39 @@ module M =
           (long_identifier
             (identifier))
           (int_literal))))))
+
+================================================================================
+Doc comments before `and` type-recursion clauses
+================================================================================
+
+/// The tree.
+type Tree =
+    | Leaf
+    | Branch of Forest
+/// A forest of trees.
+and Forest = Tree list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (xml_doc_comment)
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (xml_doc_comment)
+    (type_and_decl
+      (identifier)
+      (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))
