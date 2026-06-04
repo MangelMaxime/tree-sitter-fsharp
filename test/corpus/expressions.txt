@@ -1218,3 +1218,72 @@ let a = [| for x in xs -> x |]
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Comprehension-valued let bindings as module members (sibling let follows)
+================================================================================
+
+module M =
+    let evens xs = [ for x in xs -> x * 2 ]
+    let zeros n = [ for _ in 1 .. n -> 0 ]
+    let total = 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (parameter
+        (identifier))
+      (list_expression
+        (binary_expression
+          (for_expression
+            (identifier)
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (int_literal))))
+    (let_binding
+      (identifier)
+      (parameter
+        (identifier))
+      (list_expression
+        (for_expression
+          (wildcard_pattern)
+          (binary_expression
+            (int_literal)
+            (long_identifier
+              (identifier)))
+          (int_literal))))
+    (let_binding
+      (identifier)
+      (int_literal))))
+
+================================================================================
+Inline let-in value is preserved next to a for binder on the same line
+================================================================================
+
+let a = let x = 1 in x
+let b = for y in ys do ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (let_expression
+      (identifier)
+      (int_literal)
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (for_expression
+      (identifier)
+      (long_identifier
+        (identifier))
+      (unit))))

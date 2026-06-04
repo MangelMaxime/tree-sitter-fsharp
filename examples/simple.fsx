@@ -2069,14 +2069,23 @@ module InlineBodyWithStaticAugmentation =
         static member create n = Marker n
         static member zero = Marker 0
 
-// The `for x in xs -> expr` comprehension-yield shorthand (sugar for
-// `do yield expr`) in list / range / seq / array comprehensions. The `->`
-// belongs to the comprehension, not read as an operator on the enumerable.
-// NOTE: kept at top level deliberately — a comprehension `let` immediately
-// followed by a sibling declaration INSIDE a module still fails (a pre-existing
-// for-expression/continuation gap that affects the `do` form too; tracked
-// separately), so the in-module form is not exercised here yet.
-let forCompOfList xs = [ for x in xs -> x * 2 ]
-let forCompOfRange n = [ for _ in 1 .. n -> 0 ]
-let forCompOfSeq xs = seq { for x in xs -> x + 1 }
-let forCompOfArray xs = [| for x in xs -> x |]
+module ForComprehensionArrow =
+    // The `for x in xs -> expr` comprehension-yield shorthand (sugar for
+    // `do yield expr`) in list / range / seq / array comprehensions. The `->`
+    // belongs to the comprehension, not read as an operator on the enumerable.
+    // These are sibling members in a module: a `for`/comprehension-valued `let`
+    // followed by another `let` used to break (the `in` of `for x in xs` was
+    // mistaken for a `let … in …`, suppressing the inline-body offside) — now
+    // fixed in the scanner, so each `let` ends cleanly before the next.
+    let ofList xs = [ for x in xs -> x * 2 ]
+    let ofRange n = [ for _ in 1 .. n -> 0 ]
+    let ofSeq xs = seq { for x in xs -> x + 1 }
+    let ofArray xs = [| for x in xs -> x |]
+    let total = 0
+
+module ForValuedLetThenSibling =
+    // A `for`/`let`-in value with its own `in` keyword no longer swallows the
+    // following sibling `let` into a let-expression continuation.
+    let loop () = for x in [ 1; 2; 3 ] do printfn "%d" x
+    let nested = let x = 1 in x
+    let after = 42

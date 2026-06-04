@@ -365,28 +365,43 @@ static int check_inline_body_open(TSLexer *lexer, uint32_t *body_col) {
     *body_col = lexer->get_column(lexer);
     lexer->mark_end(lexer);
 
-    // Peek for `in` on the rest of the current line.
-    bool prev_word = false;
-    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+    // Peek for the let's OWN `in` keyword on the rest of the line (the
+    // `let x = expr in expr` form). Read whole words so a binder's `in` is NOT
+    // mistaken for the let's `in`: each `for`/`let`/`use` introduces its own `in`
+    // (`for x in xs`, `let y = e in …`, `use r = e in …`), so we keep a
+    // `pending` count and let each binder consume one following `in`. Only an
+    // `in` seen with no pending binder is the let's own — return -1 then.
+    // (Without this, `let a = for x in xs do …`, `let a = [ for x in xs -> … ]`,
+    // or `let a = let y = 1 in y` suppress LET_BODY_OPEN and the bare-`_expression`
+    // body wrongly absorbs the next-line sibling `let`.)
+    char word[8];
+    size_t wlen = 0;
+    bool in_word = false;
+    int pending = 0;
+    for (;;) {
         int32_t c = lexer->lookahead;
         bool c_word = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
                       (c >= '0' && c <= '9') || c == '_' || c == '\'';
-        if (!prev_word && c == 'i') {
-            lexer->advance(lexer, true);
-            if (lexer->lookahead == 'n') {
-                lexer->advance(lexer, true);
-                int32_t n = lexer->lookahead;
-                bool n_word = (n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') ||
-                              (n >= '0' && n <= '9') || n == '_' || n == '\'';
-                if (!n_word) return -1;
-                prev_word = true;
-            } else {
-                prev_word = c_word;
+        bool boundary = !c_word || c == '\n' || c == '\r' || c == 0;
+        if (boundary && in_word) {
+            // A word just ended — classify it.
+            if (wlen == 2 && word[0] == 'i' && word[1] == 'n') {
+                if (pending > 0) pending--;  // this `in` belongs to a for/let/use binder
+                else return -1;              // the let's own `in`
+            } else if ((wlen == 3 && word[0] == 'f' && word[1] == 'o' && word[2] == 'r') ||
+                       (wlen == 3 && word[0] == 'l' && word[1] == 'e' && word[2] == 't') ||
+                       (wlen == 3 && word[0] == 'u' && word[1] == 's' && word[2] == 'e')) {
+                pending++;
             }
-        } else {
-            lexer->advance(lexer, true);
-            prev_word = c_word;
+            in_word = false;
         }
+        if (c == '\n' || c == '\r' || c == 0) break;
+        if (c_word) {
+            if (!in_word) { in_word = true; wlen = 0; }
+            if (wlen < sizeof(word)) word[wlen] = (char)c;
+            wlen++;
+        }
+        lexer->advance(lexer, true);
     }
     return 1;
 }
