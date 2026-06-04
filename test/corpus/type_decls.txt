@@ -460,7 +460,6 @@ type IExtended =
           (long_identifier
             (identifier)))))))
 
-
 ================================================================================
 Union case mixing a named field with an anonymous tuple field
 ================================================================================
@@ -509,3 +508,43 @@ type T = | StepThumb of int * inProgress: bool * outcome: Outcome
             name: (identifier)
             type: (long_identifier
               (identifier))))))))
+
+================================================================================
+Inline union body with `with` augmentation and static members in a module
+================================================================================
+
+module M =
+    type Marker = Marker of int
+    with
+        static member create n = Marker n
+        static member zero = Marker 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier))
+    (type_decl
+      (identifier)
+      (union_type_defn
+        (union_case
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (member_defn
+        (identifier)
+        (parameter
+          (identifier))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      (member_defn
+        (identifier)
+        (application_expression
+          (long_identifier
+            (identifier))
+          (int_literal))))))

@@ -1247,17 +1247,25 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     }
 
     // Same-column type-augmentation: `type T = body \n    with` where the `with`
-    // sits at EXACTLY the body column. The `with` continues the enclosing
-    // `type_decl`, so the inner body's dedent must fire before the parser can
-    // match the `with`. The standard "col < current" rule wouldn't trigger here
-    // because the `with` is at the body column. Emit TYPE_AUGMENT_DEDENT when the
-    // augmentation branch is live (so the members stay attached), else the plain
-    // BODY_DEDENT. Only when the parser already wants one of those dedents.
-    if (col == current && (want_body_dedent || want_type_augment_dedent) &&
+    // sits at EXACTLY the (indented) body column. The `with` continues the
+    // enclosing `type_decl`, so the inner body's dedent must fire before the
+    // parser can match the `with`. The standard "col < current" rule wouldn't
+    // trigger here because the `with` is at the body column. Emit
+    // TYPE_AUGMENT_DEDENT so the augmentation members stay attached.
+    //
+    // Gated on `want_type_augment_dedent` ALONE (not the broader
+    // `want_body_dedent`): that token is only valid when the grammar entered the
+    // indented `_type_decl_body_aug` branch, i.e. the K_INDENT at `current` is
+    // genuinely the type body's. With an INLINE body (`type T = T of int`
+    // followed by `with` at the type's column) no type-body indent was pushed —
+    // the K_INDENT at `current` belongs to the ENCLOSING module/body, so popping
+    // it here would wrongly close that block and detach the `with`. In that case
+    // we fall through (VIRTUAL_SEMI is already blocked before `with`) and let the
+    // parser shift `with` straight into `type_decl`'s optional augmentation.
+    if (col == current && want_type_augment_dedent &&
         idx_has(&s->stk, K_INDENT) && peek_with(lexer)) {
         idx_pop(&s->stk, K_INDENT);
-        lexer->result_symbol = want_type_augment_dedent ? TYPE_AUGMENT_DEDENT
-                                                         : BODY_DEDENT;
+        lexer->result_symbol = TYPE_AUGMENT_DEDENT;
         return true;
     }
 

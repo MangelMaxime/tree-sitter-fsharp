@@ -1154,3 +1154,67 @@ let x = [
           (identifier))
         (string_literal)))))
 
+================================================================================
+List and range comprehensions with the arrow yield
+================================================================================
+
+let a = [ for x in xs -> x * 2 ]
+let b = [ for _ in 1 .. n -> 0 ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (list_expression
+      (binary_expression
+        (for_expression
+          (identifier)
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (list_expression
+      (for_expression
+        (wildcard_pattern)
+        (binary_expression
+          (int_literal)
+          (long_identifier
+            (identifier)))
+        (int_literal)))))
+
+================================================================================
+Seq and array comprehensions with the arrow yield
+================================================================================
+
+let s = seq { for x in xs -> x + 1 }
+let a = [| for x in xs -> x |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (for_expression
+          (identifier)
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (array_expression
+      (for_expression
+        (identifier)
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

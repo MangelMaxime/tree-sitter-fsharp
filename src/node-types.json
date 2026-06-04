@@ -3572,11 +3572,43 @@
       "required": true,
       "types": [
         {
+          "type": "array_pattern",
+          "named": true
+        },
+        {
+          "type": "list_pattern",
+          "named": true
+        },
+        {
+          "type": "literal_pattern",
+          "named": true
+        },
+        {
           "type": "long_identifier",
           "named": true
         },
         {
-          "type": "pattern",
+          "type": "record_pattern",
+          "named": true
+        },
+        {
+          "type": "struct_tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
+          "type": "typed_pattern",
+          "named": true
+        },
+        {
+          "type": "wildcard_pattern",
           "named": true
         }
       ]
@@ -10472,6 +10504,10 @@
           "named": true
         },
         {
+          "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
           "type": "type_check_pattern",
           "named": true
         },
@@ -15299,6 +15335,25 @@
     }
   },
   {
+    "type": "tuple_typed_first_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "tuple_typed_pattern",
     "named": true,
     "fields": {
@@ -17044,6 +17099,10 @@
         },
         {
           "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_first_pattern",
           "named": true
         },
         {

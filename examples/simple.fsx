@@ -2035,3 +2035,48 @@ module SemicolonSequence =
     let xs = [ 1; 2; 3 ]              // three elements, not one (1; 2; 3)
     let ys = [| a; b |]
     let withSeqElem = [ (sideEffect (); value); other ]   // 2 elements
+
+module TypedFirstTupleElement =
+    // A type annotation on the FIRST element of a parenthesised tuple pattern
+    // (previously only LATER elements could be typed). Each element may carry
+    // its own no-paren annotation, in match/function arms and or-patterns.
+    let target =
+        function
+        | Added (node: Node, _: Meta)
+        | Replaced (node: Node, _: Meta, _: Meta) -> Some node
+        | _ -> None
+
+    let bothTyped =
+        function
+        | Pair (a: int, b: int) -> a + b
+        | _ -> 0
+
+module MultiArgActivePattern =
+    // A parameterised active pattern applied to SEVERAL arguments (here
+    // list-literals) — `Contains [keys] [values]`. Previously only a single
+    // argument parsed; multiple non-identifier args now stay siblings.
+    let lookup p =
+        match p with
+        | Contains [ key ] [ value ] -> Some(key, value)
+        | _ -> None
+
+module InlineBodyWithStaticAugmentation =
+    // Single-line type body, `with` on its own line at the type's column, and
+    // `static member`s — INSIDE a module. The `with` augmentation must attach to
+    // the type, not close the module body.
+    type Marker = Marker of int
+    with
+        static member create n = Marker n
+        static member zero = Marker 0
+
+// The `for x in xs -> expr` comprehension-yield shorthand (sugar for
+// `do yield expr`) in list / range / seq / array comprehensions. The `->`
+// belongs to the comprehension, not read as an operator on the enumerable.
+// NOTE: kept at top level deliberately — a comprehension `let` immediately
+// followed by a sibling declaration INSIDE a module still fails (a pre-existing
+// for-expression/continuation gap that affects the `do` form too; tracked
+// separately), so the in-module form is not exercised here yet.
+let forCompOfList xs = [ for x in xs -> x * 2 ]
+let forCompOfRange n = [ for _ in 1 .. n -> 0 ]
+let forCompOfSeq xs = seq { for x in xs -> x + 1 }
+let forCompOfArray xs = [| for x in xs -> x |]

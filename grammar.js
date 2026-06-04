@@ -260,6 +260,11 @@ export default grammar({
         // … >`, otherwise binary wins.
         [$.type_application_expression, $._expression],
         [$.type_application_expression, $._simple_expression],
+        // `( x` opening a pattern could be a plain tuple_pattern (first element a
+        // pattern) or a tuple_typed_first_pattern (first element `x: type`). GLR
+        // explores both; the `:` after the first element decides.
+        [$.pattern, $.tuple_typed_pattern],
+        [$.identifier_pattern, $.tuple_typed_pattern],
     ],
 
 
@@ -1849,10 +1854,21 @@ export default grammar({
             choice(
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
-                    "in", $._expression, "do",
+                    "in", $._expression,
                     choice(
-                        seq($._for_body_open, field('body', $._expression), $._for_body_close),
-                        optional(field('body', $._expression)),
+                        seq("do",
+                            choice(
+                                seq($._for_body_open, field('body', $._expression), $._for_body_close),
+                                optional(field('body', $._expression)),
+                            ),
+                        ),
+                        // `[ for x in xs -> expr ]` — list/seq/array comprehension
+                        // yield shorthand (sugar for `do yield expr`). The `->`
+                        // belongs to the for, not the enumerable: `prec.dynamic`
+                        // biases the parser to end the `in` expression and take
+                        // this arm rather than read `->` as a `symbolic_op`
+                        // extending the enumerable into a bogus binary_expression.
+                        prec.dynamic(1, seq("->", field('body', $._expression))),
                     ),
                 ),
                 seq(
@@ -2045,6 +2061,7 @@ export default grammar({
             $.cons_pattern,
             $.or_pattern,
             $.tuple_pattern,
+            $.tuple_typed_first_pattern,
             $.struct_tuple_pattern,
             $.typed_pattern,
             $.as_pattern,
@@ -2140,9 +2157,16 @@ export default grammar({
         // -1  -3.14   in pattern position (e.g. match arms)
         negative_literal: $ => seq("-", choice($.int_literal, $.float_literal)),
 
+        // `Some x` / `Foo.Bar x` (constructor) and `Contains keys value`
+        // (parameterised active pattern) — a long_identifier applied to one or
+        // more ARGUMENT patterns. Arguments are `_tuple_elem_pattern` (atomic
+        // forms: `_`, literals, `[…]`, `[|…|]`, `{…}`, `(…)`, a bare
+        // long_identifier) rather than the full `$.pattern`, so multiple args
+        // stay siblings (`Contains [a] [b]` → two list args) instead of the
+        // first arg greedily swallowing the rest as a nested application.
         identifier_pattern: $ => choice(
             $.long_identifier,
-            prec.right(1, seq($.long_identifier, $.pattern)),
+            prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern))),
         ),
 
         // Inside a parenthesised tuple pattern, an element AFTER the first may
@@ -2155,6 +2179,18 @@ export default grammar({
             "(",
             $.pattern,
             repeat(seq(",", $._tuple_pattern_item)),
+            ")",
+        ),
+
+        // Like tuple_pattern but with a typed first element (`(x: T, y)`).
+        // Kept separate from tuple_pattern — and reachable only from $.pattern,
+        // never from `parameter` — so OOP-style `tuple_params` keeps owning the
+        // same shape in parameter position. The required comma (repeat1) means a
+        // lone `(x: T)` still parses as typed_pattern, not a 1-tuple.
+        tuple_typed_first_pattern: $ => seq(
+            "(",
+            $.tuple_typed_pattern,
+            repeat1(seq(",", $._tuple_pattern_item)),
             ")",
         ),
 
@@ -2179,6 +2215,7 @@ export default grammar({
             $.wildcard_pattern,
             $.literal_pattern,
             $.tuple_pattern,
+            $.tuple_typed_first_pattern,
             $.struct_tuple_pattern,
             $.typed_pattern,
             $.record_pattern,
