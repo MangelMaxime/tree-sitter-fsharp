@@ -405,6 +405,10 @@
 
 (property_accessor (parameter (identifier) @variable.parameter))
 
+; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
+; locals-resolved uses of it) read consistently.
+(for_expression (identifier) @variable)
+
 (abstract_member_defn
   name: (identifier) @function)
 
