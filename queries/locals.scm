@@ -20,6 +20,9 @@
 ; Nested let-names; `function` matches how highlights.scm colours let-names.
 (let_decl_indented name: (identifier) @local.definition.function)
 
+; `use r = …` resource bindings; `variable` matches highlights.scm.
+(use_binding name: (identifier) @local.definition.variable)
+
 ; For-loop variable (the loop's single direct identifier).
 (for_expression (identifier) @local.definition.variable)
 

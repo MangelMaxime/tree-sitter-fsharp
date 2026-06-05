@@ -1,5 +1,12 @@
 module LocalsTest
 
+// Test fixture for queries/locals.scm (scope-aware highlighting).
+//
+// Each section is a binding construct; the inline notes give the colour each
+// name should take at its use-site. The "escape tests" confirm a binding does
+// NOT leak out of its scope. Verify visually in Helix — the tree-sitter CLI
+// does not apply locals resolution.
+
 // ── Function parameters ──
 // x, y → parameter colour at their use-sites in the body
 let add x y =
@@ -10,6 +17,12 @@ let add x y =
 let compute () =
     let total = 10
     total + 1
+
+// ── Use binding ──
+// r → @variable where it's used (disposable resource binding)
+let readResource () =
+    use r = openResource ()
+    r.Read()
 
 // ── Lambda parameter ──
 // n → parameter colour in n + 1
