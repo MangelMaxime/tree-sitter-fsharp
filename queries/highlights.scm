@@ -397,6 +397,12 @@
 (member_defn
   name: (identifier) @function)
 
+; Curried member parameters — `member _.M x y = …`, `static member create n = …`.
+; Coloured like let-binding params (the let/lambda rules don't cover members, so
+; without this a member's curried params render as plain text). Tuple-style
+; member params `M(x, y)` are already handled by the `tuple_param` rule above.
+(member_defn parameters: (parameter (identifier) @variable.parameter))
+
 (property_accessor (parameter (identifier) @variable.parameter))
 
 (abstract_member_defn
