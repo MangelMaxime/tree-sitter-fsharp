@@ -11,6 +11,7 @@
                 "fsx"
             ],
             "highlights": "queries/highlights.scm",
+            "locals": "queries/locals.scm",
             "injection-regex": "^fsharp$",
             "class-name": "TreeSitterFsharp",
             "external-files": [
