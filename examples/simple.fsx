@@ -2138,3 +2138,15 @@ type Box<'T> =
 
 let genericStaticCall = Foo<int>.Create 1
 let genericStaticChain = Bar<'T>.map id x
+
+// Single type-argument generic application (`f<int>`, no comma needed): the
+// `<…>` is a type argument, NOT a `<` comparison. Works bare, as an
+// application head, piped, nested, on a generic constructor, and on a generic
+// method call. (A spaced `a < b` with no closing `>` still parses as a
+// comparison — see `isBig`/`bool_prec` above.)
+let genericBare = id<int>
+let genericApplied = Array.zeroCreate<int> 3
+let genericPiped = Seq.empty<string> |> Seq.toList
+let genericNested = box<list<int>> []
+let genericCtor = ResizeArray<int>()
+let genericMethodCall = builder.Build<string>()

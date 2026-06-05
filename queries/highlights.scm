@@ -342,6 +342,15 @@
              (long_identifier (identifier) @type)))
   (#match? @type "^[A-Z]"))
 
+; A generic application whose head is a SINGLE Capitalised identifier is a
+; generic type / constructor — `ResizeArray<int>()`, `Dictionary<_,_>`,
+; `List<int>`. Both `.` anchors restrict this to single-segment heads, so dotted
+; heads like `Map.empty<…>` / `Foo.Create<…>` keep their module/member colours;
+; `^[A-Z]` keeps generic values/functions (`id<int>`, `box<int>`) uncoloured.
+((type_application_expression
+   (long_identifier . (identifier) @type .))
+  (#match? @type "^[A-Z]"))
+
 (attribute_target name: (long_identifier (identifier) @attribute))
 (namespace_decl name: (long_identifier (identifier) @namespace))
 (module_decl name: (long_identifier (identifier) @namespace))
