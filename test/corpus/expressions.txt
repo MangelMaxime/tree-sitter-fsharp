@@ -427,8 +427,8 @@ let x = arr.[1..2]
       object: (long_identifier
         (identifier))
       index: (binary_expression
-        (int_literal)
-        (int_literal)))))
+        left: (int_literal)
+        right: (int_literal)))))
 
 ================================================================================
 Index expression open-end slice
@@ -630,8 +630,8 @@ let x = arr.[0..1].Length.ToString()
             object: (long_identifier
               (identifier))
             index: (binary_expression
-              (int_literal)
-              (int_literal)))
+              left: (int_literal)
+              right: (int_literal)))
           member: (identifier))
         member: (identifier))
       (unit))))
@@ -650,8 +650,8 @@ let x = lazy (1 + 2)
     body: (prefix_keyword_expression
       (parenthesized_expression
         (binary_expression
-          (int_literal)
-          (int_literal))))))
+          left: (int_literal)
+          right: (int_literal))))))
 
 ================================================================================
 Assert expression
@@ -667,9 +667,9 @@ let x = assert (n > 0)
     body: (prefix_keyword_expression
       (parenthesized_expression
         (binary_expression
-          (long_identifier
+          left: (long_identifier
             (identifier))
-          (int_literal))))))
+          right: (int_literal))))))
 
 ================================================================================
 Function expression
@@ -785,9 +785,9 @@ let q =
       (query_operator
         (parenthesized_expression
           (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier))
-            (int_literal))))
+            right: (int_literal))))
       (query_operator
         (long_identifier
           (identifier))))))
@@ -805,8 +805,8 @@ let x = begin 1 + 2 end
     name: (identifier)
     body: (begin_end_expression
       (binary_expression
-        (int_literal)
-        (int_literal)))))
+        left: (int_literal)
+        right: (int_literal)))))
 
 ================================================================================
 Nameof simple identifier
@@ -870,8 +870,8 @@ let f = not >> g
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (not_function)
-      (long_identifier
+      left: (not_function)
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -888,9 +888,9 @@ let f =
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (long_identifier
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -922,9 +922,9 @@ let icon =
           (literal_pattern
             (bool_literal)))
         body: (binary_expression
-          (long_identifier
+          left: (long_identifier
             (identifier))
-          (long_identifier
+          right: (long_identifier
             (identifier)))))))
 
 ================================================================================
@@ -954,9 +954,9 @@ let icon =
           (literal_pattern
             (bool_literal)))
         body: (binary_expression
-          (long_identifier
+          left: (long_identifier
             (identifier))
-          (long_identifier
+          right: (long_identifier
             (identifier)))))))
 
 ================================================================================
@@ -972,14 +972,14 @@ let u = (|Bar|)
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (binary_expression
-        (long_identifier
+      left: (binary_expression
+        left: (long_identifier
           (identifier))
-        (active_pattern_expression
+        right: (active_pattern_expression
           (long_identifier
             (identifier))
           (active_pattern_member)))
-      (long_identifier
+      right: (long_identifier
         (identifier))))
   (let_binding
     name: (identifier)
@@ -1003,12 +1003,12 @@ let f x =
     parameters: (parameter
       (identifier))
     body: (binary_expression
-      (binary_expression
-        (long_identifier
+      left: (binary_expression
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier)))
-      (long_identifier
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -1028,18 +1028,18 @@ let f =
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (binary_expression
-        (long_identifier
+      left: (binary_expression
+        left: (long_identifier
           (identifier))
-        (lambda_expression
+        right: (lambda_expression
           (parameter
             (identifier))
           body: (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier))
-            (long_identifier
+            right: (long_identifier
               (identifier)))))
-      (long_identifier
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -1119,15 +1119,15 @@ let b = x < y && y > z
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (binary_expression
-        (long_identifier
+      left: (binary_expression
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier)))
-      (binary_expression
-        (long_identifier
+      right: (binary_expression
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier))))))
 
 ================================================================================

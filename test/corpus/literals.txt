@@ -561,5 +561,5 @@ let c = [1..2]
     name: (identifier)
     body: (list_expression
       (binary_expression
-        (int_literal)
-        (int_literal)))))
+        left: (int_literal)
+        right: (int_literal)))))

@@ -51,9 +51,9 @@ type Counter() =
         parameters: (parameter
           (identifier))
         body: (binary_expression
-          (long_identifier
+          left: (long_identifier
             (identifier))
-          (long_identifier
+          right: (long_identifier
             (identifier)))))))
 
 ================================================================================
@@ -78,9 +78,9 @@ type Counter() =
         parameters: (parameter
           (identifier))
         body: (binary_expression
-          (long_identifier
+          left: (long_identifier
             (identifier))
-          (long_identifier
+          right: (long_identifier
             (identifier)))))))
 
 ================================================================================
@@ -201,10 +201,10 @@ type System.String with
         (identifier))
       name: (identifier)
       body: (binary_expression
-        (long_identifier
+        left: (long_identifier
           (identifier)
           (identifier))
-        (int_literal)))))
+        right: (int_literal)))))
 
 ================================================================================
 Type extension with type constraint
@@ -307,9 +307,9 @@ type Foo() =
             name: (identifier)
             body: (int_literal))
           continuation: (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier))
-            (long_identifier
+            right: (long_identifier
               (identifier))))))))
 
 ================================================================================

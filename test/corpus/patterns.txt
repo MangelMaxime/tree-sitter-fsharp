@@ -285,9 +285,9 @@ match s with
                 (long_identifier
                   (identifier)))))))
       body: (binary_expression
-        (long_identifier
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier))))))
 
 ================================================================================
@@ -400,9 +400,9 @@ let (|Double|) n = n * 2
     parameters: (parameter
       (identifier))
     body: (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (int_literal))))
+      right: (int_literal))))
 
 ================================================================================
 Active pattern parameterized

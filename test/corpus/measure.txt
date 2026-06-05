@@ -156,8 +156,8 @@ let b = 1.0 < x
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (float_literal)
-      (long_identifier
+      left: (float_literal)
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -176,4 +176,3 @@ type m
         (identifier))))
   (type_decl
     name: (identifier)))
-

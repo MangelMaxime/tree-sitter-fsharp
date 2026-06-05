@@ -91,12 +91,12 @@ let result = a + b * c
   (let_binding
     name: (identifier)
     body: (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (binary_expression
-        (long_identifier
+      right: (binary_expression
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier))))))
 
 ================================================================================
@@ -113,9 +113,9 @@ let inline square x = x * x
     parameters: (parameter
       (identifier))
     body: (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (long_identifier
+      right: (long_identifier
         (identifier)))))
 
 ================================================================================
@@ -163,9 +163,9 @@ let x = 1 in x + 1
     name: (identifier)
     (int_literal)
     (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (int_literal))))
+      right: (int_literal))))
 
 ================================================================================
 Let expression with function
@@ -181,9 +181,9 @@ let double x = x * 2 in double 21
     parameters: (parameter
       (identifier))
     (binary_expression
-      (long_identifier
+      left: (long_identifier
         (identifier))
-      (int_literal))
+      right: (int_literal))
     (application_expression
       (long_identifier
         (identifier))
@@ -205,9 +205,9 @@ let x = 1 in let y = 2 in x + y
       name: (identifier)
       (int_literal)
       (binary_expression
-        (long_identifier
+        left: (long_identifier
           (identifier))
-        (long_identifier
+        right: (long_identifier
           (identifier))))))
 
 ================================================================================

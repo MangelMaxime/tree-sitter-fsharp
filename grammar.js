@@ -1222,17 +1222,21 @@ export default grammar({
 
         // All infix operations in one rule (one rule keeps post-_expression state bloat down).
         // Each alternative carries its own prec to resolve shift/reduce between operators.
+        // Each alternative exposes `left` / `operator` / `right` fields so the
+        // operands and the operator are queryable (e.g. `(binary_expression
+        // operator: _ @op)`). Fields are output metadata only — they don't
+        // change the parse table.
         binary_expression: $ => choice(
-            prec.left(PREC.PIPE_EXPR,      seq($._expression, choice("|>", "<|", ">>", "<<"), $._expression)),
-            prec.left(PREC.BOOL_OR,        seq($._expression, "||", $._expression)),
-            prec.left(PREC.BOOL_AND,       seq($._expression, "&&", $._expression)),
-            prec.left(PREC.ADDITIVE,       seq($._expression, choice("+", "-"), $._expression)),
-            prec.left(PREC.MULTIPLICATIVE, seq($._expression, choice("*", "/", "%"), $._expression)),
-            prec.left(PREC.INFIX_OP,       seq($._expression, choice(">", "<", ">=", "<=", "=", "<>"), $._expression)),
-            prec.right(PREC.INFIX_OP,      seq($._expression, "::", $._expression)),
-            prec.left(PREC.INFIX_OP,       seq($._expression, $.symbolic_op, $._expression)),
-            prec.right(PREC.LARROW,        seq($._expression, "<-", $._expression)),
-            prec.right(1,                  seq($._expression, "..", $._expression)),
+            prec.left(PREC.PIPE_EXPR,      seq(field('left', $._expression), field('operator', choice("|>", "<|", ">>", "<<")), field('right', $._expression))),
+            prec.left(PREC.BOOL_OR,        seq(field('left', $._expression), field('operator', "||"), field('right', $._expression))),
+            prec.left(PREC.BOOL_AND,       seq(field('left', $._expression), field('operator', "&&"), field('right', $._expression))),
+            prec.left(PREC.ADDITIVE,       seq(field('left', $._expression), field('operator', choice("+", "-")), field('right', $._expression))),
+            prec.left(PREC.MULTIPLICATIVE, seq(field('left', $._expression), field('operator', choice("*", "/", "%")), field('right', $._expression))),
+            prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', choice(">", "<", ">=", "<=", "=", "<>")), field('right', $._expression))),
+            prec.right(PREC.INFIX_OP,      seq(field('left', $._expression), field('operator', "::"), field('right', $._expression))),
+            prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', $.symbolic_op), field('right', $._expression))),
+            prec.right(PREC.LARROW,        seq(field('left', $._expression), field('operator', "<-"), field('right', $._expression))),
+            prec.right(1,                  seq(field('left', $._expression), field('operator', ".."), field('right', $._expression))),
         ),
 
         // Two-branch form (like `if_expression`):
@@ -1358,8 +1362,8 @@ export default grammar({
                 seq(
                     // Base may be an application (`{ Foo.bar [] x with F = y }`)
                     // or a generic call (`{ Default<_>() with … }`), not only a
-                    // simple value — disambiguated by `with` (Ionide parses the
-                    // full expression before `with`).
+                    // simple value — disambiguated by `with` (the full
+                    // expression is parsed before `with`).
                     field('base', choice($._simple_expression, $.application_expression)),
                     "with",
                     $._record_fields,

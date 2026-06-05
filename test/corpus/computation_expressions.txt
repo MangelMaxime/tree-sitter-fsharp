@@ -25,10 +25,10 @@ let r =
       (query_operator
         (parenthesized_expression
           (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier)
               (identifier))
-            (int_literal))))
+            right: (int_literal))))
       (query_operator
         (long_identifier
           (identifier)
@@ -65,10 +65,10 @@ let r =
           (identifier))
         condition: (parenthesized_expression
           (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier)
               (identifier))
-            (long_identifier
+            right: (long_identifier
               (identifier)
               (identifier)))))
       (query_operator
@@ -143,10 +143,10 @@ let r =
           (identifier))
         condition: (parenthesized_expression
           (binary_expression
-            (long_identifier
+            left: (long_identifier
               (identifier)
               (identifier))
-            (long_identifier
+            right: (long_identifier
               (identifier)
               (identifier))))
         into: (identifier))
@@ -181,9 +181,9 @@ let s = List.take 3 ys
             (parameter
               (identifier))
             body: (binary_expression
-              (long_identifier
+              left: (long_identifier
                 (identifier))
-              (int_literal)))))
+              right: (int_literal)))))
       (long_identifier
         (identifier))))
   (let_binding
