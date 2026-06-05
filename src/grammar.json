@@ -11162,7 +11162,11 @@
     }
   ],
   "inline": [],
-  "supertypes": [],
+  "supertypes": [
+    "_expression",
+    "_simple_expression",
+    "_literal"
+  ],
   "reserved": {
     "global": [],
     "query_ce": [

@@ -127,6 +127,18 @@ export default grammar({
 
     word: $ => $.identifier,
 
+    // Supertypes — hidden choice rules promoted to queryable categories in
+    // node-types.json. Purely additive: the tree shape is unchanged (the
+    // concrete subtype still appears; the supertype stays hidden), but queries
+    // can now match `(_expression)` / `(_simple_expression)` / `(_literal)`
+    // instead of enumerating every alternative. `_expression` nests `_literal`
+    // (a supertype may contain another supertype).
+    supertypes: $ => [
+        $._expression,
+        $._simple_expression,
+        $._literal,
+    ],
+
     // Reserved word sets. `global` is intentionally empty — every keyword the
     // grammar uses is a string literal in some rule, and the parser only ever
     // accepts those positions. Since this is a syntax-highlighter-focused
