@@ -195,6 +195,15 @@
 (let_decl_indented
   name: (operator_name) @function)
 
+; A lowercase identifier in an `identifier_pattern` is a value BINDING — the
+; names introduced by `match`/`function`/`fun`/`let` patterns (`Some v`,
+; `Pick [ key ] [ value ]`, `h :: t`). Colour them @variable. The `^[a-z_]`
+; guard leaves the Capitalised constructor head (`Some`, `Pick`) to the
+; @constructor rule below. Placed BEFORE the let-tuple-destructure rules so
+; those still override these to @function for `let (a, b) = …` (last-wins).
+((identifier_pattern (long_identifier (identifier) @variable))
+ (#match? @variable "^[a-z_]"))
+
 ; Tuple-destructured binding names — `let a, b, c = …` (and `let (a, b) = …`).
 ; Colour them like the single-name binding form so destructured bindings don't
 ; render uncoloured. The unparenthesized form holds the names as direct
