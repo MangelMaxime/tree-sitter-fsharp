@@ -1121,18 +1121,21 @@ export default grammar({
         ),
 
         // `Map.empty<string, int>`  `f<int>` — explicit type-argument
-        // application on a value/function. Same lexical shape as a `<` /
-        // `>` comparison chain, so we bias via static `prec` (high) plus a
-        // declared conflict to commit to this form when the `<…>` actually
-        // contains type-expressions.
-        // Requires at least one comma inside the `<…>` so the grammar can
-        // tell this apart from `expr < x > y` (binary comparisons). The
-        // single-arg form `f<T>` is ambiguous and not supported.
+        // application on a value/function. Same lexical shape as a `<` / `>`
+        // comparison chain, so the declared `[type_application_expression,
+        // _expression]` / `_simple_expression` conflicts let GLR explore both
+        // and commit to this form when the `<…>` is actually closed by a
+        // matching `>` enclosing type-expressions.
         //
-        // Low static prec so simple `x < 0` comparisons aren't drawn into
-        // this rule and dead-end on the missing comma. A declared
-        // conflict lets GLR explore both — binary wins when no comma
-        // appears in the `<…>`, this rule wins when it does.
+        // SINGLE type-argument IS supported (`f<int>`, `f<'T>`) — the arg list
+        // is `type_expression (, type_expression)*`, i.e. one-or-more, commas
+        // optional. A plain comparison like `x < y` has no closing `>`, so the
+        // binary reading wins; `x < y && y > z` likewise stays binary.
+        //
+        // Accepted tradeoff: because the lexer can't see whitespace, a spaced
+        // `a < b > c` is read as generic application `a<b> c`, not `(a < b) > c`.
+        // (Real F# disambiguates these by spacing; we can't, and generic
+        // application is the more useful reading for a highlighter.)
         type_application_expression: $ => seq(
             $.long_identifier,
             "<",
