@@ -419,6 +419,12 @@
 (abstract_member_defn
   name: (identifier) @function)
 
+; Member-signature labelled element (`name: T` / `?name: T`): the name reads as
+; a parameter; a bare-identifier type reads as a type (postfix/generic/
+; type_parameter types are already covered by the standalone type rules above).
+(labelled_type name: (identifier) @variable.parameter)
+(labelled_type type: (long_identifier (identifier) @type))
+
 (type_constraint member_name: (identifier) @function)
 (type_constraint member_name: (operator_name) @function)
 

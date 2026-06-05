@@ -2574,6 +2574,72 @@
         }
       ]
     },
+    "labelled_type": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "?"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ":"
+        },
+        {
+          "type": "FIELD",
+          "name": "type",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "postfix_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "generic_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "array_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "parenthesized_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "anonymous_record_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "type_parameter"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              }
+            ]
+          }
+        }
+      ]
+    },
     "enum_type_defn": {
       "type": "REPEAT1",
       "content": {
@@ -8918,6 +8984,10 @@
         {
           "type": "SYMBOL",
           "name": "long_identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "labelled_type"
         }
       ]
     },
@@ -11176,6 +11246,19 @@
     [
       "identifier_pattern",
       "tuple_typed_pattern"
+    ],
+    [
+      "labelled_type",
+      "type_expression"
+    ],
+    [
+      "labelled_type",
+      "_union_field_type"
+    ],
+    [
+      "labelled_type",
+      "_union_field_type",
+      "type_expression"
     ]
   ],
   "precedences": [],

@@ -2150,3 +2150,7 @@ let genericPiped = Seq.empty<string> |> Seq.toList
 let genericNested = box<list<int>> []
 let genericCtor = ResizeArray<int>()
 let genericMethodCall = builder.Build<string>()
+
+type I =
+      abstract GetImportExpr: Context * selector: string * ?noMangle: bool -> Expression
+

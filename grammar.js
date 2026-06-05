@@ -279,6 +279,13 @@ export default grammar({
         // explores both; the `:` after the first element decides.
         [$.pattern, $.tuple_typed_pattern],
         [$.identifier_pattern, $.tuple_typed_pattern],
+        // `name: T` is ambiguous: a member-signature `labelled_type`, a plain
+        // type in another context (`sizeof<…>`), or a union field (`of name: T`).
+        // GLR explores them; the enclosing construct selects the right one. Two
+        // declarations cover the 2-way (type contexts) and 3-way (union) states.
+        [$.labelled_type, $.type_expression],
+        [$.labelled_type, $._union_field_type],
+        [$.labelled_type, $._union_field_type, $.type_expression],
     ],
 
 
@@ -929,6 +936,27 @@ export default grammar({
             $.anonymous_record_type,
             $.type_parameter,
             $.long_identifier,
+        ),
+
+        // `name: T` / `?name: T` — a labelled element in a member/abstract
+        // signature tuple, e.g. `abstract M: Context * selector: string *
+        // ?noMangle: bool -> Ret`. It's an alternative of `type_expression` so the
+        // surrounding `*`/`->` structure (and type highlighting) is reused; the
+        // element type itself excludes `function_type`/`tuple_type` so the
+        // signature's `->` and `*` aren't absorbed into the label.
+        labelled_type: $ => seq(
+            optional("?"),
+            field('name', $.identifier),
+            ":",
+            field('type', choice(
+                $.postfix_type,
+                $.generic_type,
+                $.array_type,
+                $.parenthesized_type,
+                $.anonymous_record_type,
+                $.type_parameter,
+                $.long_identifier,
+            )),
         ),
 
         // type Color = | Red = 0 | Green = 1 | Blue = 2
@@ -2350,6 +2378,8 @@ export default grammar({
             $.measure_power_type,
             $.type_parameter,
             $.long_identifier,
+            // `name: T` / `?name: T` element of a member/abstract signature.
+            $.labelled_type,
         ),
 
         // struct (int * string)  — value-type tuple type
