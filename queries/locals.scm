@@ -7,6 +7,13 @@
 ; tree-sitter has an implicit root scope, so these aren't needed to *resolve* a
 ; binding's own uses — they ISOLATE bindings so same-named ones in sibling
 ; scopes don't leak together and cross-resolve.
+;
+; NOTE: top-level / module / CE `let` NAMES are deliberately NOT resolved. They
+; are `let_binding` names, and `let_binding` must stay a scope to isolate each
+; function's parameters; that traps the name in its own scope. Making them
+; resolve requires dropping the let_binding scope, which leaks every function's
+; params to the file/module scope and breaks common param names (e.g. `x` with
+; several definitions resolves to the wrong one). Tried 2026-06-05, reverted.
 (let_binding) @local.scope
 (lambda_expression) @local.scope
 (member_defn) @local.scope
