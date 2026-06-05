@@ -19,6 +19,9 @@
 (member_defn) @local.scope
 (for_expression) @local.scope
 (match_arm) @local.scope
+; `let x = … in cont` — the binding's use (cont) is INSIDE this node, so scoping
+; it here is safe (no sibling-trap like top-level let_binding).
+(let_expression) @local.scope
 
 ; ── Definitions ──────────────────────────────────────────────────────────────
 ; Parameters (covers `x` and the `(x: int)` typed form).
@@ -26,6 +29,9 @@
 
 ; Nested let-names; `function` matches how highlights.scm colours let-names.
 (let_decl_indented name: (identifier) @local.definition.function)
+
+; `let x = … in …` (explicit-`in` form) — name is directly on let_expression.
+(let_expression name: (identifier) @local.definition.function)
 
 ; `use r = …` resource bindings; `variable` matches highlights.scm.
 (use_binding name: (identifier) @local.definition.variable)

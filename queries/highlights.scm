@@ -195,6 +195,13 @@
 (let_decl_indented
   name: (operator_name) @function)
 
+; `let x = … in …` (explicit-`in` form) puts the binding name directly on
+; let_expression (not a let_decl_indented child), so it needs its own rule.
+(let_expression
+  name: (identifier) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
+
 ; A lowercase identifier in an `identifier_pattern` is a value BINDING — the
 ; names introduced by `match`/`function`/`fun`/`let` patterns (`Some v`,
 ; `Pick [ key ] [ value ]`, `h :: t`). Colour them @variable. The `^[a-z_]`

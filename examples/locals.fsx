@@ -18,6 +18,10 @@ let compute () =
     let total = 10
     total + 1
 
+// ── let … in … (explicit-in form) ──
+// x → @function at both the binding and the use after `in`
+let nested = let x = 1 in x
+
 // ── Use binding ──
 // r → @variable where it's used (disposable resource binding)
 let readResource () =
