@@ -91,27 +91,27 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
         // records keep their existing shapes (`base with field` and
         // `{ new IFoo … }` make an early scanner-side commit fragile).
         ...(sameLineBraceForm ? [seq(
-            $._record_body_open,
+            $._bracket_open,
             field,
             repeat(prec.dynamic(sepPrec, seq(
-                choice(";", $._record_field_semi),
+                choice(";", $._bracket_semi),
                 field,
             ))),
-            optional(choice(";", $._record_field_semi)),
-            $._record_body_close,
+            optional(choice(";", $._bracket_semi)),
+            $._bracket_close,
         )] : []),
         // `{\n   F1\n   F2\n   }` — `{` on previous line, fields indented
         // under it, `}` on a new line. Scanner emits _body_indent at the
         // fields' column and _body_dedent at `}`.
         seq(
-            $._body_indent,
+            $._layout_open,
             field,
             repeat(prec.dynamic(sepPrec, seq(
-                choice(";", $._virtual_semi),
+                choice(";", $._layout_semi),
                 field,
             ))),
-            optional(choice(";", $._virtual_semi)),
-            $._body_dedent,
+            optional(choice(";", $._layout_semi)),
+            $._layout_end,
         ),
         // `{ F1; F2; F3 }` — single line, explicit `;` separators only.
         seq(
@@ -168,73 +168,16 @@ export default grammar({
     // Externals are zero-width tokens emitted by src/scanner.c. See that file for
     // details of the offside-rule scanner state.
     externals: $ => [
-        $._body_indent,    // delimits let_binding multi-line bodies
-        $._body_dedent,
-        $._indent,         // delimits indented let_decl_indented bodies
-        $._dedent,
-        $._inline_open,    // delimits same-line let_decl_indented bodies
-        $._inline_close,
-        $._virtual_semi,   // virtual semicolon between sibling expressions on
-                           // separate lines (F# implicit sequence operator)
-        $._let_body_open,  // delimits same-line let_binding bodies; offside
-        $._let_body_close, //   col is the enclosing indent (approx. LET's col)
-        $._record_body_open,  // delimits `{ F1\n   F2 }` records — captures
-        $._record_body_close, //   the first field's column so _virtual_semi
-                              //   can fire at matching-col line boundaries
-                              //   between fields
-        $._record_field_semi, // virtual `;` between record fields. Fires
-                              //   at col == record_cols.top INSTEAD of
-                              //   `_virtual_semi`, so nested `sequence_expression`
-                              //   bodies (e.g. inside a lambda) can't absorb
-                              //   the next field — they reduce when they
-                              //   can't shift this token.
-        $._match_body_open,   // delimits same-line match-arm bodies
-                              //   (`| pat -> body`). Offside col is the
-                              //   enclosing indent (≈ the `match` column);
-                              //   _match_body_close fires when the next line
-                              //   returns to or below it, so an inline arm
-                              //   body stops absorbing a trailing dedented
-                              //   statement (e.g. a final `0`).
-        $._match_body_close,
-        $._match_arm_sep,     // zero-width separator emitted before a
-                              //   continuation `| …` arm of a match / try /
-                              //   function. Lets the arm list stay open
-                              //   across a line whose `|` sits at (or below)
-                              //   an enclosing offside column — e.g. a
-                              //   non-indented `let f = function` inside a
-                              //   module, where the arm column collides with
-                              //   the module body indent. Emitted in
-                              //   preference to any close token when the next
-                              //   line starts a `|` arm.
-        $._for_body_open,     // delimits a real `for … do BODY` loop body
-                              //   (own line, indented). Pushes the body column
-                              //   onto the indent stack so `_virtual_semi`
-                              //   sequences multi-statement bodies. Suppressed
-                              //   when the next significant token is a query-CE
-                              //   operator (`where`/`select`/… or a chained
-                              //   `for`), so `query { for x in xs do where … }`
-                              //   keeps the for body EMPTY and the operators
-                              //   stay as `query_operator` siblings.
-        $._for_body_close,
+        $._error_sentinel,    // unused in rules; valid only on all-symbols-valid (recovery)
+        $._layout_open,       // generic body open (Decl/Then/Do/Let) after =/then/else/->/do
+        $._layout_semi,       // generic separator (next line == body col)
+        $._layout_end,        // generic close (next line < body col)
+        $._match_open,        // arm-list open after with/function/(lambda)->
+        $._match_end,         // arm-list close (dedent below arm col, or == col & not `|`)
+        $._bracket_open,      // [ / [| / { block body on its own line(s)
+        $._bracket_semi,      // newline-aligned element/field separator
+        $._bracket_close,     // ] / |] / } closing a block bracket
         $._float_trailing_dot,
-        $._bracket_open,   // after `[`/`[|` with body on next line: captures the
-                           //   element column so newline-aligned elements separate
-        $._bracket_sep,    // dedicated separator between newline-aligned elements
-                           //   (a nested sequence can't steal it, unlike _virtual_semi)
-        $._bracket_close,  // pops the element column at `]`/`|]`
-        $._ce_body_open,   // after `builder {` with body on next line: pushes the
-                           //   statement column (as a K_INDENT) so every body-close
-                           //   tracks it; statement separation is via _ce_sep
-        $._ce_sep,         // dedicated separator between newline-aligned CE statements
-                           //   (a binding's trailing expression can't steal it)
-        $._ce_body_close,  // pops the CE body column at `}`
-        $._type_augment_dedent, // BODY_DEDENT variant emitted when a `with` type
-                           //   augmentation follows the indented type body. Routes
-                           //   the parse into `_type_decl_body_aug` so `type_decl`
-                           //   keeps the augmentation attached even when the `with`
-                           //   aligns with an enclosing indent (the module body
-                           //   column), where a plain BODY_DEDENT would reduce
-                           //   type_decl early and detach the members.
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -318,9 +261,9 @@ export default grammar({
             optional(seq("=", optional(choice(
                 field('abbrev', $.long_identifier),
                 seq(
-                    $._body_indent,
+                    $._layout_open,
                     repeat($._token),
-                    $._body_dedent,
+                    $._layout_end,
                 ),
             )))),
         ),
@@ -427,17 +370,8 @@ export default grammar({
             // (`type Foo with …` — extending an already-declared type).
             optional(seq(
                 "=",
-                choice(
-                    seq(
-                        optional($._type_decl_body_or_class),
-                        optional($._type_augmentation),
-                    ),
-                    // Indented body closed by `_type_augment_dedent` → the `with`
-                    // augmentation is REQUIRED (the scanner only emits that token
-                    // when `with` follows). Keeps the members attached when the
-                    // `with` aligns with an enclosing indent column.
-                    seq($._type_decl_body_aug, $._type_augmentation),
-                ),
+                optional($._type_decl_body_or_class),
+                optional($._type_augmentation),
             )),
             repeat($.type_and_decl),
         )),
@@ -454,13 +388,8 @@ export default grammar({
             optional(seq("as", field('self', $.identifier))),
             optional(seq(
                 "=",
-                choice(
-                    seq(
-                        optional($._type_decl_body_or_class),
-                        optional($._type_augmentation),
-                    ),
-                    seq($._type_decl_body_aug, $._type_augmentation),
-                ),
+                optional($._type_decl_body_or_class),
+                optional($._type_augmentation),
             )),
         )),
 
@@ -476,7 +405,7 @@ export default grammar({
         _type_augmentation: $ => prec.right(seq(
             "with",
             optional(choice(
-                seq($._body_indent, repeat($._class_body_member), $._body_dedent),
+                seq($._layout_open, repeat($._class_body_member), $._layout_end),
                 $._class_body_member,
             )),
         )),
@@ -492,9 +421,9 @@ export default grammar({
             optional($.type_parameter_list),
             "with",
             optional(seq(
-                $._body_indent,
+                $._layout_open,
                 repeat($._class_body_member),
-                $._body_dedent,
+                $._layout_end,
             )),
         ),
 
@@ -506,7 +435,7 @@ export default grammar({
         _type_decl_body_or_class: $ => choice(
             $._type_decl_body,
             seq(
-                $._body_indent,
+                $._layout_open,
                 choice(
                     // Record / union / enum / etc. body, OPTIONALLY followed
                     // by augmentation members in the same indented block
@@ -518,24 +447,8 @@ export default grammar({
                     seq($._type_decl_body, repeat($._class_body_member)),
                     repeat1($._class_body_member),
                 ),
-                $._body_dedent,
+                $._layout_end,
             ),
-        ),
-
-        // Same indented type body as `_type_decl_body_or_class` above, but closed
-        // by `_type_augment_dedent` instead of `_body_dedent`. The scanner emits
-        // that distinct token (only) when a `with` augmentation follows the body,
-        // and this rule is ALWAYS paired with a required `_type_augmentation` in
-        // `type_decl` — so the routing is deterministic: the close token alone
-        // tells the parser whether the augmentation comes next, without needing a
-        // `with` lookahead at a state where `type_decl` would otherwise reduce.
-        _type_decl_body_aug: $ => seq(
-            $._body_indent,
-            choice(
-                seq($._type_decl_body, repeat($._class_body_member)),
-                repeat1($._class_body_member),
-            ),
-            $._type_augment_dedent,
         ),
 
         // Choice alternatives shared by `_token` (source-level / module body)
@@ -682,7 +595,7 @@ export default grammar({
                 // `Foo.bar ()\nif … then … else …` glues both statements
                 // into one chained application_expression and the
                 // `if`/`then`/`else` keywords get mis-lexed as identifiers.
-                seq($._body_indent, field('body', $._expression), $._body_dedent),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
                 field('body', $._expression),
             )),
         )),
@@ -808,7 +721,7 @@ export default grammar({
             optional(seq(
                 "with",
                 optional(choice(
-                    seq($._body_indent, repeat($._class_body_member), $._body_dedent),
+                    seq($._layout_open, repeat($._class_body_member), $._layout_end),
                     $._class_body_member,
                 )),
             )),
@@ -1114,7 +1027,7 @@ export default grammar({
         // `[ a; b ]` stays two ELEMENTS, not one `(a; b)` sequence element.
         sequence_expression: $ => prec.left(PREC.SEQ_EXPR, seq(
             $._expression,
-            repeat1(seq(choice($._virtual_semi, ";"), $._expression)),
+            repeat1(seq(choice($._layout_semi, ";"), $._expression)),
         )),
 
         // struct (a, b)  struct (a, b, c)
@@ -1335,8 +1248,8 @@ export default grammar({
                 seq(
                     $._bracket_open,
                     $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_sep), $._expression))),
-                    optional(choice(";", $._bracket_sep)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))),
+                    optional(choice(";", $._bracket_semi)),
                     $._bracket_close,
                 ),
                 // Inline form `[ a; b; c ]`. The `;` separator is given a static
@@ -1358,8 +1271,8 @@ export default grammar({
                 seq(
                     $._bracket_open,
                     $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_sep), $._expression))),
-                    optional(choice(";", $._bracket_sep)),
+                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))),
+                    optional(choice(";", $._bracket_semi)),
                     $._bracket_close,
                 ),
                 // Inline form `[| a; b; c |]` (see list_expression).
@@ -1411,11 +1324,11 @@ export default grammar({
                 // no same-line content); without this branch only the no-base
                 // field list consumes that indent, and `base with` errors.
                 seq(
-                    $._body_indent,
+                    $._layout_open,
                     field('base', choice($._simple_expression, $.application_expression)),
                     "with",
                     $._record_fields,
-                    $._body_dedent,
+                    $._layout_end,
                 ),
                 $._record_fields,
             ),
@@ -1456,10 +1369,12 @@ export default grammar({
         // same indent (F#'s implicit sequence operator). When the body is inline (same
         // line as `then`/`do`/`->`), no indent token fires and the body is a single
         // _expression.
-        _indented_or_inline_body: $ => choice(
-            seq($._body_indent, $._expression, $._body_dedent),
-            $._expression,
-        ),
+        // Uniform model: every body is a layout (open at the body's first-token
+        // column, close on dedent / mid-line closer). The old bare-`_expression`
+        // alternative is gone — it created an ambiguity where an inline body could
+        // reduce WITHOUT a layout close, so e.g. `if a then b`⏎`else …` reduced the
+        // `if` before the `else` could attach.
+        _indented_or_inline_body: $ => seq($._layout_open, $._expression, $._layout_end),
 
         if_expression: $ => prec.right(PREC.IF_EXPR, choice(
             prec(2, seq(
@@ -1560,13 +1475,13 @@ export default grammar({
                 choice(
                     // Multi-line body: scanner pushes col onto indents stack
                     // via _body_indent, pops via _body_dedent.
-                    seq($._body_indent, field('body', $._expression), $._body_dedent),
+                    seq($._layout_open, field('body', $._expression), $._layout_end),
                     // Inline body: scanner pushes the ENCLOSING indent column
                     // (approximating LET's col) onto its own let_body_cols
                     // stack via _let_body_open, pops via _let_body_close when
                     // the next line returns to or below that column. Stops
                     // `let x = expr1` from absorbing the next-line `expr2`.
-                    seq($._let_body_open, field('body', $._expression), $._let_body_close),
+                    seq($._layout_open, field('body', $._expression), $._layout_end),
                     // Fallback: scanner suppresses _let_body_open when the
                     // rest of the line contains an `in` keyword, signalling
                     // `let x = expr in expr` (let_expression Branch B). In
@@ -1597,8 +1512,8 @@ export default grammar({
         // `let` has no continuation of its own).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=", choice(
-                seq($._body_indent, field('body', $._expression), $._body_dedent),
-                seq($._let_body_open, field('body', $._expression), $._let_body_close),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
                 field('body', $._expression),
             ))),
             prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
@@ -1618,8 +1533,8 @@ export default grammar({
             $._let_signature,
             "=",
             choice(
-                seq($._indent, field('body', $._expression), $._dedent),
-                seq($._inline_open, field('body', $._expression), $._inline_close),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
             ),
             // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
             // (expression-position) let, same as the top-level `let_binding`.
@@ -1638,8 +1553,8 @@ export default grammar({
             $._let_signature,
             "=",
             choice(
-                seq($._indent, field('body', $._expression), $._dedent),
-                seq($._inline_open, field('body', $._expression), $._inline_close),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._expression), $._layout_end),
             ),
         ),
 
@@ -1840,14 +1755,16 @@ export default grammar({
             optional(seq("of", $.type_expression)),
         )),
 
-        // try expr with | pat -> expr …   /   try expr finally expr
-        // Arm list shared by match / try-with / function. Arms after the
-        // first may be preceded by `_match_arm_sep` (scanner-emitted before a
-        // continuation `|`), which keeps the list open even when the arm's
-        // `|` sits at or below an enclosing offside column.
+        // Arm list shared by match / try-with / function. `_match_open` pushes a
+        // MATCH layout context at the first arm's column (emitted by the scanner
+        // right after `with`/`function`); `_match_end` closes the list when a line
+        // dedents below the arm column (or sits at it without a leading `|`). The
+        // leading `|` of each arm is `match_arm`'s own `optional("|")`.
         _match_arms: $ => prec.right(seq(
+            $._match_open,
             $.match_arm,
-            repeat(seq(optional($._match_arm_sep), $.match_arm)),
+            repeat($.match_arm),
+            $._match_end,
         )),
 
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
@@ -1915,7 +1832,7 @@ export default grammar({
                     choice(
                         seq("do",
                             choice(
-                                seq($._for_body_open, field('body', $._expression), $._for_body_close),
+                                seq($._layout_open, field('body', $._expression), $._layout_end),
                                 optional(field('body', $._expression)),
                             ),
                         ),
@@ -1932,7 +1849,7 @@ export default grammar({
                     $.identifier,
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
                     choice(
-                        seq($._for_body_open, field('body', $._expression), $._for_body_close),
+                        seq($._layout_open, field('body', $._expression), $._layout_end),
                         optional(field('body', $._expression)),
                     ),
                 ),
@@ -1968,11 +1885,11 @@ export default grammar({
                     // dedicated separator (a binding's trailing expression can't steal
                     // it); `_ce_body_close` pops at `}`.
                     seq(
-                        $._ce_body_open,
+                        $._bracket_open,
                         reserved('query_ce', $._ce_statement),
-                        repeat(seq(choice(";", $._ce_sep), reserved('query_ce', $._ce_statement))),
-                        optional(choice(";", $._ce_sep)),
-                        $._ce_body_close,
+                        repeat(seq(choice(";", $._bracket_semi), reserved('query_ce', $._ce_statement))),
+                        optional(choice(";", $._bracket_semi)),
+                        $._bracket_close,
                     ),
                     // Single line: `builder { return x }` / `seq { x; y }`.
                     seq(
@@ -2058,7 +1975,7 @@ export default grammar({
 
         // match! expr with | pat -> expr …
         ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
-            seq("match!", $._expression, "with", repeat1($.match_arm)),
+            seq("match!", $._expression, "with", $._match_arms),
         ),
 
         // return/yield/do! forms — in _expression so they're valid inside CE if/match branches.
@@ -2105,11 +2022,7 @@ export default grammar({
         //      trailing dedented statement (e.g. a final `0` at the `match`
         //      column) out of the last arm's body.
         //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
-        _match_arm_body: $ => choice(
-            seq($._body_indent, $._expression, $._body_dedent),
-            seq($._match_body_open, $._expression, $._match_body_close),
-            $._expression,
-        ),
+        _match_arm_body: $ => seq($._layout_open, $._expression, $._layout_end),
 
         pattern: $ => choice(
             $.wildcard_pattern,
