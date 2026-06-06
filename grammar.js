@@ -510,8 +510,10 @@ export default grammar({
             "new",
             field('parameters', $.tuple_params),
             "=",
-            field('body', $._expression),
-            optional(seq("then", $._expression)),
+            // Layout body so it closes at the next ctor/member instead of
+            // absorbing it (two `new …` in a row).
+            seq($._layout_open, field('body', $._expression), $._layout_end),
+            optional(seq("then", seq($._layout_open, $._expression, $._layout_end))),
         ))),
 
         // `: TypeExpr` return-type annotation. Shared by let_binding, let_and_binding,
