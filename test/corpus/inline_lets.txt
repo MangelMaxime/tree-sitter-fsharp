@@ -330,7 +330,7 @@ let f x =
               (identifier))
             right: (long_identifier
               (identifier)))))
-      (int_literal))))
+      else: (int_literal))))
 
 ================================================================================
 Regression: inline let inside try-with body

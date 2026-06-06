@@ -348,4 +348,4 @@ type Foo() =
           (long_identifier
             (identifier))
           (int_literal)
-          (int_literal))))))
+          else: (int_literal))))))
