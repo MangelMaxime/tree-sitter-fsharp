@@ -2570,7 +2570,10 @@ export default grammar({
         // `%fmt{` specifiers tokenise separately. Final `\\./` fallback accepts
         // unknown escape sequences so they don't cascade an ERROR (same as
         // `_string_content`).
-        _interp_string_text: _ => token.immediate(repeat1(choice(
+        // `prec(1, …)` so a `//` in the string text wins the lexical conflict
+        // against `line_comment` (an extra) — otherwise `$"//# …"` lexes the `//`
+        // as a comment and breaks the string.
+        _interp_string_text: _ => token.immediate(prec(1, repeat1(choice(
             /[^"\\{}%]+/,
             /\\[\\'"abfnrtv0]/,
             /\\[0-9]{3}/,
@@ -2580,24 +2583,24 @@ export default grammar({
             /\\./,
             '{{',
             '}}',
-        ))),
+        )))),
 
-        _interp_verbatim_text: _ => token.immediate(repeat1(choice(
+        _interp_verbatim_text: _ => token.immediate(prec(1, repeat1(choice(
             /[^"{}%]+/,
             '""',
             '{{',
             '}}',
-        ))),
+        )))),
 
         // Triple-quoted interpolated: the `"[^…]` alternatives prevent greedy match
         // from eating the closing `"""`.
-        _interp_triple_text: _ => token.immediate(repeat1(choice(
+        _interp_triple_text: _ => token.immediate(prec(1, repeat1(choice(
             /[^"{}%]+/,
             /""[^"{}%]/,
             /"[^"{}%]/,
             '{{',
             '}}',
-        ))),
+        )))),
 
         // Body of `:fmt` inside `{expr:fmt}`, up to the closing `}`.
         _interp_format_spec: _ => token.immediate(/[^}]+/),

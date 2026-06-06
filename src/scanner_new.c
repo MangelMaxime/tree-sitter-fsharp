@@ -55,10 +55,6 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR } Sort;
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
-#define MAXD 512
-typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
-
-typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
