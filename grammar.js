@@ -86,10 +86,12 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
         seq(
             $._record_open,
             field,
-            repeat(prec.dynamic(sepPrec, seq(
-                choice(";", $._bracket_semi),
-                field,
-            ))),
+            // No prec.dynamic on the separator: `_bracket_semi` is a dedicated
+            // token an application value can't absorb, so it already stops a field
+            // value from swallowing the next field. A prec above the field's
+            // application would WRONGLY end the value at its head (`X = abs 3` →
+            // `X = abs`, dropping the arg).
+            repeat(seq(choice(";", $._bracket_semi), field)),
             optional(choice(";", $._bracket_semi)),
             $._bracket_close,
         ),

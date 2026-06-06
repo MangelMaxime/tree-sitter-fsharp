@@ -281,9 +281,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         return false;
     }
 
-    // Lexical trailing-dot float (mid-line). After the opens (it advances over
-    // digits destructively even on failure, so it must not precede the peeks).
-    if (valid[FLOAT_TRAILING_DOT] && scan_trailing_dot_float(lexer)) return true;
+    // Lexical trailing-dot float (mid-line). After the opens. The probe advances
+    // over digits DESTRUCTIVELY even on failure, which would corrupt the position
+    // for the layout logic below (e.g. `{ X = abs 3 }` would then see `}` and emit
+    // a spurious BRACKET_CLOSE, ending the field at `abs`). So: only probe when the
+    // current-line char is a digit, and if it's a plain int (not `1.`) RETURN
+    // FALSE — a mid-line digit never needs a layout token, so resetting to
+    // mark_end (and letting tree-sitter lex the int) is correct. At a line
+    // boundary the first char is a newline, so we fall through to the layout logic.
+    if (valid[FLOAT_TRAILING_DOT]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+            if (scan_trailing_dot_float(lexer)) return true;
+            return false;
+        }
+    }
 
     // ---- Mid-line closes ------------------------------------------------------
     // An inline body / arm-list / block bracket can close on the SAME line before
