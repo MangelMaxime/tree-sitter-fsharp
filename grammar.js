@@ -576,16 +576,9 @@ export default grammar({
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
             "=",
-            optional(choice(
-                // Multi-line body: `_body_indent` pushes the body column so
-                // `_virtual_semi` can separate sibling statements into a
-                // `sequence_expression`. Without this, a member body like
-                // `Foo.bar ()\nif … then … else …` glues both statements
-                // into one chained application_expression and the
-                // `if`/`then`/`else` keywords get mis-lexed as identifiers.
-                seq($._layout_open, field('body', $._expression), $._layout_end),
-                field('body', $._expression),
-            )),
+            // Uniform layout body (closes at the next member). `optional` keeps
+            // `member X =` (mid-edit, no body yet) parseable.
+            optional(seq($._layout_open, field('body', $._expression), $._layout_end)),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
@@ -1490,11 +1483,9 @@ export default grammar({
         // body as a `let_expression` continuation (wrong, and an error when that
         // `let` has no continuation of its own).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=", choice(
+            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=",
                 seq($._layout_open, field('body', $._expression), $._layout_end),
-                seq($._layout_open, field('body', $._expression), $._layout_end),
-                field('body', $._expression),
-            ))),
+            )),
             prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
         )),
 
