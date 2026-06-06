@@ -464,9 +464,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // `elif`/`in` — and it's the INNERMOST one, so exactly the then-branch
             // (or let-in value) closes; the enclosing DECL body (S_LAYOUT module/
             // let) does NOT, which stops the over-close that ate the module body in
-            // `module M =⏎ let f = if a then 1 else 0⏎ let g`. Not gated on
-            // valid[LAYOUT_END] (GLR keeps it true for outer layouts).
-            if (top && top->sort == S_EXPR && c >= 'a' && c <= 'z') {
+            // `module M =⏎ let f = if a then 1 else 0⏎ let g`. Gated on
+            // valid[LAYOUT_END]: once the then-branch has closed and the grammar
+            // is ready for the `else`, LAYOUT_END is no longer valid, so an
+            // ENCLOSING S_EXPR (e.g. a `let_decl_indented` value wrapping a
+            // parenthesised `(if … else …)`) is NOT also closed — which would
+            // otherwise orphan the inner `else`.
+            if (top && top->sort == S_EXPR && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
