@@ -183,6 +183,21 @@ static uint32_t cur_col(const IndentStack *s) {
     return 0;
 }
 
+// Baseline column for an inline match/arm body: the innermost enclosing
+// container, counting K_INDENT, K_CE AND K_BRACKET. Unlike `idx_top(K_INDENT)`,
+// this includes the list/array element column (K_BRACKET) so an inline arm body
+// inside a list (`[ … match x with | a -> b … ]`) closes when a line returns to
+// the element column — instead of inheriting the OUTER indent and running past
+// the `]` (which broke `match`/`yield` in list comprehensions used as multi-line
+// application arguments).
+static uint32_t inline_body_baseline(const IndentStack *s) {
+    for (int i = (int)s->size - 1; i >= 0; i--) {
+        IndentKind k = s->kinds[i];
+        if (k == K_INDENT || k == K_CE || k == K_BRACKET) return s->cols[i];
+    }
+    return 0;
+}
+
 typedef struct {
     IndentStack stk;
 } Scanner;
@@ -730,7 +745,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         }
         // Same-line body present? (Not newline / EOF.)
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
-            idx_push(&s->stk, idx_top(&s->stk, K_INDENT), K_MATCH_BODY);
+            idx_push(&s->stk, inline_body_baseline(&s->stk), K_MATCH_BODY);
             lexer->mark_end(lexer); // zero-width — emit at the body's column.
             lexer->result_symbol = MATCH_BODY_OPEN;
             return true;
