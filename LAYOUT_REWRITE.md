@@ -157,7 +157,37 @@ fail — works.** That was the make-or-break unknown. Go.
    the grammar's application rule must accept the continuation. This is where the real port's
    GLR conflicts / non-stealable separators will need care (today's `_bracket_sep` discipline).
 
-## REAL PORT — WIP STATUS (2026-06-06, transform APPLIED & generating)
+## REAL PORT — VALIDATION (2026-06-06, model proven on real code) ✅
+
+**The premise is confirmed on the real Fable files** that motivated the rewrite:
+- **Fable2Babel.fs: 69 → 9 errors** (main → new model). The accumulated-state bugs are GONE.
+- Pipeline.fs: 16 → 13. Contributors/MonadicTrampoline/Printers/Replacements.Api: still 0.
+- Two files regressed 0 → 2 (CustomLogging, FileWatchers) on a fiddly construct
+  (**property `with get() … and set(v) …` accessors** — the `and set` continuation).
+- **corpus 288/312**, examples/layout.fsx 15 errors.
+
+Scanner fixes landed (all committed on spike/layout-scanner): inline-body column (float probe
+was advancing before the peek — the big one, +17 corpus), CE-separator blocker (BRACKET_SEMI),
+leading-infix continuation (`|>`/`+`/`::` continue, +4), mid-line `in`/`else`/`elif` inline-body
+close. Grammar: bare-`_expression` removed from if/match bodies; let/match/type-body collapses.
+
+### REMAINING (next session) — fiddly competing-form constructs, by cluster
+1. **Property get/set** (`member X with get()=… and set(v)=…`) — corpus 24/25, regresses
+   CustomLogging/FileWatchers. Likely needs the `and`/`with get,set` accessor body handled.
+2. **Query expressions** (corpus 33-36, 78) — `query { for x in xs do where … select … }`; the
+   query operators + `for`-clause-not-a-loop. CE body interaction.
+3. **Object expressions** (66-68) — `{ new T with member … }`: the `{ new` disambiguation vs
+   record/CE; members layout. (Tried wrapping members in layout — didn't fix; deeper.)
+4. **Module abbreviation** (207-209) — `module L = Lib`: LAYOUT_OPEN fires for the `= Lib`
+   abbrev form (no body). Same inline-vs-block competition as records.
+5. **Type augmentation** (219/220/299/301/302) — `type … with`; the same-column `with` close.
+6. **let-in** (97/145/146/147) and **anon-record copy** (290), **generic static access** (98).
+
+Most are the inline-vs-block / overloaded-`with` family flagged from the start. The pattern for
+each: a token position where a layout form competes with a non-layout form, and LAYOUT_OPEN fires
+unconditionally. Fix options: per-construct grammar marker, or scanner peek to suppress the open.
+
+## REAL PORT — earlier WIP notes (transform APPLIED & generating)
 
 The transform below has been APPLIED on `spike/layout-scanner`. Current state:
 - **`tree-sitter generate` succeeds**; new scanner wired (`src/scanner.c`, mirror in `scanner_new.c`).
