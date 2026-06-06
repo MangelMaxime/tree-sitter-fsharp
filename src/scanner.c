@@ -568,6 +568,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_EXPR:
         case S_DECL:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            // A leading close delimiter `)`/`]`/`}` ends the enclosing construct,
+            // so an open layout body must close first — even at == body col, where
+            // neither the dedent above nor a separator (semi_blocked on closers)
+            // fires. E.g. a lambda body whose `)` is on its own line:
+            //   `g (fun c ->⏎        x⏎        )` (the `)` aligned with `x`).
+            if (valid[LAYOUT_END] && (first == ')' || is_close_bracket(first))) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `with` type-augmentation aligned AT the body column closes the
             // TYPE body (S_TYPEBODY only) so the augmentation attaches:
             //   type D =⏎    | A⏎    | B⏎    with⏎        member …
