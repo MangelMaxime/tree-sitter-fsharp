@@ -34,16 +34,23 @@ typedef enum {
     RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
     BLOCK_OPEN,         // newline-gated layout open for MODULE bodies (S_LAYOUT, closes via LAYOUT_END)
     TYPE_OPEN,          // newline-gated layout open for TYPE bodies (S_TYPEBODY — also closes before `with`)
+    EXPR_OPEN,          // expression body (if/then/else, lambda, let-in value) — S_EXPR
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
 } Sym;
 
-// S_TYPEBODY behaves exactly like S_LAYOUT (dedent-close via LAYOUT_END, etc.)
-// EXCEPT a `with` aligned AT the body column closes it (type augmentation) — a
-// module body (S_LAYOUT) must NOT close there.
-typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY } Sort;
+// Sorts (all dedent-close via LAYOUT_END except as noted):
+//   S_LAYOUT   generic decl body (let/member/module body)
+//   S_TYPEBODY type body — ALSO closes before a `with` augmentation at body col
+//   S_EXPR     expression body (then/elif/else/lambda/let-in value) — ALSO closes
+//              before an inline `else`/`elif`/`in`. Crucially a DECL body
+//              (S_LAYOUT) does NOT, so `module M =⏎ let f = if a then 1 else 0⏎
+//              let g` closes only the then-body at `else`, not the module body.
+//   S_MATCH    arm-list (closes on dedent below arm col; no semicolons)
+//   S_BRACKET  [ / [| / { … explicit-close
+typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR } Sort;
 
-// True for the dedent-closing layout sorts (generic body + type body).
-static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY; }
+// True for the dedent-closing layout sorts (decl body, type body, expr body).
+static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
@@ -200,6 +207,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // same-line `new`/`x with` → fall through to object-expr/copy-update). So the
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
+    if (valid[EXPR_OPEN])   { push(s, S_EXPR,   peek_body_col(lexer)); lexer->result_symbol = EXPR_OPEN;   return true; }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
     // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
     // NEXT line (`type X =⏎ members`, `module M =⏎ decls`). For an inline body
@@ -334,17 +342,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             //   `try e with …` / `… finally …`.
             // Gated on valid[LAYOUT_END] (true only when a layout body is open and
             // complete) — so the `in` of `for x in xs` (no open body) is unaffected.
-            if (top && layoutish(top->sort) && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
+            // Only an EXPRESSION body (S_EXPR) closes before an inline `else`/
+            // `elif`/`in` — and it's the INNERMOST one, so exactly the then-branch
+            // (or let-in value) closes; the enclosing DECL body (S_LAYOUT module/
+            // let) does NOT, which stops the over-close that ate the module body in
+            // `module M =⏎ let f = if a then 1 else 0⏎ let g`. Not gated on
+            // valid[LAYOUT_END] (GLR keeps it true for outer layouts).
+            if (top && top->sort == S_EXPR && c >= 'a' && c <= 'z') {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
-                // Only `in`/`else`/`elif` are safe here: `with` mid-line is
-                // overloaded (`member val X = v with get,set`, `{ r with … }`,
-                // `type X = … with`) and must NOT close the value's layout.
-                if (!strcmp(w, "in") || !strcmp(w, "else") || !strcmp(w, "elif")) {
+                if (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in")) {
                     s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
@@ -412,6 +423,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             return false;
         case S_LAYOUT:
         case S_TYPEBODY:
+        case S_EXPR:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `with` type-augmentation aligned AT the body column closes the
             // TYPE body (S_TYPEBODY only) so the augmentation attaches:

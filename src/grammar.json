@@ -4765,7 +4765,7 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "_layout_open"
+          "name": "_expr_open"
         },
         {
           "type": "SYMBOL",
@@ -5501,49 +5501,23 @@
           "value": "="
         },
         {
-          "type": "CHOICE",
+          "type": "SEQ",
           "members": [
             {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_open"
-                },
-                {
-                  "type": "FIELD",
-                  "name": "body",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_expression"
-                  }
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_end"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_expr_open"
             },
             {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_open"
-                },
-                {
-                  "type": "FIELD",
-                  "name": "body",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_expression"
-                  }
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_end"
-                }
-              ]
+              "type": "FIELD",
+              "name": "body",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_layout_end"
             }
           ]
         },
@@ -11005,6 +10979,10 @@
     {
       "type": "SYMBOL",
       "name": "_type_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_expr_open"
     },
     {
       "type": "SYMBOL",

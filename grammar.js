@@ -163,6 +163,7 @@ export default grammar({
         $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
         $._block_open,        // newline-gated layout open for MODULE bodies (closes via _layout_end)
         $._type_open,         // newline-gated layout open for TYPE bodies (also closes before `with`)
+        $._expr_open,         // expression body (if/then/else, lambda, let-in value); closes before else/elif/in
         $._float_trailing_dot,
     ],
 
@@ -1357,7 +1358,7 @@ export default grammar({
         // alternative is gone — it created an ambiguity where an inline body could
         // reduce WITHOUT a layout close, so e.g. `if a then b`⏎`else …` reduced the
         // `if` before the `else` could attach.
-        _indented_or_inline_body: $ => seq($._layout_open, $._expression, $._layout_end),
+        _indented_or_inline_body: $ => seq($._expr_open, $._expression, $._layout_end),
 
         if_expression: $ => prec.right(PREC.IF_EXPR, choice(
             prec(2, seq(
@@ -1502,10 +1503,9 @@ export default grammar({
             optional("rec"),
             $._let_signature,
             "=",
-            choice(
-                seq($._layout_open, field('body', $._expression), $._layout_end),
-                seq($._layout_open, field('body', $._expression), $._layout_end),
-            ),
+            // S_EXPR body (`_expr_open`) so a `let x = e in body` closes the value
+            // `e` at the inline `in`.
+            seq($._expr_open, field('body', $._expression), $._layout_end),
             // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
             // (expression-position) let, same as the top-level `let_binding`.
             // Uses `_and_decl_indented` (NOT the top-level `let_and_binding`) so
