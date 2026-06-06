@@ -75,23 +75,16 @@ function decoration($) {
 // prevents drift; the two callers pass their own field rule and the
 // dynamic-prec used to break the field-vs-postfix-application conflict.
 function indentedOrInlineFieldList($, field, sepPrec, opts) {
-    const sameLineBraceForm = opts && opts.sameLineBraceForm;
     return choice(
-        // `{ F1\n   F2 }` — `{` on the same line as the first field,
-        // subsequent fields aligned to F1's column, `}` on the same line
-        // as the last field (or a new line). Scanner captures F1's column
-        // on _record_body_open, emits _virtual_semi at matching-col line
-        // boundaries between fields, and pops on _record_body_close.
-        //
-        // Listed first and at a higher prec.dynamic so the parser commits
-        // to this branch when RECORD_BODY_OPEN is available, rather than
-        // exploring the block branch in parallel and letting its
-        // BODY_INDENT push absorb the next-line field name into a
-        // postfix_type. Only enabled for `record_type_defn` — expression
-        // records keep their existing shapes (`base with field` and
-        // `{ new IFoo … }` make an early scanner-side commit fragile).
-        ...(sameLineBraceForm ? [seq(
-            $._bracket_open,
+        // Block / newline-aligned form, covering both `{ F1\n F2 }` (`{` on the
+        // first field's line) and `{\n F1\n F2\n}`. `_record_open` peeks for a
+        // field (`ident =`/`ident :`), captures its column, and is SUPPRESSED for
+        // `{ new …}` (object expr) and `{ base with …}` (copy-update) — so those
+        // grammar branches match instead. Fields separate by `_bracket_semi` (a
+        // dedicated token a nested sequence can't steal) or explicit `;`; the
+        // body pops on `_bracket_close` at `}`.
+        seq(
+            $._record_open,
             field,
             repeat(prec.dynamic(sepPrec, seq(
                 choice(";", $._bracket_semi),
@@ -99,21 +92,9 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
             ))),
             optional(choice(";", $._bracket_semi)),
             $._bracket_close,
-        )] : []),
-        // `{\n   F1\n   F2\n   }` — `{` on previous line, fields indented
-        // under it, `}` on a new line. Scanner emits _body_indent at the
-        // fields' column and _body_dedent at `}`.
-        seq(
-            $._layout_open,
-            field,
-            repeat(prec.dynamic(sepPrec, seq(
-                choice(";", $._layout_semi),
-                field,
-            ))),
-            optional(choice(";", $._layout_semi)),
-            $._layout_end,
         ),
-        // `{ F1; F2; F3 }` — single line, explicit `;` separators only.
+        // `{ F1; F2; F3 }` — single line, explicit `;` separators only (used when
+        // `_record_open` doesn't fire, e.g. inside a copy-update's field list).
         seq(
             field,
             repeat(prec.dynamic(sepPrec, seq(";", field))),
@@ -177,6 +158,7 @@ export default grammar({
         $._bracket_open,      // [ / [| / { block body on its own line(s)
         $._bracket_semi,      // newline-aligned element/field separator
         $._bracket_close,     // ] / |] / } closing a block bracket
+        $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
         $._float_trailing_dot,
     ],
 
@@ -1729,9 +1711,7 @@ export default grammar({
             )),
             optional(seq(
                 "with",
-                $._layout_open,
                 repeat($._class_body_member),
-                $._layout_end,
             )),
             "}",
         ),

@@ -31,6 +31,7 @@ typedef enum {
     BRACKET_OPEN,       // [ / [| / { block body on its own line(s)
     BRACKET_SEMI,       // newline-aligned element/field separator
     BRACKET_CLOSE,      // ] / |] / } closing a block bracket
+    RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
 } Sym;
 
@@ -186,7 +187,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // mark_end on return), whereas `scan_trailing_dot_float` advances over digits
     // DESTRUCTIVELY even on failure — running it first would corrupt the body
     // column for an inline body like `let a = 1` (peek would see the newline → 0).
-    if (valid[LAYOUT_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
+    // When RECORD_OPEN is also valid we're right after a `{`; the RECORD_OPEN
+    // block below owns that decision (field → record; own-line base → layout;
+    // same-line `new`/`x with` → fall through to object-expr/copy-update). So the
+    // generic LAYOUT_OPEN must NOT pre-empt it.
+    if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
     if (valid[BRACKET_OPEN]) {
         // Only open a bracket CONTEXT for the block form (body on the next line).
@@ -197,6 +202,52 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
         }
         return false; // inline bracket
+    }
+
+    // RECORD_OPEN: a `{` record body whose first field starts here (same line as
+    // `{`, or the next line). Peeks to confirm a field shape (`ident =` for a
+    // record_field, `ident :` for a record_type_field) and captures the field
+    // column. SUPPRESSED (return false → fall through) for `{ new … }` (object
+    // expression) and `{ base with … }` (copy-update), whose first word is NOT
+    // followed by `=`/`:` — letting the grammar's other `{`-branches match.
+    if (valid[RECORD_OPEN]) {
+        uint32_t col = lexer->get_column(lexer);
+        bool nl = false;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            nl = true;
+            if (!next_line_indent(lexer, &col, NULL)) return false;
+        }
+        int32_t c = lexer->lookahead;
+        bool ok = false;
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '`') {
+            if (c == '`') {                       // ``quoted name``
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '`') {
+                    lexer->advance(lexer, true);
+                    while (lexer->lookahead != '`' && lexer->lookahead != '\n' &&
+                           lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                    if (lexer->lookahead == '`') { lexer->advance(lexer, true); if (lexer->lookahead == '`') lexer->advance(lexer, true); }
+                }
+            } else {
+                while (1) {
+                    int32_t ch = lexer->lookahead;
+                    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                        (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+                    else break;
+                }
+            }
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            int32_t sep = lexer->lookahead;
+            if (sep == '=' || sep == ':') ok = true;   // record_field / record_type_field
+        }
+        if (ok) { push(s, S_BRACKET, col); lexer->result_symbol = RECORD_OPEN; return true; }
+        // Not a field. If the base is on its OWN line after `{` (`{⏎ base with ⏎
+        // field }` copy-update), open a layout at the base's column. Otherwise
+        // (same-line `{ new …}` / `{ x with …}`) fall through so object-expression
+        // / inline copy-update match.
+        if (nl && valid[LAYOUT_OPEN]) { push(s, S_LAYOUT, col); lexer->result_symbol = LAYOUT_OPEN; return true; }
+        return false;
     }
 
     // Lexical trailing-dot float (mid-line). After the opens (it advances over

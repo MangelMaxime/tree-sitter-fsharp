@@ -2779,7 +2779,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "_bracket_open"
+                  "name": "_record_open"
                 },
                 {
                   "type": "SYMBOL",
@@ -2838,73 +2838,6 @@
                 {
                   "type": "SYMBOL",
                   "name": "_bracket_close"
-                }
-              ]
-            },
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_open"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "record_type_field"
-                },
-                {
-                  "type": "REPEAT",
-                  "content": {
-                    "type": "PREC_DYNAMIC",
-                    "value": 4,
-                    "content": {
-                      "type": "SEQ",
-                      "members": [
-                        {
-                          "type": "CHOICE",
-                          "members": [
-                            {
-                              "type": "STRING",
-                              "value": ";"
-                            },
-                            {
-                              "type": "SYMBOL",
-                              "name": "_layout_semi"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "SYMBOL",
-                          "name": "record_type_field"
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "CHOICE",
-                      "members": [
-                        {
-                          "type": "STRING",
-                          "value": ";"
-                        },
-                        {
-                          "type": "SYMBOL",
-                          "name": "_layout_semi"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BLANK"
-                    }
-                  ]
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_end"
                 }
               ]
             },
@@ -4638,7 +4571,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "_bracket_open"
+              "name": "_record_open"
             },
             {
               "type": "SYMBOL",
@@ -4697,73 +4630,6 @@
             {
               "type": "SYMBOL",
               "name": "_bracket_close"
-            }
-          ]
-        },
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "_layout_open"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "record_field"
-            },
-            {
-              "type": "REPEAT",
-              "content": {
-                "type": "PREC_DYNAMIC",
-                "value": 17,
-                "content": {
-                  "type": "SEQ",
-                  "members": [
-                    {
-                      "type": "CHOICE",
-                      "members": [
-                        {
-                          "type": "STRING",
-                          "value": ";"
-                        },
-                        {
-                          "type": "SYMBOL",
-                          "name": "_layout_semi"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "record_field"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "STRING",
-                      "value": ";"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "_layout_semi"
-                    }
-                  ]
-                },
-                {
-                  "type": "BLANK"
-                }
-              ]
-            },
-            {
-              "type": "SYMBOL",
-              "name": "_layout_end"
             }
           ]
         },
@@ -6525,19 +6391,11 @@
                   "value": "with"
                 },
                 {
-                  "type": "SYMBOL",
-                  "name": "_layout_open"
-                },
-                {
                   "type": "REPEAT",
                   "content": {
                     "type": "SYMBOL",
                     "name": "_class_body_member"
                   }
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_layout_end"
                 }
               ]
             },
@@ -11151,6 +11009,10 @@
     {
       "type": "SYMBOL",
       "name": "_bracket_close"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_record_open"
     },
     {
       "type": "SYMBOL",
