@@ -223,18 +223,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (top->sort == S_MATCH   && valid[MATCH_END])     { s->n--; lexer->result_symbol = MATCH_END;     return true; }
                 if (top->sort == S_BRACKET && valid[BRACKET_CLOSE]) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
             }
-            // `let … = e in body`: a same-line `in` ends the inline Let body so it
-            // attaches to the `in` continuation. Gated on valid[LAYOUT_END] (true
-            // only when a layout body is open and complete) — so the `in` of
-            // `for x in xs` (no open body there) is unaffected.
-            if (c == 'i' && top && top->sort == S_LAYOUT && valid[LAYOUT_END]) {
-                lexer->advance(lexer, true);
-                if (lexer->lookahead == 'n') {
-                    lexer->advance(lexer, true);
-                    int32_t a = lexer->lookahead;
-                    bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
-                                (a >= '0' && a <= '9') || a == '_' || a == '\'';
-                    if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            // A same-line continuation keyword ends an inline layout body so it
+            // attaches to the enclosing construct rather than being absorbed:
+            //   `let … = e in body`  ·  `if c then a else b`  ·  `if c then a elif …`
+            //   `try e with …` / `… finally …`.
+            // Gated on valid[LAYOUT_END] (true only when a layout body is open and
+            // complete) — so the `in` of `for x in xs` (no open body) is unaffected.
+            if (top && top->sort == S_LAYOUT && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
+                char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
+                while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                                 (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+                    w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
+                }
+                w[n] = '\0';
+                // Only `in`/`else`/`elif` are safe here: `with` mid-line is
+                // overloaded (`member val X = v with get,set`, `{ r with … }`,
+                // `type X = … with`) and must NOT close the value's layout.
+                if (!strcmp(w, "in") || !strcmp(w, "else") || !strcmp(w, "elif")) {
+                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
             return false; // other same-line content: layout doesn't apply
