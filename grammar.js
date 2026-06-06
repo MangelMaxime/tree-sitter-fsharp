@@ -1472,22 +1472,11 @@ export default grammar({
                 decoration($),
                 $._let_signature,
                 "=",
-                choice(
-                    // Multi-line body: scanner pushes col onto indents stack
-                    // via _body_indent, pops via _body_dedent.
-                    seq($._layout_open, field('body', $._expression), $._layout_end),
-                    // Inline body: scanner pushes the ENCLOSING indent column
-                    // (approximating LET's col) onto its own let_body_cols
-                    // stack via _let_body_open, pops via _let_body_close when
-                    // the next line returns to or below that column. Stops
-                    // `let x = expr1` from absorbing the next-line `expr2`.
-                    seq($._layout_open, field('body', $._expression), $._layout_end),
-                    // Fallback: scanner suppresses _let_body_open when the
-                    // rest of the line contains an `in` keyword, signalling
-                    // `let x = expr in expr` (let_expression Branch B). In
-                    // that case the body is matched without offside tracking.
-                    field('body', $._expression),
-                ),
+                // Uniform: the body is a layout (opens at the body's first-token
+                // column, closes on dedent / mid-line `in` / closer). Covers
+                // inline `let x = e`, own-line bodies, and `let x = e in …` (the
+                // scanner's `in` ender closes the body before `in`).
+                seq($._layout_open, field('body', $._expression), $._layout_end),
                 repeat($.let_and_binding),
             ))),
             prec(1, prec.dynamic(1, seq(

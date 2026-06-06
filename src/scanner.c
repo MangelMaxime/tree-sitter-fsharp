@@ -124,13 +124,14 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
 // is inline on the current line (use get_column). This collapses F#'s old
 // inline-vs-own-line distinction into one decision.
 static uint32_t peek_body_col(TSLexer *lexer) {
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    uint32_t col = lexer->get_column(lexer);
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
-        uint32_t col;
-        if (next_line_indent(lexer, &col, NULL)) return col;
+        uint32_t nl;
+        if (next_line_indent(lexer, &nl, NULL)) return nl;
         return 0;
     }
-    return lexer->get_column(lexer);
+    return col;
 }
 
 // Match a trailing-dot float literal (`1.`, `20.`) at the current position.
@@ -178,12 +179,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
     if (valid[ERROR_SENTINEL]) return false;      // parse-error recovery: stay out of tree-sitter's way
 
-    // Lexical trailing-dot float (mid-line); handle before any layout logic.
-    if (valid[FLOAT_TRAILING_DOT] && scan_trailing_dot_float(lexer)) return true;
-
     Ctx *top = s->n > 0 ? &s->stk[s->n - 1] : NULL;
 
     // ---- Grammar-driven OPENS (zero-width; push a context) --------------------
+    // Checked BEFORE the float probe: these only peek (and restore position via
+    // mark_end on return), whereas `scan_trailing_dot_float` advances over digits
+    // DESTRUCTIVELY even on failure — running it first would corrupt the body
+    // column for an inline body like `let a = 1` (peek would see the newline → 0).
     if (valid[LAYOUT_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
     if (valid[BRACKET_OPEN]) {
@@ -196,6 +198,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         return false; // inline bracket
     }
+
+    // Lexical trailing-dot float (mid-line). After the opens (it advances over
+    // digits destructively even on failure, so it must not precede the peeks).
+    if (valid[FLOAT_TRAILING_DOT] && scan_trailing_dot_float(lexer)) return true;
 
     // ---- Mid-line closes ------------------------------------------------------
     // An inline body / arm-list / block bracket can close on the SAME line before
@@ -216,6 +222,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (top->sort == S_LAYOUT  && valid[LAYOUT_END])    { s->n--; lexer->result_symbol = LAYOUT_END;    return true; }
                 if (top->sort == S_MATCH   && valid[MATCH_END])     { s->n--; lexer->result_symbol = MATCH_END;     return true; }
                 if (top->sort == S_BRACKET && valid[BRACKET_CLOSE]) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
+            }
+            // `let … = e in body`: a same-line `in` ends the inline Let body so it
+            // attaches to the `in` continuation. Gated on valid[LAYOUT_END] (true
+            // only when a layout body is open and complete) — so the `in` of
+            // `for x in xs` (no open body there) is unaffected.
+            if (c == 'i' && top && top->sort == S_LAYOUT && valid[LAYOUT_END]) {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == 'n') {
+                    lexer->advance(lexer, true);
+                    int32_t a = lexer->lookahead;
+                    bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
+                                (a >= '0' && a <= '9') || a == '_' || a == '\'';
+                    if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                }
             }
             return false; // other same-line content: layout doesn't apply
         }
