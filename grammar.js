@@ -163,7 +163,8 @@ export default grammar({
         $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
         $._block_open,        // newline-gated layout open for MODULE bodies (closes via _layout_end)
         $._type_open,         // newline-gated layout open for TYPE bodies (also closes before `with`)
-        $._expr_open,         // expression body (if/then/else, lambda, let-in value); closes before else/elif/in
+        $._expr_open,         // expression body (then/elif body, lambda, let-in value); closes before else/elif/in
+        $._else_open,         // final-else body; suppressed when next token is `if` (→ flat else-if)
         $._float_trailing_dot,
     ],
 
@@ -1368,8 +1369,14 @@ export default grammar({
                 $._expression,
                 "then",
                 $._indented_or_inline_body,
-                repeat(seq("elif", $._expression, "then", $._indented_or_inline_body)),
-                optional(seq("else", $._indented_or_inline_body)),
+                // `else if c then …` ≡ `elif c then …` (F#). The scanner suppresses
+                // `_else_open` before `if`, so the final-else branch below can't take
+                // `else if`; it flattens here, keeping the chain at one level (an
+                // else-body-nested if would over-close at a later dedented `elif`).
+                repeat(seq(choice("elif", seq("else", "if")), $._expression, "then", $._indented_or_inline_body)),
+                // Final else: a non-`if` body (uses `_else_open`, which the scanner
+                // declines before `if`).
+                optional(seq("else", $._else_open, field('else', $._expression), $._layout_end)),
             )),
             prec(1, seq(
                 "if",

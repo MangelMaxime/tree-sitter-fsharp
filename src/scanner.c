@@ -34,7 +34,9 @@ typedef enum {
     RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
     BLOCK_OPEN,         // newline-gated layout open for MODULE bodies (S_LAYOUT, closes via LAYOUT_END)
     TYPE_OPEN,          // newline-gated layout open for TYPE bodies (S_TYPEBODY — also closes before `with`)
-    EXPR_OPEN,          // expression body (if/then/else, lambda, let-in value) — S_EXPR
+    EXPR_OPEN,          // expression body (then/elif body, lambda, let-in value) — S_EXPR
+    ELSE_OPEN,          // final-else body — S_EXPR, but SUPPRESSED when next token is `if`
+                        //   (`else if` flattens to an elif clause, no nested else-body)
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
 } Sym;
 
@@ -208,6 +210,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
     if (valid[EXPR_OPEN])   { push(s, S_EXPR,   peek_body_col(lexer)); lexer->result_symbol = EXPR_OPEN;   return true; }
+    if (valid[ELSE_OPEN]) {
+        // Final-else body. If it starts with `if`, this is `else if` — DON'T open a
+        // nested else-body; return false so the grammar's flat `else if`→elif clause
+        // matches (and its elif/else stay at the chain's level instead of nesting an
+        // if inside the else-body, whose layout would over-close at a later `elif`).
+        uint32_t col = peek_body_col(lexer);  // positions lexer at the body's first char
+        if (lexer->lookahead == 'i') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 'f') {
+                lexer->advance(lexer, true);
+                int32_t a = lexer->lookahead;
+                bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
+                            (a >= '0' && a <= '9') || a == '_' || a == '\'';
+                if (!word) return false;  // `else if …` → flat elif clause
+            }
+        }
+        push(s, S_EXPR, col); lexer->result_symbol = ELSE_OPEN; return true;
+    }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
     // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
     // NEXT line (`type X =⏎ members`, `module M =⏎ decls`). For an inline body

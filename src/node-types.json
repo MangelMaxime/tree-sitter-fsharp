@@ -1304,7 +1304,18 @@
   {
     "type": "if_expression",
     "named": true,
-    "fields": {},
+    "fields": {
+      "else": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
       "required": true,

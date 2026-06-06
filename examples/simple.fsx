@@ -130,6 +130,8 @@ let condition a b c =
         "b"
     elif c then
         "c"
+    else if b then
+        "b"
     else
         "nothing"
 
