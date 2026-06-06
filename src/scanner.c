@@ -55,9 +55,21 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR } Sort;
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
+#define MAXD 512
+typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
+
+typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
+
+// Is there a match/try/function arm-list (S_MATCH) anywhere on the stack? Used to
+// tell a real match-arm `|` (close the inline arm body first) from a UNION case
+// separator `type X = A | B` (no arm-list — must NOT close the enclosing body).
+static bool has_match_ctx(Scanner *s) {
+    for (int i = (int)s->n - 1; i >= 0; i--) if (s->stk[i].sort == S_MATCH) return true;
+    return false;
+}
 
 void *tree_sitter_fsharp_external_scanner_create(void) { return calloc(1, sizeof(Scanner)); }
 void tree_sitter_fsharp_external_scanner_destroy(void *p) { free(p); }
@@ -345,9 +357,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 int32_t c1 = lexer->lookahead;
                 if (is_close_bracket(c1)) closer = true;
-                else if (c1 != '>' && c1 != '|' && top && layoutish(top->sort) && valid[LAYOUT_END]) {
+                else if (c1 != '>' && c1 != '|' && top && layoutish(top->sort) && valid[LAYOUT_END] && has_match_ctx(s)) {
                     // A bare same-line `|` is the next match arm; close the inline
-                    // arm body first (`function | 0 -> "a" | _ -> "b"`).
+                    // arm body first (`function | 0 -> "a" | _ -> "b"`). Gated on an
+                    // S_MATCH being on the stack so a UNION case separator
+                    // `type X = A | B` (no arm-list) does NOT close the enclosing body.
                     s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
