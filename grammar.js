@@ -713,7 +713,9 @@ export default grammar({
 
         // do expr  (class initializer or module-level side effect)
         // static do runs once at type initialization time
-        do_stmt: $ => seq(optional("static"), "do", $._expression),
+        // Layout body so `[static] do expr` closes at the next member/statement
+        // instead of absorbing it (e.g. `static do printfn …` before members).
+        do_stmt: $ => seq(optional("static"), "do", $._expr_open, $._expression, $._layout_end),
 
         // Explicit field in a class:
         //   val mutable field: int
