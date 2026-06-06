@@ -1149,7 +1149,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     // inside a module) open across all its arms. The grammar's validity gate
     // means this never fires mid-arm-body (an own-line arm body's BODY_DEDENT
     // closes first; only then is the arm complete and MATCH_ARM_SEP valid).
-    if (want_match_arm_sep && bar_arm) {
+    // EXCEPT a `|` that has dedented BELOW the current indented body
+    // (`col < current`) while a dedent is also pending: that `|` belongs to an
+    // OUTER match, not the innermost one — the inner match's containing arm body
+    // must reduce (BODY_DEDENT) first, and the outer match then gets its
+    // MATCH_ARM_SEP on a later scan call. A genuine next arm of THIS match sits
+    // at the body indent (`col == current`), so it is unaffected. Without this
+    // guard a shallower `|` is greedily absorbed as another arm of the innermost
+    // match (e.g. a doubly-nested `match`), leaving the inner arm body's indent
+    // un-popped and corrupting the offside baseline for a later own-line `else`.
+    if (want_match_arm_sep && bar_arm &&
+        !(col < current && (want_dedent || want_body_dedent))) {
         lexer->result_symbol = MATCH_ARM_SEP;
         return true;
     }
