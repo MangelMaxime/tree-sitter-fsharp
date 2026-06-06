@@ -159,7 +159,8 @@ export default grammar({
         $._bracket_semi,      // newline-aligned element/field separator
         $._bracket_close,     // ] / |] / } closing a block bracket
         $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
-        $._block_open,        // newline-gated layout open for type/module bodies (closes via _layout_end)
+        $._block_open,        // newline-gated layout open for MODULE bodies (closes via _layout_end)
+        $._type_open,         // newline-gated layout open for TYPE bodies (also closes before `with`)
         $._float_trailing_dot,
     ],
 
@@ -418,7 +419,7 @@ export default grammar({
         _type_decl_body_or_class: $ => choice(
             $._type_decl_body,
             seq(
-                $._block_open,
+                $._type_open,
                 choice(
                     // Record / union / enum / etc. body, OPTIONALLY followed
                     // by augmentation members in the same indented block

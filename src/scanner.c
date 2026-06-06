@@ -32,11 +32,18 @@ typedef enum {
     BRACKET_SEMI,       // newline-aligned element/field separator
     BRACKET_CLOSE,      // ] / |] / } closing a block bracket
     RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
-    BLOCK_OPEN,         // newline-gated layout open for type/module bodies (S_LAYOUT, closes via LAYOUT_END)
+    BLOCK_OPEN,         // newline-gated layout open for MODULE bodies (S_LAYOUT, closes via LAYOUT_END)
+    TYPE_OPEN,          // newline-gated layout open for TYPE bodies (S_TYPEBODY — also closes before `with`)
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
 } Sym;
 
-typedef enum { S_LAYOUT, S_MATCH, S_BRACKET } Sort;
+// S_TYPEBODY behaves exactly like S_LAYOUT (dedent-close via LAYOUT_END, etc.)
+// EXCEPT a `with` aligned AT the body column closes it (type augmentation) — a
+// module body (S_LAYOUT) must NOT close there.
+typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY } Sort;
+
+// True for the dedent-closing layout sorts (generic body + type body).
+static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
@@ -207,6 +214,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         return false; // inline body — let the grammar's inline alternative match
     }
+    // TYPE_OPEN: like BLOCK_OPEN but the context is S_TYPEBODY so a `with`
+    // augmentation at the body column closes it (see the S_TYPEBODY boundary case).
+    if (valid[TYPE_OPEN]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            uint32_t col;
+            if (next_line_indent(lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
+        }
+        return false; // inline type body (record/alias/inline DU) — let it match
+    }
     if (valid[BRACKET_OPEN]) {
         // Only open a bracket CONTEXT for the block form (body on the next line).
         // Inline `[ a; b ]` uses literal `;` + `]` and needs no scanner context.
@@ -283,14 +300,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 int32_t c1 = lexer->lookahead;
                 if (is_close_bracket(c1)) closer = true;
-                else if (c1 != '>' && c1 != '|' && top && top->sort == S_LAYOUT && valid[LAYOUT_END]) {
+                else if (c1 != '>' && c1 != '|' && top && layoutish(top->sort) && valid[LAYOUT_END]) {
                     // A bare same-line `|` is the next match arm; close the inline
                     // arm body first (`function | 0 -> "a" | _ -> "b"`).
                     s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
             if (closer && top) {
-                if (top->sort == S_LAYOUT  && valid[LAYOUT_END])    { s->n--; lexer->result_symbol = LAYOUT_END;    return true; }
+                if (layoutish(top->sort)  && valid[LAYOUT_END])    { s->n--; lexer->result_symbol = LAYOUT_END;    return true; }
                 if (top->sort == S_MATCH   && valid[MATCH_END])     { s->n--; lexer->result_symbol = MATCH_END;     return true; }
                 if (top->sort == S_BRACKET && valid[BRACKET_CLOSE]) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
             }
@@ -300,7 +317,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             //   `try e with …` / `… finally …`.
             // Gated on valid[LAYOUT_END] (true only when a layout body is open and
             // complete) — so the `in` of `for x in xs` (no open body) is unaffected.
-            if (top && top->sort == S_LAYOUT && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
+            if (top && layoutish(top->sort) && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
@@ -323,7 +340,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (at_eof) {
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
-        if (valid[LAYOUT_END]   && top && top->sort == S_LAYOUT)   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
+        if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
         return false;
     }
 
@@ -331,7 +348,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (!next_line_indent(lexer, &col, &first)) {           // EOF after trailing blanks
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
-        if (valid[LAYOUT_END]   && top && top->sort == S_LAYOUT)   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
+        if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
         return false;
     }
     if (!top) return false;
@@ -377,7 +394,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (valid[MATCH_END] && (col < top->col || (col == top->col && !bar_arm))) { s->n--; lexer->result_symbol = MATCH_END; return true; }
             return false;
         case S_LAYOUT:
+        case S_TYPEBODY:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            // A `with` type-augmentation aligned AT the body column closes the
+            // TYPE body (S_TYPEBODY only) so the augmentation attaches:
+            //   type D =⏎    | A⏎    | B⏎    with⏎        member …
+            // A module body (S_LAYOUT) at == col must NOT close before `with`.
+            if (top->sort == S_TYPEBODY && valid[LAYOUT_END] && col == top->col && first == 'w') {
+                lexer->advance(lexer, true);            // 'w'
+                if (lexer->lookahead == 'i') { lexer->advance(lexer, true);
+                if (lexer->lookahead == 't') { lexer->advance(lexer, true);
+                if (lexer->lookahead == 'h') { lexer->advance(lexer, true);
+                    int32_t a = lexer->lookahead;
+                    bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
+                                (a >= '0' && a <= '9') || a == '_' || a == '\'';
+                    if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                }}}
+            }
             if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
             return false;
     }

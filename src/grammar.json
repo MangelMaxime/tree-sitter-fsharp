@@ -841,7 +841,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "_block_open"
+              "name": "_type_open"
             },
             {
               "type": "CHOICE",
@@ -11017,6 +11017,10 @@
     {
       "type": "SYMBOL",
       "name": "_block_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_type_open"
     },
     {
       "type": "SYMBOL",
