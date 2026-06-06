@@ -1729,7 +1729,9 @@ export default grammar({
             )),
             optional(seq(
                 "with",
+                $._layout_open,
                 repeat($._class_body_member),
+                $._layout_end,
             )),
             "}",
         ),

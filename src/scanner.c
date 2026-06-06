@@ -265,10 +265,34 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // handled by BRACKET_CLOSE above/below via valid-gating.
     bool bar_arm = (first == '|');
 
+    // Leading-infix continuation: a line that BEGINS with an infix operator
+    // continues the previous expression (F#'s leading-operator rule), so NO
+    // layout token fires — even when the operator sits at or below the body
+    // column (`|>`/`<|`/`>>` pipe chains, `+`/`*`/… arithmetic, `::` cons).
+    // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
+    // only doubled. Unary-capable leads (`-` `+` `!` `~` `@`) are excluded.
+    {
+        int32_t c0 = first;
+        if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
+            c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':') {
+            lexer->advance(lexer, true);
+            int32_t c1 = lexer->lookahead;
+            bool infix = false;
+            if (c0 == '|')      infix = (c1 == '>' || c1 == '|');           // |> ||
+            else if (c0 == '&') infix = (c1 == '&');                        // &&
+            else if (c0 == ':') infix = (c1 == ':' || c1 == '>' || c1 == '?'); // :: :> :?
+            else                infix = true;                              // = < > * / % ^
+            if (infix) return false;
+        }
+    }
+
     switch (top->sort) {
         case S_BRACKET:
             if (valid[BRACKET_CLOSE] && (is_close_bracket(first) || first == '|')) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
-            if (valid[BRACKET_SEMI] && col == top->col) { lexer->result_symbol = BRACKET_SEMI; return true; }
+            // Same blocker as LAYOUT_SEMI: a CE statement separator must not fire
+            // before `else`/`elif`/… — otherwise `if c then return a`⏎`else …`
+            // inside a CE detaches the else (banked-fix #3, in the new model).
+            if (valid[BRACKET_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = BRACKET_SEMI; return true; }
             return false;
         case S_MATCH:
             // Close the arm-list when a line dedents below the arm column, or sits

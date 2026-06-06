@@ -6525,11 +6525,19 @@
                   "value": "with"
                 },
                 {
+                  "type": "SYMBOL",
+                  "name": "_layout_open"
+                },
+                {
                   "type": "REPEAT",
                   "content": {
                     "type": "SYMBOL",
                     "name": "_class_body_member"
                   }
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_layout_end"
                 }
               ]
             },
