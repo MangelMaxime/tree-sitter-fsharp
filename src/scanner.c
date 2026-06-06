@@ -1453,23 +1453,39 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     if (want_ce_sep && at_ce_col) {
         int32_t c = la0;
         bool blocked = (c == '|' || c == ')' || c == ']' || c == '}' || infix_continue);
-        // Block before `and`/`and!`: it CONTINUES a `let!`/`and!` applicative
-        // group (or a `let … and …` binding), so it isn't a new statement and
-        // must not be separated off. (`la0`/the peeked chars are safe to consume
-        // here — CE_SEP is zero-width and `mark_end` was already set.)
-        if (!blocked && c == 'a') {
-            lexer->advance(lexer, true);
-            if (lexer->lookahead == 'n') {
+        // Block before a continuation keyword that belongs to the CURRENT
+        // statement rather than starting a new one. A CE_SEP here would split
+        // the construct and detach the tail:
+        //   - `else`/`elif`/`then`: an `if … then return x` whose `else`/`elif`
+        //     sits at the CE column — without this the branch detaches (the
+        //     `if` reduces with only the then-branch and `else …` parses as a
+        //     stray statement, erroring on a `return!`/`do!` bang body).
+        //   - `with`/`finally`: continue a `try`/`match`.
+        //   - `in`: a `let … in` continuation.
+        //   - `and`/`and!`: a `let!`/`and!` applicative group or `let … and …`.
+        // None of these words ever START a CE statement, so blocking is safe.
+        // (`la0`/the peeked chars are safe to consume — CE_SEP is zero-width and
+        // `mark_end` was already set.)
+        if (!blocked && c >= 'a' && c <= 'z') {
+            int32_t buf[10];
+            size_t n = 0;
+            int32_t look = lexer->lookahead;
+            while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                             (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+                buf[n++] = look;
                 lexer->advance(lexer, true);
-                if (lexer->lookahead == 'd') {
-                    lexer->advance(lexer, true);
-                    int32_t after = lexer->lookahead;
-                    bool word = (after >= 'a' && after <= 'z') ||
-                                (after >= 'A' && after <= 'Z') ||
-                                (after >= '0' && after <= '9') ||
-                                after == '_' || after == '\'';
-                    if (!word) blocked = true; // `and` (space) or `and!`
-                }
+                look = lexer->lookahead;
+            }
+            static const char *ce_cont[] = {
+                "else", "elif", "then", "with", "finally", "in", "and", NULL,
+            };
+            for (const char **k = ce_cont; *k; k++) {
+                size_t kl = strlen(*k);
+                if (kl != n) continue;
+                bool eq = true;
+                for (size_t j = 0; j < kl; j++)
+                    if (buf[j] != (int32_t)(*k)[j]) { eq = false; break; }
+                if (eq) { blocked = true; break; }
             }
         }
         if (!blocked) {
