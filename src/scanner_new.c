@@ -32,6 +32,7 @@ typedef enum {
     BRACKET_SEMI,       // newline-aligned element/field separator
     BRACKET_CLOSE,      // ] / |] / } closing a block bracket
     RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
+    BLOCK_OPEN,         // newline-gated layout open for type/module bodies (S_LAYOUT, closes via LAYOUT_END)
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
 } Sym;
 
@@ -193,6 +194,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
+    // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
+    // NEXT line (`type X =⏎ members`, `module M =⏎ decls`). For an inline body
+    // (`type X = {…}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
+    // so the grammar's inline alternative matches. Newline-gated like BRACKET_OPEN,
+    // but pushes S_LAYOUT (dedent-close via LAYOUT_END).
+    if (valid[BLOCK_OPEN]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            uint32_t col;
+            if (next_line_indent(lexer, &col, NULL)) { push(s, S_LAYOUT, col); lexer->result_symbol = BLOCK_OPEN; return true; }
+        }
+        return false; // inline body — let the grammar's inline alternative match
+    }
     if (valid[BRACKET_OPEN]) {
         // Only open a bracket CONTEXT for the block form (body on the next line).
         // Inline `[ a; b ]` uses literal `;` + `]` and needs no scanner context.

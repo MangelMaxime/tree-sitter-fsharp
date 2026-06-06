@@ -148,7 +148,7 @@
                           "members": [
                             {
                               "type": "SYMBOL",
-                              "name": "_layout_open"
+                              "name": "_block_open"
                             },
                             {
                               "type": "REPEAT",
@@ -841,7 +841,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "_layout_open"
+              "name": "_block_open"
             },
             {
               "type": "CHOICE",
@@ -11013,6 +11013,10 @@
     {
       "type": "SYMBOL",
       "name": "_record_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_block_open"
     },
     {
       "type": "SYMBOL",

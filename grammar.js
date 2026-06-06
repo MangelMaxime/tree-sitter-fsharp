@@ -159,6 +159,7 @@ export default grammar({
         $._bracket_semi,      // newline-aligned element/field separator
         $._bracket_close,     // ] / |] / } closing a block bracket
         $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
+        $._block_open,        // newline-gated layout open for type/module bodies (closes via _layout_end)
         $._float_trailing_dot,
     ],
 
@@ -243,7 +244,7 @@ export default grammar({
             optional(seq("=", optional(choice(
                 field('abbrev', $.long_identifier),
                 seq(
-                    $._layout_open,
+                    $._block_open,
                     repeat($._token),
                     $._layout_end,
                 ),
@@ -417,7 +418,7 @@ export default grammar({
         _type_decl_body_or_class: $ => choice(
             $._type_decl_body,
             seq(
-                $._layout_open,
+                $._block_open,
                 choice(
                     // Record / union / enum / etc. body, OPTIONALLY followed
                     // by augmentation members in the same indented block
