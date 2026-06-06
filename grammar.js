@@ -646,7 +646,9 @@ export default grammar({
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
             "=",
-            field('body', $._expression),
+            // Layout body (like every other `=` body) so it closes at the next
+            // member/decl instead of absorbing it.
+            seq($._layout_open, field('body', $._expression), $._layout_end),
         ),
 
         // with get [, set]  (auto-property accessor list)
