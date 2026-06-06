@@ -52,10 +52,16 @@ typedef enum {
 //              let g` closes only the then-body at `else`, not the module body.
 //   S_MATCH    arm-list (closes on dedent below arm col; no semicolons)
 //   S_BRACKET  [ / [| / { … explicit-close
-typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR } Sort;
+//   S_DECL     module/source declaration body — like S_LAYOUT, but a
+//              `_layout_semi` is NEVER emitted before a declaration keyword
+//              (`let`/`type`/`module`/…). A module body is `repeat(_token)`, so a
+//              bare-expression `_token` must not extend into the next declaration
+//              as a `sequence_expression` (`ignore x⏎ let y = …` is two decls,
+//              whereas a function body — S_LAYOUT — DOES sequence `let` as let-in).
+typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL } Sort;
 
-// True for the dedent-closing layout sorts (decl body, type body, expr body).
-static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR; }
+// True for the dedent-closing layout sorts (decl body, type body, expr body, module body).
+static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
@@ -253,6 +259,27 @@ static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
     return consumed;
 }
 
+// In an S_DECL (module/source) body, a line beginning with one of these keywords
+// starts a fresh declaration `_token` — never a continuation of the previous
+// bare-expression statement. Blocking LAYOUT_SEMI before them stops the previous
+// `_token` from absorbing the declaration into a `sequence_expression` (which then
+// fails when, e.g., the `let` has no continuation). `first` is the leading char.
+static bool decl_starter(TSLexer *lexer, int32_t first) {
+    if (first < 'a' || first > 'z') return false;
+    char w[12]; size_t n = 0; int32_t look = lexer->lookahead;
+    while (n < 11 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                      (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+        w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
+    }
+    w[n] = '\0';
+    return !strcmp(w, "let") || !strcmp(w, "use") || !strcmp(w, "do") ||
+           !strcmp(w, "type") || !strcmp(w, "module") || !strcmp(w, "open") ||
+           !strcmp(w, "exception") || !strcmp(w, "namespace") || !strcmp(w, "inline") ||
+           !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "val") ||
+           !strcmp(w, "abstract") || !strcmp(w, "inherit") || !strcmp(w, "override") ||
+           !strcmp(w, "default") || !strcmp(w, "interface");
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
@@ -307,7 +334,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col;
-            if (next_line_indent(lexer, &col, NULL)) { push(s, S_LAYOUT, col); lexer->result_symbol = BLOCK_OPEN; return true; }
+            if (next_line_indent(lexer, &col, NULL)) { push(s, S_DECL, col); lexer->result_symbol = BLOCK_OPEN; return true; }
         }
         return false; // inline body — let the grammar's inline alternative match
     }
@@ -515,6 +542,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_LAYOUT:
         case S_TYPEBODY:
         case S_EXPR:
+        case S_DECL:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `with` type-augmentation aligned AT the body column closes the
             // TYPE body (S_TYPEBODY only) so the augmentation attaches:
@@ -531,6 +559,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                 }}}
             }
+            // S_DECL: never separate before a declaration keyword — the line is a
+            // new `_token`, not a `sequence_expression` continuation of the prior
+            // bare-expression statement.
+            if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
             if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
             return false;
     }
