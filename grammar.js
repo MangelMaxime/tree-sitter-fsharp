@@ -1140,10 +1140,19 @@ export default grammar({
         // &expr — address-of / byref argument  someFunc(&mutableVal)
         address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._expression)),
 
-        // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics
+        // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics.
+        // The keyword is fused with its REQUIRED adjacent `<` into a single
+        // token so the bare words stay usable as plain identifiers everywhere
+        // else (`let typeof = …`, `f (a, typeof, …)` — common in Fable). With
+        // them as standalone string keywords the lexer (keyword-extraction on)
+        // emits the keyword in any expression slot and dead-ends when no `<`
+        // follows. Requiring no-space `typeof<` disambiguates from a variable
+        // comparison `typeof < x` (which keeps `typeof` an identifier).
         type_keyword_expression: $ => seq(
-            choice("sizeof", "typeof", "typedefof"),
-            "<",
+            alias(
+                token(seq(choice("sizeof", "typeof", "typedefof"), "<")),
+                $.type_intrinsic,
+            ),
             $.type_expression,
             ">",
         ),

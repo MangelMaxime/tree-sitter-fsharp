@@ -41,7 +41,10 @@
 ; Unary prefix operators on a single expression — same semantic role as
 ; `not`/`nameof`/etc., so they share the @keyword.operator slot rather
 ; than the generic @keyword used for declaration/control keywords.
-["not" "upcast" "downcast" "nameof" "sizeof" "typeof" "typedefof" "lazy" "assert"] @keyword.operator
+["not" "upcast" "downcast" "nameof" "lazy" "assert"] @keyword.operator
+; sizeof</typeof</typedefof< are fused keyword+`<` tokens (so the bare words
+; stay usable as identifiers); colour the intrinsic node as a keyword.
+(type_intrinsic) @keyword.operator
 
 (address_of_expression "&" @operator)
 (optional_named_arg "?" @operator)

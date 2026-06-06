@@ -4443,11 +4443,15 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "type_intrinsic",
           "named": true
         }
       ]
@@ -5461,10 +5465,6 @@
     "named": true
   },
   {
-    "type": "sizeof",
-    "named": false
-  },
-  {
     "type": "skip",
     "named": false
   },
@@ -5537,16 +5537,12 @@
     "named": false
   },
   {
-    "type": "type_parameter",
+    "type": "type_intrinsic",
     "named": true
   },
   {
-    "type": "typedefof",
-    "named": false
-  },
-  {
-    "type": "typeof",
-    "named": false
+    "type": "type_parameter",
+    "named": true
   },
   {
     "type": "unit",

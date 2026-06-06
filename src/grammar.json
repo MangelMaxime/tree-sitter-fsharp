@@ -3491,25 +3491,38 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "sizeof"
-            },
-            {
-              "type": "STRING",
-              "value": "typeof"
-            },
-            {
-              "type": "STRING",
-              "value": "typedefof"
+          "type": "ALIAS",
+          "content": {
+            "type": "TOKEN",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "sizeof"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "typeof"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "typedefof"
+                    }
+                  ]
+                },
+                {
+                  "type": "STRING",
+                  "value": "<"
+                }
+              ]
             }
-          ]
-        },
-        {
-          "type": "STRING",
-          "value": "<"
+          },
+          "named": true,
+          "value": "type_intrinsic"
         },
         {
           "type": "SYMBOL",
