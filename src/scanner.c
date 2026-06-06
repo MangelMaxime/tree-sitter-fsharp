@@ -41,6 +41,7 @@ typedef enum {
     INTERP_STRING_TEXT,   // text chunk in $"…"   (external so // isn't a comment)
     INTERP_VERBATIM_TEXT, // text chunk in $@"…" / @$"…"
     INTERP_TRIPLE_TEXT,   // text chunk in $"""…"""
+    FOR_OPEN,             // `for … do` body open; suppressed for query-CE operators
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -305,6 +306,27 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // same-line `new`/`x with` → fall through to object-expr/copy-update). So the
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
+    // FOR_OPEN: the body of a `for … do`. Like LAYOUT_OPEN but SUPPRESSED when the
+    // body would not indent past the enclosing context — that's a query-CE
+    // `for x in xs do`⏎`where …`/`select …`, where the operators sit at the CE
+    // column, not in an indented loop body. Suppressing keeps the for body empty so
+    // the operators stay `query_operator` CE siblings (a real loop body always
+    // indents past the `for`, so this never suppresses a genuine body). Dedicated
+    // (not LAYOUT_OPEN) so only for-do bodies get this rule.
+    if (valid[FOR_OPEN]) {
+        uint32_t bc = peek_body_col(lexer);
+        if (top && bc <= top->col) {
+            // No indented body — query-CE for-clause. Emit the enclosing
+            // statement separator so the following `where`/`select`/`join`/… is a
+            // SIBLING `query_operator`, not absorbed as an application argument of
+            // the empty-body `for`. (peek_body_col advanced, but the separator is
+            // zero-width at the mark_end baseline, so over-advance is discarded.)
+            if (top->sort == S_BRACKET && valid[BRACKET_SEMI]) { lexer->result_symbol = BRACKET_SEMI; return true; }
+            if (layoutish(top->sort) && valid[LAYOUT_SEMI])    { lexer->result_symbol = LAYOUT_SEMI; return true; }
+            return false;
+        }
+        push(s, S_LAYOUT, bc); lexer->result_symbol = FOR_OPEN; return true;
+    }
     if (valid[EXPR_OPEN])   { push(s, S_EXPR,   peek_body_col(lexer)); lexer->result_symbol = EXPR_OPEN;   return true; }
     if (valid[ELSE_OPEN]) {
         // Final-else body. If it starts with `if`, this is `else if` — DON'T open a

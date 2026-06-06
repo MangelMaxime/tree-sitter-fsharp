@@ -173,6 +173,7 @@ export default grammar({
         $._interp_string_text,
         $._interp_verbatim_text,
         $._interp_triple_text,
+        $._for_open,          // `for … do` body open (suppressed before query-CE operators)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1817,10 +1818,14 @@ export default grammar({
                     "in", $._expression,
                     choice(
                         seq("do",
-                            choice(
-                                seq($._layout_open, field('body', $._expression), $._layout_end),
-                                optional(field('body', $._expression)),
-                            ),
+                            // `_for_open` is suppressed when the "body" sits at the
+                            // enclosing (CE) column rather than indented — i.e. a
+                            // query `for x in xs do`⏎`where …`/`select …` — so the
+                            // body stays empty and the operators are query_operator
+                            // CE siblings. A real indented/inline loop body opens
+                            // normally. (No bare `optional($._expression)` fallback:
+                            // it would greedily eat the next query operator.)
+                            optional(seq($._for_open, field('body', $._expression), $._layout_end)),
                         ),
                         // `[ for x in xs -> expr ]` — list/seq/array comprehension
                         // yield shorthand (sugar for `do yield expr`). The `->`
@@ -1834,10 +1839,7 @@ export default grammar({
                 seq(
                     $.identifier,
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
-                    choice(
-                        seq($._layout_open, field('body', $._expression), $._layout_end),
-                        optional(field('body', $._expression)),
-                    ),
+                    optional(seq($._for_open, field('body', $._expression), $._layout_end)),
                 ),
             ),
         )),

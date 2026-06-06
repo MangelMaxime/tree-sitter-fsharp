@@ -6658,7 +6658,7 @@
                                 "members": [
                                   {
                                     "type": "SYMBOL",
-                                    "name": "_layout_open"
+                                    "name": "_for_open"
                                   },
                                   {
                                     "type": "FIELD",
@@ -6675,20 +6675,7 @@
                                 ]
                               },
                               {
-                                "type": "CHOICE",
-                                "members": [
-                                  {
-                                    "type": "FIELD",
-                                    "name": "body",
-                                    "content": {
-                                      "type": "SYMBOL",
-                                      "name": "_expression"
-                                    }
-                                  },
-                                  {
-                                    "type": "BLANK"
-                                  }
-                                ]
+                                "type": "BLANK"
                               }
                             ]
                           }
@@ -6763,7 +6750,7 @@
                         "members": [
                           {
                             "type": "SYMBOL",
-                            "name": "_layout_open"
+                            "name": "_for_open"
                           },
                           {
                             "type": "FIELD",
@@ -6780,20 +6767,7 @@
                         ]
                       },
                       {
-                        "type": "CHOICE",
-                        "members": [
-                          {
-                            "type": "FIELD",
-                            "name": "body",
-                            "content": {
-                              "type": "SYMBOL",
-                              "name": "_expression"
-                            }
-                          },
-                          {
-                            "type": "BLANK"
-                          }
-                        ]
+                        "type": "BLANK"
                       }
                     ]
                   }
@@ -10965,6 +10939,10 @@
     {
       "type": "SYMBOL",
       "name": "_interp_triple_text"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_for_open"
     }
   ],
   "inline": [],
