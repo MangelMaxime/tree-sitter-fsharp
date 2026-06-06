@@ -308,6 +308,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t c = lexer->lookahead;
         if (c != '\n' && c != '\r' && c != 0) {
             bool closer = (c == ')' || c == ']' || c == '}');
+            if (!closer && c == '@') {            // `@>` / `@@>` code-quotation close
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '>') closer = true;
+                else if (lexer->lookahead == '@') { lexer->advance(lexer, true); if (lexer->lookahead == '>') closer = true; }
+            }
             if (!closer && c == '|') {            // `|]` array / `|}` anon-record close
                 lexer->advance(lexer, true);
                 int32_t c1 = lexer->lookahead;
