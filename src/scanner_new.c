@@ -510,7 +510,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // layout token fires — even when the operator sits at or below the body
     // column (`|>`/`<|`/`>>` pipe chains, `+`/`*`/… arithmetic, `::` cons).
     // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
-    // only doubled. Unary-capable leads (`-` `+` `!` `~` `@`) are excluded.
+    // only doubled. Other unary-capable leads (`!` `~` `@`) are excluded.
     {
         int32_t c0 = first;
         if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
@@ -524,6 +524,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             else                infix = true;                              // = < > * / % ^
             if (infix) return false;
         }
+    }
+
+    // Leading `+`/`-`/`@` operator continuation, but ONLY in a layout body — per
+    // F#'s leading-operator rule `x⏎ + (…)` / `xs⏎ @ [ … ]` continues the
+    // expression. These are unary/prefix-capable, so this is restricted to layout
+    // sorts (a bracket / match arm-list keeps newline-as-element/arm separator).
+    // Excluded forms: `->` (lambda/match arrow), `@"…"` (verbatim string), `@>` /
+    // `@@>` (code-quotation close).
+    if (top && layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
+        lexer->advance(lexer, true);
+        int32_t c1 = lexer->lookahead;
+        if (first == '+') return false;
+        if (first == '-' && c1 != '>') return false;
+        if (first == '@' && c1 != '"' && c1 != '>' && c1 != '@') return false;
     }
 
     switch (top->sort) {
