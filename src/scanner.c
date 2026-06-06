@@ -183,13 +183,20 @@ static uint32_t cur_col(const IndentStack *s) {
     return 0;
 }
 
-// Baseline column for an inline match/arm body: the innermost enclosing
-// container, counting K_INDENT, K_CE AND K_BRACKET. Unlike `idx_top(K_INDENT)`,
-// this includes the list/array element column (K_BRACKET) so an inline arm body
-// inside a list (`[ … match x with | a -> b … ]`) closes when a line returns to
-// the element column — instead of inheriting the OUTER indent and running past
-// the `]` (which broke `match`/`yield` in list comprehensions used as multi-line
-// application arguments).
+// THE canonical enclosing-body baseline for inline body opens (LET_BODY_OPEN and
+// MATCH_BODY_OPEN): the innermost enclosing container, counting K_INDENT, K_CE
+// AND K_BRACKET. Unlike `idx_top(K_INDENT)`, this includes the list/array element
+// column (K_BRACKET) and the CE statement column (K_CE) so an inline let/arm body
+// inside a list or CE (`[ … match x with | a -> b … ]`) closes when a line
+// returns to that container's column — instead of inheriting the OUTER indent
+// and running past the `]`/`}` (which broke `match`/`yield`/`let` bodies in list
+// comprehensions and CEs).
+//
+// IMPORTANT: every inline-body-open MUST use this one function (not a hand-rolled
+// `idx_top(K_INDENT)`), so adding a new container kind only needs updating here —
+// that consistency is what stops the recurring "new kind not accounted for" bug.
+// (This is the SEQUENCING baseline's sibling; `cur_col`/`current` are a DIFFERENT
+// concept — the VIRTUAL_SEMI/DEDENT line — and deliberately exclude K_BRACKET.)
 static uint32_t inline_body_baseline(const IndentStack *s) {
     for (int i = (int)s->size - 1; i >= 0; i--) {
         IndentKind k = s->kinds[i];
@@ -586,6 +593,20 @@ static bool scan_trailing_dot_float(TSLexer *lexer) {
 
 bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *s = payload;
+
+    // Error-recovery detection: tree-sitter sets EVERY external valid during
+    // error recovery. Normal parse states only ever have a handful valid (real
+    // files top out well under this; clean files never hit it). When recovery is
+    // active we must NOT push new offside columns — otherwise the scanner keeps
+    // opening bodies on garbage lookahead and the stack explodes (observed:
+    // hundreds of thousands of pushes), turning one local error into a file-wide
+    // cascade (the "error-recovery tail"). Suppressing pushes here can only
+    // affect files that are ALREADY in error — clean files never enter recovery,
+    // so this is regression-safe by construction.
+    int nvalid = 0;
+    for (int i = 0; i <= TYPE_AUGMENT_DEDENT; i++) if (valid_symbols[i]) nvalid++;
+    bool recovery = nvalid > 20;
+
     bool want_body_indent = valid_symbols[BODY_INDENT];
     bool want_body_dedent = valid_symbols[BODY_DEDENT];
     bool want_indent = valid_symbols[INDENT];
@@ -610,6 +631,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
     bool want_ce_sep = valid_symbols[CE_SEP];
     bool want_ce_body_close = valid_symbols[CE_BODY_CLOSE];
     bool want_type_augment_dedent = valid_symbols[TYPE_AUGMENT_DEDENT];
+
+    // In error recovery, allow ONLY the stack-UNWINDING tokens (closes/dedents):
+    // suppress every body-OPEN/INDENT (they idx_push and would explode the stack
+    // on garbage lookahead) AND every separator (they'd inject spurious structure
+    // mid-error). Keeping closes/dedents lets the offside stack unwind so parsing
+    // resyncs cleanly. This contains the recovery cascade that otherwise turns one
+    // local error into a file-wide failure. Regression-safe: clean files never
+    // enter recovery, so this can only ever affect already-erroring input.
+    if (recovery) {
+        want_body_indent = false;
+        want_indent = false;
+        want_inline_open = false;
+        want_let_body_open = false;
+        want_record_body_open = false;
+        want_match_body_open = false;
+        want_for_body_open = false;
+        want_bracket_open = false;
+        want_ce_body_open = false;
+        want_virtual_semi = false;
+        want_record_field_semi = false;
+        want_match_arm_sep = false;
+        want_bracket_sep = false;
+        want_ce_sep = false;
+    }
 
     if (!want_body_indent && !want_body_dedent && !want_indent && !want_dedent
         && !want_inline_open && !want_inline_close && !want_virtual_semi
@@ -719,7 +764,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
         uint32_t body_col = 0; // unused for LET_BODY_OPEN
         int r = check_inline_body_open(lexer, &body_col);
         if (r == 1) {
-            idx_push(&s->stk, idx_top(&s->stk, K_INDENT), K_LET_BODY);
+            idx_push(&s->stk, inline_body_baseline(&s->stk), K_LET_BODY);
             lexer->result_symbol = LET_BODY_OPEN;
             return true;
         }
