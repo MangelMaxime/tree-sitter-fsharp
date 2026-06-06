@@ -216,7 +216,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             bool closer = (c == ')' || c == ']' || c == '}');
             if (!closer && c == '|') {            // `|]` array / `|}` anon-record close
                 lexer->advance(lexer, true);
-                closer = is_close_bracket(lexer->lookahead);
+                int32_t c1 = lexer->lookahead;
+                if (is_close_bracket(c1)) closer = true;
+                else if (c1 != '>' && c1 != '|' && top && top->sort == S_LAYOUT && valid[LAYOUT_END]) {
+                    // A bare same-line `|` is the next match arm; close the inline
+                    // arm body first (`function | 0 -> "a" | _ -> "b"`).
+                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                }
             }
             if (closer && top) {
                 if (top->sort == S_LAYOUT  && valid[LAYOUT_END])    { s->n--; lexer->result_symbol = LAYOUT_END;    return true; }
