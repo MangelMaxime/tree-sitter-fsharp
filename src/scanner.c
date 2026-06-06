@@ -505,13 +505,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // handled by BRACKET_CLOSE above/below via valid-gating.
     bool bar_arm = (first == '|');
 
-    // Leading-infix continuation: a line that BEGINS with an infix operator
-    // continues the previous expression (F#'s leading-operator rule), so NO
-    // layout token fires — even when the operator sits at or below the body
-    // column (`|>`/`<|`/`>>` pipe chains, `+`/`*`/… arithmetic, `::` cons).
+    // A leading infix operator continues the previous expression (F#'s
+    // leading-operator rule) — UNLESS it DEDENTS below an EXPRESSION body
+    // (S_EXPR: then/elif/else/lambda/let-in value), in which case that body must
+    // close first and re-invocation continues the OUTER chain. This pipes the
+    // whole if in `if c then a else b⏎ |> f` (close the inline else-body, then
+    // `|>` applies to the if) instead of binding `|>` to just `b`. Restricted to
+    // S_EXPR: a match arm body / decl body (S_LAYOUT) keeps the previous
+    // behaviour (the operator continues the inner body, e.g. `match … | B -> 2⏎
+    // |> g` keeps `2 |> g`).
+    bool infix_continues = !(top->sort == S_EXPR && col < top->col);
+
+    // `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/… arithmetic, `::` cons.
     // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
-    // only doubled. Other unary-capable leads (`!` `~` `@`) are excluded.
-    {
+    // only doubled. Other unary-capable leads (`!` `~`) are excluded.
+    if (infix_continues) {
         int32_t c0 = first;
         if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
             c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':') {
@@ -524,20 +532,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             else                infix = true;                              // = < > * / % ^
             if (infix) return false;
         }
-    }
 
-    // Leading `+`/`-`/`@` operator continuation, but ONLY in a layout body — per
-    // F#'s leading-operator rule `x⏎ + (…)` / `xs⏎ @ [ … ]` continues the
-    // expression. These are unary/prefix-capable, so this is restricted to layout
-    // sorts (a bracket / match arm-list keeps newline-as-element/arm separator).
-    // Excluded forms: `->` (lambda/match arrow), `@"…"` (verbatim string), `@>` /
-    // `@@>` (code-quotation close).
-    if (top && layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
-        lexer->advance(lexer, true);
-        int32_t c1 = lexer->lookahead;
-        if (first == '+') return false;
-        if (first == '-' && c1 != '>') return false;
-        if (first == '@' && c1 != '"' && c1 != '>' && c1 != '@') return false;
+        // Leading `+`/`-`/`@` — also continuation, but only in a layout body (a
+        // bracket / match arm-list keeps newline-as-element/arm separator). They
+        // are unary/prefix-capable. Excluded forms: `->` (lambda/match arrow),
+        // `@"…"` (verbatim string), `@>` / `@@>` (code-quotation close).
+        if (layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
+            lexer->advance(lexer, true);
+            int32_t c1 = lexer->lookahead;
+            if (first == '+') return false;
+            if (first == '-' && c1 != '>') return false;
+            if (first == '@' && c1 != '"' && c1 != '>' && c1 != '@') return false;
+        }
     }
 
     switch (top->sort) {
