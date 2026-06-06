@@ -38,6 +38,9 @@ typedef enum {
     ELSE_OPEN,          // final-else body — S_EXPR, but SUPPRESSED when next token is `if`
                         //   (`else if` flattens to an elif clause, no nested else-body)
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
+    INTERP_STRING_TEXT,   // text chunk in $"…"   (external so // isn't a comment)
+    INTERP_VERBATIM_TEXT, // text chunk in $@"…" / @$"…"
+    INTERP_TRIPLE_TEXT,   // text chunk in $"""…"""
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -200,10 +203,68 @@ static bool semi_blocked(TSLexer *lexer, int32_t first) {
     return false;
 }
 
+// Consume a maximal TEXT run of an interpolated string, stopping (without
+// consuming) at the next structural token: `{` interpolation, closing quote, or
+// `%` printf/percent. Doubled braces `{{`/`}}` and (per kind) escapes/quotes are
+// part of the text. `mark_end` is advanced only over confirmed text, so an
+// over-peeked terminator is excluded from the token. Returns true iff ≥1 char of
+// text was consumed; on false the caller returns false and tree-sitter lexes the
+// structural token itself (resuming from the pre-scan position).
+//
+// Done in the external scanner — which runs BEFORE extra-skipping — so a leading
+// `//` is consumed as text instead of being lexed as a `line_comment` extra.
+typedef enum { TX_STRING, TX_VERBATIM, TX_TRIPLE } TextKind;
+
+static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
+    bool consumed = false;
+    for (;;) {
+        int32_t c = lexer->lookahead;
+        if (c == 0) break;                 // EOF
+        if (c == '%') break;               // percent / printf format terminator
+        if (c == '{' || c == '}') {        // single brace = terminator; doubled = text
+            lexer->advance(lexer, false);
+            if (lexer->lookahead == c) { lexer->advance(lexer, false); consumed = true; lexer->mark_end(lexer); continue; }
+            break;                         // single brace: stop (mark_end is before it)
+        }
+        if (c == '"') {
+            if (kind == TX_STRING) break;  // closing quote
+            if (kind == TX_VERBATIM) {     // "" is an escaped quote (text), lone " closes
+                lexer->advance(lexer, false);
+                if (lexer->lookahead == '"') { lexer->advance(lexer, false); consumed = true; lexer->mark_end(lexer); continue; }
+                break;
+            }
+            // TX_TRIPLE: """ closes; a lone " or "" (not part of """) is text.
+            lexer->advance(lexer, false);
+            if (lexer->lookahead == '"') {
+                lexer->advance(lexer, false);
+                if (lexer->lookahead == '"') break;   // """ closer (mark_end before 1st ")
+                consumed = true; lexer->mark_end(lexer); continue;   // "" text
+            }
+            consumed = true; lexer->mark_end(lexer); continue;       // lone " text
+        }
+        if (c == '\\' && kind == TX_STRING) {           // escape: \\ , \n , \uXXXX … (lenient)
+            lexer->advance(lexer, false);
+            if (lexer->lookahead != 0) lexer->advance(lexer, false);
+            consumed = true; lexer->mark_end(lexer); continue;
+        }
+        lexer->advance(lexer, false);                   // ordinary text char (incl. newline)
+        consumed = true; lexer->mark_end(lexer);
+    }
+    return consumed;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
     if (valid[ERROR_SENTINEL]) return false;      // parse-error recovery: stay out of tree-sitter's way
+
+    // ---- Interpolated-string text (lexical; before any layout logic) ----------
+    // When a text symbol is valid we are inside a string: no layout token applies.
+    // Consume the text run, or return false at a structural char so tree-sitter
+    // lexes the `{`/`"`/`%` itself.
+    if (valid[INTERP_STRING_TEXT])   { bool ok = scan_interp_text(lexer, TX_STRING);   if (ok) lexer->result_symbol = INTERP_STRING_TEXT;   return ok; }
+    if (valid[INTERP_VERBATIM_TEXT]) { bool ok = scan_interp_text(lexer, TX_VERBATIM); if (ok) lexer->result_symbol = INTERP_VERBATIM_TEXT; return ok; }
+    if (valid[INTERP_TRIPLE_TEXT])   { bool ok = scan_interp_text(lexer, TX_TRIPLE);   if (ok) lexer->result_symbol = INTERP_TRIPLE_TEXT;   return ok; }
 
     Ctx *top = s->n > 0 ? &s->stk[s->n - 1] : NULL;
 

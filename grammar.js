@@ -166,6 +166,13 @@ export default grammar({
         $._expr_open,         // expression body (then/elif body, lambda, let-in value); closes before else/elif/in
         $._else_open,         // final-else body; suppressed when next token is `if` (→ flat else-if)
         $._float_trailing_dot,
+        // Interpolated-string TEXT chunks. External (not token.immediate) so the
+        // scanner consumes them BEFORE tree-sitter's extra-skipping — otherwise a
+        // leading `//` (e.g. `$"//# sourceMappingURL={…}"`) is lexed as a
+        // `line_comment` extra and corrupts the string. See scan_interp_text().
+        $._interp_string_text,
+        $._interp_verbatim_text,
+        $._interp_triple_text,
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -2570,41 +2577,9 @@ export default grammar({
             )
         ),
 
-        // Body chunks of interpolated strings. `%` is excluded so printf-style
-        // `%fmt{` specifiers tokenise separately. Final `\\./` fallback accepts
-        // unknown escape sequences so they don't cascade an ERROR (same as
-        // `_string_content`).
-        // `prec(1, …)` so a `//` in the string text wins the lexical conflict
-        // against `line_comment` (an extra) — otherwise `$"//# …"` lexes the `//`
-        // as a comment and breaks the string.
-        _interp_string_text: _ => token.immediate(prec(1, repeat1(choice(
-            /[^"\\{}%]+/,
-            /\\[\\'"abfnrtv0]/,
-            /\\[0-9]{3}/,
-            /\\x[0-9a-fA-F]{2}/,
-            /\\u[0-9a-fA-F]{4}/,
-            /\\U[0-9a-fA-F]{8}/,
-            /\\./,
-            '{{',
-            '}}',
-        )))),
-
-        _interp_verbatim_text: _ => token.immediate(prec(1, repeat1(choice(
-            /[^"{}%]+/,
-            '""',
-            '{{',
-            '}}',
-        )))),
-
-        // Triple-quoted interpolated: the `"[^…]` alternatives prevent greedy match
-        // from eating the closing `"""`.
-        _interp_triple_text: _ => token.immediate(prec(1, repeat1(choice(
-            /[^"{}%]+/,
-            /""[^"{}%]/,
-            /"[^"{}%]/,
-            '{{',
-            '}}',
-        )))),
+        // _interp_string_text / _interp_verbatim_text / _interp_triple_text are
+        // EXTERNAL tokens (see externals block + scan_interp_text in scanner.c) so
+        // a leading `//` in the text isn't preempted by the line_comment extra.
 
         // Body of `:fmt` inside `{expr:fmt}`, up to the closing `}`.
         _interp_format_spec: _ => token.immediate(/[^}]+/),

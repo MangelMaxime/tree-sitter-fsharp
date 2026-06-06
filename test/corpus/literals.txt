@@ -315,6 +315,7 @@ $"Hello {firstName} {lastName}!"
     (interpolation
       (long_identifier
         (identifier)))
+    (string_content)
     (interpolation
       (long_identifier
         (identifier)))
