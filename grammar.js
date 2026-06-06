@@ -2126,6 +2126,7 @@ export default grammar({
         // unambiguously (no comma → no typed-item branch).
         tuple_pattern: $ => seq(
             "(",
+            optional("?"),                 // OOP optional param: (msg, ?range)
             $.pattern,
             repeat(seq(",", $._tuple_pattern_item)),
             ")",
@@ -2143,9 +2144,12 @@ export default grammar({
             ")",
         ),
 
-        _tuple_pattern_item: $ => choice(
-            $.pattern,
-            $.tuple_typed_pattern,
+        _tuple_pattern_item: $ => seq(
+            optional("?"),                 // OOP optional param: (msg, ?range)
+            choice(
+                $.pattern,
+                $.tuple_typed_pattern,
+            ),
         ),
 
         // `name : type` element of a parenthesised tuple pattern (the tuple's

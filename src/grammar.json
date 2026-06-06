@@ -8088,6 +8088,18 @@
           "value": "("
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "?"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "SYMBOL",
           "name": "pattern"
         },
@@ -8147,15 +8159,32 @@
       ]
     },
     "_tuple_pattern_item": {
-      "type": "CHOICE",
+      "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "pattern"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "?"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         },
         {
-          "type": "SYMBOL",
-          "name": "tuple_typed_pattern"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "pattern"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "tuple_typed_pattern"
+            }
+          ]
         }
       ]
     },
