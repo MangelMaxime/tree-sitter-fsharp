@@ -1553,9 +1553,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *payload, TSLexer *lexer, con
                 "type", "module", "namespace", "exception", "open",
                 NULL,
             };
+            // `do!` is a CE statement (bang form), NOT the `do` that continues a
+            // `for … do` / `while … do` loop — so it must NOT block the
+            // virtual-semi separating it from the previous statement (e.g. a
+            // `use x = e` whose value would otherwise absorb the `do!` line).
+            bool do_bang = (i == 2 && buf[0] == 'd' && buf[1] == 'o' && look == '!');
             for (const char **k = blockers; *k; k++) {
                 size_t kl = strlen(*k);
                 if (kl != i) continue;
+                if (do_bang && kl == 2 && (*k)[0] == 'd' && (*k)[1] == 'o') continue;
                 bool eq = true;
                 for (size_t j = 0; j < kl; j++) {
                     if (buf[j] != (int32_t)(*k)[j]) { eq = false; break; }
