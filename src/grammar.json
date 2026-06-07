@@ -2629,6 +2629,10 @@
               {
                 "type": "SYMBOL",
                 "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "flexible_type"
               }
             ]
           }

@@ -1724,6 +1724,10 @@
             "named": true
           },
           {
+            "type": "flexible_type",
+            "named": true
+          },
+          {
             "type": "generic_type",
             "named": true
           },

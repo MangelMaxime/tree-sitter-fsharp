@@ -408,3 +408,29 @@ type T =
           (type_expression
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Flexible type as a labelled parameter type
+================================================================================
+
+type T =
+    abstract set: source: #TypedArray -> unit
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (abstract_member_defn
+      name: (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              name: (identifier)
+              type: (flexible_type
+                (long_identifier
+                  (identifier)))))
+          (type_expression
+            (long_identifier
+              (identifier))))))))

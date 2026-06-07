@@ -884,6 +884,7 @@ export default grammar({
                 $.anonymous_record_type,
                 $.type_parameter,
                 $.long_identifier,
+                $.flexible_type,        // `source: #TypedArray`
             )),
         ),
 

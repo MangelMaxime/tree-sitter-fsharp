@@ -256,6 +256,7 @@ module L13_Types =
     type IConsole =
         abstract log: [<ParamArray>] args: obj[] -> unit
         abstract assert': condition: bool * [<ParamArray>] data: obj[] -> unit
+        abstract write: source: #IDisposable * ?offset: int -> unit  // flexible-type labelled param
 
 // ── Decl: nested modules ────────────────────────────────────────────────────
 module L14_NestedModules =
