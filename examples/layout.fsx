@@ -203,6 +203,13 @@ module L10_ListsArrays =
 
     let withSideEffectElem = [ (sideEffect (); value); other ]
 
+    // Dotless indexing (F# 6+): no space before `[` is an index; a space is
+    // application to a list literal.
+    let first xs = xs[0]
+    let slice xs = xs[1..]
+    let head2 xs = xs[..2]
+    let appliedToList = List.map id [ 1; 2; 3 ]   // space → application, not index
+
 // ── Brackets: records ───────────────────────────────────────────────────────
 module L11_Records =
     type Point = { X: int; Y: int }

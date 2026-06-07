@@ -36,6 +36,10 @@
         "named": true
       },
       {
+        "type": "bracket_index_expression",
+        "named": true
+      },
+      {
         "type": "ce_result_expr",
         "named": true
       },
@@ -453,6 +457,14 @@
           {
             "type": "_simple_expression",
             "named": true
+          },
+          {
+            "type": "bracket_index_expression",
+            "named": true
+          },
+          {
+            "type": "index_expression",
+            "named": true
           }
         ]
       }
@@ -821,6 +833,40 @@
     "fields": {}
   },
   {
+    "type": "bracket_index_expression",
+    "named": true,
+    "fields": {
+      "index": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "index_slice",
+            "named": true
+          }
+        ]
+      },
+      "object": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "ce_match_bang_expr",
     "named": true,
     "fields": {},
@@ -1090,6 +1136,10 @@
           },
           {
             "type": "begin_end_expression",
+            "named": true
+          },
+          {
+            "type": "bracket_index_expression",
             "named": true
           },
           {
@@ -3552,6 +3602,14 @@
           },
           {
             "type": "application_expression",
+            "named": true
+          },
+          {
+            "type": "bracket_index_expression",
+            "named": true
+          },
+          {
+            "type": "index_expression",
             "named": true
           }
         ]

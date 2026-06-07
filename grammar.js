@@ -1027,6 +1027,7 @@ export default grammar({
             $.dot_expression,
             $.dynamic_expression,
             $.index_expression,
+            $.bracket_index_expression,
             $.try_expression,
             $.prefix_keyword_expression,
             $.do_expression,
@@ -1340,7 +1341,7 @@ export default grammar({
             "{|",
             choice(
                 seq(
-                    field('base', $._simple_expression),
+                    field('base', choice($._simple_expression, $.bracket_index_expression, $.index_expression)),
                     "with",
                     $._record_fields,
                 ),
@@ -1359,7 +1360,7 @@ export default grammar({
                     // or a generic call (`{ Default<_>() with … }`), not only a
                     // simple value — disambiguated by `with` (the full
                     // expression is parsed before `with`).
-                    field('base', choice($._simple_expression, $.application_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
                     "with",
                     $._record_fields,
                 ),
@@ -1370,7 +1371,7 @@ export default grammar({
                 // field list consumes that indent, and `base with` errors.
                 seq(
                     $._layout_open,
-                    field('base', choice($._simple_expression, $.application_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
                     "with",
                     $._record_fields,
                     $._layout_end,
@@ -1654,6 +1655,7 @@ export default grammar({
             $.typed_expression,
             $.struct_tuple_expression,
             $.index_expression,
+            $.bracket_index_expression,
             $.application_expression,
             // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
             // nested-type) access on a generic type name. Without this, the
@@ -1680,6 +1682,16 @@ export default grammar({
         index_expression: $ => prec(PREC.INDEX_EXPR, seq(
             field('object', $._expression),
             ".[",
+            field('index', $._index_args),
+            "]",
+        )),
+
+        // arr[0]  arr[1..2]  m.Value[..2]  dict["k"]  (F# 6+ dotless indexer).
+        // `token.immediate("[")` requires NO space before `[`, distinguishing an
+        // index (`arr[i]`) from application to a list literal (`f [i]`).
+        bracket_index_expression: $ => prec(PREC.INDEX_EXPR, seq(
+            field('object', $._expression),
+            token.immediate("["),
             field('index', $._index_args),
             "]",
         )),

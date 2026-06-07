@@ -3282,6 +3282,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "bracket_index_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "try_expression"
         },
         {
@@ -4648,8 +4652,21 @@
                   "type": "FIELD",
                   "name": "base",
                   "content": {
-                    "type": "SYMBOL",
-                    "name": "_simple_expression"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_simple_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "bracket_index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "index_expression"
+                      }
+                    ]
                   }
                 },
                 {
@@ -4700,6 +4717,14 @@
                       {
                         "type": "SYMBOL",
                         "name": "application_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "bracket_index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "index_expression"
                       }
                     ]
                   }
@@ -4734,6 +4759,14 @@
                       {
                         "type": "SYMBOL",
                         "name": "application_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "bracket_index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "index_expression"
                       }
                     ]
                   }
@@ -6029,6 +6062,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "bracket_index_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "application_expression"
         },
         {
@@ -6074,6 +6111,42 @@
           {
             "type": "STRING",
             "value": ".["
+          },
+          {
+            "type": "FIELD",
+            "name": "index",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_index_args"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "]"
+          }
+        ]
+      }
+    },
+    "bracket_index_expression": {
+      "type": "PREC",
+      "value": 20,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "object",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_expression"
+            }
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "["
+            }
           },
           {
             "type": "FIELD",

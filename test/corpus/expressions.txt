@@ -1654,3 +1654,77 @@ let n = typeof<int>.Name
           (long_identifier
             (identifier))))
       member: (identifier))))
+
+================================================================================
+Dotless index expression
+================================================================================
+
+let x = arr[0]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (bracket_index_expression
+      object: (long_identifier
+        (identifier))
+      index: (int_literal))))
+
+================================================================================
+Dotless index slice
+================================================================================
+
+let x = arr[1..]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (bracket_index_expression
+      object: (long_identifier
+        (identifier))
+      index: (index_slice
+        (int_literal)))))
+
+================================================================================
+Copy-update with an index base
+================================================================================
+
+let x = { nodes[i] with Value = v }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      base: (bracket_index_expression
+        object: (long_identifier
+          (identifier))
+        index: (long_identifier
+          (identifier)))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier))))))
+
+================================================================================
+Application to a list is not an index
+================================================================================
+
+let x = f [1; 2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (list_expression
+        (int_literal)
+        (int_literal)))))
