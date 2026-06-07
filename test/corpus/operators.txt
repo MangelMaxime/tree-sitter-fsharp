@@ -242,3 +242,24 @@ let f () = v := 10
         (identifier))
       operator: (symbolic_op)
       right: (int_literal))))
+
+================================================================================
+Operator as a first-class value
+================================================================================
+
+let add = (+)
+let r = (+) 1 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (operator_name))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (operator_application
+        (operator_name)
+        (int_literal))
+      (int_literal))))

@@ -991,6 +991,9 @@ export default grammar({
             $.active_pattern_expression,
             // `(+) 1 2`, `(=) x y` — operator name applied to arguments.
             $.operator_application,
+            // `(+)`, `(>>)` — a bare operator as a first-class value (`let add =
+            // (+)`, `(+) >> id`). The applied form above wins when args follow.
+            $._operator_value,
             // `not` as a first-class function value (`not >> g`, `not |> f`).
             $.not_function,
             $.list_expression,
@@ -1144,6 +1147,12 @@ export default grammar({
             alias($._value_operator_name, $.operator_name),
             repeat1($._simple_expression),
         )),
+
+        // Bare `(op)` as a first-class value in expression position. Negative
+        // prec so `operator_application` (APP_EXPR) wins whenever an argument
+        // follows; this only matches when the operator stands alone. Hidden so
+        // the tree shows just `operator_name` (same node as the applied form).
+        _operator_value: $ => prec(-1, alias($._value_operator_name, $.operator_name)),
 
         // Operator-name set for the APPLIED form. Excludes the bare `^` / `&` /
         // `|` (which collide with SRTP `(^T …)` / byref `(& …)` / anon-record

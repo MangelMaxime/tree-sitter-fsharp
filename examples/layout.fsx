@@ -49,6 +49,10 @@ module L03_Functions =
     let litChars = "bcd".ToCharArray()
     let charStr = 'x'.ToString()
 
+    // Operator as a first-class value.
+    let add = (+)
+    let combine = List.reduce (+)
+
 // ── Decl: multi-statement sequences (virtual semicolons) ────────────────────
 module L04_Sequences =
     let sideEffects () =

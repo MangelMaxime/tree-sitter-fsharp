@@ -3155,6 +3155,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "_operator_value"
+        },
+        {
+          "type": "SYMBOL",
           "name": "not_function"
         },
         {
@@ -3637,6 +3641,19 @@
             }
           }
         ]
+      }
+    },
+    "_operator_value": {
+      "type": "PREC",
+      "value": -1,
+      "content": {
+        "type": "ALIAS",
+        "content": {
+          "type": "SYMBOL",
+          "name": "_value_operator_name"
+        },
+        "named": true,
+        "value": "operator_name"
       }
     },
     "_value_operator_name": {
