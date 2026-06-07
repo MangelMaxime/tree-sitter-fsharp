@@ -41,6 +41,8 @@ module L02_OwnLineLet =
 module L03_Functions =
     let add a b = a + b
     let typed (a: int) (b: int) : int = a + b
+    // Inline `when` constraint on a parameter's type variable.
+    let isDefault (value: 'T when 'T: equality) = value = Unchecked.defaultof<'T>
     let curriedOwnLine a b =
         a * b
 

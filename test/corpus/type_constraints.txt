@@ -148,3 +148,23 @@ let inline f<'T when 'T: (new: unit -> 'T)> () = new 'T()
       (unit))
     body: (new_expression
       (type_parameter))))
+
+================================================================================
+Inline when-constraint in a parameter type
+================================================================================
+
+let isNull (value: 'T when 'T: null) = value
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter))
+      (type_constraint
+        (type_parameter)))
+    body: (long_identifier
+      (identifier))))

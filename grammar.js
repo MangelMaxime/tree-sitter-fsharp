@@ -2327,7 +2327,9 @@ export default grammar({
             // `([<Attr>] x: int)` / `([<Attr>] x)` — attributes on curried params
             // (used for ParamArray, optional/caller-info attributes outside tuple
             // form, etc.).
-            prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, ")")),
+            // The optional `when` clause covers an inline constraint on the
+            // param's type variable: `(value: 'T when 'T: null)`.
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, optional($._when_constraints), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
