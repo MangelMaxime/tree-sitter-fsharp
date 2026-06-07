@@ -293,3 +293,18 @@ module L17_AccumulatedState =
 
                 dispose ()
             }
+
+// ── Types: flexible (subtype) constraints `#T` ──────────────────────────────
+module L18_FlexibleTypes =
+    // `#T` means "T or any subtype". Valid in parameter and return annotations,
+    // as the operand of a function type, and as an upcast target.
+    let dispose (x: #IDisposable) = x.Dispose ()
+
+    let firstOf (xs: #seq<int>) = Seq.head xs
+
+    let using (res: #IDisposable) (body: #IDisposable -> unit) = body res
+
+    let asComparable (x: obj) = x :> #IComparable
+
+    type Sink() =
+        member _.Accept(items: #seq<'T>) = Seq.length items
