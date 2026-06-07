@@ -303,6 +303,8 @@
 (type_expression (long_identifier) @type)
 (generic_type (long_identifier) @type)
 (postfix_type (long_identifier) @type)
+(flexible_type "#" @punctuation.special)
+(flexible_type (long_identifier) @type)
 (type_parameter) @type.parameter
 
 ; Unit identifiers in measure types and literals
@@ -333,6 +335,7 @@
 (type_expression (long_identifier (identifier) @type))
 (generic_type (long_identifier (identifier) @type))
 (postfix_type (long_identifier (identifier) @type))
+(flexible_type (long_identifier (identifier) @type))
 (measure_power_type (long_identifier (identifier) @type))
 (measure_expression (long_identifier (identifier) @type))
 (type_check_pattern (long_identifier (identifier) @type))
