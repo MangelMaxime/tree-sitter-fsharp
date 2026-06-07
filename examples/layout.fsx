@@ -49,9 +49,10 @@ module L03_Functions =
     let litChars = "bcd".ToCharArray()
     let charStr = 'x'.ToString()
 
-    // Operator as a first-class value.
+    // Operator as a first-class value, and member access on a type intrinsic.
     let add = (+)
     let combine = List.reduce (+)
+    let typeName = typeof<int>.Name
 
 // ── Decl: multi-statement sequences (virtual semicolons) ────────────────────
 module L04_Sequences =

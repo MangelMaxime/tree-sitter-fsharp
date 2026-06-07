@@ -1654,6 +1654,9 @@ export default grammar({
             // the parser only limps through via a MISSING `not` recovery (no
             // clean tree) or errors outright inside a type augmentation body.
             $.type_application_expression,
+            // `typeof<int>.Name` / `typeof<_>.IsGenericType` — member access on a
+            // type-level intrinsic (common in reflection code).
+            $.type_keyword_expression,
             $.dot_expression,
             $.begin_end_expression,
             // `'T.StaticMember` / `^T.StaticMember` — modern F# SRTP member access,

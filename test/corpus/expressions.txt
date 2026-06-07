@@ -1635,3 +1635,22 @@ let make () = {
         parameters: (parameter
           (unit))
         body: (int_literal)))))
+
+================================================================================
+Member access on a type intrinsic
+================================================================================
+
+let n = typeof<int>.Name
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (type_keyword_expression
+        (type_intrinsic)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      member: (identifier))))

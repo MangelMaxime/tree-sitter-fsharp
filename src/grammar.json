@@ -5995,6 +5995,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "type_keyword_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "dot_expression"
         },
         {
