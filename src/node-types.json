@@ -1131,6 +1131,10 @@
             "named": true
           },
           {
+            "type": "anonymous_record_expression",
+            "named": true
+          },
+          {
             "type": "application_expression",
             "named": true
           },
@@ -1160,6 +1164,10 @@
           },
           {
             "type": "parenthesized_expression",
+            "named": true
+          },
+          {
+            "type": "record_expression",
             "named": true
           },
           {

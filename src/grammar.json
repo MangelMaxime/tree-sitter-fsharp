@@ -6117,6 +6117,14 @@
         },
         {
           "type": "SYMBOL",
+          "name": "record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "type_application_expression"
         },
         {

@@ -1800,3 +1800,24 @@ let ($) a b = a
       (identifier))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Member access on a record literal
+================================================================================
+
+let h = { a = 1 }.GetHashCode()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (record_expression
+          (record_field
+            name: (long_identifier
+              (identifier))
+            value: (int_literal)))
+        member: (identifier))
+      (unit))))

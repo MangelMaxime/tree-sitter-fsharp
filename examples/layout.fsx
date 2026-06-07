@@ -58,9 +58,10 @@ module L03_Functions =
     let combine = List.reduce (+)
     let typeName = typeof<int>.Name
 
-    // Member access on a collection literal.
+    // Member access on a collection / record literal.
     let listLen = [ 1; 2; 3 ].Length
     let arrHash = [| 1; 2 |].GetHashCode()
+    let recHash = {| a = 1; b = 2 |}.GetHashCode()
 
     // Single-character custom operator definition.
     let ($) (f: obj) (x: obj) : obj = f
