@@ -6097,6 +6097,14 @@
         },
         {
           "type": "SYMBOL",
+          "name": "list_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "array_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "type_application_expression"
         },
         {

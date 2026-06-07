@@ -1765,3 +1765,20 @@ let f () = new 'T()
       (unit))
     body: (new_expression
       (type_parameter))))
+
+================================================================================
+Member access on a list literal
+================================================================================
+
+let h = [1; 2].Length
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (list_expression
+        (int_literal)
+        (int_literal))
+      member: (identifier))))

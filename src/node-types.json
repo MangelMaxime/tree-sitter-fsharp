@@ -1135,6 +1135,10 @@
             "named": true
           },
           {
+            "type": "array_expression",
+            "named": true
+          },
+          {
             "type": "begin_end_expression",
             "named": true
           },
@@ -1148,6 +1152,10 @@
           },
           {
             "type": "index_expression",
+            "named": true
+          },
+          {
+            "type": "list_expression",
             "named": true
           },
           {

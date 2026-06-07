@@ -56,6 +56,10 @@ module L03_Functions =
     let combine = List.reduce (+)
     let typeName = typeof<int>.Name
 
+    // Member access on a collection literal.
+    let listLen = [ 1; 2; 3 ].Length
+    let arrHash = [| 1; 2 |].GetHashCode()
+
     // Attribute with a target specifier (`return:`).
     [<return: Struct>]
     let (|Even|_|) n = if n % 2 = 0 then ValueSome() else ValueNone

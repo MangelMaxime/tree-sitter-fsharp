@@ -1660,6 +1660,10 @@ export default grammar({
             $.index_expression,
             $.bracket_index_expression,
             $.application_expression,
+            // `[1; 2].GetHashCode()` / `[|1; 2|].Length` — member access on a
+            // list / array literal.
+            $.list_expression,
+            $.array_expression,
             // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
             // nested-type) access on a generic type name. Without this, the
             // type_application_expression isn't a valid member-access object, so
