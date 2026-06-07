@@ -185,7 +185,9 @@
     (identifier) @variable.parameter)*)
 
 (let_binding
-  name: (operator_name) @function)
+  name: (operator_name) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
 
 (let_decl_indented
   name: (active_pattern_name) @function)
@@ -196,7 +198,9 @@
     (identifier) @variable.parameter)*)
 
 (let_decl_indented
-  name: (operator_name) @function)
+  name: (operator_name) @function
+  parameters: (parameter
+    (identifier) @variable.parameter)*)
 
 ; `let x = … in …` (explicit-`in` form) puts the binding name directly on
 ; let_expression (not a let_decl_indented child), so it needs its own rule.
