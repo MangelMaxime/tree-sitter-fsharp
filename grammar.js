@@ -567,7 +567,7 @@ export default grammar({
         //       = …
         _return_type_annot: $ => seq(
             ":",
-            field('return_type', $.type_expression),
+            field('return_type', choice($.type_expression, $.nullable_type)),
             optional(seq(
                 "when",
                 $.type_constraint,
@@ -768,7 +768,7 @@ export default grammar({
             optional($.access_modifier),
             field('name', $.identifier),
             ":",
-            $.type_expression,
+            choice($.type_expression, $.nullable_type),
         ),
 
         // `optional(access_modifier)`: `type X = private | A | B` — a private (or
@@ -900,6 +900,9 @@ export default grammar({
                 $.type_parameter,
                 $.long_identifier,
                 $.flexible_type,        // `source: #TypedArray`
+                // (nullable `value: string | null` not added here: labelled_type
+                // is shared with union NAMED fields, where `|` is the case
+                // separator — use `value: (string | null)` in member sigs.)
             )),
         ),
 
@@ -964,7 +967,7 @@ export default grammar({
             optional("mutable"),
             field('name', $.identifier),
             ":",
-            field('type', $.type_expression),
+            field('type', choice($.type_expression, $.nullable_type)),
         )),
 
         _literal: $ => choice(
@@ -2329,7 +2332,7 @@ export default grammar({
             // form, etc.).
             // The optional `when` clause covers an inline constraint on the
             // param's type variable: `(value: 'T when 'T: null)`.
-            prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, optional($._when_constraints), ")")),
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional($._when_constraints), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
@@ -2448,8 +2451,21 @@ export default grammar({
             "]",
         )),
 
-        // (int -> string)
-        parenthesized_type: $ => seq("(", $.type_expression, ")"),
+        // (int -> string)  /  (string | null)
+        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type), ")"),
+
+        // `string | null` — F# 9 nullable reference type. Deliberately NOT a
+        // member of the general `type_expression` choice: its `|` would clash with
+        // the union-case separator. Instead it's allowed only in unambiguous
+        // annotation positions (parenthesised types, parameter / return / field
+        // type annotations), where no union `|` can follow. Operand is an atomic
+        // type head (incl. a parenthesised type, so `(string list) | null` works).
+        nullable_type: $ => seq(
+            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
+                $.parenthesized_type, $.type_parameter),
+            "|",
+            "null",
+        ),
 
         // 'a  ^T  '``Generic type with spaces``
         // Backtick-quoted identifier form is also accepted so that type

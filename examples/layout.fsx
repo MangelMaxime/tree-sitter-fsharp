@@ -297,6 +297,14 @@ module L13_Types =
     type MyInt = int
     type Pair = int * string
 
+    // F# 9 nullable reference types `T | null` (annotation positions; use parens
+    // inside a union case).
+    let orNull (s: string | null) : string | null = s
+    type Holder = { value: string | null }
+    type Outcome =
+        | Ok of int
+        | Failed of (string | null)
+
     // ML-style prefix type parameters (before the name).
     type 'T container = System.Collections.Generic.List<'T>
     type ('k, 'v) lookup = Map<'k, 'v>

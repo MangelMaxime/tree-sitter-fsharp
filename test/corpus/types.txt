@@ -265,3 +265,64 @@ let f (x: #seq<int>) = ()
               (long_identifier
                 (identifier)))))))
     body: (unit)))
+
+================================================================================
+Nullable type in a parameter
+================================================================================
+
+let f (s: string | null) = s
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (nullable_type
+        (long_identifier
+          (identifier))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Nullable type in a record field
+================================================================================
+
+type T = { x: string | null }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (nullable_type
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Nullable type parenthesized in a union field
+================================================================================
+
+type U =
+    | A
+    | B of (string | null)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (parenthesized_type
+            (nullable_type
+              (long_identifier
+                (identifier)))))))))
