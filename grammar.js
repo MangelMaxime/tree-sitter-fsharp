@@ -2275,6 +2275,10 @@ export default grammar({
             // form, etc.).
             prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
+            // `?loc` — bare (un-parenthesized) curried optional param. A type
+            // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
+            // the return type, not the param type.
+            prec(20, seq("?", $.identifier)),
             $.tuple_params,                // (x: int, y: int) — OOP-style multi-param
             $.destructure_parameter,       // ((a,b): int*int)   ({X=x}: Point)
             $.tuple_pattern,               // (a, b)   (Some x)

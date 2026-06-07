@@ -434,3 +434,24 @@ type T =
           (type_expression
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Bare optional curried parameter
+================================================================================
+
+type T =
+    static member m ?loc : int = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      return_type: (type_expression
+        (long_identifier
+          (identifier)))
+      body: (int_literal))))

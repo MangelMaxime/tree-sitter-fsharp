@@ -8598,6 +8598,23 @@
           }
         },
         {
+          "type": "PREC",
+          "value": 20,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "?"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              }
+            ]
+          }
+        },
+        {
           "type": "SYMBOL",
           "name": "tuple_params"
         },

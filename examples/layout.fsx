@@ -263,6 +263,10 @@ module L13_Types =
         abstract assert': condition: bool * [<ParamArray>] data: obj[] -> unit
         abstract write: source: #IDisposable * ?offset: int -> unit  // flexible-type labelled param
 
+    type Node =
+        // Bare (un-parenthesized) curried optional param `?loc`.
+        static member leaf ?loc : Node = Node.leaf
+
 // ── Decl: nested modules ────────────────────────────────────────────────────
 module L14_NestedModules =
     module Inner =
