@@ -114,3 +114,33 @@ let 数学 = 42
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Trailing comment after match-with
+================================================================================
+
+let f x =
+    match x with // pick
+    | 0 -> "zero"
+    | _ -> "other"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (line_comment)
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        body: (string_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        body: (string_literal)))))

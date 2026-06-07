@@ -168,6 +168,20 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
 static uint32_t peek_body_col(TSLexer *lexer) {
     uint32_t col = lexer->get_column(lexer);
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
+    // A trailing comment after the opener keyword (`match x with // …`,
+    // `let x = (* … *)`) means the body/arms start on a later line — defer to
+    // next_line_indent (which skips comment-only lines) instead of taking the
+    // comment's column as the body column.
+    if (lexer->lookahead == '/') {
+        lexer->advance(lexer, true);
+        if (lexer->lookahead == '/') { uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0; }
+        return col;  // a lone `/` is inline (operator), body sits at its column
+    }
+    if (lexer->lookahead == '(') {
+        lexer->advance(lexer, true);
+        if (lexer->lookahead == '*') { uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0; }
+        return col;  // `(` inline (parenthesised pattern / expression)
+    }
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         uint32_t nl;
         if (next_line_indent(lexer, &nl, NULL)) return nl;

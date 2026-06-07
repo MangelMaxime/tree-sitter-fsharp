@@ -104,7 +104,7 @@ module L06_Match =
         | _ -> "other"
 
     let guarded n =
-        match n with
+        match n with // a trailing comment here must not break the arm list
         | x when x < 0 -> "neg"
         | 0 -> "zero"
         | _ -> "pos"
