@@ -421,6 +421,9 @@
 ; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
 ; locals-resolved uses of it) read consistently.
 (for_expression (identifier) @variable)
+; …and the bindings of an unparenthesized tuple binder (`for k, v in pairs`).
+(for_expression
+  (unparenthesized_tuple_pattern (long_identifier (identifier) @variable)))
 
 (abstract_member_defn
   name: (identifier) @function)
