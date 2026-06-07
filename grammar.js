@@ -1931,7 +1931,8 @@ export default grammar({
                     ),
                 ),
                 seq(
-                    $.identifier,
+                    // `_` is a valid range-loop binder (`for _ = 0 to n do …`).
+                    choice($.identifier, $.wildcard_pattern),
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
                     optional(seq($._for_open, field('body', $._expression), $._layout_end)),
                 ),

@@ -167,6 +167,10 @@ module L09_Loops =
             printfn "%d" i
             printfn "again %d" i
 
+    let forCountWildcard () =
+        for _ = 0 to 9 do  // `_` binder when the index is unused
+            printfn "tick"
+
     let forTuple () =
         for k, v in pairs do
             printfn "%A %A" k v

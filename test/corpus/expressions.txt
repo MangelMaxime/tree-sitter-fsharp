@@ -1728,3 +1728,24 @@ let x = f [1; 2]
       (list_expression
         (int_literal)
         (int_literal)))))
+
+================================================================================
+For range loop with wildcard binder
+================================================================================
+
+let f () =
+    for _ = 0 to 10 do
+        ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (for_expression
+      (wildcard_pattern)
+      (int_literal)
+      (int_literal)
+      body: (unit))))
