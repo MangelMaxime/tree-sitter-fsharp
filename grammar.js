@@ -2339,7 +2339,9 @@ export default grammar({
             // form, etc.).
             // The optional `when` clause covers an inline constraint on the
             // param's type variable: `(value: 'T when 'T: null)`.
-            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional($._when_constraints), ")")),
+            // The trailing constraint covers `(value: 'T when 'T: null)` and the
+            // subtype form `(resource: 'T :> IDisposable)`.
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional(choice($._when_constraints, seq(":>", $.type_expression))), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as

@@ -190,3 +190,25 @@ let f<'T when 'T: not null> (x: 'T) = x
         (type_parameter)))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Subtype constraint in a parameter type
+================================================================================
+
+let f (r: 'T :> System.IDisposable) = r
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter))
+      (type_expression
+        (long_identifier
+          (identifier)
+          (identifier))))
+    body: (long_identifier
+      (identifier))))
