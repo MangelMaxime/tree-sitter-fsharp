@@ -661,3 +661,85 @@ type Tagged = Tagged of int with member this.Value = match this with Tagged n ->
                 (identifier))))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+ML-style prefix type parameter
+================================================================================
+
+type 'T set = Set<'T>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (prefix_type_parameters
+      (type_parameter))
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (type_expression
+          (type_parameter))))))
+
+================================================================================
+ML-style prefix type parameters (parenthesized)
+================================================================================
+
+type ('a, 'b) pair = 'a * 'b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (prefix_type_parameters
+      (type_parameter)
+      (type_parameter))
+    name: (identifier)
+    alias: (type_expression
+      (tuple_type
+        (type_expression
+          (type_parameter))
+        (type_expression
+          (type_parameter))))))
+
+================================================================================
+Constraint clause outside the type-parameter list
+================================================================================
+
+type Foo<'T> when 'T: comparison = int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (type_constraint
+      (type_parameter))
+    alias: (type_expression
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Attribute on a type parameter
+================================================================================
+
+type Set<[<EqualityConditionalOn>]'T> = int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (attribute
+        (attribute_target
+          name: (long_identifier
+            (identifier))))
+      (type_parameter))
+    alias: (type_expression
+      (long_identifier
+        (identifier)))))
+

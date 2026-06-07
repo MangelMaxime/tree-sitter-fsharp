@@ -264,6 +264,13 @@ module L13_Types =
     type MyInt = int
     type Pair = int * string
 
+    // ML-style prefix type parameters (before the name).
+    type 'T container = System.Collections.Generic.List<'T>
+    type ('k, 'v) lookup = Map<'k, 'v>
+
+    // Constraint clause OUTSIDE the `<…>` list, and an attribute on a type param.
+    type Bag<[<EqualityConditionalOn>] 'T> when 'T: comparison = 'T list
+
     // Abstract members with attributes on labelled params (Fable interop).
     type IConsole =
         abstract log: [<ParamArray>] args: obj[] -> unit

@@ -3080,6 +3080,21 @@
     }
   },
   {
+    "type": "prefix_type_parameters",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "type_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "preproc_directive",
     "named": true,
     "fields": {
@@ -4138,6 +4153,10 @@
           "named": true
         },
         {
+          "type": "prefix_type_parameters",
+          "named": true
+        },
+        {
           "type": "primary_constructor",
           "named": true
         },
@@ -4151,6 +4170,10 @@
         },
         {
           "type": "struct_type_defn",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -4366,6 +4389,10 @@
           "named": true
         },
         {
+          "type": "prefix_type_parameters",
+          "named": true
+        },
+        {
           "type": "primary_constructor",
           "named": true
         },
@@ -4383,6 +4410,10 @@
         },
         {
           "type": "type_and_decl",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
           "named": true
         },
         {
@@ -4567,6 +4598,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
         {
           "type": "type_constraint",
           "named": true

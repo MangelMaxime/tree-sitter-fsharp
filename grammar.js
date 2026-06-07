@@ -351,8 +351,14 @@ export default grammar({
             // the name. Distinct from the slot below (which controls
             // visibility of the primary CONSTRUCTOR).
             optional($.access_modifier),
+            // ML-style prefix type parameters: `type 'T set = …`,
+            // `type ('a, 'b) pair = …`. Alternative to the postfix `<…>` list.
+            optional($.prefix_type_parameters),
             field('name', $.identifier),
             optional($.type_parameter_list),
+            // `type Foo<'T> when 'T: comparison = …` — constraints may also sit
+            // OUTSIDE the `<…>` list, between it and `=`.
+            optional($._when_constraints),
             // `type Foo private (...)` — F# allows an access modifier between
             // the type-parameter list and the primary constructor (controls
             // who can call the constructor, not visibility of the type).
@@ -384,8 +390,10 @@ export default grammar({
             "and",
             repeat($.attribute),
             optional($.access_modifier),
+            optional($.prefix_type_parameters),
             field('name', $.identifier),
             optional($.type_parameter_list),
+            optional($._when_constraints),
             optional($.access_modifier),
             optional($.primary_constructor),
             optional(seq("as", field('self', $.identifier))),
@@ -2411,16 +2419,30 @@ export default grammar({
             ),
         ))),
 
+        // ML-style prefix params on a type definition: `'T` or `('a, 'b)`,
+        // appearing before the type name (`type 'T set`, `type ('a,'b) pair`).
+        prefix_type_parameters: $ => choice(
+            $.type_parameter,
+            seq("(", $.type_parameter, repeat(seq(",", $.type_parameter)), ")"),
+        ),
+
+        // `when 'T :> IFoo and 'U : comparison` — generic-constraint clause,
+        // shared by `type_parameter_list` (inside `<…>`) and `type_decl` /
+        // `type_and_decl` (outside, between `<…>` and `=`).
+        _when_constraints: $ => prec.right(seq(
+            "when",
+            $.type_constraint,
+            repeat(seq("and", $.type_constraint)),
+        )),
+
         // <'T, 'U when 'T :> IFoo and 'U : comparison>
+        // A type parameter may carry an attribute (`<[<Measure>] 'u>`,
+        // `<[<EqualityConditionalOn>] 'T>`).
         type_parameter_list: $ => seq(
             "<",
-            $.type_parameter,
-            repeat(seq(",", $.type_parameter)),
-            optional(seq(
-                "when",
-                $.type_constraint,
-                repeat(seq("and", $.type_constraint)),
-            )),
+            repeat($.attribute), $.type_parameter,
+            repeat(seq(",", repeat($.attribute), $.type_parameter)),
+            optional($._when_constraints),
             ">",
         ),
 
