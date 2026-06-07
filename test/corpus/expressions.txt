@@ -1782,3 +1782,21 @@ let h = [1; 2].Length
         (int_literal)
         (int_literal))
       member: (identifier))))
+
+================================================================================
+Single-character custom operator definition
+================================================================================
+
+let ($) a b = a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (operator_name)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))

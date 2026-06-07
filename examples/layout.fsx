@@ -62,6 +62,9 @@ module L03_Functions =
     let listLen = [ 1; 2; 3 ].Length
     let arrHash = [| 1; 2 |].GetHashCode()
 
+    // Single-character custom operator definition.
+    let ($) (f: obj) (x: obj) : obj = f
+
     // Attribute with a target specifier (`return:`).
     [<return: Struct>]
     let (|Even|_|) n = if n % 2 = 0 then ValueSome() else ValueNone
