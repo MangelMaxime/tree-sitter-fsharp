@@ -1609,3 +1609,29 @@ let f () =
           operator: (symbolic_op)
           right: (int_literal)))
       (unit))))
+
+================================================================================
+Object expression with brace at end of line
+================================================================================
+
+let make () = {
+    new IFoo with
+        member _.M() = 1 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (object_expression
+      type: (long_identifier
+        (identifier))
+      (member_defn
+        self: (member_self_ident
+          (identifier))
+        name: (identifier)
+        parameters: (parameter
+          (unit))
+        body: (int_literal)))))

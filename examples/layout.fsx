@@ -325,6 +325,13 @@ module L15_Classes =
         ) =
         member val Width = defaultArg width 0 with get, set
 
+    // Object expression whose `{` ends the line, with `new` on the next.
+    type Factory() =
+        member _.Make () = {
+            new System.IDisposable with
+                member _.Dispose () = ()
+        }
+
 // ── Match: type augmentation `with` (the overloaded-`with` case) ────────────
 module L16_Augmentation =
     type Reference =

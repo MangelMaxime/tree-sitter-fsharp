@@ -221,6 +221,24 @@ static bool is_name_start(int32_t c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '`';
 }
 
+// Like peek_name_segment but copies the (plain-identifier) segment into buf,
+// NUL-terminated and truncated to cap. A backtick segment yields "`" (which
+// never matches a plain keyword). Lets the RECORD_OPEN peek tell an object
+// expression (`{ new … }`) from a copy-update base on its own line.
+static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
+    int n = 0;
+    if (lexer->lookahead == '`') { if (cap > 1) { buf[0] = '`'; buf[1] = 0; } else if (cap > 0) buf[0] = 0; peek_name_segment(lexer); return; }
+    while (1) {
+        int32_t ch = lexer->lookahead;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') {
+            if (n < cap - 1) buf[n++] = (char)ch;
+            lexer->advance(lexer, true);
+        } else break;
+    }
+    if (cap > 0) buf[n < cap ? n : cap - 1] = 0;
+}
+
 // A line whose first significant char/word does NOT start a new statement, so a
 // LAYOUT_SEMI before it would be wrong (it continues the current construct):
 //   * closing delimiters `)` `]` `}` and `|` (match arm / `|>` pipe);
@@ -483,8 +501,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         int32_t c = lexer->lookahead;
         bool ok = false;
+        char w0[8] = {0};
         if (is_name_start(c)) {
-            peek_name_segment(lexer);
+            peek_name_capture(lexer, w0, sizeof(w0));
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             // A leading field modifier (`mutable foo: …`): a second identifier
             // word sits before the `:`. Skip it so the `=`/`:` check sees the
@@ -512,8 +531,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // Not a field. If the base is on its OWN line after `{` (`{⏎ base with ⏎
         // field }` copy-update), open a layout at the base's column. Otherwise
         // (same-line `{ new …}` / `{ x with …}`) fall through so object-expression
-        // / inline copy-update match.
-        if (nl && valid[LAYOUT_OPEN]) { push(s, S_LAYOUT, col); lexer->result_symbol = LAYOUT_OPEN; return true; }
+        // / inline copy-update match. An object expression on its own line
+        // (`{⏎ new IFoo with …}`) must ALSO fall through — its `new` is a literal
+        // token with no layout open, so suppress LAYOUT_OPEN when the first word
+        // is `new`.
+        if (nl && valid[LAYOUT_OPEN] && strcmp(w0, "new") != 0) { push(s, S_LAYOUT, col); lexer->result_symbol = LAYOUT_OPEN; return true; }
         return false;
     }
 
