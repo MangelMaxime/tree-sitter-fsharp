@@ -1821,3 +1821,20 @@ let h = { a = 1 }.GetHashCode()
             value: (int_literal)))
         member: (identifier))
       (unit))))
+
+================================================================================
+Code quotation as an application argument
+================================================================================
+
+let r = f <@ 42 @>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (typed_quotation
+        (int_literal)))))

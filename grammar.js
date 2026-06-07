@@ -1214,6 +1214,12 @@ export default grammar({
             // application (semantically wrong but free of ERROR) — the proper
             // fix is sequence-expression support, tracked separately.
             $.computation_expression,
+            // `f <@ expr @>` — a code quotation as an application ARGUMENT. Without
+            // this, `<@` after a value lexes as the `<@` symbolic_op (binary), so
+            // `EvaluateQuotation <@ 42 @>` mis-parses. (Only the typed `<@ @>` form
+            // is added here; `untyped_quotation`'s `<@@` ripples GLR states and
+            // regresses Set.fs, and isn't used as an application arg in practice.)
+            $.typed_quotation,
         ),
 
         // All infix operations in one rule (one rule keeps post-_expression state bloat down).

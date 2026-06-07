@@ -68,6 +68,9 @@ module L03_Functions =
     // Single-character custom operator definition.
     let ($) (f: obj) (x: obj) : obj = f
 
+    // Code quotation as an application argument (`f <@ … @>`).
+    let evalq = eval <@ 1 + 2 @>
+
     // Attribute with a target specifier (`return:`).
     [<return: Struct>]
     let (|Even|_|) n = if n % 2 = 0 then ValueSome() else ValueNone
