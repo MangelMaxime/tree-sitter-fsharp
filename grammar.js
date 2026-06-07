@@ -2518,6 +2518,7 @@ export default grammar({
         type_constraint: $ => choice(
             seq($.type_parameter, ":>", $.type_expression),
             seq($.type_parameter, ":", "null"),
+            seq($.type_parameter, ":", "not", "null"),   // F# 9 non-null constraint
             seq($.type_parameter, ":", "struct"),
             seq($.type_parameter, ":", "not", "struct"),
             seq($.type_parameter, ":", "comparison"),

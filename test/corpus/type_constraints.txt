@@ -168,3 +168,25 @@ let isNull (value: 'T when 'T: null) = value
         (type_parameter)))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Non-null (not null) constraint
+================================================================================
+
+let f<'T when 'T: not null> (x: 'T) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)))
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    body: (long_identifier
+      (identifier))))

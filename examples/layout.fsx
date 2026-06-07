@@ -43,6 +43,8 @@ module L03_Functions =
     let typed (a: int) (b: int) : int = a + b
     // Inline `when` constraint on a parameter's type variable.
     let isDefault (value: 'T when 'T: equality) = value = Unchecked.defaultof<'T>
+    // F# 9 non-null constraint.
+    let firstKey<'K when 'K: not null> (m: Map<'K, int>) = Map.toList m |> List.head |> fst
     let curriedOwnLine a b =
         a * b
 
