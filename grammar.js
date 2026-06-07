@@ -283,6 +283,13 @@ export default grammar({
         ),
 
         attribute_target: $ => seq(
+            // Optional target specifier: `[<return: Struct>]`, `[<assembly:
+            // AssemblyVersion(…)>]`, `[<param: …>]`. `return`/`module`/`type` are
+            // keyword tokens; the rest lex as plain identifiers.
+            optional(seq(
+                field('target', choice($.identifier, "return", "module", "type")),
+                ":",
+            )),
             field('name', $.long_identifier),
             optional(choice(
                 // `[<Foo(args)>]` — parenthesised constructor arguments. The `( )`

@@ -319,6 +319,11 @@
 
 (attribute_target
   name: (long_identifier) @attribute)
+; Attribute target specifier (`[<assembly: …>]`, `[<param: …>]`) — colour the
+; specifier word as a keyword (the `return`/`module`/`type` forms are literal
+; keyword tokens already covered by the keyword list above).
+(attribute_target
+  target: (identifier) @keyword)
 
 (namespace_decl
   name: (long_identifier) @namespace)

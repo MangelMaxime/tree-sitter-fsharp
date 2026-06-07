@@ -431,3 +431,22 @@ let /// doc
     (xml_doc_comment)
     (identifier)
     (int_literal)))
+
+================================================================================
+Attribute with a target specifier
+================================================================================
+
+[<assembly: AssemblyVersion("1.0")>]
+do ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      target: (identifier)
+      name: (long_identifier
+        (identifier))
+      (string_literal)))
+  (do_stmt
+    (unit)))

@@ -54,6 +54,10 @@ module L03_Functions =
     let combine = List.reduce (+)
     let typeName = typeof<int>.Name
 
+    // Attribute with a target specifier (`return:`).
+    [<return: Struct>]
+    let (|Even|_|) n = if n % 2 = 0 then ValueSome() else ValueNone
+
 // ── Decl: multi-statement sequences (virtual semicolons) ────────────────────
 module L04_Sequences =
     let sideEffects () =
