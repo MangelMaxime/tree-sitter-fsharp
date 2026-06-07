@@ -1834,7 +1834,9 @@ export default grammar({
             "for",
             choice(
                 seq(
-                    choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern),
+                    choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
+                        // `for item, text in pairs do …` — unparenthesised tuple binder.
+                        $.unparenthesized_tuple_pattern),
                     "in", $._expression,
                     choice(
                         seq("do",

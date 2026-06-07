@@ -6674,6 +6674,10 @@
                       {
                         "type": "SYMBOL",
                         "name": "record_pattern"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "unparenthesized_tuple_pattern"
                       }
                     ]
                   },

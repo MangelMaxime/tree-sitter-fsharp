@@ -1462,3 +1462,32 @@ let v = obj?(key) (a, b)
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+For loop with unparenthesized tuple binder
+================================================================================
+
+let f () =
+    for k, v in pairs do
+        ignore k
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (for_expression
+      (unparenthesized_tuple_pattern
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

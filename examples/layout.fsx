@@ -138,6 +138,10 @@ module L09_Loops =
             printfn "%d" i
             printfn "again %d" i
 
+    let forTuple () =
+        for k, v in pairs do
+            printfn "%A %A" k v
+
     let whileLoop () =
         let mutable i = 0
         while i < 3 do
