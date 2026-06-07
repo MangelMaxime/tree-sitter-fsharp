@@ -271,6 +271,13 @@ module L13_Types =
     // Constraint clause OUTSIDE the `<…>` list, and an attribute on a type param.
     type Bag<[<EqualityConditionalOn>] 'T> when 'T: comparison = 'T list
 
+    // Record type with consecutive `mutable` fields (own-line form).
+    type Cursor =
+        {
+            mutable index: int
+            mutable active: bool
+        }
+
     // Abstract members with attributes on labelled params (Fable interop).
     type IConsole =
         abstract log: [<ParamArray>] args: obj[] -> unit

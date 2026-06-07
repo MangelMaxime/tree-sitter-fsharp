@@ -743,3 +743,30 @@ type Set<[<EqualityConditionalOn>]'T> = int
       (long_identifier
         (identifier)))))
 
+
+================================================================================
+Record type with consecutive mutable fields
+================================================================================
+
+type R =
+    {
+        mutable a: int
+        mutable b: bool
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier)))))))

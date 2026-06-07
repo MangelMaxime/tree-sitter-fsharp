@@ -486,6 +486,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (is_name_start(c)) {
             peek_name_segment(lexer);
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            // A leading field modifier (`mutable foo: …`): a second identifier
+            // word sits before the `:`. Skip it so the `=`/`:` check sees the
+            // field, not the modifier. Copy-update (`x with …`) / object-expr
+            // (`new T …`) have a second word too but no trailing `=`/`:`, so they
+            // still fall through.
+            if (is_name_start(lexer->lookahead)) {
+                peek_name_segment(lexer);
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            }
             // A qualified field name (`FunctionDef.Name = …`) — consume `.seg`
             // chains so the `=`/`:` check below still fires. A copy-update base
             // (`Foo.bar with …`) is followed by `with`, not `=`/`:`, so it still
