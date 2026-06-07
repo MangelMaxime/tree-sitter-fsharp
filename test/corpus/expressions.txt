@@ -1419,3 +1419,46 @@ let r =
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Dynamic-access operator
+================================================================================
+
+let color = el?style?color
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dynamic_expression
+      object: (dynamic_expression
+        object: (long_identifier
+          (identifier))
+        member: (identifier))
+      member: (identifier))))
+
+================================================================================
+Dynamic-access with computed key and call
+================================================================================
+
+let v = obj?(key) (a, b)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dynamic_expression
+        object: (long_identifier
+          (identifier))
+        member: (parenthesized_expression
+          (long_identifier
+            (identifier))))
+      (parenthesized_expression
+        (tuple_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

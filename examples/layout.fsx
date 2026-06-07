@@ -308,3 +308,15 @@ module L18_FlexibleTypes =
 
     type Sink() =
         member _.Accept(items: #seq<'T>) = Seq.length items
+
+// ── Expr: dynamic-access operator `?` (Fable JS interop) ────────────────────
+module L19_DynamicAccess =
+    // `obj?member` is the dynamic-lookup operator; chains and is callable.
+    let color (el) = el?style?color
+
+    let join (path) = path?join ("a", "b")
+
+    // `?(expr)` computed key, and dynamic set with `<-`.
+    let lookup (o) (k) = o?(k)
+
+    let setX (o) = o?x <- 1

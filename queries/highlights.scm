@@ -494,6 +494,10 @@
 ; was nested dot_expressions; that case is now a single long_identifier).
 (dot_expression member: (identifier) @variable.other.member)
 
+; Dynamic-access operator `obj?member` — `?` as operator, member as a member ref.
+(dynamic_expression "?" @operator)
+(dynamic_expression member: (identifier) @variable.other.member)
+
 ; DU constructors and active-pattern cases in match patterns.
 ; Capitalized identifier in identifier_pattern position = constructor (F# convention).
 ((identifier_pattern

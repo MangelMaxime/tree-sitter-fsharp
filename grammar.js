@@ -499,6 +499,11 @@ export default grammar({
         // Primary constructor for class types: `type T()` or `type Dog(name: string, …)`.
         // The `unit` branch handles `type T()` — the lexer atomises `()` into the unit
         // token, so we accept it here rather than splitting it back into `(` `)`.
+        // Primary constructor for class types: `type T()` or `type Dog(name, …)`.
+        // (A constructor attribute like `type T [<ParamObject>] (…)` is NOT
+        // supported: it conflicts irreconcilably with a standalone attribute on
+        // the following declaration, e.g. `[<Measure>] type cm`⏎`[<Measure>] type
+        // kg` — the optional ctor would mis-grab the second `[<Measure>]`.)
         primary_constructor: $ => prec(20, choice(
             $.unit,
             seq(
@@ -990,6 +995,7 @@ export default grammar({
             $.for_expression,
             $.while_expression,
             $.dot_expression,
+            $.dynamic_expression,
             $.index_expression,
             $.try_expression,
             $.prefix_keyword_expression,
@@ -1588,6 +1594,16 @@ export default grammar({
             field('object', $._dot_object),
             ".",
             field('member', $.identifier),
+        )),
+
+        // `obj?member` / `obj?(expr)` — F#'s dynamic-lookup operator (`(?)`), used
+        // heavily in Fable JS interop (`el?style`, `path?join(a, b)`). The `?` is
+        // `token.immediate` (no space before it) so it's distinct from an
+        // `optional_named_arg` argument (`f ?name = x`, which has a space).
+        dynamic_expression: $ => prec(PREC.DOT, seq(
+            field('object', $._expression),
+            token.immediate("?"),
+            field('member', choice($.identifier, $.parenthesized_expression)),
         )),
 
         // Compound LHS allowed as the object of a `dot_expression`. Notably

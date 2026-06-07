@@ -48,6 +48,10 @@
         "named": true
       },
       {
+        "type": "dynamic_expression",
+        "named": true
+      },
+      {
         "type": "for_expression",
         "named": true
       },
@@ -1065,6 +1069,36 @@
           },
           {
             "type": "typed_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "dynamic_expression",
+    "named": true,
+    "fields": {
+      "member": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "parenthesized_expression",
+            "named": true
+          }
+        ]
+      },
+      "object": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_expression",
             "named": true
           }
         ]

@@ -3128,6 +3128,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "dynamic_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "index_expression"
         },
         {
@@ -5791,6 +5795,47 @@
             "content": {
               "type": "SYMBOL",
               "name": "identifier"
+            }
+          }
+        ]
+      }
+    },
+    "dynamic_expression": {
+      "type": "PREC",
+      "value": 19,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "object",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_expression"
+            }
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "?"
+            }
+          },
+          {
+            "type": "FIELD",
+            "name": "member",
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "identifier"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "parenthesized_expression"
+                }
+              ]
             }
           }
         ]
