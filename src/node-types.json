@@ -44,6 +44,10 @@
         "named": true
       },
       {
+        "type": "do_expression",
+        "named": true
+      },
+      {
         "type": "dot_expression",
         "named": true
       },
@@ -997,6 +1001,21 @@
         },
         {
           "type": "wildcard_pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "do_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_expression",
           "named": true
         }
       ]

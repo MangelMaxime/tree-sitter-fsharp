@@ -223,3 +223,22 @@ a || b, c
     (long_identifier
       (identifier))))
 
+
+================================================================================
+Ref-cell assignment operator
+================================================================================
+
+let f () = v := 10
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (binary_expression
+      left: (long_identifier
+        (identifier))
+      operator: (symbolic_op)
+      right: (int_literal))))

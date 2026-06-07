@@ -3244,6 +3244,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "do_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "begin_end_expression"
         },
         {
@@ -4312,6 +4316,10 @@
           {
             "type": "STRING",
             "value": "@"
+          },
+          {
+            "type": "STRING",
+            "value": ":="
           },
           {
             "type": "PATTERN",
@@ -6724,6 +6732,23 @@
                 "value": "assert"
               }
             ]
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        ]
+      }
+    },
+    "do_expression": {
+      "type": "PREC_RIGHT",
+      "value": 2,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "do"
           },
           {
             "type": "SYMBOL",

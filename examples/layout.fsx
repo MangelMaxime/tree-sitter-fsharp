@@ -163,6 +163,13 @@ module L09_Loops =
         while i < 3 do
             i <- i + 1
 
+    // `:=` ref-cell assignment (and `do`-statement form).
+    let refLoop () =
+        let counter = ref 0
+        do counter := 0
+        while !counter < 3 do
+            counter := !counter + 1
+
 // ── Brackets: lists / arrays ────────────────────────────────────────────────
 module L10_ListsArrays =
     let inlineList = [ 1; 2; 3 ]

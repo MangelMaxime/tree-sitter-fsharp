@@ -1019,6 +1019,7 @@ export default grammar({
             $.index_expression,
             $.try_expression,
             $.prefix_keyword_expression,
+            $.do_expression,
             $.begin_end_expression,
             $.function_expression,
             $.typecast_expression,
@@ -1259,6 +1260,9 @@ export default grammar({
         // win over `symbolic_op` at the lexer.
         symbolic_op: _ => token(choice(
             "@",
+            // `:=` (ref-cell assignment). `:` is NOT in the operator-char set
+            // below (it would clash with type annotations), so list it here.
+            ":=",
             /[!$%&*+\-.\/<=>?@^|~][!$%&*+\-.\/<=>?@^|~]+/,
         )),
 
@@ -1815,6 +1819,14 @@ export default grammar({
         prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR,
             seq(choice("lazy", "assert"), $._expression),
         ),
+
+        // `do expr` — a unit-returning statement written explicitly inside a
+        // sequence (`do v := 0`, `do obj.Mutate ()`). prec.right at 2 (just above
+        // SEQ_EXPR=1) so it reduces as ONE statement and the enclosing sequence
+        // keeps the following lines as siblings — while the operand still grabs a
+        // full application / assignment (prec ≥ 4). (A `|>`/tuple operand, prec 1,
+        // would bind outside the `do`, but that form is degenerate for `do`.)
+        do_expression: $ => prec.right(2, seq("do", $._expression)),
 
         // begin expr end  — sequenced block (equivalent to parenthesized)
         begin_end_expression: $ => prec(PREC.PAREN_EXPR, seq("begin", $._expression, "end")),

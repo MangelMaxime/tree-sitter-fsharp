@@ -1585,3 +1585,27 @@ let r =
           (identifier))
         value: (long_identifier
           (identifier))))))
+
+================================================================================
+Do statement in a sequence
+================================================================================
+
+let f () =
+    do v := 0
+    ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (sequence_expression
+      (do_expression
+        (binary_expression
+          left: (long_identifier
+            (identifier))
+          operator: (symbolic_op)
+          right: (int_literal)))
+      (unit))))
