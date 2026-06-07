@@ -5931,6 +5931,10 @@
         {
           "type": "SYMBOL",
           "name": "type_parameter"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_literal"
         }
       ]
     },

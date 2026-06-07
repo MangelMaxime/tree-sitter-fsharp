@@ -1036,6 +1036,10 @@
         "required": true,
         "types": [
           {
+            "type": "_literal",
+            "named": true
+          },
+          {
             "type": "application_expression",
             "named": true
           },

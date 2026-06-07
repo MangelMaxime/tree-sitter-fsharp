@@ -1526,3 +1526,34 @@ let f () =
           (long_identifier
             (identifier))
           (unit))))))
+
+================================================================================
+Member access on a literal
+================================================================================
+
+let a = "abc".Length
+let b = "bcd".ToCharArray()
+let c = 'x'.ToString()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (string_literal)
+      member: (identifier)))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (string_literal)
+        member: (identifier))
+      (unit)))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (char_literal)
+        member: (identifier))
+      (unit))))

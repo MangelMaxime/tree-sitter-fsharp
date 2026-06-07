@@ -1639,6 +1639,9 @@ export default grammar({
             // where a (statically-resolved) type parameter is the root of a member
             // chain, e.g. `'a.suffixFormat.SuffixDelimStart`.
             $.type_parameter,
+            // `"abc".Length` / `'a'.ToString()` / `42 .ToString()` — member access on
+            // a literal (a `42.ToString()` with no space is a float by F#'s rule).
+            $._literal,
         ),
 
         // arr.[0]  arr.[1..2]  arr.[..2]  arr.[1..]  dict.["k"]  m.[0, 1]

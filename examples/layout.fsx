@@ -40,6 +40,11 @@ module L03_Functions =
     let curriedOwnLine a b =
         a * b
 
+    // Member access directly on a literal.
+    let litLen = "abc".Length
+    let litChars = "bcd".ToCharArray()
+    let charStr = 'x'.ToString()
+
 // ── Decl: multi-statement sequences (virtual semicolons) ────────────────────
 module L04_Sequences =
     let sideEffects () =
