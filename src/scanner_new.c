@@ -194,6 +194,33 @@ static bool scan_trailing_dot_float(TSLexer *lexer) {
 
 static bool is_close_bracket(int32_t c) { return c == ']' || c == '}'; }
 
+// Consume one identifier segment at the lookahead — a plain ident
+// (`Foo`/`foo'`/`x9`) or a ``quoted name``. Caller ensures the first char is an
+// identifier start. Used by the RECORD_OPEN field peek so a qualified field name
+// (`FunctionDef.Name = …`) is recognised as a field, not a copy-update base.
+static void peek_name_segment(TSLexer *lexer) {
+    if (lexer->lookahead == '`') {                // ``quoted name``
+        lexer->advance(lexer, true);
+        if (lexer->lookahead == '`') {
+            lexer->advance(lexer, true);
+            while (lexer->lookahead != '`' && lexer->lookahead != '\n' &&
+                   lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+            if (lexer->lookahead == '`') { lexer->advance(lexer, true); if (lexer->lookahead == '`') lexer->advance(lexer, true); }
+        }
+        return;
+    }
+    while (1) {
+        int32_t ch = lexer->lookahead;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+        else break;
+    }
+}
+
+static bool is_name_start(int32_t c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '`';
+}
+
 // A line whose first significant char/word does NOT start a new statement, so a
 // LAYOUT_SEMI before it would be wrong (it continues the current construct):
 //   * closing delimiters `)` `]` `}` and `|` (match arm / `|>` pipe);
@@ -456,24 +483,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         int32_t c = lexer->lookahead;
         bool ok = false;
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '`') {
-            if (c == '`') {                       // ``quoted name``
-                lexer->advance(lexer, true);
-                if (lexer->lookahead == '`') {
-                    lexer->advance(lexer, true);
-                    while (lexer->lookahead != '`' && lexer->lookahead != '\n' &&
-                           lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
-                    if (lexer->lookahead == '`') { lexer->advance(lexer, true); if (lexer->lookahead == '`') lexer->advance(lexer, true); }
-                }
-            } else {
-                while (1) {
-                    int32_t ch = lexer->lookahead;
-                    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-                        (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
-                    else break;
-                }
-            }
+        if (is_name_start(c)) {
+            peek_name_segment(lexer);
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            // A qualified field name (`FunctionDef.Name = …`) — consume `.seg`
+            // chains so the `=`/`:` check below still fires. A copy-update base
+            // (`Foo.bar with …`) is followed by `with`, not `=`/`:`, so it still
+            // falls through.
+            while (lexer->lookahead == '.') {
+                lexer->advance(lexer, true);
+                if (!is_name_start(lexer->lookahead)) break;
+                peek_name_segment(lexer);
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            }
             int32_t sep = lexer->lookahead;
             if (sep == '=' || sep == ':') ok = true;   // record_field / record_type_field
         }

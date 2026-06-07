@@ -204,6 +204,13 @@ module L11_Records =
         { X = 1   // trailing comment must not absorb the next field
           Y = 2 }
 
+    // Type-qualified field name disambiguates which record type (own-line form).
+    let qualifiedFields =
+        {
+            Point.X = 1
+            Y = 2
+        }
+
 // ── Brackets: computation expressions ───────────────────────────────────────
 module L12_ComputationExpr =
     let asyncResult =

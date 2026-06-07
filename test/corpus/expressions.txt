@@ -1557,3 +1557,31 @@ let c = 'x'.ToString()
         object: (char_literal)
         member: (identifier))
       (unit))))
+
+================================================================================
+Type-qualified record field on its own line
+================================================================================
+
+let r =
+    {
+        FunctionDef.Name = name
+        Args = args
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      (record_field
+        name: (long_identifier
+          (identifier)
+          (identifier))
+        value: (long_identifier
+          (identifier)))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier))))))
