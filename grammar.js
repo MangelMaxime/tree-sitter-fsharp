@@ -2650,6 +2650,9 @@ export default grammar({
                         /x[0-9a-fA-F]{2}/,
                         /u[0-9a-fA-F]{4}/,
                         /U[0-9a-fA-F]{8}/,
+                        // Line continuation: a `\` at end of line elides the
+                        // newline and the next line's leading whitespace.
+                        /\r?\n[ \t]*/,
                         // Fallback: any other char after `\`. Real F# rejects
                         // unknown escape sequences (FS1157), but a syntax-
                         // highlighting grammar should still parse the string

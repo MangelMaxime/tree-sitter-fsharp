@@ -20,6 +20,10 @@ module L01_InlineLet =
     let tuple_v = 1, 2
     let paren_v = (1 + 2) * 3
 
+    // `\` at end of line continues the string (newline + leading ws elided).
+    let continued = "the quick brown fox \
+                     jumps over the lazy dog"
+
 // ── Decl: own-line let bodies ───────────────────────────────────────────────
 module L02_OwnLineLet =
     let single =

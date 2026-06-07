@@ -564,3 +564,17 @@ let c = [1..2]
       (binary_expression
         left: (int_literal)
         right: (int_literal)))))
+
+================================================================================
+String with line continuation
+================================================================================
+
+let s = "abc \
+    def"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (string_literal)))
