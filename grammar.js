@@ -1778,7 +1778,9 @@ export default grammar({
         new_expression: $ => prec(PREC.NEW_OBJ,
             seq(
                 "new",
-                choice($.generic_type, $.long_identifier),
+                // `new 'T()` — construct a generic type parameter (used with a
+                // `'T: (new: unit -> 'T)` constraint).
+                choice($.generic_type, $.long_identifier, $.type_parameter),
                 "(",
                 optional(seq($._expression, repeat(seq(",", $._expression)))),
                 ")",
@@ -2501,7 +2503,9 @@ export default grammar({
             seq($.type_parameter, ":", "unmanaged"),
             seq($.type_parameter, ":", "enum", "<", $.type_expression, ">"),
             seq($.type_parameter, ":", "delegate", "<", $.type_expression, ",", $.type_expression, ">"),
-            seq($.type_parameter, ":", "(", "new", ":", "unit", "->", $.type_expression, ")"),
+            // Constructor constraint: `^T : (new: unit -> 'T)`. The `unit -> 'T`
+            // is a function type_expression so `unit` is a real (colourable) type.
+            seq($.type_parameter, ":", "(", "new", ":", $.type_expression, ")"),
             // SRTP member constraint: ^T : (member Foo: int -> int)
             //                         ^T : (static member (+): ^T * ^T -> ^T)
             seq($.type_parameter, ":", "(",

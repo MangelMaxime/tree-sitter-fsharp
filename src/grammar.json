@@ -6540,6 +6540,10 @@
               {
                 "type": "SYMBOL",
                 "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "type_parameter"
               }
             ]
           },
@@ -9692,14 +9696,6 @@
             {
               "type": "STRING",
               "value": ":"
-            },
-            {
-              "type": "STRING",
-              "value": "unit"
-            },
-            {
-              "type": "STRING",
-              "value": "->"
             },
             {
               "type": "SYMBOL",

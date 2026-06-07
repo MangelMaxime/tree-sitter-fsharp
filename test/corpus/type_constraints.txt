@@ -121,3 +121,30 @@ let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T)
         (identifier))
       (string_literal))))
 
+
+================================================================================
+Constructor (new) SRTP constraint
+================================================================================
+
+let inline f<'T when 'T: (new: unit -> 'T)> () = new 'T()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (type_parameter))))))
+    parameters: (parameter
+      (unit))
+    body: (new_expression
+      (type_parameter))))

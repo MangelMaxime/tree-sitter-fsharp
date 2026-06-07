@@ -319,6 +319,9 @@ module L13_Types =
         // Bare (un-parenthesized) curried optional param `?loc`.
         static member leaf ?loc : Node = Node.leaf
 
+    // `new 'T()` — construct a generic type parameter (needs a `new` constraint).
+    let inline createDefault<'T when 'T: (new: unit -> 'T)> () = new 'T()
+
 // ── Decl: nested modules ────────────────────────────────────────────────────
 module L14_NestedModules =
     module Inner =

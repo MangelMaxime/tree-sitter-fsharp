@@ -2856,6 +2856,10 @@
         {
           "type": "generic_type",
           "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
         }
       ]
     }
@@ -5791,10 +5795,6 @@
   {
     "type": "type_parameter",
     "named": true
-  },
-  {
-    "type": "unit",
-    "named": false
   },
   {
     "type": "unit",

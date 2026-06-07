@@ -1749,3 +1749,19 @@ let f () =
       (int_literal)
       (int_literal)
       body: (unit))))
+
+================================================================================
+New on a generic type parameter
+================================================================================
+
+let f () = new 'T()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (new_expression
+      (type_parameter))))
