@@ -465,6 +465,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         push(s, S_EXPR, col); lexer->result_symbol = ELSE_OPEN; return true;
     }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
+
+    // Lexical trailing-dot float (`1.`, `20.`). Placed AFTER the peek_body_col
+    // opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) — running it before them would
+    // destructively advance over the digits of an inline body like `let a = 1` and
+    // corrupt the body column. But it MUST come BEFORE the newline-gated opens
+    // (BLOCK/TYPE/BRACKET) and RECORD_OPEN: those `return false` for an inline body,
+    // which would otherwise short-circuit this probe and make a first array/list
+    // element `[|1.|]` mis-lex as `1` + `.|`. A digit can never start one of those
+    // (they fire on a newline / a field-shape peek), so checking float first is safe.
+    if (valid[FLOAT_TRAILING_DOT]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+            if (scan_trailing_dot_float(lexer)) return true;
+            return false;
+        }
+    }
+
     // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
     // NEXT line (`type X =⏎ members`, `module M =⏎ decls`). For an inline body
     // (`type X = {…}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
@@ -551,22 +568,6 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // is `new`.
         if (nl && valid[LAYOUT_OPEN] && strcmp(w0, "new") != 0) { push(s, S_LAYOUT, col); lexer->result_symbol = LAYOUT_OPEN; return true; }
         return false;
-    }
-
-    // Lexical trailing-dot float (mid-line). After the opens. The probe advances
-    // over digits DESTRUCTIVELY even on failure, which would corrupt the position
-    // for the layout logic below (e.g. `{ X = abs 3 }` would then see `}` and emit
-    // a spurious BRACKET_CLOSE, ending the field at `abs`). So: only probe when the
-    // current-line char is a digit, and if it's a plain int (not `1.`) RETURN
-    // FALSE — a mid-line digit never needs a layout token, so resetting to
-    // mark_end (and letting tree-sitter lex the int) is correct. At a line
-    // boundary the first char is a newline, so we fall through to the layout logic.
-    if (valid[FLOAT_TRAILING_DOT]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-        if (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
-            if (scan_trailing_dot_float(lexer)) return true;
-            return false;
-        }
     }
 
     // ---- Mid-line closes ------------------------------------------------------

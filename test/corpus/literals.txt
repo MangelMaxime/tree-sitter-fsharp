@@ -578,3 +578,18 @@ let s = "abc \
   (let_binding
     name: (identifier)
     body: (string_literal)))
+
+================================================================================
+Trailing-dot floats in an array literal
+================================================================================
+
+let xs = [|1.; 2.|]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (array_expression
+      (float_literal)
+      (float_literal))))
