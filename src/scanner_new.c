@@ -191,11 +191,13 @@ static bool is_close_bracket(int32_t c) { return c == ']' || c == '}'; }
 // A line whose first significant char/word does NOT start a new statement, so a
 // LAYOUT_SEMI before it would be wrong (it continues the current construct):
 //   * closing delimiters `)` `]` `}` and `|` (match arm / `|>` pipe);
+//   * a leading `,` — a tuple / argument-list separator (`f(⏎ a⏎ , b)`), never a
+//     statement start;
 //   * continuation keywords of an enclosing if/try/let (`else`/`elif`/`then`/
 //     `with`/`finally`/`in`/`and`).
 // `first` is the leading char (from next_line_indent, where lookahead==first).
 static bool semi_blocked(TSLexer *lexer, int32_t first) {
-    if (first == ')' || first == ']' || first == '}' || first == '|') return true;
+    if (first == ')' || first == ']' || first == '}' || first == '|' || first == ',') return true;
     if (first >= 'a' && first <= 'z') {
         char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
         while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||

@@ -223,3 +223,45 @@ type Speed = float<m/s>
             (long_identifier
               (identifier))))))))
 
+
+================================================================================
+Flexible type in a parameter annotation
+================================================================================
+
+let f (x: #IDisposable) = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (flexible_type
+          (long_identifier
+            (identifier)))))
+    body: (unit)))
+
+================================================================================
+Flexible generic type
+================================================================================
+
+let f (x: #seq<int>) = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (flexible_type
+          (generic_type
+            (long_identifier
+              (identifier))
+            (type_expression
+              (long_identifier
+                (identifier)))))))
+    body: (unit)))

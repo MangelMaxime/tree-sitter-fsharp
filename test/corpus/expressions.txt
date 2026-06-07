@@ -1395,3 +1395,27 @@ with
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Leading-comma argument continuation
+================================================================================
+
+let r =
+    g (
+        a
+    , b)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (tuple_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

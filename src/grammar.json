@@ -8697,9 +8697,47 @@
         },
         {
           "type": "SYMBOL",
+          "name": "flexible_type"
+        },
+        {
+          "type": "SYMBOL",
           "name": "labelled_type"
         }
       ]
+    },
+    "flexible_type": {
+      "type": "PREC",
+      "value": 4,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "#"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "generic_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "postfix_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "array_type"
+              }
+            ]
+          }
+        ]
+      }
     },
     "struct_tuple_type": {
       "type": "SEQ",
@@ -10864,6 +10902,10 @@
       "labelled_type",
       "_union_field_type",
       "type_expression"
+    ],
+    [
+      "flexible_type",
+      "generic_type"
     ]
   ],
   "precedences": [],

@@ -225,6 +225,10 @@ export default grammar({
         [$.labelled_type, $.type_expression],
         [$.labelled_type, $._union_field_type],
         [$.labelled_type, $._union_field_type, $.type_expression],
+        // `#Foo<int>` — the `<` could extend `Foo` into a `generic_type` inside the
+        // flexible type, or (after `#Foo`) start a comparison. GLR explores both;
+        // in a type position the generic form wins.
+        [$.flexible_type, $.generic_type],
     ],
 
 
@@ -2292,9 +2296,20 @@ export default grammar({
             $.measure_power_type,
             $.type_parameter,
             $.long_identifier,
+            // `#IDisposable` / `#seq<'T>` — flexible type (this type or a subtype).
+            $.flexible_type,
             // `name: T` / `?name: T` element of a member/abstract signature.
             $.labelled_type,
         ),
+
+        // Flexible (subtype) constraint: `#BaseType`. Binds tightly to the
+        // following type so `#A -> B` is `(#A) -> B`. The constituent type is a
+        // concrete head (identifier/generic/postfix/array) rather than a full
+        // type_expression, so `#` doesn't swallow a trailing `->`/`*`.
+        flexible_type: $ => prec(TYPE_PREC.APP, seq(
+            "#",
+            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type),
+        )),
 
         // struct (int * string)  — value-type tuple type
         struct_tuple_type: $ => seq("struct", "(", $.tuple_type, ")"),
