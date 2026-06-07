@@ -262,6 +262,15 @@ module L15_Classes =
         member this.Describe () =
             sprintf "%s" name
 
+    // Attribute on the primary constructor (Fable interop "ParamObject" style).
+    type Options
+        [<ParamObject>]
+        (
+            ?width: int,
+            ?height: int
+        ) =
+        member val Width = defaultArg width 0 with get, set
+
 // ── Match: type augmentation `with` (the overloaded-`with` case) ────────────
 module L16_Augmentation =
     type Reference =

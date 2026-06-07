@@ -3158,6 +3158,10 @@
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "tuple_param",
           "named": true
         },

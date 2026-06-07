@@ -349,3 +349,31 @@ type Foo() =
             (identifier))
           (int_literal)
           else: (int_literal))))))
+
+================================================================================
+Primary constructor with an attribute (ParamObject style)
+================================================================================
+
+type Opt [<ParamObject>] (?a: int, ?b: int) = class end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (attribute
+        (attribute_target
+          name: (long_identifier
+            (identifier))))
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (class_type_defn)))

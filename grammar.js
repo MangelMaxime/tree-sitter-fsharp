@@ -174,6 +174,7 @@ export default grammar({
         $._interp_verbatim_text,
         $._interp_triple_text,
         $._for_open,          // `for … do` body open (suppressed before query-CE operators)
+        $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (…)`) — only when `[<…>]+ (` follows
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -499,14 +500,17 @@ export default grammar({
         // Primary constructor for class types: `type T()` or `type Dog(name: string, …)`.
         // The `unit` branch handles `type T()` — the lexer atomises `()` into the unit
         // token, so we accept it here rather than splitting it back into `(` `)`.
-        // Primary constructor for class types: `type T()` or `type Dog(name, …)`.
-        // (A constructor attribute like `type T [<ParamObject>] (…)` is NOT
-        // supported: it conflicts irreconcilably with a standalone attribute on
-        // the following declaration, e.g. `[<Measure>] type cm`⏎`[<Measure>] type
-        // kg` — the optional ctor would mis-grab the second `[<Measure>]`.)
+        // Primary constructor for class types: `type T()` / `type Dog(name, …)`,
+        // and `type T [<ParamObject; Emit>] (…)` (Fable interop — attributes on the
+        // ctor). The attribute form is gated by the scanner token `_ctor_attr`,
+        // emitted ONLY when `[<…>]+` is immediately followed by `(`. That avoids
+        // mis-grabbing a standalone attribute on the NEXT declaration
+        // (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]` is
+        // followed by `type`, not `(`).
         primary_constructor: $ => prec(20, choice(
             $.unit,
             seq(
+                optional(seq($._ctor_attr, repeat1($.attribute))),
                 "(",
                 $.tuple_param,
                 repeat(seq(",", $.tuple_param)),

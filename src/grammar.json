@@ -1023,6 +1023,30 @@
             "type": "SEQ",
             "members": [
               {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_ctor_attr"
+                      },
+                      {
+                        "type": "REPEAT1",
+                        "content": {
+                          "type": "SYMBOL",
+                          "name": "attribute"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "BLANK"
+                  }
+                ]
+              },
+              {
                 "type": "STRING",
                 "value": "("
               },
@@ -11034,6 +11058,10 @@
     {
       "type": "SYMBOL",
       "name": "_for_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_ctor_attr"
     }
   ],
   "inline": [],

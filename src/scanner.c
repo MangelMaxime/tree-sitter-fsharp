@@ -42,6 +42,7 @@ typedef enum {
     INTERP_VERBATIM_TEXT, // text chunk in $@"…" / @$"…"
     INTERP_TRIPLE_TEXT,   // text chunk in $"""…"""
     FOR_OPEN,             // `for … do` body open; suppressed for query-CE operators
+    CTOR_ATTR,            // zero-width: attribute on a primary ctor — only when `[<…>]+ (` follows
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -297,6 +298,48 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[INTERP_TRIPLE_TEXT])   { bool ok = scan_interp_text(lexer, TX_TRIPLE);   if (ok) lexer->result_symbol = INTERP_TRIPLE_TEXT;   return ok; }
 
     Ctx *top = s->n > 0 ? &s->stk[s->n - 1] : NULL;
+
+    // CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
+    // a type name. Look ahead past one or more `[<…>]` attributes; emit ONLY when a
+    // `(` (the constructor params) follows. This distinguishes a ctor attribute
+    // (`type T [<ParamObject>] (…)`) from a standalone attribute on the NEXT
+    // declaration (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]`
+    // is followed by `type`). Zero-width, so the attributes/`(` are re-lexed after.
+    if (valid[CTOR_ATTR]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        if (lexer->lookahead != '[') return false;
+        lexer->advance(lexer, true);
+        if (lexer->lookahead != '<') return false;
+        lexer->advance(lexer, true);
+        for (;;) {                                   // consume `[<…>]` attribute(s)
+            for (;;) {                               // scan to the closing `>]`
+                int32_t c = lexer->lookahead;
+                if (c == 0) return false;
+                if (c == '"') {                      // skip a string (may contain `>]`)
+                    lexer->advance(lexer, true);
+                    while (lexer->lookahead != '"' && lexer->lookahead != 0) {
+                        if (lexer->lookahead == '\\') lexer->advance(lexer, true);
+                        if (lexer->lookahead != 0) lexer->advance(lexer, true);
+                    }
+                    if (lexer->lookahead == '"') lexer->advance(lexer, true);
+                    continue;
+                }
+                if (c == '>') { lexer->advance(lexer, true); if (lexer->lookahead == ']') { lexer->advance(lexer, true); break; } continue; }
+                lexer->advance(lexer, true);
+            }
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            if (lexer->lookahead == '[') {           // another `[<…>]`?
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '<') { lexer->advance(lexer, true); continue; }
+                return false;
+            }
+            break;
+        }
+        if (lexer->lookahead == '(') { lexer->result_symbol = CTOR_ATTR; return true; }
+        return false;
+    }
 
     // ---- Grammar-driven OPENS (zero-width; push a context) --------------------
     // Checked BEFORE the float probe: these only peek (and restore position via
