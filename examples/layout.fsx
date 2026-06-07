@@ -252,6 +252,11 @@ module L13_Types =
     type MyInt = int
     type Pair = int * string
 
+    // Abstract members with attributes on labelled params (Fable interop).
+    type IConsole =
+        abstract log: [<ParamArray>] args: obj[] -> unit
+        abstract assert': condition: bool * [<ParamArray>] data: obj[] -> unit
+
 // ── Decl: nested modules ────────────────────────────────────────────────────
 module L14_NestedModules =
     module Inner =

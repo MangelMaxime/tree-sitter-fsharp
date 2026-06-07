@@ -176,6 +176,7 @@ export default grammar({
         $._for_open,          // `for … do` body open (suppressed before query-CE operators)
         $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (…)`) — only when `[<…>]+ (` follows
         $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
+        $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -867,6 +868,11 @@ export default grammar({
         // element type itself excludes `function_type`/`tuple_type` so the
         // signature's `->` and `*` aren't absorbed into the label.
         labelled_type: $ => seq(
+            // `[<ParamArray>] xs: obj[]` — attribute on a labelled (member-sig)
+            // parameter. Gated by `_label_attr` (emitted by the scanner only when
+            // `[<…>]+ ident:` follows) so it stays a distinct token from a
+            // member-decoration `[<…>]` and creates no type-body conflict.
+            optional(seq($._label_attr, repeat1($.attribute))),
             optional("?"),
             field('name', $.identifier),
             ":",

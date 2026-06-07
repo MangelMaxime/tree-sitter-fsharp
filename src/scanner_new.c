@@ -44,6 +44,7 @@ typedef enum {
     FOR_OPEN,             // `for … do` body open; suppressed for query-CE operators
     CTOR_ATTR,            // zero-width: attribute on a primary ctor — only when `[<…>]+ (` follows
     TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
+    LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -288,6 +289,42 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
            !strcmp(w, "default") || !strcmp(w, "interface");
 }
 
+// Consume one or more consecutive `[<…>]` attributes, leaving the lexer at the
+// first non-whitespace char AFTER them. Skips strings (which may contain `>]`).
+// Returns false if not actually at `[<`. Used by the CTOR_ATTR / LABEL_ATTR peeks.
+static bool skip_bracket_attrs(TSLexer *lexer) {
+    if (lexer->lookahead != '[') return false;
+    lexer->advance(lexer, true);
+    if (lexer->lookahead != '<') return false;
+    lexer->advance(lexer, true);
+    for (;;) {
+        for (;;) {                                   // scan to the closing `>]`
+            int32_t c = lexer->lookahead;
+            if (c == 0) return false;
+            if (c == '"') {                          // skip a string
+                lexer->advance(lexer, true);
+                while (lexer->lookahead != '"' && lexer->lookahead != 0) {
+                    if (lexer->lookahead == '\\') lexer->advance(lexer, true);
+                    if (lexer->lookahead != 0) lexer->advance(lexer, true);
+                }
+                if (lexer->lookahead == '"') lexer->advance(lexer, true);
+                continue;
+            }
+            if (c == '>') { lexer->advance(lexer, true); if (lexer->lookahead == ']') { lexer->advance(lexer, true); break; } continue; }
+            lexer->advance(lexer, true);
+        }
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        if (lexer->lookahead == '[') {               // another `[<…>]`?
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '<') { lexer->advance(lexer, true); continue; }
+            return false;
+        }
+        break;
+    }
+    return true;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
@@ -312,35 +349,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[CTOR_ATTR]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
-        if (lexer->lookahead != '[') return false;
-        lexer->advance(lexer, true);
-        if (lexer->lookahead != '<') return false;
-        lexer->advance(lexer, true);
-        for (;;) {                                   // consume `[<…>]` attribute(s)
-            for (;;) {                               // scan to the closing `>]`
-                int32_t c = lexer->lookahead;
-                if (c == 0) return false;
-                if (c == '"') {                      // skip a string (may contain `>]`)
-                    lexer->advance(lexer, true);
-                    while (lexer->lookahead != '"' && lexer->lookahead != 0) {
-                        if (lexer->lookahead == '\\') lexer->advance(lexer, true);
-                        if (lexer->lookahead != 0) lexer->advance(lexer, true);
-                    }
-                    if (lexer->lookahead == '"') lexer->advance(lexer, true);
-                    continue;
-                }
-                if (c == '>') { lexer->advance(lexer, true); if (lexer->lookahead == ']') { lexer->advance(lexer, true); break; } continue; }
-                lexer->advance(lexer, true);
-            }
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
-            if (lexer->lookahead == '[') {           // another `[<…>]`?
-                lexer->advance(lexer, true);
-                if (lexer->lookahead == '<') { lexer->advance(lexer, true); continue; }
-                return false;
-            }
-            break;
-        }
+        if (!skip_bracket_attrs(lexer)) return false;
         if (lexer->lookahead == '(') { lexer->result_symbol = CTOR_ATTR; return true; }
         return false;
     }
@@ -503,6 +512,25 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         int32_t c = lexer->lookahead;
         if (c != '\n' && c != '\r' && c != 0) {
+            // Attribute on a labelled (member-sig) param: `[<ParamArray>] xs: obj[]`.
+            // Emit a zero-width LABEL_ATTR only when `[<…>]+` is followed by
+            // `ident:` (or `?ident:`). Done HERE (mid-line, gated on `c == '['`) so a
+            // non-match falls through to the closer logic / `return false` exactly as
+            // before — it never pre-empts the layout opens above.
+            if (c == '[' && valid[LABEL_ATTR] && skip_bracket_attrs(lexer)) {
+                if (lexer->lookahead == '?') lexer->advance(lexer, true);
+                int32_t a = lexer->lookahead;
+                if ((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_') {
+                    while (1) {
+                        int32_t ch = lexer->lookahead;
+                        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+                        else break;
+                    }
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    if (lexer->lookahead == ':') { lexer->result_symbol = LABEL_ATTR; return true; }
+                }
+            }
             bool closer = (c == ')' || c == ']' || c == '}');
             if (!closer && c == '@') {            // `@>` / `@@>` code-quotation close
                 lexer->advance(lexer, true);

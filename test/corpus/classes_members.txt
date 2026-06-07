@@ -377,3 +377,34 @@ type Opt [<ParamObject>] (?a: int, ?b: int) = class end
           (long_identifier
             (identifier)))))
     (class_type_defn)))
+
+================================================================================
+Attribute on a labelled abstract-member parameter
+================================================================================
+
+type T =
+    abstract member M: [<ParamArray>] args: obj[] -> obj
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (abstract_member_defn
+      name: (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (array_type
+              (type_expression
+                (labelled_type
+                  (attribute
+                    (attribute_target
+                      name: (long_identifier
+                        (identifier))))
+                  name: (identifier)
+                  type: (long_identifier
+                    (identifier))))))
+          (type_expression
+            (long_identifier
+              (identifier))))))))

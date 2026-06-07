@@ -2552,6 +2552,30 @@
           "type": "CHOICE",
           "members": [
             {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "_label_attr"
+                },
+                {
+                  "type": "REPEAT1",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "attribute"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
               "type": "STRING",
               "value": "?"
             },
@@ -11092,6 +11116,10 @@
     {
       "type": "SYMBOL",
       "name": "_try_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_label_attr"
     }
   ],
   "inline": [],
