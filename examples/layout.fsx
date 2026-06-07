@@ -104,6 +104,17 @@ module L06_Match =
             if a = 0 then "x"
             else "y"
 
+    // try/with with a multi-statement body (and inside a CE).
+    let tryMulti () =
+        async {
+            try
+                do! step1 ()
+                do! step2 ()
+                return! finish ()
+            with ex ->
+                return! recover ex
+        }
+
 // ── Match: function / lambda ────────────────────────────────────────────────
 module L07_Lambda =
     let inc = fun x -> x + 1

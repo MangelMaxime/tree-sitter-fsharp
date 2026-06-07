@@ -175,6 +175,7 @@ export default grammar({
         $._interp_triple_text,
         $._for_open,          // `for … do` body open (suppressed before query-CE operators)
         $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (…)`) — only when `[<…>]+ (` follows
+        $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1778,11 +1779,17 @@ export default grammar({
             $._match_end,
         )),
 
+        // The try body uses a DEDICATED layout sort (`_try_open` → S_TRY) so a
+        // multi-statement body sequences (e.g. inside a CE: `async { try do! a⏎
+        // return! b with … }`) and closes at `with`/`finally`. A dedicated sort
+        // (not the generic S_EXPR) means the `with`-close is try-specific and does
+        // NOT fire for a `match … with` sitting inside an enclosing expr body.
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
-            "try", $._expression,
+            "try",
+            seq($._try_open, $._expression, $._layout_end),
             choice(
                 seq("with", $._match_arms),
-                seq("finally", $._expression),
+                seq("finally", seq($._try_open, $._expression, $._layout_end)),
             ),
         )),
 

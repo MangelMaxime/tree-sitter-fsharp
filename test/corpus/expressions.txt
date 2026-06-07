@@ -1491,3 +1491,38 @@ let f () =
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Multi-statement try body
+================================================================================
+
+let f () =
+    try
+        a ()
+        b ()
+    with _ -> c ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (try_expression
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit)))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        body: (application_expression
+          (long_identifier
+            (identifier))
+          (unit))))))

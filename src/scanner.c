@@ -43,6 +43,7 @@ typedef enum {
     INTERP_TRIPLE_TEXT,   // text chunk in $"""…"""
     FOR_OPEN,             // `for … do` body open; suppressed for query-CE operators
     CTOR_ATTR,            // zero-width: attribute on a primary ctor — only when `[<…>]+ (` follows
+    TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -60,10 +61,13 @@ typedef enum {
 //              bare-expression `_token` must not extend into the next declaration
 //              as a `sequence_expression` (`ignore x⏎ let y = …` is two decls,
 //              whereas a function body — S_LAYOUT — DOES sequence `let` as let-in).
-typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL } Sort;
+//   S_TRY      try / finally body — like S_EXPR, but ALSO closes before an inline
+//              `with`/`finally` (a dedicated sort so the close is try-specific and
+//              doesn't fire for a `match … with` inside an enclosing expr body).
+typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY } Sort;
 
-// True for the dedent-closing layout sorts (decl body, type body, expr body, module body).
-static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL; }
+// True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
+static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
 typedef struct { uint32_t col; uint8_t sort; } Ctx;
 
@@ -373,6 +377,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         push(s, S_LAYOUT, bc); lexer->result_symbol = FOR_OPEN; return true;
     }
     if (valid[EXPR_OPEN])   { push(s, S_EXPR,   peek_body_col(lexer)); lexer->result_symbol = EXPR_OPEN;   return true; }
+    if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
     if (valid[ELSE_OPEN]) {
         // Final-else body. If it starts with `if`, this is `else if` — DON'T open a
         // nested else-body; return false so the grammar's flat `else if`→elif clause
@@ -548,6 +553,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
+            // A try/finally body (S_TRY) closes before an inline `with`/`finally`:
+            //   `try e with …` / `try e finally …`. Dedicated sort, so this never
+            //   fires for a `match … with` inside an enclosing S_EXPR body.
+            if (top && top->sort == S_TRY && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
+                char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
+                while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                                 (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+                    w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
+                }
+                w[n] = '\0';
+                if (!strcmp(w, "with") || !strcmp(w, "finally")) {
+                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                }
+            }
             return false; // other same-line content: layout doesn't apply
         }
     }
@@ -634,6 +653,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_TYPEBODY:
         case S_EXPR:
         case S_DECL:
+        case S_TRY:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A leading close delimiter `)`/`]`/`}` ends the enclosing construct,
             // so an open layout body must close first — even at == body col, where
