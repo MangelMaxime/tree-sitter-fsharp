@@ -8491,6 +8491,13 @@
           "value": "("
         },
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
+        },
+        {
           "type": "CHOICE",
           "members": [
             {
@@ -8564,6 +8571,13 @@
     "_tuple_pattern_item": {
       "type": "SEQ",
       "members": [
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
+        },
         {
           "type": "CHOICE",
           "members": [

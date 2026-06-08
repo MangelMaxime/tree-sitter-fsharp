@@ -694,3 +694,31 @@ match p with
       (pattern
         (wildcard_pattern))
       (int_literal))))
+
+================================================================================
+Attribute on a non-first tuple parameter
+================================================================================
+
+let f (x, [<A>] y) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (attribute
+          (attribute_target
+            name: (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier))))

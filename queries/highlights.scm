@@ -432,6 +432,19 @@
 
 (property_accessor (parameter (identifier) @variable.parameter))
 
+; Tuple-destructured parameters: `let f (x, y)`, `member M(a, b: int)`. The
+; UNTYPED `(x, y)` form is a `tuple_pattern` (not `tuple_params`), so the rules
+; above miss it. Scoped under `parameter` so a tuple pattern in MATCH position
+; stays @variable. Lowercase guard keeps a constructor element (`(Some a, b)`)
+; from being recoloured.
+(parameter
+  (tuple_pattern
+    (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter))))
+  (#match? @variable.parameter "^[a-z_]"))
+(parameter
+  (tuple_pattern
+    (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))
+
 ; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
 ; locals-resolved uses of it) read consistently.
 (for_expression (identifier) @variable)

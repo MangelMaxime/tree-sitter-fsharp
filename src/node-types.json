@@ -4189,6 +4189,10 @@
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "pattern",
           "named": true
         },
@@ -4222,6 +4226,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
         {
           "type": "pattern",
           "named": true

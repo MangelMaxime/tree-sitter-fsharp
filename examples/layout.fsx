@@ -322,6 +322,10 @@ module L13_Types =
     type MyInt = int
     type Pair = int * string
 
+    // Attribute on a non-first tuple parameter element.
+    type Mapper() =
+        member _.Map(f, [<InjectAttribute>] comparer: int) = f comparer
+
     // F# 9 nullable reference types `T | null` (annotation positions; use parens
     // inside a union case).
     let orNull (s: string | null) : string | null = s
