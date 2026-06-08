@@ -3624,8 +3624,17 @@
           "value": "<"
         },
         {
-          "type": "SYMBOL",
-          "name": "type_expression"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "type_expression"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "nullable_type"
+            }
+          ]
         },
         {
           "type": "REPEAT",
@@ -3637,8 +3646,17 @@
                 "value": ","
               },
               {
-                "type": "SYMBOL",
-                "name": "type_expression"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "type_expression"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "nullable_type"
+                  }
+                ]
               }
             ]
           }
@@ -9386,6 +9404,10 @@
               },
               {
                 "type": "SYMBOL",
+                "name": "nullable_type"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "measure_expression"
               }
             ]
@@ -9409,6 +9431,10 @@
                         "type": "SYMBOL",
                         "name": "type_expression"
                       }
+                    },
+                    {
+                      "type": "SYMBOL",
+                      "name": "nullable_type"
                     },
                     {
                       "type": "SYMBOL",

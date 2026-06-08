@@ -304,6 +304,49 @@ type T = { x: string | null }
             (identifier)))))))
 
 ================================================================================
+Nullable type as a generic type argument
+================================================================================
+
+let f (d: Dictionary<string | null>) = d
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (generic_type
+          (long_identifier
+            (identifier))
+          (nullable_type
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Nullable type as a generic argument in expression position
+================================================================================
+
+let d = Dictionary<string | null>()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (type_application_expression
+        (long_identifier
+          (identifier))
+        (nullable_type
+          (long_identifier
+            (identifier))))
+      (unit))))
+
+================================================================================
 Nullable type parenthesized in a union field
 ================================================================================
 

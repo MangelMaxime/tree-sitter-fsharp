@@ -1447,6 +1447,10 @@
           "named": true
         },
         {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         }
@@ -4430,6 +4434,10 @@
       "types": [
         {
           "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "nullable_type",
           "named": true
         },
         {

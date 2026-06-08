@@ -1135,8 +1135,8 @@ export default grammar({
         type_application_expression: $ => seq(
             $.long_identifier,
             "<",
-            $.type_expression,
-            repeat(seq(",", $.type_expression)),
+            choice($.type_expression, $.nullable_type),
+            repeat(seq(",", choice($.type_expression, $.nullable_type))),
             ">",
         ),
 
@@ -2463,12 +2463,16 @@ export default grammar({
             $.long_identifier,
         )),
 
-        // list<int>, Map<string, int>
+        // list<int>, Map<string, int>, ResizeArray<string | null>
+        // A `nullable_type` (`string | null`) is allowed as a type argument: inside
+        // `<…>` the `|` is unambiguous (arguments are delimited by `,` and `>`, no
+        // union case can follow), the same reasoning that lets `parenthesized_type`
+        // carry one.
         generic_type: $ => prec(TYPE_PREC.APP, seq(
             $.long_identifier,
             "<",
-            choice(prec.dynamic(1, $.type_expression), $.measure_expression),
-            repeat(seq(",", choice(prec.dynamic(1, $.type_expression), $.measure_expression))),
+            choice(prec.dynamic(1, $.type_expression), $.nullable_type, $.measure_expression),
+            repeat(seq(",", choice(prec.dynamic(1, $.type_expression), $.nullable_type, $.measure_expression))),
             ">",
         )),
 

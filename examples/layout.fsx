@@ -340,6 +340,11 @@ module L13_Types =
         | Ok of int
         | Failed of (string | null)
 
+    // `T | null` as a generic type argument — unambiguous inside `<…>`, both in a
+    // type annotation and as an expression-level generic instantiation.
+    let mkBag (d: Dictionary<string, ResizeArray<string | null>>) = d
+    let empty () = Dictionary<string | null, int>()
+
     // ML-style prefix type parameters (before the name).
     type 'T container = System.Collections.Generic.List<'T>
     type ('k, 'v) lookup = Map<'k, 'v>
