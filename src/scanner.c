@@ -772,6 +772,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                 }}}
             }
+            // A module-only keyword (`open`/`module`/`namespace`/`exception`)
+            // aligned AT the type-body column closes the type body. A NON-indented
+            // DU (`type T =⏎| A⏎| B⏎open …`) puts the body at the module column, so
+            // a dedent never fires; without this, the union field type
+            // over-consumes the following `open Foo` as a postfix type.
+            if (top->sort == S_TYPEBODY && valid[LAYOUT_END] && col == top->col &&
+                first >= 'a' && first <= 'z') {
+                char w[12]; size_t wn = 0; int32_t lk = lexer->lookahead;
+                while (wn < 11 && lk >= 'a' && lk <= 'z') { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
+                w[wn] = '\0';
+                bool boundary = !((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
+                                  (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'');
+                if (boundary && (!strcmp(w, "open") || !strcmp(w, "module") ||
+                                 !strcmp(w, "namespace") || !strcmp(w, "exception"))) {
+                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                }
+            }
             // S_DECL: never separate before a declaration keyword — the line is a
             // new `_token`, not a `sequence_expression` continuation of the prior
             // bare-expression statement.

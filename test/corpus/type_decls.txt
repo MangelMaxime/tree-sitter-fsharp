@@ -770,3 +770,43 @@ type R =
         type: (type_expression
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Non-indented union cases then a module declaration
+================================================================================
+
+module M
+
+type T =
+| A
+| B of int
+
+open System
+
+let f x = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    name: (long_identifier
+      (identifier)))
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier))))))
+  (import_decl
+    (long_identifier
+      (identifier)))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier))))

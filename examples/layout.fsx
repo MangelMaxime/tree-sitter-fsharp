@@ -303,6 +303,16 @@ module L13_Types =
         | Rectangle of float * float
         | Point
 
+    // Non-indented DU cases (at the `type` column) followed by a module-level
+    // declaration — the type body must close at `open`, not absorb it.
+    type Token =
+    | Plus
+    | Minus of int
+
+    open System
+
+    let tokenZero = Plus
+
     type Person =
         {
             Name: string
