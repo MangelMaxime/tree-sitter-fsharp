@@ -1378,7 +1378,19 @@
           "named": true
         },
         {
+          "type": "array_pattern",
+          "named": true
+        },
+        {
           "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "list_pattern",
+          "named": true
+        },
+        {
+          "type": "literal_pattern",
           "named": true
         },
         {
@@ -1386,7 +1398,19 @@
           "named": true
         },
         {
+          "type": "struct_tuple_pattern",
+          "named": true
+        },
+        {
           "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
+          "type": "typed_pattern",
           "named": true
         },
         {

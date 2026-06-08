@@ -7067,6 +7067,26 @@
                       {
                         "type": "SYMBOL",
                         "name": "unparenthesized_tuple_pattern"
+                      },
+                      {
+                        "type": "PREC_RIGHT",
+                        "value": 1,
+                        "content": {
+                          "type": "SEQ",
+                          "members": [
+                            {
+                              "type": "SYMBOL",
+                              "name": "long_identifier"
+                            },
+                            {
+                              "type": "REPEAT1",
+                              "content": {
+                                "type": "SYMBOL",
+                                "name": "_tuple_elem_pattern"
+                              }
+                            }
+                          ]
+                        }
                       }
                     ]
                   },

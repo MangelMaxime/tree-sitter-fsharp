@@ -198,6 +198,11 @@ module L09_Loops =
         for k, v in pairs do
             printfn "%A %A" k v
 
+    // Union-case / active-pattern application binder, e.g. iterating a dictionary.
+    let forKeyValue (dict) =
+        for KeyValue(k, v) in dict do
+            printfn "%A %A" k v
+
     let whileLoop () =
         let mutable i = 0
         while i < 3 do

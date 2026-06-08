@@ -540,6 +540,14 @@
 ; Named DU field pattern: Email(address = addr) → highlight the constructor name
 (named_field_pattern constructor: (long_identifier) @constructor)
 
+; Union-case / active-pattern application binder in a for loop:
+; `for KeyValue(k, v) in dict do …`. The binder head is the FIRST child of
+; `for_expression` (the enumerable always follows `in`), so anchoring on it
+; keeps the same @constructor coloring patterns get in a match arm.
+((for_expression
+   . (long_identifier (identifier) @constructor))
+ (#match? @constructor "^[A-Z]"))
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))

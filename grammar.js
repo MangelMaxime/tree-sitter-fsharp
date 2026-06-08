@@ -1932,7 +1932,11 @@ export default grammar({
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
                         // `for item, text in pairs do …` — unparenthesised tuple binder.
-                        $.unparenthesized_tuple_pattern),
+                        $.unparenthesized_tuple_pattern,
+                        // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
+                        // application binder (the bare `long_identifier` form is omitted:
+                        // a no-arg binder is already covered by `$.identifier`).
+                        prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern)))),
                     "in", $._expression,
                     choice(
                         seq("do",

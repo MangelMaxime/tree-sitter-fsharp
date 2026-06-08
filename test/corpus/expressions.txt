@@ -760,6 +760,36 @@ let f () =
           (unit))))))
 
 ================================================================================
+For loop with a union-case application binder
+================================================================================
+
+for KeyValue(k, v) in dict do
+    ignore k
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_expression
+    (long_identifier
+      (identifier))
+    (tuple_pattern
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier)))))
+    (long_identifier
+      (identifier))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
 Query for-clause keeps for body empty (not a loop)
 ================================================================================
 
