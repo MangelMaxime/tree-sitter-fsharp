@@ -120,7 +120,7 @@ type Counter() =
       (unit))
     (member_defn
       name: (identifier)
-      (string_literal)
+      body: (string_literal)
       (auto_property_accessors))))
 
 ================================================================================
@@ -139,7 +139,7 @@ type Counter() =
       (unit))
     (member_defn
       name: (identifier)
-      (int_literal)
+      body: (int_literal)
       (auto_property_accessors))))
 
 ================================================================================
@@ -158,7 +158,7 @@ type Counter() =
       (unit))
     (member_defn
       name: (identifier)
-      (string_literal)
+      body: (string_literal)
       (auto_property_accessors))))
 
 ================================================================================
@@ -455,3 +455,27 @@ type T =
         (long_identifier
           (identifier)))
       body: (int_literal))))
+
+================================================================================
+Consecutive auto-properties without accessors
+================================================================================
+
+type C() =
+    member val P1 = x
+    member val P2 = y
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      name: (identifier)
+      body: (long_identifier
+        (identifier)))
+    (member_defn
+      name: (identifier)
+      body: (long_identifier
+        (identifier)))))

@@ -665,7 +665,13 @@ export default grammar({
                 field('name', $.identifier),
                 optional($._return_type_annot),
                 "=",
-                $._expression,
+                // Layout-bounded init expression. Without a body context the
+                // init greedily sequences into the next member (`member val A =
+                // x⏎ member val B = y` → `A = (x; …)`). Reuse the S_TRY opener
+                // (`_try_open`): like a generic layout body it dedent-closes at
+                // the next member, but it ALSO closes before an inline `with`, so
+                // the `with get, set` accessor form still attaches.
+                seq($._try_open, field('body', $._expression), $._layout_end),
                 optional($.auto_property_accessors),
             )),
         ),

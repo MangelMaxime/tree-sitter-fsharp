@@ -387,6 +387,13 @@ module L15_Classes =
         ) =
         member val Width = defaultArg width 0 with get, set
 
+    // Consecutive auto-properties without accessors — each init expression must
+    // close before the next `member val` (and an inline `with get, set` still
+    // attaches, as on Width above).
+    type Bag2(a: int, b: string) =
+        member val First = a
+        member val Second = b
+
     // Object expression whose `{` ends the line, with `new` on the next.
     type Factory() =
         member _.Make () = {
