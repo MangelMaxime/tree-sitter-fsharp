@@ -451,6 +451,21 @@
     }
   },
   {
+    "type": "and_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "anonymous_record_expression",
     "named": true,
     "fields": {
@@ -3168,6 +3183,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "and_pattern",
+          "named": true
+        },
         {
           "type": "array_pattern",
           "named": true

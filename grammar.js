@@ -2137,6 +2137,7 @@ export default grammar({
             $.identifier_pattern,
             $.cons_pattern,
             $.or_pattern,
+            $.and_pattern,
             $.tuple_pattern,
             $.tuple_typed_first_pattern,
             $.struct_tuple_pattern,
@@ -2179,6 +2180,10 @@ export default grammar({
         // pat1 | pat2  — alternative patterns. prec.left(1) binds tighter than `as`
         // (0) and looser than `::` (2).
         or_pattern: $ => prec.left(1, seq($.pattern, "|", $.pattern)),
+
+        // pat1 & pat2  — conjunction (AND) pattern, e.g. `Foo x & Bar y` /
+        // `ForFile f & HasEditIn r`. Both subpatterns must match.
+        and_pattern: $ => prec.left(1, seq($.pattern, "&", $.pattern)),
 
         // (pat : type)  — type annotation on a pattern, always parenthesised.
         typed_pattern: $ => seq("(", $.pattern, ":", $.type_expression, ")"),

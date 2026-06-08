@@ -47,6 +47,9 @@
 (type_intrinsic) @keyword.operator
 
 (address_of_expression "&" @operator)
+; The `&` combining an and-pattern (`A a & B b`) is a pattern combinator like the
+; or-pattern `|`, so it shares the @keyword.control slot rather than @operator.
+(and_pattern "&" @keyword.control)
 (optional_named_arg "?" @operator)
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)

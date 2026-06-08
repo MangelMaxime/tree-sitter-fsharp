@@ -8012,6 +8012,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "and_pattern"
+        },
+        {
+          "type": "SYMBOL",
           "name": "tuple_pattern"
         },
         {
@@ -8192,6 +8196,27 @@
           {
             "type": "STRING",
             "value": "|"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "pattern"
+          }
+        ]
+      }
+    },
+    "and_pattern": {
+      "type": "PREC_LEFT",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "pattern"
+          },
+          {
+            "type": "STRING",
+            "value": "&"
           },
           {
             "type": "SYMBOL",

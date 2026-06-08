@@ -126,6 +126,12 @@ module L06_Match =
         | 0 -> "zero"
         | _ -> "pos"
 
+    // And-pattern (conjunction) — both sub-patterns (often active patterns) match.
+    let classify x =
+        match x with
+        | Even n & GreaterThan 10 -> "big even"
+        | _ -> "other"
+
     let nested g a c =
         match g with
         | 1 ->
