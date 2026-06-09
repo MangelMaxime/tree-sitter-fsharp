@@ -4608,6 +4608,10 @@
       "required": true,
       "types": [
         {
+          "type": "generic_type",
+          "named": true
+        },
+        {
           "type": "long_identifier",
           "named": true
         },

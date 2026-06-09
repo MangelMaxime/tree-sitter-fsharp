@@ -9857,6 +9857,10 @@
       "type": "CHOICE",
       "members": [
         {
+          "type": "SYMBOL",
+          "name": "generic_type"
+        },
+        {
           "type": "SEQ",
           "members": [
             {

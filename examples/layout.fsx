@@ -48,6 +48,8 @@ module L03_Functions =
     let isDefault (value: 'T when 'T: equality) = value = Unchecked.defaultof<'T>
     // F# 9 non-null constraint.
     let firstKey<'K when 'K: not null> (m: Map<'K, int>) = Map.toList m |> List.head |> fst
+    // IWSAM / bare-interface constraint (F# 7+): `'T` must implement IParsable<'T>.
+    let parseIt<'T when IParsable<'T>> (s: string) = 's'
     // Subtype (`:>`) constraint on a parameter's type.
     let useDisposable (r: 'T :> System.IDisposable) = r.Dispose ()
     let curriedOwnLine a b =

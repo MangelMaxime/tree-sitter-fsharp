@@ -2582,6 +2582,10 @@ export default grammar({
 
         // 'T :> IFoo   'T : null   'T : comparison   …
         type_constraint: $ => choice(
+            // IWSAM / bare-interface constraint (F# 7+): `when IParsable<'T>` —
+            // the type parameter must implement the (usually generic) interface,
+            // with no `'T :` prefix.
+            $.generic_type,
             seq($.type_parameter, ":>", $.type_expression),
             seq($.type_parameter, ":", "null"),
             seq($.type_parameter, ":", "not", "null"),   // F# 9 non-null constraint

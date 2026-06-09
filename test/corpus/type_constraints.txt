@@ -212,3 +212,26 @@ let f (r: 'T :> System.IDisposable) = r
           (identifier))))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+IWSAM bare-interface constraint
+================================================================================
+
+let f<'T when IParsable<'T>> () = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (generic_type
+          (long_identifier
+            (identifier))
+          (type_expression
+            (type_parameter)))))
+    parameters: (parameter
+      (unit))
+    body: (int_literal)))
