@@ -2020,16 +2020,18 @@ export default grammar({
             seq(
                 choice(
                     field('builder', $.long_identifier),
-                    // Oxpecker element DSL: the builder is an APPLICATION —
-                    // `div() { … }` / `div(attrs) { … }`. The zero-width
+                    // Builder-is-an-APPLICATION CE: `div() { … }` / `div(attrs) { … }`
+                    // (Oxpecker element DSL) and `stage "x" { … }` / `pipeline "B" { … }`
+                    // (Fun.Build-style, a string-named builder). The zero-width
                     // `_element_dsl_open` LEADS this alternative; the scanner emits
-                    // it only when `ident ( … ) {` is actually ahead, so a plain
+                    // it only when `ident <arg> {` is actually ahead, so a plain
                     // `a()`⏎`b()` (no following `{`) never enters here and the
                     // offside layout is unaffected.
                     seq(
                         $._element_dsl_open,
                         field('builder', $.long_identifier),
-                        field('args', choice($.unit, $.parenthesized_expression)),
+                        field('args', choice($.unit, $.parenthesized_expression,
+                                             $.string_literal, $.verbatim_string, $.triple_quoted_string)),
                         // Fluent method chain before the body: `div(attrs).hxTarget("#x").hxSwap("y") { … }`
                         repeat(seq(
                             ".",

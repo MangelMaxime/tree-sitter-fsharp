@@ -499,9 +499,20 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         if (!edsl_skip_name(lexer)) return false;
     }
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-    if (lexer->lookahead != '(') return false;
-    if (!edsl_skip_balanced_parens(lexer)) return false;
-    // After each `)`: the body `{` must be SAME-line (only spaces/tabs between, so
+    // The builder argument is either a parenthesised group (`div(attrs)`) or a
+    // single string literal (`stage "x"` / `pipeline "Build"`, Fun.Build-style).
+    if (lexer->lookahead == '(') {
+        if (!edsl_skip_balanced_parens(lexer)) return false;
+    } else if (lexer->lookahead == '"') {
+        edsl_skip_dquote(lexer);                          // regular or """triple"""
+    } else if (lexer->lookahead == '@') {
+        lexer->advance(lexer, true);
+        if (lexer->lookahead != '"') return false;
+        edsl_skip_verbatim(lexer);                        // @"verbatim"
+    } else {
+        return false;
+    }
+    // After each arg: the body `{` must be SAME-line (only spaces/tabs between, so
     // `foo(a, b)`⏎`{ record }` isn't read as one DSL); otherwise a fluent
     // `.method( … )` chain link may continue (those CAN sit on their own lines).
     for (;;) {

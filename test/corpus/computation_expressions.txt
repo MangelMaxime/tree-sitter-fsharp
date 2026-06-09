@@ -359,3 +359,23 @@ let v = div(id).hxSwap("y") { "hi" }
       method_args: (parenthesized_expression
         (string_literal))
       (string_literal))))
+
+================================================================================
+CE builder applied to a string name (Fun.Build style)
+================================================================================
+
+let s = stage "x" { run "y" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      args: (string_literal)
+      (application_expression
+        (long_identifier
+          (identifier))
+        (string_literal)))))

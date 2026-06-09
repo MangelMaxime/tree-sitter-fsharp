@@ -560,6 +560,13 @@ module L20_ElementDSL =
         div() { "x" }
         ignore ()
 
+    // Builder applied to a STRING name (Fun.Build / Saturn style), not parens.
+    let build =
+        pipeline "Build" {
+            description "Default build pipeline"
+            stage "Compile" { run "dotnet build" }
+        }
+
     // Fluent method chain on the builder before the body — chain links may sit on
     // their own lines (`.hxBoost`/`.hxTarget` are Oxpecker.Htmx modifiers).
     let chained =
