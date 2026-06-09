@@ -440,6 +440,8 @@ module L15_Classes =
     type Bag2(a: int, b: string) =
         member val First = a
         member val Second = b
+        // Access modifier on an auto-property.
+        member val public Third = 0 with get, set
 
     // Object expression whose `{` ends the line, with `new` on the next.
     type Factory() =

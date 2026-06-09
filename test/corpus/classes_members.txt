@@ -508,3 +508,23 @@ type T =
                 (identifier))))))
       body: (long_identifier
         (identifier)))))
+
+================================================================================
+Auto-property with an access modifier
+================================================================================
+
+type T() =
+    member val public N = 0 with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (access_modifier)
+      name: (identifier)
+      body: (int_literal)
+      (auto_property_accessors))))

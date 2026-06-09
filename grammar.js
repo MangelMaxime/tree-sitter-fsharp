@@ -665,6 +665,7 @@ export default grammar({
                 optional("static"),
                 "member",
                 "val",
+                optional($.access_modifier),   // `member val public N = …`
                 field('name', $.identifier),
                 optional($._return_type_annot),
                 "=",
