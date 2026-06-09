@@ -579,6 +579,11 @@
 ((destructure_parameter
    . (long_identifier (identifier) @constructor))
  (#match? @constructor "^[A-Z]"))
+; The deconstructed binding(s) — the long_identifier(s) AFTER the constructor
+; (`url` in `(Url url: Url)`) — are value bindings; colour @variable.
+((destructure_parameter
+   (long_identifier) (long_identifier (identifier) @variable))
+ (#match? @variable "^[a-z_]"))
 
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)

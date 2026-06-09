@@ -42,6 +42,11 @@
 ; `as`-alias binding (`… as item`, `Some x as y`) — so its later uses resolve.
 (as_pattern (identifier) @local.definition.variable)
 
+; Deconstructed binding in a typed parameter `(Url url: Url)` — the
+; long_identifier after the constructor; register so its uses resolve.
+((destructure_parameter (long_identifier) (long_identifier (identifier) @local.definition.variable))
+ (#match? @local.definition.variable "^[a-z_]"))
+
 ; Match / pattern bindings; the lowercase guard leaves uppercase constructor
 ; heads to highlights' @constructor rule.
 ((identifier_pattern (long_identifier (identifier) @local.definition.variable))
