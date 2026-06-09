@@ -385,14 +385,47 @@ static bool skip_bracket_attrs(TSLexer *lexer) {
     return true;
 }
 
+// Skip a `"`-initiated string at the opening quote: triple `"""…"""` or regular
+// `"…"` (with `\"` escape). Lexer ends just past the closing quote(s).
+static void edsl_skip_dquote(TSLexer *lexer) {
+    lexer->advance(lexer, true);                          // opening "
+    if (lexer->lookahead == '"') {
+        lexer->advance(lexer, true);
+        if (lexer->lookahead != '"') return;             // empty "" string
+        lexer->advance(lexer, true);                     // triple """ … """
+        int q = 0;
+        while (lexer->lookahead != 0) {
+            if (lexer->lookahead == '"') { q++; lexer->advance(lexer, true); if (q == 3) break; }
+            else { q = 0; lexer->advance(lexer, true); }
+        }
+        return;
+    }
+    while (lexer->lookahead != '"' && lexer->lookahead != 0) {
+        if (lexer->lookahead == '\\') { lexer->advance(lexer, true); if (lexer->lookahead != 0) lexer->advance(lexer, true); continue; }
+        lexer->advance(lexer, true);
+    }
+    if (lexer->lookahead == '"') lexer->advance(lexer, true);
+}
+
+// Skip a verbatim `@"…"` body at the opening quote; `""` is an escaped quote.
+static void edsl_skip_verbatim(TSLexer *lexer) {
+    lexer->advance(lexer, true);                          // opening "
+    while (lexer->lookahead != 0) {
+        if (lexer->lookahead == '"') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '"') { lexer->advance(lexer, true); continue; }  // "" escape
+            break;                                        // closing "
+        }
+        lexer->advance(lexer, true);
+    }
+}
+
 // Lookahead for the Oxpecker element-DSL head `ident(.seg)* ( … ) {` — the CE
 // builder is an APPLICATION. The lexer is positioned at the builder's first
 // char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH token so the
-// over-advance is discarded and the real tokens are re-lexed. Skips string
-// contents so a `)`/`"` inside the args doesn't miscount paren depth. This
-// scanner-side lookahead is what lets the parser tell `div() { … }` (element DSL)
-// from `a()`⏎`b()` (two applications): the LR table can't peek past the args for
-// the `{`.
+// over-advance is discarded and the real tokens are re-lexed. This scanner-side
+// lookahead is what lets the parser tell `div() { … }` (element DSL) from
+// `a()`⏎`b()` (two applications): the LR table can't peek past the args for `{`.
 // Tail of element_dsl_ahead: the caller has consumed the first name segment;
 // check the optional `.seg` qualification, then `( … ) {`.
 static bool element_dsl_parens_brace(TSLexer *lexer) {
@@ -408,27 +441,52 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
     }
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
     if (lexer->lookahead != '(') return false;
-    int depth = 0;                                        // balanced parens (skip strings)
+    // Balanced parens. Args MAY span lines (`div(class'="a"⏎ , id="b") {`), so all
+    // string/comment forms are skipped to keep the paren depth exact — a `)`, `{`
+    // or `"` inside a string must not miscount (this is what made an earlier
+    // newline-allowing version mis-fire on an emoticon `:^)` inside a triple
+    // string in a multi-line `(fun … )` arg). The closing `)` and the body `{`
+    // must still be on the SAME line (only spaces/tabs between), which keeps a
+    // `foo(a, b)`⏎`{ record }` from being read as one element DSL.
+    int depth = 0, guard = 0;
     for (;;) {
+        if (++guard > 8192) return false;                // runaway guard
         int32_t c = lexer->lookahead;
         if (c == 0) return false;
-        // Element-DSL args are single-line in practice; abort at a newline. This
-        // also stops the probe from scanning into a large multi-line `(fun … )`
-        // argument whose embedded triple/verbatim/interpolated strings this simple
-        // skipper can't track — which would otherwise miscount paren depth and
-        // find a spurious `) {` (e.g. an emoticon `:^)` before an interpolation).
-        if (c == '\n' || c == '\r') return false;
-        if (c == '"') {
+        if (c == '"') { edsl_skip_dquote(lexer); continue; }
+        if (c == '@') {                                  // @"verbatim" / @$"…"
             lexer->advance(lexer, true);
-            while (lexer->lookahead != '"' && lexer->lookahead != 0) {
-                if (lexer->lookahead == '\\') { lexer->advance(lexer, true); if (lexer->lookahead != 0) lexer->advance(lexer, true); continue; }
-                lexer->advance(lexer, true);
-            }
-            if (lexer->lookahead == '"') lexer->advance(lexer, true);
+            if (lexer->lookahead == '$') lexer->advance(lexer, true);
+            if (lexer->lookahead == '"') edsl_skip_verbatim(lexer);
             continue;
         }
-        if (c == '(') { depth++; lexer->advance(lexer, true); continue; }
-        if (c == ')') { depth--; lexer->advance(lexer, true); if (depth == 0) break; continue; }
+        if (c == '$') {                                  // $"interp" / $@"…" / $"""…"""
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '@') { lexer->advance(lexer, true); if (lexer->lookahead == '"') edsl_skip_verbatim(lexer); }
+            else if (lexer->lookahead == '"') edsl_skip_dquote(lexer);
+            continue;
+        }
+        if (c == '/') {                                  // // line comment
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '/') { while (lexer->lookahead != '\n' && lexer->lookahead != 0) lexer->advance(lexer, true); }
+            continue;
+        }
+        if (c == '(') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '*') {               // (* block comment *) — not a paren
+                lexer->advance(lexer, true);
+                int32_t prev = 0;
+                while (lexer->lookahead != 0) {
+                    int32_t cc = lexer->lookahead; lexer->advance(lexer, true);
+                    if (prev == '*' && cc == ')') break;
+                    prev = cc;
+                }
+                continue;
+            }
+            depth++;
+            continue;
+        }
+        if (c == ')') { lexer->advance(lexer, true); depth--; if (depth == 0) break; continue; }
         lexer->advance(lexer, true);
     }
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);

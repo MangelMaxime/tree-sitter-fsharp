@@ -306,3 +306,33 @@ let f () =
           (long_identifier
             (identifier))
           (unit))))))
+
+================================================================================
+Element DSL with multi-line (leading-comma) arguments
+================================================================================
+
+let v =
+    div(class'="a"
+        , id="b") {
+        "x"
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      args: (parenthesized_expression
+        (tuple_expression
+          (binary_expression
+            left: (long_identifier
+              (identifier))
+            right: (string_literal))
+          (binary_expression
+            left: (long_identifier
+              (identifier))
+            right: (string_literal))))
+      (string_literal))))

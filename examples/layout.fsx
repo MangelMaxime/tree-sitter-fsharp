@@ -500,11 +500,13 @@ module L20_ElementDSL =
         div() { "x" }
         ignore ()
 
-    // Richer tree: multiple named arguments, named args with spaces, a nested
+    // Richer tree: multi-LINE arguments (leading-comma style — args may span
+    // lines, the `) {` stays on one line), named args with spaces, a nested
     // `For(each=…)` builder yielding a lambda, deep nesting, an interpolated
     // string child, and `if/else` whose branches are themselves element DSLs.
     let view items handleClick =
-        div(class'="container", id="main") {
+        div(class'="container"
+            , id="main") {
             h1(style = "color: red") { "Title" }
 
             ul(class'="list") {
