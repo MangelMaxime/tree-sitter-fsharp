@@ -2686,6 +2686,10 @@ export default grammar({
             // Bare expression statements (last so all the above forms win
             // when their leading keyword/punctuation is unambiguous)
             $._expression,
+
+            // FSI / script trailing `;` after a top-level / module-body
+            // declaration (`open System;`). (`;;` is handled as an extra.)
+            ";",
         ),
 
         // Plain identifiers and `` `any text` ``-quoted form, unified in one terminal.

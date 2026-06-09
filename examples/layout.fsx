@@ -413,6 +413,11 @@ module L14_NestedModules =
     module Sibling =
         let other = 2
 
+    // FSI / script trailing `;` after a declaration.
+    module WithSemis =
+        open System;
+        let value = 1
+
 // ── Decl: classes & members ─────────────────────────────────────────────────
 module L15_Classes =
     type Counter() =

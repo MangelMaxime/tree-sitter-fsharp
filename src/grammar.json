@@ -10431,6 +10431,10 @@
         {
           "type": "SYMBOL",
           "name": "_expression"
+        },
+        {
+          "type": "STRING",
+          "value": ";"
         }
       ]
     },

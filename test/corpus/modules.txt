@@ -48,3 +48,16 @@ module private P = My.Internal
       (identifier)
       (identifier))))
 
+
+================================================================================
+Open declaration with a trailing semicolon
+================================================================================
+
+open System;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (import_decl
+    (long_identifier
+      (identifier))))
