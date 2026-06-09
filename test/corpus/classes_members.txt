@@ -528,3 +528,29 @@ type T() =
       name: (identifier)
       body: (int_literal)
       (auto_property_accessors))))
+
+================================================================================
+Wildcard in a tuple parameter
+================================================================================
+
+let f (_: int, x: string) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_params
+        (tuple_param
+          (wildcard_pattern)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier))))

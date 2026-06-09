@@ -4331,6 +4331,10 @@
         {
           "type": "type_expression",
           "named": true
+        },
+        {
+          "type": "wildcard_pattern",
+          "named": true
         }
       ]
     }

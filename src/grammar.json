@@ -1192,8 +1192,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "identifier"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "wildcard_pattern"
+            }
+          ]
         },
         {
           "type": "CHOICE",
@@ -11921,6 +11930,14 @@
     [
       "flexible_type",
       "generic_type"
+    ],
+    [
+      "tuple_param",
+      "pattern"
+    ],
+    [
+      "tuple_param",
+      "destructure_parameter"
     ]
   ],
   "precedences": [],

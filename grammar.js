@@ -234,6 +234,10 @@ export default grammar({
         // flexible type, or (after `#Foo`) start a comparison. GLR explores both;
         // in a type position the generic form wins.
         [$.flexible_type, $.generic_type],
+        // `( _ …` in a param list: the `_` could be a lambda pattern element or a
+        // `tuple_param` wildcard (OOP/member param, `member _.M(_: int, …)`).
+        [$.tuple_param, $.pattern],
+        [$.tuple_param, $.destructure_parameter],
     ],
 
 
@@ -540,7 +544,8 @@ export default grammar({
         tuple_param: $ => seq(
             repeat($.attribute),    // [<DefaultParameterValue(42)>], [<CallerMemberName>], etc.
             optional("?"),
-            $.identifier,
+            // `_` (wildcard) is a valid param name: `member _.M(_: int, x: string)`.
+            choice($.identifier, $.wildcard_pattern),
             // `value: string | null` — nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.
             optional(seq(":", choice($.type_expression, $.nullable_type))),

@@ -54,6 +54,8 @@ module L03_Functions =
     let useDisposable (r: 'T :> System.IDisposable) = r.Dispose ()
     // Single-case union deconstruction in a typed parameter.
     let unwrap (Url url: Url) = url
+    // Wildcard `_` in a tuple parameter (OOP-style multi-arg).
+    let ignoreFirst (_: int, x: string) = x
     let curriedOwnLine a b =
         a * b
 
