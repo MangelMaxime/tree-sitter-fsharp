@@ -772,6 +772,38 @@ type R =
             (identifier)))))))
 
 ================================================================================
+Record type with an attribute on a field
+================================================================================
+
+type T =
+    {
+        Name: string
+        [<JsonRequired>]
+        Age: int
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (record_type_defn
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (record_type_field
+        (attribute
+          (attribute_target
+            name: (long_identifier
+              (identifier))))
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
 Non-indented union cases then a module declaration
 ================================================================================
 

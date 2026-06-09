@@ -971,6 +971,7 @@ export default grammar({
         // prec(POSTFIX) on the field ties its REDUCE precedence with postfix_type's SHIFT
         // precedence, letting prec.dynamic in record_type_defn resolve the conflict.
         record_type_field: $ => prec(TYPE_PREC.POSTFIX, seq(
+            repeat($.attribute),           // `[<JsonRequired>] Age: int` — attribute on a record field
             optional("mutable"),
             field('name', $.identifier),
             ":",

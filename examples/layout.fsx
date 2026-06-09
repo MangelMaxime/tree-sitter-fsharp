@@ -256,6 +256,15 @@ module L10_ListsArrays =
 module L11_Records =
     type Point = { X: int; Y: int }
 
+    // Attribute on a record field (own-line and same-line forms).
+    type Dto =
+        {
+            Name: string
+            [<JsonRequired>]
+            Age: int
+            [<DefaultValue>] mutable Score: int
+        }
+
     let inlineRec = { X = 1; Y = 2 }
 
     let ownLineRec =
