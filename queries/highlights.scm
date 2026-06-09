@@ -567,6 +567,18 @@
   builder: (long_identifier) @function
   args: _)
 
+; Element-DSL named arguments (HTML attributes / props): the left operand of a
+; top-level `=` inside the builder's args — `div(class'="x", id="y")`,
+; `button(onClick = handler)`, `For(each=items)`. Single-arg and tuple forms.
+; Uses @variable.other.member (Helix's property scope; the theme has no `property`).
+(computation_expression
+  args: (parenthesized_expression
+          (binary_expression left: (long_identifier (identifier) @variable.other.member))))
+(computation_expression
+  args: (parenthesized_expression
+          (tuple_expression
+            (binary_expression left: (long_identifier (identifier) @variable.other.member)))))
+
 ; Query CE custom operators (select/where/groupBy/join/leftOuterJoin/…).
 ; The leading keyword on simple query_operators is captured via `op:`;
 ; compound forms list the literal keywords inside the rule. Tagged
