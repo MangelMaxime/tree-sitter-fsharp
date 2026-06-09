@@ -540,7 +540,9 @@ export default grammar({
             repeat($.attribute),    // [<DefaultParameterValue(42)>], [<CallerMemberName>], etc.
             optional("?"),
             $.identifier,
-            optional(seq(":", $.type_expression)),
+            // `value: string | null` — nullable is unambiguous here (params are
+            // delimited by `,`/`)`), like generic args and record fields.
+            optional(seq(":", choice($.type_expression, $.nullable_type))),
         ),
 
         // Secondary class constructor: `new(args) = expr [then expr]`.

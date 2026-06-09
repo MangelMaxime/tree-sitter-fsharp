@@ -371,6 +371,10 @@ module L13_Types =
     let mkBag (d: Dictionary<string, ResizeArray<string | null>>) = d
     let empty () = Dictionary<string | null, int>()
 
+    // `T | null` in a comma-separated member / constructor parameter.
+    type Tag(text: string | null) =
+        static member attr(name: string, value: string | null) = value
+
     // ML-style prefix type parameters (before the name).
     type 'T container = System.Collections.Generic.List<'T>
     type ('k, 'v) lookup = Map<'k, 'v>

@@ -479,3 +479,32 @@ type C() =
       name: (identifier)
       body: (long_identifier
         (identifier)))))
+
+================================================================================
+Nullable type in a tuple (member) parameter
+================================================================================
+
+type T =
+    static member attr(name: string, value: string | null) = value
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier))))
+          (tuple_param
+            (identifier)
+            (nullable_type
+              (long_identifier
+                (identifier))))))
+      body: (long_identifier
+        (identifier)))))
