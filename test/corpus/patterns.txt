@@ -661,6 +661,69 @@ match v with
         (identifier)))))
 
 ================================================================================
+Typed-first tuple pattern in a let binding
+================================================================================
+
+let (a: int, b: string) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (tuple_typed_first_pattern
+      (tuple_typed_pattern
+        pattern: (long_identifier
+          (identifier))
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (tuple_typed_pattern
+        pattern: (long_identifier
+          (identifier))
+        type: (type_expression
+          (long_identifier
+            (identifier)))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Typed-first tuple pattern in a let! binding
+================================================================================
+
+let f = task {
+    let! (a: int, b: string) = x
+    return a
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (let_binding
+        name: (tuple_typed_first_pattern
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier)))))
+        body: (long_identifier
+          (identifier)))
+      (ce_result_expr
+        (long_identifier
+          (identifier))))))
+
+================================================================================
 Active pattern applied to multiple list-literal arguments
 ================================================================================
 

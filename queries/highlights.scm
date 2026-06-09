@@ -237,6 +237,25 @@
 (let_decl_indented
   name: (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @function))))
   (#match? @function "^[a-z_]"))
+; Typed-first tuple destructuring `let (a: int, b: string) = …` / `let! (a: T, b) = …`.
+; Type-annotated elements are `tuple_typed_pattern`; untyped later elements nest
+; in identifier_pattern. Colour both like the other destructured binding names.
+(let_binding
+  name: (tuple_typed_first_pattern
+          (tuple_typed_pattern pattern: (long_identifier (identifier) @function)))
+  (#match? @function "^[a-z_]"))
+(let_binding
+  name: (tuple_typed_first_pattern
+          (pattern (identifier_pattern (long_identifier (identifier) @function))))
+  (#match? @function "^[a-z_]"))
+(let_decl_indented
+  name: (tuple_typed_first_pattern
+          (tuple_typed_pattern pattern: (long_identifier (identifier) @function)))
+  (#match? @function "^[a-z_]"))
+(let_decl_indented
+  name: (tuple_typed_first_pattern
+          (pattern (identifier_pattern (long_identifier (identifier) @function))))
+  (#match? @function "^[a-z_]"))
 
 (let_and_binding
   name: (identifier) @function

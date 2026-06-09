@@ -1500,7 +1500,10 @@ export default grammar({
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
             $.identifier, $.operator_name, $.active_pattern_name,
-            $.typed_pattern, $.tuple_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+            // `tuple_typed_first_pattern` covers `let (a: int, b) = …` / `let! (r: T, line: string) = …`
+            // (first tuple element type-annotated); `tuple_pattern` already handles
+            // the untyped-first / later-typed cases.
+            $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
         ),
 
         // `[inline/mutable] name [type-params] params [:return-type]` — the middle of a

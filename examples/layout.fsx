@@ -20,6 +20,9 @@ module L01_InlineLet =
     let tuple_v = 1, 2
     let paren_v = (1 + 2) * 3
 
+    // Destructuring let with a type-annotated FIRST tuple element.
+    let (typed_a: int, typed_b: string) = pair
+
     // `\` at end of line continues the string (newline + leading ws elided).
     let continued = "the quick brown fox \
                      jumps over the lazy dog"
@@ -154,6 +157,13 @@ module L06_Match =
                 return! finish ()
             with ex ->
                 return! recover ex
+        }
+
+    // `let!` binding a type-annotated FIRST tuple element.
+    let bindTyped () =
+        task {
+            let! (a: int, b: string) = fetch ()
+            return a, b
         }
 
 // ── Match: function / lambda ────────────────────────────────────────────────

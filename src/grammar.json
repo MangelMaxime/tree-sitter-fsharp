@@ -5371,6 +5371,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "tuple_typed_first_pattern"
+        },
+        {
+          "type": "SYMBOL",
           "name": "struct_tuple_pattern"
         },
         {

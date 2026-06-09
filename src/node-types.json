@@ -2042,6 +2042,10 @@
             "named": true
           },
           {
+            "type": "tuple_typed_first_pattern",
+            "named": true
+          },
+          {
             "type": "typed_pattern",
             "named": true
           },
@@ -2147,6 +2151,10 @@
           },
           {
             "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_typed_first_pattern",
             "named": true
           },
           {
@@ -2263,6 +2271,10 @@
           },
           {
             "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_typed_first_pattern",
             "named": true
           },
           {
@@ -2385,6 +2397,10 @@
           },
           {
             "type": "tuple_pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_typed_first_pattern",
             "named": true
           },
           {
