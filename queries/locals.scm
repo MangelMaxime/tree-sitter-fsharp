@@ -39,6 +39,9 @@
 ; For-loop variable (the loop's single direct identifier).
 (for_expression (identifier) @local.definition.variable)
 
+; `as`-alias binding (`… as item`, `Some x as y`) — so its later uses resolve.
+(as_pattern (identifier) @local.definition.variable)
+
 ; Match / pattern bindings; the lowercase guard leaves uppercase constructor
 ; heads to highlights' @constructor rule.
 ((identifier_pattern (long_identifier (identifier) @local.definition.variable))

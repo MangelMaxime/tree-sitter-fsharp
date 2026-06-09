@@ -224,6 +224,9 @@
 ((identifier_pattern (long_identifier (identifier) @variable))
  (#match? @variable "^[a-z_]"))
 
+; The `as`-alias binds a name (`… as item`, `Some x as y`) — colour it @variable.
+(as_pattern (identifier) @variable)
+
 ; Tuple-destructured binding names — `let a, b, c = …` (and `let (a, b) = …`).
 ; Colour them like the single-name binding form so destructured bindings don't
 ; render uncoloured. The unparenthesized form holds the names as direct

@@ -1909,3 +1909,29 @@ let r = f <@ 42 @>
         (identifier))
       (typed_quotation
         (int_literal)))))
+
+================================================================================
+For loop binder with an as-pattern alias
+================================================================================
+
+for (a, b) as item in xs do ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (for_expression
+    (as_pattern
+      (pattern
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (identifier))
+    (long_identifier
+      (identifier))
+    body: (unit)))

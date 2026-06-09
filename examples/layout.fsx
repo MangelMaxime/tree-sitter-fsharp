@@ -217,6 +217,11 @@ module L09_Loops =
         for KeyValue(k, v) in dict do
             printfn "%A %A" k v
 
+    // Binder with an `as` alias capturing the whole element.
+    let forAs (rows) =
+        for (col, _, _) as item in rows do
+            ignore item
+
     let whileLoop () =
         let mutable i = 0
         while i < 3 do

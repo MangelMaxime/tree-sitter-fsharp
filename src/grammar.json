@@ -7109,6 +7109,10 @@
                         "name": "unparenthesized_tuple_pattern"
                       },
                       {
+                        "type": "SYMBOL",
+                        "name": "as_pattern"
+                      },
+                      {
                         "type": "PREC_RIGHT",
                         "value": 1,
                         "content": {

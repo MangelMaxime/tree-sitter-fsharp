@@ -1943,6 +1943,8 @@ export default grammar({
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
                         // `for item, text in pairs do …` — unparenthesised tuple binder.
                         $.unparenthesized_tuple_pattern,
+                        // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
+                        $.as_pattern,
                         // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
                         // application binder (the bare `long_identifier` form is omitted:
                         // a no-arg binder is already covered by `$.identifier`).
