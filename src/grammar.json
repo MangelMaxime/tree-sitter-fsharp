@@ -7311,12 +7311,51 @@
         "type": "SEQ",
         "members": [
           {
-            "type": "FIELD",
-            "name": "builder",
-            "content": {
-              "type": "SYMBOL",
-              "name": "long_identifier"
-            }
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "builder",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "long_identifier"
+                }
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_element_dsl_open"
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "builder",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "long_identifier"
+                    }
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "args",
+                    "content": {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SYMBOL",
+                          "name": "unit"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "parenthesized_expression"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
           },
           {
             "type": "STRING",
@@ -11699,6 +11738,10 @@
     {
       "type": "SYMBOL",
       "name": "_label_attr"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_element_dsl_open"
     }
   ],
   "inline": [],

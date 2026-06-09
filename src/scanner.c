@@ -45,6 +45,7 @@ typedef enum {
     CTOR_ATTR,            // zero-width: attribute on a primary ctor — only when `[<…>]+ (` follows
     TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
     LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
+    ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -384,6 +385,78 @@ static bool skip_bracket_attrs(TSLexer *lexer) {
     return true;
 }
 
+// Lookahead for the Oxpecker element-DSL head `ident(.seg)* ( … ) {` — the CE
+// builder is an APPLICATION. The lexer is positioned at the builder's first
+// char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH token so the
+// over-advance is discarded and the real tokens are re-lexed. Skips string
+// contents so a `)`/`"` inside the args doesn't miscount paren depth. This
+// scanner-side lookahead is what lets the parser tell `div() { … }` (element DSL)
+// from `a()`⏎`b()` (two applications): the LR table can't peek past the args for
+// the `{`.
+// Tail of element_dsl_ahead: the caller has consumed the first name segment;
+// check the optional `.seg` qualification, then `( … ) {`.
+static bool element_dsl_parens_brace(TSLexer *lexer) {
+    while (lexer->lookahead == '.') {                     // qualified `A.B.div`
+        lexer->advance(lexer, true);
+        if (!is_name_start(lexer->lookahead)) return false;
+        for (;;) {
+            int32_t ch = lexer->lookahead;
+            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
+            break;
+        }
+    }
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    if (lexer->lookahead != '(') return false;
+    int depth = 0;                                        // balanced parens (skip strings)
+    for (;;) {
+        int32_t c = lexer->lookahead;
+        if (c == 0) return false;
+        // Element-DSL args are single-line in practice; abort at a newline. This
+        // also stops the probe from scanning into a large multi-line `(fun … )`
+        // argument whose embedded triple/verbatim/interpolated strings this simple
+        // skipper can't track — which would otherwise miscount paren depth and
+        // find a spurious `) {` (e.g. an emoticon `:^)` before an interpolation).
+        if (c == '\n' || c == '\r') return false;
+        if (c == '"') {
+            lexer->advance(lexer, true);
+            while (lexer->lookahead != '"' && lexer->lookahead != 0) {
+                if (lexer->lookahead == '\\') { lexer->advance(lexer, true); if (lexer->lookahead != 0) lexer->advance(lexer, true); continue; }
+                lexer->advance(lexer, true);
+            }
+            if (lexer->lookahead == '"') lexer->advance(lexer, true);
+            continue;
+        }
+        if (c == '(') { depth++; lexer->advance(lexer, true); continue; }
+        if (c == ')') { depth--; lexer->advance(lexer, true); if (depth == 0) break; continue; }
+        lexer->advance(lexer, true);
+    }
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    return lexer->lookahead == '{';
+}
+
+// Full element-DSL head probe (lexer at the builder's first char): read the first
+// name segment, then defer to element_dsl_parens_brace.
+static bool element_dsl_ahead(TSLexer *lexer) {
+    if (!is_name_start(lexer->lookahead)) return false;
+    for (;;) {
+        int32_t ch = lexer->lookahead;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
+        break;
+    }
+    return element_dsl_parens_brace(lexer);
+}
+
+// Emit the zero-width element-DSL marker if `valid` and the pattern is ahead.
+// Call right before a `return false` where an expression/statement can begin
+// (lexer at the candidate builder's first char). On no-match the destructive
+// advance is discarded by the caller's `return false`.
+static inline bool try_element_dsl(TSLexer *lexer, const bool *valid) {
+    if (valid[ELEMENT_DSL_OPEN] && element_dsl_ahead(lexer)) { lexer->result_symbol = ELEMENT_DSL_OPEN; return true; }
+    return false;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
@@ -513,6 +586,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             uint32_t col;
             if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
         }
+        // Same-line content after a CE/bracket `{`: an element-DSL builder here
+        // (`div() { span() {…} }`) needs its marker — the mid-line block below is
+        // unreachable once we return. (Spaces/tabs already skipped above.)
+        if (try_element_dsl(lexer, valid)) return true;
         return false; // inline bracket
     }
 
@@ -638,29 +715,35 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // ENCLOSING S_EXPR (e.g. a `let_decl_indented` value wrapping a
             // parenthesised `(if … else …)`) is NOT also closed — which would
             // otherwise orphan the inner `else`.
-            if (top && top->sort == S_EXPR && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
+            // Word-led mid-line dispatch. A leading word can be a continuation
+            // keyword that closes an inline body, OR an Oxpecker element-DSL builder
+            // applied to `( … ) {`. Both start at `c`, so read the leading word
+            // ONCE and dispatch — reading it twice would advance past it and
+            // corrupt the second probe.
+            //   - S_EXPR closes before an inline `else`/`elif`/`in`.
+            //   - S_TRY closes before an inline `with`/`finally` (dedicated sort, so
+            //     this never fires for a `match … with` inside an S_EXPR body).
+            //   - ELEMENT_DSL_OPEN fires when `<word>(.seg)* ( … ) {` follows.
+            // Continuation closes are tried FIRST: at a `with`/`in` position
+            // ELEMENT_DSL_OPEN can be co-valid (the body could continue as an
+            // application) and the body-close must win.
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
-                if (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in")) {
-                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                if (top && valid[LAYOUT_END]) {
+                    if (top->sort == S_EXPR && (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in"))) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
                 }
-            }
-            // A try/finally body (S_TRY) closes before an inline `with`/`finally`:
-            //   `try e with …` / `try e finally …`. Dedicated sort, so this never
-            //   fires for a `match … with` inside an enclosing S_EXPR body.
-            if (top && top->sort == S_TRY && valid[LAYOUT_END] && c >= 'a' && c <= 'z') {
-                char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
-                while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
-                                 (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
-                    w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
-                }
-                w[n] = '\0';
-                if (!strcmp(w, "with") || !strcmp(w, "finally")) {
-                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
+                    lexer->result_symbol = ELEMENT_DSL_OPEN; return true;
                 }
             }
             return false; // other same-line content: layout doesn't apply
@@ -739,6 +822,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // before `else`/`elif`/… — otherwise `if c then return a`⏎`else …`
             // inside a CE detaches the else (banked-fix #3, in the new model).
             if (valid[BRACKET_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = BRACKET_SEMI; return true; }
+            // First element of a `{`-block body that is itself an element DSL
+            // (`div() {⏎ span() {…}`): the mid-line block is unreachable from the
+            // line-boundary path, so probe here (after the separator above, so a
+            // SUBSEQUENT element gets its separator first then this on re-invoke).
+            if (try_element_dsl(lexer, valid)) return true;
             return false;
         case S_MATCH:
             // Close the arm-list when a line dedents below the arm column, or sits
@@ -794,6 +882,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // bare-expression statement.
             if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
             if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+            // Element DSL as the first statement of an indented let/expr body
+            // (`let page =⏎ div() {…}`): probe after the separator above.
+            if (try_element_dsl(lexer, valid)) return true;
             return false;
     }
     return false;

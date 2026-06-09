@@ -177,6 +177,7 @@ export default grammar({
         $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (…)`) — only when `[<…>]+ (` follows
         $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
         $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
+        $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1987,7 +1988,20 @@ export default grammar({
         // remain plain identifiers in every other parse state.
         computation_expression: $ => prec(PREC.CE_EXPR,
             seq(
-                field('builder', $.long_identifier),
+                choice(
+                    field('builder', $.long_identifier),
+                    // Oxpecker element DSL: the builder is an APPLICATION —
+                    // `div() { … }` / `div(attrs) { … }`. The zero-width
+                    // `_element_dsl_open` LEADS this alternative; the scanner emits
+                    // it only when `ident ( … ) {` is actually ahead, so a plain
+                    // `a()`⏎`b()` (no following `{`) never enters here and the
+                    // offside layout is unaffected.
+                    seq(
+                        $._element_dsl_open,
+                        field('builder', $.long_identifier),
+                        field('args', choice($.unit, $.parenthesized_expression)),
+                    ),
+                ),
                 "{",
                 optional(choice(
                     // Multi-line `builder {`⏎ statements ⏎`}`. `reserved('query_ce')`

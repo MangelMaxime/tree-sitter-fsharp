@@ -231,3 +231,78 @@ let f x =
       (ce_result_expr
         (long_identifier
           (identifier))))))
+
+================================================================================
+Element DSL builder (application) single line
+================================================================================
+
+let v = div() { "hi" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      args: (unit)
+      (string_literal))))
+
+================================================================================
+Element DSL nested across lines
+================================================================================
+
+let page =
+    div() {
+        h1() { "T" }
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      args: (unit)
+      (computation_expression
+        builder: (long_identifier
+          (identifier))
+        args: (unit)
+        (string_literal)))))
+
+================================================================================
+Element DSL with attribute args does not break following application
+================================================================================
+
+let f () =
+    div(id) { "x" }
+    a ()
+    b ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (sequence_expression
+      (computation_expression
+        builder: (long_identifier
+          (identifier))
+        args: (parenthesized_expression
+          (long_identifier
+            (identifier)))
+        (string_literal))
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))))))

@@ -560,6 +560,13 @@
 (computation_expression
   builder: (long_identifier) @keyword)
 
+; Oxpecker element-DSL builder (`div() { … }`) — the form WITH an `args` field is a
+; function application (an HTML/element tag), not a CE keyword. Placed after the
+; rule above so last-match-in-source-order recolours it from @keyword to @function.
+(computation_expression
+  builder: (long_identifier) @function
+  args: _)
+
 ; Query CE custom operators (select/where/groupBy/join/leftOuterJoin/…).
 ; The leading keyword on simple query_operators is captured via `op:`;
 ; compound forms list the literal keywords inside the rule. Tagged

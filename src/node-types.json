@@ -975,6 +975,20 @@
     "type": "computation_expression",
     "named": true,
     "fields": {
+      "args": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "parenthesized_expression",
+            "named": true
+          },
+          {
+            "type": "unit",
+            "named": true
+          }
+        ]
+      },
       "builder": {
         "multiple": false,
         "required": true,

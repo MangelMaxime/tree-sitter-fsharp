@@ -483,3 +483,42 @@ module L19_DynamicAccess =
     let lookup (o) (k) = o?(k)
 
     let setX (o) = o?x <- 1
+
+// ── Expr: element-DSL computation expression (Oxpecker-style) ───────────────
+module L20_ElementDSL =
+    // The CE builder is an APPLICATION `tag(args)`, not a bare name; the body is
+    // child elements. Nests and mixes with ordinary statements/applications.
+    let page =
+        div() {
+            h1() { "Title" }
+            p(id) { "paragraph" }
+        }
+
+    // A plain application statement right after one must still parse as two calls
+    // (the scanner only treats `tag(args) {` — with a following brace — as a DSL).
+    let render () =
+        div() { "x" }
+        ignore ()
+
+    // Richer tree: multiple named arguments, named args with spaces, a nested
+    // `For(each=…)` builder yielding a lambda, deep nesting, an interpolated
+    // string child, and `if/else` whose branches are themselves element DSLs.
+    let view items handleClick =
+        div(class'="container", id="main") {
+            h1(style = "color: red") { "Title" }
+
+            ul(class'="list") {
+                For(each=items) {
+                    yield fun item _ ->
+                        li(class'="row") {
+                            span(class'="name") { item.Name }
+                            button(onClick = handleClick) { "Buy" }
+                        }
+                }
+            }
+
+            if items.Length = 0 then
+                p() { "No items" }
+            else
+                p(class'="count") { $"{items.Length} items" }
+        }
