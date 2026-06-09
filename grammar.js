@@ -2806,6 +2806,7 @@ export default grammar({
                 "'",
                 choice(
                     /[^'\\]/,
+                    "'",            // `'''` — an unescaped single-quote char literal
                     seq("\\", choice(
                         /[\\'"abfnrtv0]/,
                         /[0-9]{3}/,

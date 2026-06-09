@@ -63,6 +63,7 @@ module L03_Functions =
     let litLen = "abc".Length
     let litChars = "bcd".ToCharArray()
     let charStr = 'x'.ToString()
+    let quoteChar = '''   // unescaped single-quote char literal
 
     // Operator as a first-class value, and member access on a type intrinsic.
     let add = (+)
