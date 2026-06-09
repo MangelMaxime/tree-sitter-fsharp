@@ -1113,6 +1113,22 @@
       "required": true,
       "types": [
         {
+          "type": "array_pattern",
+          "named": true
+        },
+        {
+          "type": "list_pattern",
+          "named": true
+        },
+        {
+          "type": "literal_pattern",
+          "named": true
+        },
+        {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
           "type": "record_pattern",
           "named": true
         },
@@ -1125,7 +1141,15 @@
           "named": true
         },
         {
+          "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "typed_pattern",
           "named": true
         },
         {

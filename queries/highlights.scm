@@ -570,6 +570,13 @@
    . (long_identifier (identifier) @constructor))
  (#match? @constructor "^[A-Z]"))
 
+; Single-case-union deconstruction in a typed parameter `(Url url: Url)`: the
+; FIRST child of `destructure_parameter` is the constructor (the bound name and
+; the type follow), so anchoring on it gives the same @constructor colour.
+((destructure_parameter
+   . (long_identifier (identifier) @constructor))
+ (#match? @constructor "^[A-Z]"))
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))

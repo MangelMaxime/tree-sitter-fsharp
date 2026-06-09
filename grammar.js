@@ -2413,6 +2413,10 @@ export default grammar({
                 $.struct_tuple_pattern,
                 $.record_pattern,
                 $.wildcard_pattern,
+                // `(Url url: Url)` — single-case union / active-pattern
+                // deconstruction (the constructor-application form only; the bare
+                // `(x: T)` is handled inline in `parameter`).
+                prec.right(seq($.long_identifier, repeat1($._tuple_elem_pattern))),
             ),
             ":",
             $.type_expression,

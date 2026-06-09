@@ -52,6 +52,8 @@ module L03_Functions =
     let parseIt<'T when IParsable<'T>> (s: string) = 's'
     // Subtype (`:>`) constraint on a parameter's type.
     let useDisposable (r: 'T :> System.IDisposable) = r.Dispose ()
+    // Single-case union deconstruction in a typed parameter.
+    let unwrap (Url url: Url) = url
     let curriedOwnLine a b =
         a * b
 
