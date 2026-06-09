@@ -2000,6 +2000,12 @@ export default grammar({
                         $._element_dsl_open,
                         field('builder', $.long_identifier),
                         field('args', choice($.unit, $.parenthesized_expression)),
+                        // Fluent method chain before the body: `div(attrs).hxTarget("#x").hxSwap("y") { … }`
+                        repeat(seq(
+                            ".",
+                            field('method', $.long_identifier),
+                            field('method_args', choice($.unit, $.parenthesized_expression)),
+                        )),
                     ),
                 ),
                 "{",

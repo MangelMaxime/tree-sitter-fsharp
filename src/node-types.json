@@ -998,6 +998,30 @@
             "named": true
           }
         ]
+      },
+      "method": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      },
+      "method_args": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "parenthesized_expression",
+            "named": true
+          },
+          {
+            "type": "unit",
+            "named": true
+          }
+        ]
       }
     },
     "children": {

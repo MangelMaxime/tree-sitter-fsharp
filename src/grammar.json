@@ -7352,6 +7352,43 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "type": "REPEAT",
+                    "content": {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": "."
+                        },
+                        {
+                          "type": "FIELD",
+                          "name": "method",
+                          "content": {
+                            "type": "SYMBOL",
+                            "name": "long_identifier"
+                          }
+                        },
+                        {
+                          "type": "FIELD",
+                          "name": "method_args",
+                          "content": {
+                            "type": "CHOICE",
+                            "members": [
+                              {
+                                "type": "SYMBOL",
+                                "name": "unit"
+                              },
+                              {
+                                "type": "SYMBOL",
+                                "name": "parenthesized_expression"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
                   }
                 ]
               }

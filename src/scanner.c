@@ -420,34 +420,13 @@ static void edsl_skip_verbatim(TSLexer *lexer) {
     }
 }
 
-// Lookahead for the Oxpecker element-DSL head `ident(.seg)* ( … ) {` — the CE
-// builder is an APPLICATION. The lexer is positioned at the builder's first
-// char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH token so the
-// over-advance is discarded and the real tokens are re-lexed. This scanner-side
-// lookahead is what lets the parser tell `div() { … }` (element DSL) from
-// `a()`⏎`b()` (two applications): the LR table can't peek past the args for `{`.
-// Tail of element_dsl_ahead: the caller has consumed the first name segment;
-// check the optional `.seg` qualification, then `( … ) {`.
-static bool element_dsl_parens_brace(TSLexer *lexer) {
-    while (lexer->lookahead == '.') {                     // qualified `A.B.div`
-        lexer->advance(lexer, true);
-        if (!is_name_start(lexer->lookahead)) return false;
-        for (;;) {
-            int32_t ch = lexer->lookahead;
-            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-                (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
-            break;
-        }
-    }
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-    if (lexer->lookahead != '(') return false;
-    // Balanced parens. Args MAY span lines (`div(class'="a"⏎ , id="b") {`), so all
-    // string/comment forms are skipped to keep the paren depth exact — a `)`, `{`
-    // or `"` inside a string must not miscount (this is what made an earlier
-    // newline-allowing version mis-fire on an emoticon `:^)` inside a triple
-    // string in a multi-line `(fun … )` arg). The closing `)` and the body `{`
-    // must still be on the SAME line (only spaces/tabs between), which keeps a
-    // `foo(a, b)`⏎`{ record }` from being read as one element DSL.
+// Consume a balanced `( … )` group with the lexer positioned at the opening `(`.
+// Args MAY span lines (`div(class'="a"⏎ , id="b")`), so every string/comment form
+// is skipped to keep the paren depth exact — a `)`, `{` or `"` inside a string
+// must not miscount (this is what made an earlier newline-allowing version
+// mis-fire on an emoticon `:^)` inside a triple string in a multi-line `(fun … )`
+// arg). Returns false on EOF / runaway.
+static bool edsl_skip_balanced_parens(TSLexer *lexer) {
     int depth = 0, guard = 0;
     for (;;) {
         if (++guard > 8192) return false;                // runaway guard
@@ -486,11 +465,56 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
             depth++;
             continue;
         }
-        if (c == ')') { lexer->advance(lexer, true); depth--; if (depth == 0) break; continue; }
+        if (c == ')') { lexer->advance(lexer, true); depth--; if (depth == 0) return true; continue; }
         lexer->advance(lexer, true);
     }
+}
+
+// Consume a (possibly qualified) identifier with the lexer at its first char.
+static bool edsl_skip_name(TSLexer *lexer) {
+    if (!is_name_start(lexer->lookahead)) return false;
+    for (;;) {
+        int32_t ch = lexer->lookahead;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
+        break;
+    }
+    return true;
+}
+
+// Lookahead for the Oxpecker element-DSL head: the CE builder is an APPLICATION,
+// optionally extended by a fluent method chain —
+//   `div() {`  ·  `div(attrs) {`  ·  `div(attrs).hxTarget("#x").hxSwap("y") {`
+// (chain links may sit on their own lines). The lexer is positioned at the
+// builder's first char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH
+// token so the over-advance is discarded and the real tokens are re-lexed. This
+// scanner-side lookahead is what lets the parser tell `div() { … }` (element DSL)
+// from `a()`⏎`b()` (two applications): the LR table can't peek past the args/chain
+// for the `{`. Tail of element_dsl_ahead: the caller has consumed the first name
+// segment; check the optional `.seg` qualification, then `( … )( .m( … ) )* {`.
+static bool element_dsl_parens_brace(TSLexer *lexer) {
+    while (lexer->lookahead == '.') {                     // qualified `A.B.div`
+        lexer->advance(lexer, true);
+        if (!edsl_skip_name(lexer)) return false;
+    }
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-    return lexer->lookahead == '{';
+    if (lexer->lookahead != '(') return false;
+    if (!edsl_skip_balanced_parens(lexer)) return false;
+    // After each `)`: the body `{` must be SAME-line (only spaces/tabs between, so
+    // `foo(a, b)`⏎`{ record }` isn't read as one DSL); otherwise a fluent
+    // `.method( … )` chain link may continue (those CAN sit on their own lines).
+    for (;;) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead == '{') return true;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        if (lexer->lookahead != '.') return false;        // not a chain link → not a DSL
+        lexer->advance(lexer, true);
+        if (!edsl_skip_name(lexer)) return false;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead != '(') return false;        // method must be CALLED
+        if (!edsl_skip_balanced_parens(lexer)) return false;
+    }
 }
 
 // Full element-DSL head probe (lexer at the builder's first char): read the first

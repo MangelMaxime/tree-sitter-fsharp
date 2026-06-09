@@ -579,6 +579,11 @@
           (tuple_expression
             (binary_expression left: (long_identifier (identifier) @variable.other.member)))))
 
+; Element-DSL fluent chain methods (`div(…).hxTarget("#x").hxSwap("y") { … }`) —
+; colour the method name like any other member access.
+(computation_expression
+  method: (long_identifier (identifier) @variable.other.member))
+
 ; Query CE custom operators (select/where/groupBy/join/leftOuterJoin/…).
 ; The leading keyword on simple query_operators is captured via `op:`;
 ; compound forms list the literal keywords inside the rule. Tagged

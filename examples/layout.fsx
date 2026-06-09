@@ -500,6 +500,15 @@ module L20_ElementDSL =
         div() { "x" }
         ignore ()
 
+    // Fluent method chain on the builder before the body — chain links may sit on
+    // their own lines (`.hxBoost`/`.hxTarget` are Oxpecker.Htmx modifiers).
+    let chained =
+        div(class'="card")
+            .hxBoost(true)
+            .hxTarget("#main") {
+            h2() { "Live" }
+        }
+
     // Richer tree: multi-LINE arguments (leading-comma style — args may span
     // lines, the `) {` stays on one line), named args with spaces, a nested
     // `For(each=…)` builder yielding a lambda, deep nesting, an interpolated
