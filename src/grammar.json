@@ -3241,6 +3241,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "inline_il_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "typed_expression"
         },
         {
@@ -3712,6 +3716,65 @@
         }
       ]
     },
+    "inline_il_expression": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 2,
+            "content": {
+              "type": "STRING",
+              "value": "(#"
+            }
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "string_literal"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_simple_expression"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ":"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "type_expression"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 2,
+            "content": {
+              "type": "STRING",
+              "value": "#)"
+            }
+          }
+        }
+      ]
+    },
     "typed_expression": {
       "type": "SEQ",
       "members": [
@@ -3852,6 +3915,10 @@
         {
           "type": "SYMBOL",
           "name": "parenthesized_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "inline_il_expression"
         },
         {
           "type": "SYMBOL",

@@ -78,6 +78,9 @@ module L03_Functions =
     // Code quotation as an application argument (`f <@ … @>`).
     let evalq = eval <@ 1 + 2 @>
 
+    // Inline IL intrinsic `(# "opcode" args : type #)`.
+    let inline retype (x: 'a) : 'b = (# "" x : 'b #)
+
     // Attribute with a target specifier (`return:`).
     [<return: Struct>]
     let (|Even|_|) n = if n % 2 = 0 then ValueSome() else ValueNone

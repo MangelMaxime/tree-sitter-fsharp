@@ -1935,3 +1935,24 @@ for (a, b) as item in xs do ()
     (long_identifier
       (identifier))
     body: (unit)))
+
+================================================================================
+Inline IL expression
+================================================================================
+
+let f x = (# "ldlen" x : int #)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (inline_il_expression
+      (string_literal)
+      (long_identifier
+        (identifier))
+      (type_expression
+        (long_identifier
+          (identifier))))))

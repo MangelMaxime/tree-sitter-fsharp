@@ -999,6 +999,7 @@ export default grammar({
 
         _expression: $ => choice(
             $.parenthesized_expression,
+            $.inline_il_expression,
             $.typed_expression,
             $.application_expression,
             $.binary_expression,
@@ -1147,6 +1148,17 @@ export default grammar({
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
+        // Inline IL: `(# "IL.opcode" arg* [: type] #)` — a low-level intrinsic
+        // (e.g. `(# "" x : 'b #)` for an unsafe cast). `(#`/`#)` are glued tokens
+        // so they don't collide with a parenthesised flexible type `(#Foo)`.
+        inline_il_expression: $ => seq(
+            token(prec(2, "(#")),
+            $.string_literal,
+            repeat($._simple_expression),
+            optional(seq(":", $.type_expression)),
+            token(prec(2, "#)")),
+        ),
+
         // (expr : type)  — inline type annotation, always parenthesised.
         // Disambiguated from parenthesized_expression by the ":" after the expression.
         typed_expression: $ => seq("(", $._expression, ":", $.type_expression, ")"),
@@ -1188,6 +1200,7 @@ export default grammar({
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
+            $.inline_il_expression,
             $.typed_expression,
             $.list_expression,
             $.array_expression,
