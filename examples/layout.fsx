@@ -567,3 +567,22 @@ module L20_ElementDSL =
             else
                 p(class'="count") { $"{items.Length} items" }
         }
+
+// ── Brackets: inline-FIRST list comprehension ───────────────────────────────
+// First element on the SAME line as `[` (`[ yield x`), then newline-aligned
+// elements — the bracket context opens at the inline element's column so the
+// later lines still separate (instead of merging into one application).
+module L21b_InlineFirstComprehension =
+    let res =
+        [ yield constructors
+          if not isModule then
+              yield! fields
+              if Seq.length fields > 0 then
+                  yield nl
+              yield! funcs ]
+        |> Seq.distinct
+
+    // Same in a CE builder (`seq { x`⏎`  y }`), first element inline.
+    let items =
+        seq { yield head
+              yield! tail }

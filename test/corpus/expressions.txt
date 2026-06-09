@@ -1185,6 +1185,27 @@ let x = [
         (string_literal)))))
 
 ================================================================================
+Inline-first list comprehension (first element on the bracket line)
+================================================================================
+
+let r =
+    [ yield a
+      yield! b ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (list_expression
+      (ce_result_expr
+        (long_identifier
+          (identifier)))
+      (ce_result_expr
+        (long_identifier
+          (identifier))))))
+
+================================================================================
 List and range comprehensions with the arrow yield
 ================================================================================
 

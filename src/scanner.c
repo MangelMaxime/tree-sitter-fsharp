@@ -661,18 +661,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         return false; // inline type body (record/alias/inline DU) — let it match
     }
     if (valid[BRACKET_OPEN]) {
-        // Only open a bracket CONTEXT for the block form (body on the next line).
-        // Inline `[ a; b ]` uses literal `;` + `]` and needs no scanner context.
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            // Block form: body on the next line(s).
             uint32_t col;
             if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
+            return false;
         }
+        // Capture the inline first element's column / lead char BEFORE the
+        // element-DSL probe, which advances the lexer destructively on a miss.
+        uint32_t inline_col = lexer->get_column(lexer);
+        int32_t inline_first = lexer->lookahead;
         // Same-line content after a CE/bracket `{`: an element-DSL builder here
         // (`div() { span() {…} }`) needs its marker — the mid-line block below is
         // unreachable once we return. (Spaces/tabs already skipped above.)
         if (try_element_dsl(lexer, valid)) return true;
-        return false; // inline bracket
+        // Inline-FIRST content (`[ yield a`⏎`  yield! b ]`, `seq { x`⏎`  y }`).
+        // Open the context at the first element's column so newline-aligned
+        // continuation elements still get a `_bracket_semi` separator (otherwise
+        // they'd merge into the first element as an application). Skip when the
+        // next char closes the bracket immediately (`[]`/`[| |]`/`{}` empty, or a
+        // leading `|`/`}`/`]`), which has no element to anchor a context.
+        if (inline_first == ']' || inline_first == '}' || inline_first == '|' || inline_first == 0) return false;
+        push(s, S_BRACKET, inline_col);
+        lexer->result_symbol = BRACKET_OPEN; return true;
     }
 
     // RECORD_OPEN: a `{` record body whose first field starts here (same line as
