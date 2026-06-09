@@ -508,6 +508,10 @@ module L19_DynamicAccess =
 
     let setX (o) = o?x <- 1
 
+    // `%`/`%%` splice (anti-quotation) prefix — in real quotations and Fable.
+    let spliceInQuote (e) = <@ %e + 1 @>
+    let spliceField (this) = { Order.Id = %this.Id }
+
 // ── Expr: element-DSL computation expression (Oxpecker-style) ───────────────
 module L20_ElementDSL =
     // The CE builder is an APPLICATION `tag(args)`, not a bare name; the body is

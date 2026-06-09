@@ -1853,6 +1853,26 @@ let h = { a = 1 }.GetHashCode()
       (unit))))
 
 ================================================================================
+Splice (anti-quotation) prefix operator
+================================================================================
+
+let r = { Id = %this.Id }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (unary_expression
+          (long_identifier
+            (identifier)
+            (identifier)))))))
+
+================================================================================
 Code quotation as an application argument
 ================================================================================
 

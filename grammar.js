@@ -1272,7 +1272,9 @@ export default grammar({
         ),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
-            choice("not", "~~~", "-", "!"),
+            // `%`/`%%` are the quotation splice (anti-quotation) prefixes —
+            // `<@ %e @>` — also reused by Fable for emit/splice.
+            choice("not", "~~~", "-", "!", "%%", "%"),
             $._expression,
         )),
 
