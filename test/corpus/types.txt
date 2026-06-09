@@ -267,6 +267,30 @@ let f (x: #seq<int>) = ()
     body: (unit)))
 
 ================================================================================
+Flexible-type intersection in a parameter
+================================================================================
+
+let f (env: #IReader & #ILogger) = env
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (type_intersection
+          (flexible_type
+            (long_identifier
+              (identifier)))
+          (flexible_type
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
 Nullable type in a parameter
 ================================================================================
 

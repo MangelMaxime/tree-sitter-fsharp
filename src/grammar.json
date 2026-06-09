@@ -9350,6 +9350,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "type_intersection"
+        },
+        {
+          "type": "SYMBOL",
           "name": "labelled_type"
         }
       ]
@@ -9384,6 +9388,35 @@
                 "name": "array_type"
               }
             ]
+          }
+        ]
+      }
+    },
+    "type_intersection": {
+      "type": "PREC_LEFT",
+      "value": 2,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "flexible_type"
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "&"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "flexible_type"
+                }
+              ]
+            }
           }
         ]
       }

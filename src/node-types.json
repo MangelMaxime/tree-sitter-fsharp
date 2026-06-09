@@ -4813,6 +4813,10 @@
           "named": true
         },
         {
+          "type": "type_intersection",
+          "named": true
+        },
+        {
           "type": "type_parameter",
           "named": true
         }
@@ -4891,6 +4895,21 @@
       "types": [
         {
           "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_intersection",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "flexible_type",
           "named": true
         }
       ]

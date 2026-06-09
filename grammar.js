@@ -2456,6 +2456,8 @@ export default grammar({
             $.long_identifier,
             // `#IDisposable` / `#seq<'T>` — flexible type (this type or a subtype).
             $.flexible_type,
+            // `#A & #B` — flexible-type intersection (F# 7+ interface constraint).
+            $.type_intersection,
             // `name: T` / `?name: T` element of a member/abstract signature.
             $.labelled_type,
         ),
@@ -2467,6 +2469,14 @@ export default grammar({
         flexible_type: $ => prec(TYPE_PREC.APP, seq(
             "#",
             choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type),
+        )),
+
+        // `#A & #B [& #C …]` — flexible-type intersection: a value that is a subtype
+        // of every listed interface/type (F# 7+ interface intersection constraint),
+        // e.g. `(env: #IReader & #ILogger)`.
+        type_intersection: $ => prec.left(TYPE_PREC.TUPLE, seq(
+            $.flexible_type,
+            repeat1(seq("&", $.flexible_type)),
         )),
 
         // struct (int * string)  — value-type tuple type

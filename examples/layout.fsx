@@ -488,6 +488,9 @@ module L18_FlexibleTypes =
 
     let asComparable (x: obj) = x :> #IComparable
 
+    // Flexible-type intersection: a subtype of every listed interface (F# 7+).
+    let logRead (env: #IReader & #ILogger) = env
+
     type Sink() =
         member _.Accept(items: #seq<'T>) = Seq.length items
 
