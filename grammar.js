@@ -178,6 +178,7 @@ export default grammar({
         $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
         $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
         $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
+        $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -2213,9 +2214,25 @@ export default grammar({
         named_field_pattern: $ => seq(
             field('constructor', $.long_identifier),
             "(",
-            $.named_field_pat,
-            repeat(prec.dynamic(2, seq(optional(";"), $.named_field_pat))),
-            optional(";"),
+            choice(
+                // Offside / newline-aligned form `Foo(`⏎`a = x`⏎`b = y)`. A
+                // dedicated `_paren_field_open` (NOT the shared record open, which
+                // rippled) pushes an S_BRACKET context at the field column so
+                // newline-aligned fields separate via `_bracket_semi`; pops at `)`.
+                seq(
+                    $._paren_field_open,
+                    $.named_field_pat,
+                    repeat(seq(choice(";", $._bracket_semi), $.named_field_pat)),
+                    optional(choice(";", $._bracket_semi)),
+                    $._bracket_close,
+                ),
+                // Inline form `Foo(a = x; b = y)` — explicit `;` separators.
+                seq(
+                    $.named_field_pat,
+                    repeat(prec.dynamic(2, seq(";", $.named_field_pat))),
+                    optional(";"),
+                ),
+            ),
             ")",
         ),
 

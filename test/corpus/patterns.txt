@@ -255,6 +255,41 @@ match s with
         (identifier)))))
 
 ================================================================================
+Named DU field pattern across multiple lines
+================================================================================
+
+match x with
+| Foo(
+    a = p
+    b = q) -> p
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (named_field_pattern
+          constructor: (long_identifier
+            (identifier))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
+          (named_field_pat
+            name: (identifier)
+            value: (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      body: (long_identifier
+        (identifier)))))
+
+================================================================================
 Named DU field pattern multiple fields
 ================================================================================
 

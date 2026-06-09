@@ -142,6 +142,15 @@ module L06_Match =
         | Even n & GreaterThan 10 -> "big even"
         | _ -> "other"
 
+    // Named-field DU pattern with the fields on their own lines (offside).
+    let destructure node =
+        match node with
+        | Binding(
+            headPat = p
+            returnInfo = None
+            trivia = t) -> p, t
+        | _ -> failwith "?"
+
     let nested g a c =
         match g with
         | 1 ->

@@ -46,6 +46,7 @@ typedef enum {
     TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
     LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
     ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
+    PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -685,6 +686,36 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (inline_first == ']' || inline_first == '}' || inline_first == '|' || inline_first == 0) return false;
         push(s, S_BRACKET, inline_col);
         lexer->result_symbol = BRACKET_OPEN; return true;
+    }
+
+    // PAREN_FIELD_OPEN: the body of a named-field pattern `Foo(ident = …)` — a
+    // dedicated open (valid ONLY in named_field_pattern) so newline-aligned fields
+    // get an S_BRACKET separator. Peek `ident(.seg)* =` (the `=` distinguishes a
+    // named field from a tuple-arg `Foo(a, b)`); capture the field column. Like
+    // RECORD_OPEN but `=`-only and never reused outside the pattern.
+    if (valid[PAREN_FIELD_OPEN]) {
+        uint32_t col = lexer->get_column(lexer);
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            if (!next_line_indent(lexer, &col, NULL)) return false;
+        }
+        bool ok = false;
+        if (is_name_start(lexer->lookahead)) {
+            peek_name_segment(lexer);
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            while (lexer->lookahead == '.') {              // qualified field name
+                lexer->advance(lexer, true);
+                if (!is_name_start(lexer->lookahead)) break;
+                peek_name_segment(lexer);
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            }
+            if (lexer->lookahead == '=') {                 // `=` (not `==`/`=>`) → named field
+                lexer->advance(lexer, true);
+                if (lexer->lookahead != '=' && lexer->lookahead != '>') ok = true;
+            }
+        }
+        if (ok) { push(s, S_BRACKET, col); lexer->result_symbol = PAREN_FIELD_OPEN; return true; }
+        return false;
     }
 
     // RECORD_OPEN: a `{` record body whose first field starts here (same line as
