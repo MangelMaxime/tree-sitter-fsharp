@@ -57,6 +57,9 @@ module L03_Functions =
     // A typed single-case-union deconstruction as a tuple-param element, beside
     // an unparenthesized-typed element: `(Wrap inner: int, g: int -> int)`.
     let mapWrapped (Wrap inner: int, g: int -> int) = g inner
+    // A parenthesized tuple pattern as a (typed) tuple-param element:
+    // `(s: int, (r, x): int * float)`.
+    let combineSummary (s: int, (r, x): int * float) = s + r
     // Wildcard `_` in a tuple parameter (OOP-style multi-arg).
     let ignoreFirst (_: int, x: string) = x
     // A non-first tuple-param element may carry redundant parens (here around a

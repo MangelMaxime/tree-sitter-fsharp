@@ -2115,6 +2115,45 @@ let _ = match x with | [ a, B.Coll(o, t) ] -> a | _ -> a
           (identifier))))))
 
 ================================================================================
+Parenthesized tuple pattern as a typed tuple-param element
+================================================================================
+
+let f (s: int, (r, x): int * float) = s
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (tuple_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
+          (type_expression
+            (tuple_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
 For loop tuple binder with a typed non-first element
 ================================================================================
 

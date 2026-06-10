@@ -63,6 +63,16 @@
 ((tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable))
  (#match? @local.definition.variable "^[a-z_]"))
 
+; Direct `tuple_param` name (`s` in `(s: int, …)`) — nested in tuple_params, so
+; the `parameter` rule above misses it; register so its body uses resolve.
+(tuple_param (identifier) @local.definition.variable.parameter)
+
+; Bindings of a tuple pattern nested in a `tuple_param` (`(r, x)` in
+; `(s, (r, x): T)`) — recolour as parameters (placed after the generic
+; identifier_pattern rule so it wins for this position).
+((tuple_param (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+
 ; ── References ────────────────────────────────────────────────────────────────
 ; Root segment of an identifier path (so `x` in `x.Length` is a reference, but
 ; `.Length` is not).

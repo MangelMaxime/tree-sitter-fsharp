@@ -570,6 +570,10 @@ export default grammar({
                 // `(AesKey key: T, iv)` — a single-case union / active-pattern
                 // deconstruction carrying a type, as a tuple-param element.
                 prec.right(seq($.long_identifier, repeat1($._tuple_elem_pattern))),
+                // `(s, (r, x): int * float)` — a parenthesised tuple pattern as a
+                // tuple-param element, optionally type-annotated (handled by the
+                // trailing `: type` below).
+                $.tuple_pattern,
             ),
             // `value: string | null` — nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.

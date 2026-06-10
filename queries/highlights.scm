@@ -482,6 +482,12 @@
 (parameter
   (tuple_pattern
     (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))
+; The same tuple destructure, but nested as a `tuple_param` element
+; (`(s: int, (r, x): int * float)`) — colour those bindings @variable.parameter too.
+((tuple_param
+   (tuple_pattern
+     (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter)))))
+ (#match? @variable.parameter "^[a-z_]"))
 
 ; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
 ; locals-resolved uses of it) read consistently.
