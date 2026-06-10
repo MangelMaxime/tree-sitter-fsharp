@@ -845,6 +845,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t c = lexer->lookahead;
         bool ok = false;
         char w0[8] = {0};
+        // A field may lead with `[<…>]` attribute(s) — common in offside record
+        // TYPE bodies (`{ [<JsonProperty("@id")>]⏎ Id : string … }`). Skip them
+        // so the `ident =`/`:` field-shape check below still fires; `col` stays at
+        // the attribute's `[`, which is where every field of the body aligns.
+        if (c == '[') {
+            if (!skip_bracket_attrs(lexer)) return false;
+            c = lexer->lookahead;
+        }
         if (is_name_start(c)) {
             peek_name_capture(lexer, w0, sizeof(w0));
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);

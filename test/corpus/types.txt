@@ -310,6 +310,42 @@ let f (s: string | null) = s
       (identifier))))
 
 ================================================================================
+Offside record-type fields with leading attributes
+================================================================================
+
+type T =
+    { [<Foo>]
+      A : int
+      [<Bar("x")>]
+      B : string }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (record_type_defn
+      (record_type_field
+        (attribute
+          (attribute_target
+            name: (long_identifier
+              (identifier))))
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (record_type_field
+        (attribute
+          (attribute_target
+            name: (long_identifier
+              (identifier))
+            (string_literal)))
+        name: (identifier)
+        type: (type_expression
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
 Nullable type in a record field
 ================================================================================
 

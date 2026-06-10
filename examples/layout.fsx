@@ -380,6 +380,20 @@ module L11_Records =
             [<DefaultValue>] mutable Score: int
         }
 
+    // The FIRST offside field carries an attribute (`{ [<…>]⏎ Field … }`) — the
+    // `= {`-on-one-line and the `{`-on-next-line forms (e.g. Paket's JSON DTOs).
+    type Resource =
+        { [<JsonProperty("@type")>]
+          Type: string
+          [<JsonProperty("@id")>]
+          Id: string }
+
+    type Catalog = {
+        [<JsonProperty("source")>]
+        Source: string
+        Cursor: int
+    }
+
     let inlineRec = { X = 1; Y = 2 }
 
     let ownLineRec =
