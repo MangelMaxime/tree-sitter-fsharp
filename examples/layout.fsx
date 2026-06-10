@@ -123,6 +123,18 @@ module L05_If =
         else
             "c"
 
+    // An else-BODY whose first statement is an `if` (on its OWN line, indented) is a
+    // multi-statement body — NOT an `else if`/elif. Here the if-then is followed by a
+    // `match`, so the `else` must open a body (the inline `else if` form still flattens).
+    let elseBodyStartsWithIf x =
+        if x > 0 then
+            "pos"
+        else
+            if x = 0 then ignore ()
+            match x with
+            | -1 -> "neg-one"
+            | _ -> "neg"
+
     let ifInArg f a b =
         f (
             if a then b

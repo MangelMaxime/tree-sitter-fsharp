@@ -1956,3 +1956,42 @@ let f x = (# "ldlen" x : int #)
       (type_expression
         (long_identifier
           (identifier))))))
+
+================================================================================
+Else-body whose first statement is an if-then (not else-if), then more statements
+================================================================================
+
+let f x =
+    if x then
+        1
+    else
+        if y then ignore ()
+        match x with
+        | _ -> 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (if_expression
+      (long_identifier
+        (identifier))
+      (int_literal)
+      else: (sequence_expression
+        (if_expression
+          (long_identifier
+            (identifier))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit)))
+        (match_expression
+          (long_identifier
+            (identifier))
+          (match_arm
+            (pattern
+              (wildcard_pattern))
+            body: (int_literal)))))))
