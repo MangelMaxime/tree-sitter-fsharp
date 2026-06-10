@@ -9284,6 +9284,48 @@
         ]
       }
     },
+    "list_tuple_pattern": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "pattern"
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "pattern"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "_list_pattern_item": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "list_tuple_pattern"
+        }
+      ]
+    },
     "list_pattern": {
       "type": "SEQ",
       "members": [
@@ -9299,7 +9341,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "pattern"
+                  "name": "_list_pattern_item"
                 },
                 {
                   "type": "REPEAT",
@@ -9312,7 +9354,7 @@
                       },
                       {
                         "type": "SYMBOL",
-                        "name": "pattern"
+                        "name": "_list_pattern_item"
                       }
                     ]
                   }
@@ -9345,7 +9387,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "pattern"
+                  "name": "_list_pattern_item"
                 },
                 {
                   "type": "REPEAT",
@@ -9358,7 +9400,7 @@
                       },
                       {
                         "type": "SYMBOL",
-                        "name": "pattern"
+                        "name": "_list_pattern_item"
                       }
                     ]
                   }

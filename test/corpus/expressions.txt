@@ -2071,6 +2071,50 @@ let _ = Set.add x !cell
           (identifier))))))
 
 ================================================================================
+List pattern holding an unparenthesized tuple
+================================================================================
+
+let _ = match x with | [ a, B.Coll(o, t) ] -> a | _ -> a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (wildcard_pattern)
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (list_pattern
+            (list_tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)
+                    (identifier))
+                  (tuple_pattern
+                    (pattern
+                      (identifier_pattern
+                        (long_identifier
+                          (identifier))))
+                    (pattern
+                      (identifier_pattern
+                        (long_identifier
+                          (identifier))))))))))
+        body: (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        body: (long_identifier
+          (identifier))))))
+
+================================================================================
 For loop tuple binder with a typed non-first element
 ================================================================================
 

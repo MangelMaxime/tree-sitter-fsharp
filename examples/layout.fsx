@@ -188,6 +188,14 @@ module L06_Match =
             Token = t } :: _ -> t
         | _ -> ""
 
+    // List/array pattern holding an unparenthesized tuple element
+    // (`[ tag, Coll(o, t) ]` = a one-element list of the tuple).
+    let listTuple x =
+        match x with
+        | [ a, b ] -> a + b
+        | [ tag, Coll(o, _) ] -> tag + o
+        | _ -> 0
+
     let nested g a c =
         match g with
         | 1 ->

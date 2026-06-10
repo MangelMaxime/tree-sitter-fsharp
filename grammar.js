@@ -2462,11 +2462,19 @@ export default grammar({
             $.identifier,
         )),
 
+        // A `;`-separated element may itself be an unparenthesized tuple:
+        // `[ a, b, c ]` is a one-element list holding the tuple `(a, b, c)`.
+        // Unlike the param-context `unparenthesized_tuple_pattern`, the elements
+        // here are FULL patterns — inside `[ ]` a constructor application like
+        // `Ctor(x, y)` is unambiguous (`[ A.Tag, B.Coll(o, t) ]`).
+        list_tuple_pattern: $ => prec.right(seq($.pattern, repeat1(seq(",", $.pattern)))),
+        _list_pattern_item: $ => choice($.pattern, $.list_tuple_pattern),
+
         list_pattern: $ => seq(
             "[",
             optional(seq(
-                $.pattern,
-                repeat(seq(";", $.pattern)),
+                $._list_pattern_item,
+                repeat(seq(";", $._list_pattern_item)),
             )),
             "]",
         ),
@@ -2474,8 +2482,8 @@ export default grammar({
         array_pattern: $ => seq(
             "[|",
             optional(seq(
-                $.pattern,
-                repeat(seq(";", $.pattern)),
+                $._list_pattern_item,
+                repeat(seq(";", $._list_pattern_item)),
             )),
             "|]",
         ),

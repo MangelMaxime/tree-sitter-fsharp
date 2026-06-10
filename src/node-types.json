@@ -573,6 +573,10 @@
       "required": false,
       "types": [
         {
+          "type": "list_tuple_pattern",
+          "named": true
+        },
+        {
           "type": "pattern",
           "named": true
         }
@@ -2605,6 +2609,25 @@
     "children": {
       "multiple": true,
       "required": false,
+      "types": [
+        {
+          "type": "list_tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "list_tuple_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
       "types": [
         {
           "type": "pattern",
