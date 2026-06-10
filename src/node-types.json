@@ -140,6 +140,10 @@
         "named": true
       },
       {
+        "type": "prefix_bang_expression",
+        "named": true
+      },
+      {
         "type": "prefix_keyword_expression",
         "named": true
       },
@@ -349,6 +353,10 @@
       },
       {
         "type": "parenthesized_expression",
+        "named": true
+      },
+      {
+        "type": "prefix_bang_expression",
         "named": true
       },
       {
@@ -3281,6 +3289,10 @@
       "required": false,
       "types": [
         {
+          "type": "bang_op",
+          "named": true
+        },
+        {
           "type": "symbolic_op",
           "named": true
         }
@@ -3495,6 +3507,32 @@
         },
         {
           "type": "type_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "prefix_bang_expression",
+    "named": true,
+    "fields": {
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "bang_op",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_simple_expression",
           "named": true
         }
       ]
@@ -5843,6 +5881,10 @@
   {
     "type": "averageBy",
     "named": false
+  },
+  {
+    "type": "bang_op",
+    "named": true
   },
   {
     "type": "begin",

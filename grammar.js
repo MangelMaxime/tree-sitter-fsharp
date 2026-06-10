@@ -1045,6 +1045,7 @@ export default grammar({
             $.type_application_expression,
             $.unary_expression,
             $.deref_expression,
+            $.prefix_bang_expression,
             // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value (`snd >> M.(|Foo|) >> g`).
             $.active_pattern_expression,
             // `(+) 1 2`, `(=) x y` — operator name applied to arguments.
@@ -1230,13 +1231,14 @@ export default grammar({
         // as applied operators and not worth the parse ambiguity.
         _value_operator_name: $ => seq(
             "(",
-            choice($.symbolic_op, "+", "-", "*", "/", "%", "=", "<", ">"),
+            choice($.symbolic_op, $.bang_op, "+", "-", "*", "/", "%", "=", "<", ">"),
             ")",
         ),
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
             $.deref_expression,
+            $.prefix_bang_expression,
             $.inline_il_expression,
             $.typed_expression,
             $.list_expression,
@@ -1334,10 +1336,18 @@ export default grammar({
             $._expression,
         )),
 
-        // `!cell` — ref-cell dereference (and `!!`/`!%`… nest as repeated `!`). Unlike
-        // `-`, it binds TIGHTER than application, so `f !cell` = `f (!cell)`. It's a
-        // `_simple_expression` precisely so it can be an application ARGUMENT.
+        // `!cell` — ref-cell dereference. Unlike `-`, it binds TIGHTER than
+        // application, so `f !cell` = `f (!cell)`. It's a `_simple_expression`
+        // precisely so it can be an application ARGUMENT.
         deref_expression: $ => prec(PREC.PREFIX_EXPR, seq("!", $._simple_expression)),
+
+        // `!!`, `!%`, `!^` … — a `!`-led symbolic operator (2+ chars) used as a
+        // custom PREFIX operator (e.g. FAKE's `(!!)` glob operator: `!! "*.fs"`,
+        // `!! 1 m`). Distinct token from `symbolic_op` so it can LEAD an
+        // expression; bare `!` (deref) stays its own token. Binds tighter than
+        // application, so `!! 1 m` = `((!!) 1) m`.
+        prefix_bang_expression: $ => prec(PREC.PREFIX_EXPR, seq(field('operator', $.bang_op), $._simple_expression)),
+        bang_op: _ => token(/![!$%&*+\-.\/<=>?@^|~]+/),
 
         // `not` used as a first-class function value — it's an ordinary
         // FSharp.Core function, not a reserved operator: `not >> g`,
@@ -1530,6 +1540,7 @@ export default grammar({
             "(",
             choice(
                 $.symbolic_op,
+                $.bang_op,       // `!`-led prefix operators: `(!!)`, `(!%)`, …
                 "+", "-", "*", "/", "%",
                 "=", "<", ">",
                 "&", "|", "^",

@@ -3331,6 +3331,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "prefix_bang_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "active_pattern_expression"
         },
         {
@@ -3936,6 +3940,10 @@
               "name": "symbolic_op"
             },
             {
+              "type": "SYMBOL",
+              "name": "bang_op"
+            },
+            {
               "type": "STRING",
               "value": "+"
             },
@@ -3985,6 +3993,10 @@
         {
           "type": "SYMBOL",
           "name": "deref_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "prefix_bang_expression"
         },
         {
           "type": "SYMBOL",
@@ -4613,6 +4625,34 @@
             "name": "_simple_expression"
           }
         ]
+      }
+    },
+    "prefix_bang_expression": {
+      "type": "PREC",
+      "value": 15,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "operator",
+            "content": {
+              "type": "SYMBOL",
+              "name": "bang_op"
+            }
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_simple_expression"
+          }
+        ]
+      }
+    },
+    "bang_op": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "![!$%&*+\\-.\\/<=>?@^|~]+"
       }
     },
     "not_function": {
@@ -5384,6 +5424,10 @@
             {
               "type": "SYMBOL",
               "name": "symbolic_op"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "bang_op"
             },
             {
               "type": "STRING",

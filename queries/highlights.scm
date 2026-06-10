@@ -55,6 +55,10 @@
 (type_intersection "&" @operator)
 (optional_named_arg "?" @operator)
 (deref_expression "!" @operator)
+(prefix_bang_expression operator: (bang_op) @operator)
+; `!`-led custom operator as a value / name (`(!!)`, `(!%)`) — colour it like
+; `(symbolic_op)` so it reads as an operator everywhere, not just in prefix use.
+(operator_name (bang_op) @operator)
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)

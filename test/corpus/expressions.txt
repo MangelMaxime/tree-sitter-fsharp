@@ -2154,6 +2154,26 @@ let f (s: int, (r, x): int * float) = s
       (identifier))))
 
 ================================================================================
+Custom bang prefix operator (!!)
+================================================================================
+
+let _ = !! "*.fs"
+let op = (!!)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (wildcard_pattern)
+    body: (prefix_bang_expression
+      operator: (bang_op)
+      (string_literal)))
+  (let_binding
+    name: (identifier)
+    body: (operator_name
+      (bang_op))))
+
+================================================================================
 For loop tuple binder with a typed non-first element
 ================================================================================
 

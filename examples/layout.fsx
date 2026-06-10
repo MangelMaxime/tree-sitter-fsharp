@@ -315,6 +315,31 @@ module L09_Loops =
         ignore (Set.add 1 !cell)
         printfn "%d" !cell
 
+    // Custom `!`-led prefix operator (e.g. FAKE's glob `(!!)`): leads an
+    // expression, binds tighter than application (`!! pat key` = `((!!) pat) key`),
+    // and is still usable as a first-class value `(!!)`.
+    let private (!!) (i: int) (m: string) = m.Substring i
+    let bangPrefix (key) =
+        let glob = !! 0 key
+        ignore (Some (!! 0 key))
+        ignore ((!!) 0 key)
+
+    // Custom SYMBOLIC operators (symbolic_op): definition, infix use, and as a
+    // first-class value. These ARE coloured @operator everywhere (incl. value
+    // position `(>>=)`), unlike the `!`-led `(!!)` value form above.
+    let (>>=) (m: int option) (f: int -> int option) = Option.bind f m
+    let (<!>) f x = List.map f x
+    let symbolicOps (a) (b) (f) (xs) =
+        let chained = a >>= (fun v -> b >>= (fun w -> Some (v + w)))
+        let mapped = f <!> xs
+        let bindVal = (>>=)
+        let mapVal = (<!>)
+        chained, mapped, bindVal, mapVal
+
+    // Pipe / compose operators (built-in symbolic) for contrast.
+    let pipeline (xs) = xs |> List.map ((+) 1) |> List.filter ((<) 0) |> List.sum
+    let composed = (fun x -> x + 1) >> (fun x -> x * 2)
+
 // ── Brackets: lists / arrays ────────────────────────────────────────────────
 module L10_ListsArrays =
     let inlineList = [ 1; 2; 3 ]
