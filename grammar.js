@@ -571,7 +571,7 @@ export default grammar({
             "=",
             // Layout body so it closes at the next ctor/member instead of
             // absorbing it (two `new …` in a row).
-            seq($._layout_open, field('body', $._expression), $._layout_end),
+            seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             optional(seq("then", seq($._layout_open, $._expression, $._layout_end))),
         ))),
 
@@ -637,7 +637,7 @@ export default grammar({
             "=",
             // Uniform layout body (closes at the next member). `optional` keeps
             // `member X =` (mid-edit, no body yet) parseable.
-            optional(seq($._layout_open, field('body', $._expression), $._layout_end)),
+            optional(seq($._layout_open, field('body', $._ascribable_body), $._layout_end)),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
@@ -709,7 +709,7 @@ export default grammar({
             "=",
             // Layout body (like every other `=` body) so it closes at the next
             // member/decl instead of absorbing it.
-            seq($._layout_open, field('body', $._expression), $._layout_end),
+            seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
         ),
 
         // with get [, set]  (auto-property accessor list)
@@ -1583,7 +1583,7 @@ export default grammar({
                 // column, closes on dedent / mid-line `in` / closer). Covers
                 // inline `let x = e`, own-line bodies, and `let x = e in …` (the
                 // scanner's `in` ender closes the body before `in`).
-                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
                 repeat($.let_and_binding),
             ))),
             prec(1, prec.dynamic(1, seq(
@@ -1608,7 +1608,7 @@ export default grammar({
         // `let` has no continuation of its own).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=",
-                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             )),
             prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
         )),
@@ -1646,8 +1646,8 @@ export default grammar({
             $._let_signature,
             "=",
             choice(
-                seq($._layout_open, field('body', $._expression), $._layout_end),
-                seq($._layout_open, field('body', $._expression), $._layout_end),
+                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             ),
         ),
 
@@ -1782,6 +1782,17 @@ export default grammar({
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
             seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
+
+        // `body : Type` — bare type ascription on a BINDING/MEMBER BODY tail. Pervasive
+        // in FSharpPlus, where a function's return type is suffixed after the body:
+        //   let map  (f: 'T->_) (Cont x) = Cont (fun c -> x (c << f)) : Cont<'R,'U>
+        // SCOPED to body positions (reached via `_ascribable_body`, NOT `_expression`)
+        // so it does NOT shadow `typed_expression` for `(e : t)` and doesn't turn a
+        // trailing `T[]` into an index. `prec.right` so the `:` extends the body.
+        type_ascription_expression: $ => prec.right(seq($._expression, ":", $.type_expression)),
+
+        // A binding/member body that may carry a trailing return-type ascription.
+        _ascribable_body: $ => choice($._expression, $.type_ascription_expression),
 
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),
@@ -2215,7 +2226,7 @@ export default grammar({
         //      trailing dedented statement (e.g. a final `0` at the `match`
         //      column) out of the last arm's body.
         //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
-        _match_arm_body: $ => seq($._layout_open, $._expression, $._layout_end),
+        _match_arm_body: $ => seq($._layout_open, $._ascribable_body, $._layout_end),
 
         pattern: $ => choice(
             $.wildcard_pattern,

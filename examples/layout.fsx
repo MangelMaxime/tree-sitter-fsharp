@@ -62,6 +62,12 @@ module L03_Functions =
     let curriedOwnLine a b =
         a * b
 
+    // Bare type ascription on a binding-body TAIL (`= expr : Type`, no parens) —
+    // the FSharpPlus return-type-suffix idiom. Also valid on member and match-arm
+    // bodies; `(e : T)` stays a parenthesised typed_expression (not shadowed).
+    let singletonAsc value = [ value ] : int list
+    let mapAsc f x = box (f x) : obj
+
     // Member access directly on a literal.
     let litLen = "abc".Length
     let litChars = "bcd".ToCharArray()

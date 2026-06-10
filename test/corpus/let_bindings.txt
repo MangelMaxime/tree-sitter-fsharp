@@ -412,3 +412,28 @@ let f (Url url: Url) = url
             (identifier)))))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Bare type ascription on a binding body (= expr : Type)
+================================================================================
+
+let singleton value = [ value ] : int list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (type_ascription_expression
+      (list_expression
+        (long_identifier
+          (identifier)))
+      (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))
