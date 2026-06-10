@@ -1543,10 +1543,6 @@
           "named": true
         },
         {
-          "type": "unparenthesized_tuple_pattern",
-          "named": true
-        },
-        {
           "type": "wildcard_pattern",
           "named": true
         }

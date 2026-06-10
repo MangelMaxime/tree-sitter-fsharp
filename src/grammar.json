@@ -7270,10 +7270,6 @@
                       },
                       {
                         "type": "SYMBOL",
-                        "name": "unparenthesized_tuple_pattern"
-                      },
-                      {
-                        "type": "SYMBOL",
                         "name": "as_pattern"
                       },
                       {
@@ -7289,7 +7285,7 @@
                         "members": [
                           {
                             "type": "SYMBOL",
-                            "name": "tuple_typed_pattern"
+                            "name": "_tuple_pattern_item"
                           },
                           {
                             "type": "REPEAT1",

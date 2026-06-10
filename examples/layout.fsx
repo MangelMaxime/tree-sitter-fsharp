@@ -259,14 +259,19 @@ module L09_Loops =
             printfn "%A %A" k v
 
     // Type-annotated for-binders: bare (`for s: string in`), parenthesised
-    // (`for (line: string) in`), and a typed unparenthesised tuple (`for k: T, r in`).
+    // (`for (line: string) in`), typed tuples (any element typed), and a whole-tuple
+    // `as` alias.
     let forTyped (xs) (rows) =
         for s: string in xs do
             ignore s
         for (line: string) in xs do
             ignore line
-        for k: string, r: string in rows do
+        for k: string, r: string in rows do        // typed-first tuple
             ignore (k, r)
+        for _, name: string, v in rows do           // typed NON-first element
+            ignore name
+        for a, b, c as whole in rows do             // whole-tuple `as` alias
+            ignore whole
 
     // Union-case / active-pattern application binder, e.g. iterating a dictionary.
     let forKeyValue (dict) =

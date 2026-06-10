@@ -1531,11 +1531,14 @@ let f () =
     parameters: (parameter
       (unit))
     body: (for_expression
-      (unparenthesized_tuple_pattern
-        (long_identifier
-          (identifier))
-        (long_identifier
-          (identifier)))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
       (long_identifier
         (identifier))
       body: (application_expression
@@ -2064,5 +2067,39 @@ let _ = Set.add x !cell
         (long_identifier
           (identifier)))
       (deref_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+For loop tuple binder with a typed non-first element
+================================================================================
+
+let f xs = for _, name: string, v in xs do ignore name
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (for_expression
+      (pattern
+        (wildcard_pattern))
+      (tuple_typed_pattern
+        pattern: (long_identifier
+          (identifier))
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier))
         (long_identifier
           (identifier))))))
