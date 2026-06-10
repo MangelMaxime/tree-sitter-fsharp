@@ -483,13 +483,18 @@ export default grammar({
                 $._type_open,
                 choice(
                     // Record / union / enum / etc. body, OPTIONALLY followed
-                    // by augmentation members in the same indented block
-                    // (no `with` keyword). Valid F#:
-                    //   type Project =
-                    //       | A
-                    //       | B
+                    // by augmentation members in the same indented block —
+                    // with or without a `with` keyword. Valid F#:
+                    //   type Project =            type NonEmptyMap<…> =
+                    //       | A                       private { Value: Map<…> } with
+                    //       | B                       member this.Item k = …
                     //       static member ofString s = …
-                    seq($._type_decl_body, repeat($._class_body_member)),
+                    // The mid-line `with` after the body's `}` is consumed HERE,
+                    // inside the typebody layout (no close needed); the
+                    // augmentation-below-at-type-col form (`with` on its own
+                    // line) still goes through the scanner's S_TYPEBODY close +
+                    // `_type_augmentation`.
+                    seq($._type_decl_body, optional("with"), repeat($._class_body_member)),
                     repeat1($._class_body_member),
                 ),
                 $._layout_end,

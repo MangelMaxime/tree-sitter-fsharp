@@ -925,3 +925,46 @@ let iterSpecs specs =
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Next-line record body followed by an inline with-augmentation
+================================================================================
+
+type NonEmptyMap<'K when 'K: comparison> =
+    private { Value: Map<'K, int> } with
+    member this.Item k = this.Value.[k]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)))
+    (record_type_defn
+      (access_modifier)
+      (record_type_field
+        name: (identifier)
+        type: (type_expression
+          (generic_type
+            (long_identifier
+              (identifier))
+            (type_expression
+              (type_parameter))
+            (type_expression
+              (long_identifier
+                (identifier)))))))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      body: (index_expression
+        object: (long_identifier
+          (identifier)
+          (identifier))
+        index: (long_identifier
+          (identifier))))))

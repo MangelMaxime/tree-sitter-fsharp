@@ -951,6 +951,18 @@
                       "name": "_type_decl_body"
                     },
                     {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": "with"
+                        },
+                        {
+                          "type": "BLANK"
+                        }
+                      ]
+                    },
+                    {
                       "type": "REPEAT",
                       "content": {
                         "type": "SYMBOL",

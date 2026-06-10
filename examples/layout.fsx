@@ -760,6 +760,13 @@ module L16_Augmentation =
         static member toId = function | Reference x | GlobalReference x -> x
         member this.Self = this
 
+    // Next-line record body with the `with` INLINE after the closing `}`
+    // (FSharpPlus NonEmptyMap style) — members follow at the body column.
+    type NonEmptyMap<'K when 'K: comparison> =
+        private { Value: Map<'K, int> } with
+        member this.Item k = this.Value.[k]
+        static member Create v = { Value = v }
+
 // ── Accumulated-state regressions (must stay 0 errors) ──────────────────────
 module L17_AccumulatedState =
     // The `dd` repro: class-lets + member + two if-then blocks with do!/use.
