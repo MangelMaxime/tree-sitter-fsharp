@@ -564,7 +564,13 @@ export default grammar({
             repeat($.attribute),    // [<DefaultParameterValue(42)>], [<CallerMemberName>], etc.
             optional("?"),
             // `_` (wildcard) is a valid param name: `member _.M(_: int, x: string)`.
-            choice($.identifier, $.wildcard_pattern),
+            choice(
+                $.identifier,
+                $.wildcard_pattern,
+                // `(AesKey key: T, iv)` — a single-case union / active-pattern
+                // deconstruction carrying a type, as a tuple-param element.
+                prec.right(seq($.long_identifier, repeat1($._tuple_elem_pattern))),
+            ),
             // `value: string | null` — nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.
             optional(seq(":", choice($.type_expression, $.nullable_type))),

@@ -1230,6 +1230,26 @@
             {
               "type": "SYMBOL",
               "name": "wildcard_pattern"
+            },
+            {
+              "type": "PREC_RIGHT",
+              "value": 0,
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "long_identifier"
+                  },
+                  {
+                    "type": "REPEAT1",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "_tuple_elem_pattern"
+                    }
+                  }
+                ]
+              }
             }
           ]
         },

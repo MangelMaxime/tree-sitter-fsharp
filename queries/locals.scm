@@ -44,8 +44,13 @@
 
 ; Deconstructed binding in a typed parameter `(Url url: Url)` — the
 ; long_identifier after the constructor; register so its uses resolve.
-((destructure_parameter (long_identifier) (long_identifier (identifier) @local.definition.variable))
- (#match? @local.definition.variable "^[a-z_]"))
+((destructure_parameter (long_identifier) (long_identifier (identifier) @local.definition.variable.parameter))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+
+; Same, as a tuple-param element (`(Wrap inner: int, g)`) — the long_identifier
+; after the constructor; register so its body uses resolve.
+((tuple_param (long_identifier) (long_identifier (identifier) @local.definition.variable.parameter))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
 
 ; Match / pattern bindings; the lowercase guard leaves uppercase constructor
 ; heads to highlights' @constructor rule.

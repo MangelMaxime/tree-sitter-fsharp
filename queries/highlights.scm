@@ -590,10 +590,20 @@
    . (long_identifier (identifier) @constructor))
  (#match? @constructor "^[A-Z]"))
 ; The deconstructed binding(s) — the long_identifier(s) AFTER the constructor
-; (`url` in `(Url url: Url)`) — are value bindings; colour @variable.
+; (`url` in `(Url url: Url)`) — are param bindings; colour @variable.parameter.
 ((destructure_parameter
-   (long_identifier) (long_identifier (identifier) @variable))
- (#match? @variable "^[a-z_]"))
+   (long_identifier) (long_identifier (identifier) @variable.parameter))
+ (#match? @variable.parameter "^[a-z_]"))
+
+; Same single-case-union deconstruction, but as a tuple-param element
+; (`(Wrap inner: int, g)`): the FIRST long_identifier is the constructor, the
+; deconstructed binding(s) after it are param bindings.
+((tuple_param
+   . (long_identifier (identifier) @constructor))
+ (#match? @constructor "^[A-Z]"))
+((tuple_param
+   (long_identifier) (long_identifier (identifier) @variable.parameter))
+ (#match? @variable.parameter "^[a-z_]"))
 
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)

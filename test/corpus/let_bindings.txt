@@ -414,6 +414,43 @@ let f (Url url: Url) = url
       (identifier))))
 
 ================================================================================
+Single-case union deconstruction as a typed tuple-param element
+================================================================================
+
+let f (Wrap inner: int, g: int -> int) = g inner
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_params
+        (tuple_param
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (identifier)
+          (type_expression
+            (function_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
 Bare type ascription on a binding body (= expr : Type)
 ================================================================================
 

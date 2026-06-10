@@ -54,6 +54,9 @@ module L03_Functions =
     let useDisposable (r: 'T :> System.IDisposable) = r.Dispose ()
     // Single-case union deconstruction in a typed parameter.
     let unwrap (Url url: Url) = url
+    // A typed single-case-union deconstruction as a tuple-param element, beside
+    // an unparenthesized-typed element: `(Wrap inner: int, g: int -> int)`.
+    let mapWrapped (Wrap inner: int, g: int -> int) = g inner
     // Wildcard `_` in a tuple parameter (OOP-style multi-arg).
     let ignoreFirst (_: int, x: string) = x
     // A non-first tuple-param element may carry redundant parens (here around a
