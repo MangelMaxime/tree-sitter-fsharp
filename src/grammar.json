@@ -3296,6 +3296,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "deref_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "active_pattern_expression"
         },
         {
@@ -3949,6 +3953,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "deref_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "inline_il_expression"
         },
         {
@@ -4544,10 +4552,6 @@
               },
               {
                 "type": "STRING",
-                "value": "!"
-              },
-              {
-                "type": "STRING",
                 "value": "%%"
               },
               {
@@ -4559,6 +4563,23 @@
           {
             "type": "SYMBOL",
             "name": "_expression"
+          }
+        ]
+      }
+    },
+    "deref_expression": {
+      "type": "PREC",
+      "value": 15,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "!"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_simple_expression"
           }
         ]
       }

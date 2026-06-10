@@ -290,6 +290,12 @@ module L09_Loops =
         while !counter < 3 do
             counter := !counter + 1
 
+    // `!cell` deref is a HIGH-precedence prefix, so it works as an application
+    // ARGUMENT (`f !cell`, `Set.add x !cell`) — not just standalone.
+    let derefAsArg (cell) (set) =
+        ignore (Set.add 1 !cell)
+        printfn "%d" !cell
+
 // ── Brackets: lists / arrays ────────────────────────────────────────────────
 module L10_ListsArrays =
     let inlineList = [ 1; 2; 3 ]

@@ -2044,3 +2044,25 @@ let n = info?name.AsString()
           member: (identifier))
         member: (identifier))
       (unit))))
+
+================================================================================
+Ref-cell deref as an application argument
+================================================================================
+
+let _ = Set.add x !cell
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (wildcard_pattern)
+    body: (application_expression
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (deref_expression
+        (long_identifier
+          (identifier))))))

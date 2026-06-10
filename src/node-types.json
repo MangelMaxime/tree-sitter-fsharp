@@ -48,6 +48,10 @@
         "named": true
       },
       {
+        "type": "deref_expression",
+        "named": true
+      },
+      {
         "type": "do_expression",
         "named": true
       },
@@ -285,6 +289,10 @@
       },
       {
         "type": "computation_expression",
+        "named": true
+      },
+      {
+        "type": "deref_expression",
         "named": true
       },
       {
@@ -1126,6 +1134,21 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "deref_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_simple_expression",
+          "named": true
+        }
+      ]
     }
   },
   {

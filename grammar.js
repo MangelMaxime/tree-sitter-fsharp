@@ -1025,6 +1025,7 @@ export default grammar({
             // when the `<…>` contains type-expressions with a comma.
             $.type_application_expression,
             $.unary_expression,
+            $.deref_expression,
             // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value (`snd >> M.(|Foo|) >> g`).
             $.active_pattern_expression,
             // `(+) 1 2`, `(=) x y` — operator name applied to arguments.
@@ -1216,6 +1217,7 @@ export default grammar({
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
+            $.deref_expression,
             $.inline_il_expression,
             $.typed_expression,
             $.list_expression,
@@ -1306,9 +1308,17 @@ export default grammar({
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
             // `%`/`%%` are the quotation splice (anti-quotation) prefixes —
             // `<@ %e @>` — also reused by Fable for emit/splice.
-            choice("not", "~~~", "-", "!", "%%", "%"),
+            // NOTE: `!` (ref-cell deref) is NOT here — it's a HIGH-precedence prefix
+            // (see `deref_expression`) so it can be an application argument; the ops
+            // here are low-precedence (`f - x` must stay a subtraction, not `f (-x)`).
+            choice("not", "~~~", "-", "%%", "%"),
             $._expression,
         )),
+
+        // `!cell` — ref-cell dereference (and `!!`/`!%`… nest as repeated `!`). Unlike
+        // `-`, it binds TIGHTER than application, so `f !cell` = `f (!cell)`. It's a
+        // `_simple_expression` precisely so it can be an application ARGUMENT.
+        deref_expression: $ => prec(PREC.PREFIX_EXPR, seq("!", $._simple_expression)),
 
         // `not` used as a first-class function value — it's an ordinary
         // FSharp.Core function, not a reserved operator: `not >> g`,

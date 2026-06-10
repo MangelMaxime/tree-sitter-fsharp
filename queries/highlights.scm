@@ -54,6 +54,7 @@
 ; like the tuple-type `*` → @operator.
 (type_intersection "&" @operator)
 (optional_named_arg "?" @operator)
+(deref_expression "!" @operator)
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)
