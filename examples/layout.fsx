@@ -575,6 +575,11 @@ module L19_DynamicAccess =
 
     let join (path) = path?join ("a", "b")
 
+    // Member access / method call on the RESULT of a dynamic lookup, without parens
+    // (`info?name.AsString()`, `node?pages.Length`) — common in FSharp.Data.
+    let dynMember (info) = info?name.AsString()
+    let dynIndexed (docs) = docs.[0]?pages.AsInteger()
+
     // `?(expr)` computed key, and dynamic set with `<-`.
     let lookup (o) (k) = o?(k)
 

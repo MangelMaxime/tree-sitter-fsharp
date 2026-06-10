@@ -6286,6 +6286,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "dynamic_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "list_expression"
         },
         {

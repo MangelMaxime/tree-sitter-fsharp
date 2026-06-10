@@ -1712,6 +1712,9 @@ export default grammar({
             $.index_expression,
             $.bracket_index_expression,
             $.application_expression,
+            // `info?name.AsString()` / `el?style.color` — a member access on the result
+            // of a dynamic lookup (Fable JS interop), without needing `(info?name).…`.
+            $.dynamic_expression,
             // `[1; 2].GetHashCode()` / `[|1; 2|].Length` — member access on a
             // list / array / record literal.
             $.list_expression,

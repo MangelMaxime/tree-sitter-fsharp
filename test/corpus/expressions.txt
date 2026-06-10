@@ -2023,3 +2023,23 @@ let f xs = for x: string in xs do ignore x
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Member access on the result of a dynamic lookup
+================================================================================
+
+let n = info?name.AsString()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (dynamic_expression
+          object: (long_identifier
+            (identifier))
+          member: (identifier))
+        member: (identifier))
+      (unit))))
