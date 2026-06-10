@@ -1002,3 +1002,83 @@ let g x =
             (identifier))
           right: (long_identifier
             (identifier)))))))
+
+================================================================================
+Typar dots, inline try-finally in a CE, multiline list pattern
+================================================================================
+
+let inline runThen<'T, .. > (f) = f
+
+let wrapped c comp = seq { try for e in c () do yield e finally comp () }
+
+let matchTargets x =
+    match x with
+    | [ [| Target "T1" |]
+        [| Target "T2" |] ] -> 1
+    | _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter))
+    parameters: (parameter
+      (identifier))
+    body: (long_identifier
+      (identifier)))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (try_expression
+        (for_expression
+          (identifier)
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))
+          body: (ce_result_expr
+            (long_identifier
+              (identifier))))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit)))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (list_pattern
+            (pattern
+              (array_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))
+                    (literal_pattern
+                      (string_literal))))))
+            (pattern
+              (array_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))
+                    (literal_pattern
+                      (string_literal))))))))
+        body: (int_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        body: (int_literal)))))

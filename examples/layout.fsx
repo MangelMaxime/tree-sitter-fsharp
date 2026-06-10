@@ -61,6 +61,9 @@ module L03_Functions =
     let firstKey<'K when 'K: not null> (m: Map<'K, int>) = Map.toList m |> List.head |> fst
     // IWSAM / bare-interface constraint (F# 7+): `'T` must implement IParsable<'T>.
     let parseIt<'T when IParsable<'T>> (s: string) = 's'
+    // Trailing `..` in a typar list — "and any further type parameters"
+    // (FSharpPlus SeqT style).
+    let inline runThen<'T, .. > (f) = f
     // Subtype (`:>`) constraint on a parameter's type.
     let useDisposable (r: 'T :> System.IDisposable) = r.Dispose ()
     // Single-case union deconstruction in a typed parameter.
@@ -268,6 +271,18 @@ module L06_Match =
         | _ ->
             if a = 0 then "x"
             else "y"
+
+    // Inline one-liner try/finally inside a CE — the `finally` must close the
+    // for-body THEN the try-body (cascading inline closes).
+    let wrapFinally c comp = seq { try for e in c () do yield e finally comp () }
+
+    // Multiline LIST pattern: newline-aligned elements (here array patterns —
+    // the Fake.Core target-ordering test style).
+    let matchTargets x =
+        match x with
+        | [ [| Target "T1" |]
+            [| Target "T2" |] ] -> 1
+        | _ -> 0
 
     // try/with with a multi-statement body (and inside a CE).
     let tryMulti () =

@@ -1271,6 +1271,9 @@ export default grammar({
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
+            // `S (^X: (static member F: ^X -> ^X) x)` — an SRTP call as an
+            // application argument (FSharpPlus TypeLevel style).
+            $.srtp_call_expression,
             $.deref_expression,
             $.prefix_bang_expression,
             $.inline_il_expression,
@@ -2217,7 +2220,8 @@ export default grammar({
                     // Single line: `builder { return x }` / `seq { x; y }`.
                     seq(
                         reserved('query_ce', $._ce_statement),
-                        repeat(seq(";", reserved('query_ce', $._ce_statement))),
+                        repeat(prec(1, seq(";", reserved('query_ce', $._ce_statement)))),
+                        optional(";"),   // `seq { yield x; yield! xs; }` trailing
                     ),
                 )),
                 "}",
@@ -2302,6 +2306,12 @@ export default grammar({
         ),
 
         // return/yield/do! forms — in _expression so they're valid inside CE if/match branches.
+        // KNOWN GAP: `seq { yield x; }` — an INLINE trailing `;` before `}`.
+        // The `;` shift (sequence-extension inside the operand, prec SEQ_EXPR)
+        // statically beats this rule's reduce; equalizing the precedence ties
+        // it with EVERY prec-1 operator (`|>`, `,`, …), and the GLR forks then
+        // need opposite outcomes per token (tried 2026-06-10, reverted). The
+        // multiline form and `seq { a; b }` without the trailing `;` parse.
         ce_result_expr: $ => choice(
             seq("return", $._expression),
             seq("return!", $._expression),
@@ -2568,20 +2578,43 @@ export default grammar({
         list_tuple_pattern: $ => prec.right(seq($.pattern, repeat1(seq(",", $.pattern)))),
         _list_pattern_item: $ => choice($.pattern, $.list_tuple_pattern),
 
+        // Both forms: inline `[ a; b ]` and block/newline-aligned
+        // (`| [ [| Target "T1" |]⏎     [| Target "T2" |] ]` — Fake.Core tests).
+        // The block form reuses the expression brackets' scanner machinery:
+        // `_bracket_open` captures the first element's column, `_bracket_semi`
+        // separates newline-aligned elements, `_bracket_close` pops at `]`.
         list_pattern: $ => seq(
             "[",
-            optional(seq(
-                $._list_pattern_item,
-                repeat(seq(";", $._list_pattern_item)),
+            optional(choice(
+                seq(
+                    $._bracket_open,
+                    $._list_pattern_item,
+                    repeat(seq(choice(";", $._bracket_semi), $._list_pattern_item)),
+                    optional(choice(";", $._bracket_semi)),
+                    $._bracket_close,
+                ),
+                seq(
+                    $._list_pattern_item,
+                    repeat(seq(";", $._list_pattern_item)),
+                ),
             )),
             "]",
         ),
 
         array_pattern: $ => seq(
             "[|",
-            optional(seq(
-                $._list_pattern_item,
-                repeat(seq(";", $._list_pattern_item)),
+            optional(choice(
+                seq(
+                    $._bracket_open,
+                    $._list_pattern_item,
+                    repeat(seq(choice(";", $._bracket_semi), $._list_pattern_item)),
+                    optional(choice(";", $._bracket_semi)),
+                    $._bracket_close,
+                ),
+                seq(
+                    $._list_pattern_item,
+                    repeat(seq(";", $._list_pattern_item)),
+                ),
             )),
             "|]",
         ),
@@ -2837,6 +2870,7 @@ export default grammar({
             "<",
             repeat($.attribute), $.type_parameter,
             repeat(seq(",", repeat($.attribute), $.type_parameter)),
+            optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
             optional($._when_constraints),
             ">",
         ),

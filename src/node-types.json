@@ -372,6 +372,10 @@
         "named": true
       },
       {
+        "type": "srtp_call_expression",
+        "named": true
+      },
+      {
         "type": "string_literal",
         "named": true
       },

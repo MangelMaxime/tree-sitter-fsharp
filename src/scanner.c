@@ -1016,6 +1016,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
+                    // `finally` is owned EXCLUSIVELY by try/finally (unlike
+                    // `with`), so when an S_TRY is open SOMEWHERE below, every
+                    // inner inline body must close first — one per invocation —
+                    // until the S_TRY branch above fires:
+                    //   `seq { try for e in c () do yield e finally comp () }`
+                    // closes the for-body here, then the try-body above.
+                    if (!strcmp(w, "finally") && layoutish(top->sort)) {
+                        for (size_t i = 0; i + 1 < s->n; i++) {
+                            if (s->stk[i].sort == S_TRY) {
+                                s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                            }
+                        }
+                    }
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
                     lexer->result_symbol = ELEMENT_DSL_OPEN; return true;
