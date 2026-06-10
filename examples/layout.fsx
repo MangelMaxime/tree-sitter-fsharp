@@ -120,6 +120,19 @@ module L04_Sequences =
     // A trailing `;` after a binding body is a no-op statement terminator.
     let trailingSemi () = compute ();
     let trailingSemiInline = 1;
+    // …also after the LAST statement of a multi-statement layout body (the
+    // body then closes by dedent — NuGetV3 style; the scanner folds the `;`
+    // into the layout close), and after an inline sequence.
+    let trailingSemiBlock (basePath) =
+        let directory = locate basePath
+        if directory.Exists |> not then
+            directory.Create()
+        directory;
+    let trailingSemiSeq () = stepA (); stepB ();
+
+    // Bare expression statements terminated by `;` (unquote test style).
+    verify 1 =! 1;
+    verify 2 =! 2;
 
 // ── Then: if / elif / else ──────────────────────────────────────────────────
 module L05_If =

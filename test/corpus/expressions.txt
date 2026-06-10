@@ -2206,3 +2206,66 @@ let f xs = for _, name: string, v in xs do ignore name
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Trailing semicolon as a statement terminator
+================================================================================
+
+typeof<int>.Name =! "int";
+typeof<string>.Name =! "string";
+
+let getDirectory (basePath) =
+    let directory = locate basePath
+    if directory.Exists |> not then
+        directory.Create()
+    directory;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (binary_expression
+    left: (dot_expression
+      object: (type_keyword_expression
+        (type_intrinsic)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      member: (identifier))
+    operator: (symbolic_op)
+    right: (string_literal))
+  (binary_expression
+    left: (dot_expression
+      object: (type_keyword_expression
+        (type_intrinsic)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      member: (identifier))
+    operator: (symbolic_op)
+    right: (string_literal))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (let_expression
+      binding: (let_decl_indented
+        name: (identifier)
+        body: (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      continuation: (sequence_expression
+        (if_expression
+          (binary_expression
+            left: (long_identifier
+              (identifier)
+              (identifier))
+            right: (not_function))
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (unit)))
+        (long_identifier
+          (identifier))))))

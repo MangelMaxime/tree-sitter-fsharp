@@ -1023,6 +1023,29 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (ce_brace_content_is_ce_body(lexer)) { lexer->result_symbol = CE_BRACE_OPEN; return true; }
                 }
             }
+            // A TRAILING `;` at end-of-line in a layout body that is about to
+            // close by dedent/EOF: consume it INTO the LAYOUT_END (`let f () =⏎
+            // g ()⏎ a;` — NuGetV3 style). Once the body is a sequence the
+            // grammar has no slot for the `;` (a grammar-level optional never
+            // fires — the `;` shift commits to the separator reading), so the
+            // terminator must disappear here. Only when the line truly ends
+            // after the `;` (an inline `a; b` keeps its literal separator) and
+            // only on a real dedent — an equal-column next line is a SIBLING
+            // statement (`module M =⏎ f x;⏎ g y;`), handled by the `";"` _token.
+            if (c == ';' && valid[LAYOUT_END] && top && layoutish(top->sort)) {
+                lexer->advance(lexer, false);           // consume `;`
+                if (lexer->lookahead != ';') {          // leave `;;` to the extras
+                    lexer->mark_end(lexer);             // token = just the `;`
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
+                        uint32_t ncol; int32_t nfirst = 0;
+                        if (!next_line_indent(lexer, &ncol, &nfirst) || ncol < top->col) {
+                            s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                        }
+                    }
+                }
+                return false;                           // not trailing: literal `;`
+            }
             return false; // other same-line content: layout doesn't apply
         }
     }

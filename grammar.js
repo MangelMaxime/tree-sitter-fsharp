@@ -193,6 +193,12 @@ export default grammar({
     // Conflict declarations enable GLR exploration where LALR(1) is insufficient.
     // Without them, prec.dynamic is silently ignored.
     conflicts: $ => [
+        // `expr ;` at statement level: the `;` could continue a sequence_expression
+        // (`a; b`) or terminate the statement (the `;` is then the standalone `";"`
+        // _token / a body-level `optional(";")`). GLR forks; the sequence path dies
+        // when no expression follows the `;`, and prec.dynamic(1) on
+        // sequence_expression prefers the one-statement reading when one does.
+        [$.sequence_expression, $._token],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$.record_type_field, $.postfix_type],
@@ -1118,10 +1124,28 @@ export default grammar({
         // list/array separators — but the literal `;` can, hence the higher
         // static precedence on the list/array `;` separators (see below) so
         // `[ a; b ]` stays two ELEMENTS, not one `(a; b)` sequence element.
-        sequence_expression: $ => prec.left(PREC.SEQ_EXPR, seq(
+        // Second branch: `stmt;` — a TRAILING `;` as a statement terminator
+        // (`f x =! g y;`, the unquote test style). prec(-1) so every separator
+        // reading wins: a list/array `;` (static prec on those separators) and
+        // the sequence's own `; expr` continuation both shift instead of
+        // reducing this. After a newline-separated sequence (`a`⏎`b;`) the
+        // left-assoc first branch nests this as its LAST element, so the
+        // trailing form composes without an optional on the main branch.
+        // prec.dynamic(1): a `;` after an expression STATEMENT forks (see the
+        // [$.sequence_expression, $._token] conflict) between continuing this
+        // sequence (`a; b` — one statement) and ending the statement with the
+        // `;` as a standalone terminator `_token` (`f x =! g y;`, unquote
+        // style). When an expression follows, both survive — prefer the
+        // sequence; when none does (newline/EOF), this path dies and the
+        // terminator reading parses cleanly.
+        // (A trailing `;` after the sequence's LAST statement in a layout body —
+        // `let f () =⏎ g ()⏎ a;` — is consumed by the SCANNER into the closing
+        // `_layout_end`: a grammar-level `optional(";")` here never fires, the
+        // `;` shift always commits to the separator reading first.)
+        sequence_expression: $ => prec.dynamic(1, prec.left(PREC.SEQ_EXPR, seq(
             $._expression,
             repeat1(seq(choice($._layout_semi, ";"), $._expression)),
-        )),
+        ))),
 
         // struct (a, b)  struct (a, b, c)
         struct_tuple_expression: $ => prec(PREC.PAREN_EXPR, seq(
@@ -2866,8 +2890,12 @@ export default grammar({
             $._decl_or_comment,
 
             // Bare expression statements (last so all the above forms win
-            // when their leading keyword/punctuation is unambiguous)
-            $._expression,
+            // when their leading keyword/punctuation is unambiguous).
+            // prec(PREC.SEQ_EXPR) matches sequence_expression so the `expr • ;`
+            // state is a genuine GLR fork (see the conflicts entry) instead of
+            // being statically resolved toward the sequence shift — which made
+            // a trailing `stmt;` unparseable.
+            prec(PREC.SEQ_EXPR, $._expression),
 
             // FSI / script trailing `;` after a top-level / module-body
             // declaration (`open System;`). (`;;` is handled as an extra.)
