@@ -90,6 +90,11 @@ module L03_Functions =
     // …and on a LAMBDA body (`fun x -> … : T`), incl. after a `let … in`.
     let lambdaAsc g = fun x -> g x : int
     let lambdaLetInAsc f g = fun x -> let r = f x in g r : string
+    // …and on a NESTED let body followed by more statements (FSharpPlus
+    // Traversable style — this one cascaded 410 errors before the fix).
+    let nestedAsc lst =
+        let s = sequence lst : int list
+        map W s : int
 
     // `when` constraint on a tuple-param element FOLLOWED BY more params —
     // the FSharpPlus Control/* `Default1` overload idiom.
@@ -373,6 +378,11 @@ module L09_Loops =
         for KeyValue(k, v) in dict do
             printfn "%A %A" k v
 
+    // Named-DU-field deconstruction binder (`Ctor(field= pat)`, fantomas style).
+    let forNamedField (specs) =
+        for SynTypeDefnSig(typeRepr= trepr) in specs do
+            ignore trepr
+
     // Struct-tuple binder (`for struct(k, v) in …`, FSharp.Data.Adaptive style),
     // and typed struct-tuple elements in a parameter / match pattern.
     let forStruct (elements) =
@@ -613,6 +623,9 @@ module L13_Types =
 
     type MyInt = int
     type Pair = int * string
+
+    // Enum with the FIRST case bare on one line (FsCheck test style).
+    type ByteFlags = A = 1uy | B = 2uy | C = 4uy
 
     // Attribute on a non-first tuple parameter element.
     type Mapper() =

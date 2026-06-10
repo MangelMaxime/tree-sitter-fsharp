@@ -842,3 +842,86 @@ let f x = x
       (identifier))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Inline enum, nested-let body ascription, for with a named-field binder
+================================================================================
+
+type ByteFlags = A = 1uy | B = 2uy | C = 4uy
+
+let sequenced lst =
+    let s = sequence lst : int list
+    map W s : int
+
+let iterSpecs specs =
+    for SynTypeDefnSig(typeRepr= trepr) in specs do
+        ignore trepr
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (enum_type_defn
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))
+      (enum_case
+        name: (identifier)
+        value: (int_literal))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (type_ascription_expression
+      (let_expression
+        binding: (let_decl_indented
+          name: (identifier)
+          body: (type_ascription_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (postfix_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier))))))
+        continuation: (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier))))
+      (type_expression
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (for_expression
+      (named_field_pattern
+        constructor: (long_identifier
+          (identifier))
+        (named_field_pat
+          name: (identifier)
+          value: (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

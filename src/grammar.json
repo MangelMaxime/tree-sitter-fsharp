@@ -2878,11 +2878,37 @@
       ]
     },
     "enum_type_defn": {
-      "type": "REPEAT1",
-      "content": {
-        "type": "SYMBOL",
-        "name": "enum_case"
-      }
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "SYMBOL",
+            "name": "enum_case"
+          }
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_enum_case_bare"
+              },
+              "named": true,
+              "value": "enum_case"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "enum_case"
+              }
+            }
+          ]
+        }
+      ]
     },
     "struct_type_defn": {
       "type": "SEQ",
@@ -2984,6 +3010,44 @@
           "type": "STRING",
           "value": "|"
         },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "FIELD",
+          "name": "value",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "int_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "negative_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "char_literal"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "_enum_case_bare": {
+      "type": "SEQ",
+      "members": [
         {
           "type": "FIELD",
           "name": "name",
@@ -6202,8 +6266,17 @@
               "type": "FIELD",
               "name": "body",
               "content": {
-                "type": "SYMBOL",
-                "name": "_expression"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_expression"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "type_ascription_expression"
+                  }
+                ]
               }
             },
             {
@@ -7608,6 +7681,10 @@
                             }
                           }
                         ]
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "named_field_pattern"
                       },
                       {
                         "type": "PREC_RIGHT",

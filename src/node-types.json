@@ -1539,6 +1539,10 @@
           "named": true
         },
         {
+          "type": "named_field_pattern",
+          "named": true
+        },
+        {
           "type": "pattern",
           "named": true
         },
@@ -2395,6 +2399,10 @@
         "types": [
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "type_ascription_expression",
             "named": true
           }
         ]

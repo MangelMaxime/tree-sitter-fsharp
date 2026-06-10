@@ -966,7 +966,12 @@ export default grammar({
         ),
 
         // type Color = | Red = 0 | Green = 1 | Blue = 2
-        enum_type_defn: $ => repeat1($.enum_case),
+        // The FIRST case may omit its `|` (`type Flags = A = 1uy | B = 2uy`),
+        // mirroring union_case_bare.
+        enum_type_defn: $ => choice(
+            repeat1($.enum_case),
+            seq(alias($._enum_case_bare, $.enum_case), repeat($.enum_case)),
+        ),
 
         // type Point3D = struct val x: float … end — block-style bodies hold the
         // same class-body members as `type Foo() = …` (no _body_indent needed
@@ -993,6 +998,11 @@ export default grammar({
 
         enum_case: $ => seq(
             "|",
+            field('name', $.identifier),
+            "=",
+            field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
+        ),
+        _enum_case_bare: $ => seq(
             field('name', $.identifier),
             "=",
             field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
@@ -1716,8 +1726,10 @@ export default grammar({
             $._let_signature,
             "=",
             // S_EXPR body (`_expr_open`) so a `let x = e in body` closes the value
-            // `e` at the inline `in`.
-            seq($._expr_open, field('body', $._expression), $._layout_end),
+            // `e` at the inline `in`. The ascription alternative covers the
+            // FSharpPlus `let s = sequence lst : '``Functor<…>``` suffix —
+            // without it the `:` breaks the let and poisons the next statement.
+            seq($._expr_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
             // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
             // (expression-position) let, same as the top-level `let_binding`.
             // Uses `_and_decl_indented` (NOT the top-level `let_and_binding`) so
@@ -2113,6 +2125,9 @@ export default grammar({
                         // A trailing whole-tuple `as` alias (`for k, v as x in …`) is the
                         // `as_pattern` branch above (its pattern is this tuple).
                         seq($._tuple_pattern_item, repeat1(seq(",", $._tuple_pattern_item))),
+                        // `for SynTypeDefnSig(typeRepr= trepr) in specs do …` —
+                        // named-DU-field deconstruction binder (fantomas style).
+                        $.named_field_pattern,
                         // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
                         // application binder (the bare `long_identifier` form is omitted:
                         // a no-arg binder is already covered by `$.identifier`).
