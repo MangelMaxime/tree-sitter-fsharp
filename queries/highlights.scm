@@ -532,6 +532,21 @@
   (struct_tuple_pattern
     (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))
 
+; A PARENTHESIZED tuple pattern as a parameter whose FIRST element is typed
+; (`((x: ^t when …, f: int), m)` — tuple_typed_first_pattern nesting): colour
+; its typed and bare elements as parameters too.
+(parameter
+  (tuple_pattern
+    (pattern
+      (tuple_typed_first_pattern
+        (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))))
+((parameter
+   (tuple_pattern
+     (pattern
+       (tuple_typed_first_pattern
+         (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter)))))))
+ (#match? @variable.parameter "^[a-z_]"))
+
 ; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
 ; locals-resolved uses of it) read consistently.
 (for_expression (identifier) @variable)

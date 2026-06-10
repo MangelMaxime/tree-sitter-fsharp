@@ -4369,6 +4369,10 @@
             "named": true
           },
           {
+            "type": "new",
+            "named": false
+          },
+          {
             "type": "operator_name",
             "named": true
           }
@@ -4811,6 +4815,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "type_constraint",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -5035,6 +5049,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "new",
+            "named": false
           },
           {
             "type": "operator_name",
@@ -5660,6 +5678,10 @@
       "types": [
         {
           "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "preproc_directive",
           "named": true
         },
         {

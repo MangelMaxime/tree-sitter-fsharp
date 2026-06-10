@@ -627,6 +627,15 @@ module L13_Types =
     // Enum with the FIRST case bare on one line (FsCheck test style).
     type ByteFlags = A = 1uy | B = 2uy | C = 4uy
 
+    // `#nowarn`/`#warnon` directives BETWEEN union cases (Argu test style) —
+    // they don't dedent-close the type body.
+    type CliArgs =
+        | First of int
+#nowarn 44
+        | Rest_Arg of int
+#warnon 44
+        | Main of chars: char list
+
     // Attribute on a non-first tuple parameter element.
     type Mapper() =
         member _.Map(f, [<InjectAttribute>] comparer: int) = f comparer
@@ -678,6 +687,12 @@ module L13_Types =
 
     // `new 'T()` — construct a generic type parameter (needs a `new` constraint).
     let inline createDefault<'T when 'T: (new: unit -> 'T)> () = new 'T()
+    // SRTP CALL with a constructor signature (`new` replaces `member name`).
+    let inline ofSeq (x: seq<'t>) = (^R : (new : seq<'t> -> ^R) x)
+    // `when` constraint (incl. an SRTP member sig) on a typed element of a
+    // PARENTHESIZED tuple pattern (FSharpPlus Control/Functor overloads).
+    type MapLike =
+        static member inline F ((x: ^t when ^t : (static member (>>=) : int -> int), f: int), m: int) = x
 
     // Type-provider STATIC arguments: positional literals (string / triple-quoted)
     // and named constants (`Name=value`, spaces allowed, value may be a literal,

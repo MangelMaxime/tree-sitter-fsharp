@@ -83,6 +83,19 @@
  (#match? @local.definition.variable.parameter "^[a-z_]"))
 (destructure_parameter (struct_tuple_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable.parameter))))
 
+; Direct tuple-pattern parameter elements (`(a, b: int)` under `parameter`) —
+; the typed form's generic rule above classes them plain `variable`; in
+; parameter position they are parameters (matches highlights).
+(parameter (tuple_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable.parameter))))
+((parameter (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+
+; Paren-tuple parameter with a typed FIRST element (`((x: ^t when …, f), m)`) —
+; class the nested elements as parameters so body uses recolour correctly.
+(parameter (tuple_pattern (pattern (tuple_typed_first_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable.parameter))))))
+((parameter (tuple_pattern (pattern (tuple_typed_first_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+
 ; ── References ────────────────────────────────────────────────────────────────
 ; Root segment of an identifier path (so `x` in `x.Length` is a reference, but
 ; `.Length` is not).

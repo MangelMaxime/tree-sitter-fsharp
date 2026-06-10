@@ -150,10 +150,17 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
         if (lexer->lookahead == 0) return false;
         if (lexer->lookahead == '#') {
             lexer->advance(lexer, true);
-            char w[6]; size_t wi = 0;
-            while (wi < 5 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
+            char w[8]; size_t wi = 0;
+            while (wi < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
             w[wi] = '\0';
-            if (strcmp(w, "if") == 0 || strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 || strcmp(w, "endif") == 0) {
+            // `#nowarn`/`#warnon` are skipped like the `#if` family so they
+            // don't dedent-close an open body when interspersed (e.g. between
+            // union cases, Argu style); the directive tokens themselves are
+            // consumed by the grammar where it allows `preproc_directive`.
+            // NOT `#load`/`#r`: those are top-level statements that RELY on
+            // the dedent-close firing at their line.
+            if (strcmp(w, "if") == 0 || strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 || strcmp(w, "endif") == 0 ||
+                strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0) {
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
                 continue;

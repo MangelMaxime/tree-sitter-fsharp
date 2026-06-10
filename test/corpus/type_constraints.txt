@@ -235,3 +235,116 @@ let f<'T when IParsable<'T>> () = 1
     parameters: (parameter
       (unit))
     body: (int_literal)))
+
+================================================================================
+SRTP new-constraint call, when-constraints in paren tuple patterns, directives between union cases
+================================================================================
+
+let inline ofSeq (x: seq<'t>) = (^R : (new : seq<'t> -> ^R) x)
+
+type Mapper =
+    static member F ((x: ^t when ^t : (static member (>>=) : int -> int), f: int), m: int) = x
+
+type Args =
+    | First of int
+#nowarn 44
+    | Rest_Arg of int
+#warnon 44
+    | Main of chars: char list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (generic_type
+          (long_identifier
+            (identifier))
+          (type_expression
+            (type_parameter)))))
+    body: (srtp_call_expression
+      (type_parameter)
+      member_type: (type_expression
+        (function_type
+          (type_expression
+            (generic_type
+              (long_identifier
+                (identifier))
+              (type_expression
+                (type_parameter))))
+          (type_expression
+            (type_parameter))))
+      argument: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (tuple_pattern
+          (pattern
+            (tuple_typed_first_pattern
+              (tuple_typed_pattern
+                pattern: (long_identifier
+                  (identifier))
+                type: (type_expression
+                  (type_parameter))
+                (type_constraint
+                  (type_parameter)
+                  member_name: (operator_name
+                    (symbolic_op))
+                  member_type: (type_expression
+                    (function_type
+                      (type_expression
+                        (long_identifier
+                          (identifier)))
+                      (type_expression
+                        (long_identifier
+                          (identifier)))))))
+              (tuple_typed_pattern
+                pattern: (long_identifier
+                  (identifier))
+                type: (type_expression
+                  (long_identifier
+                    (identifier))))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (long_identifier
+        (identifier))))
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier))))
+      (preproc_directive
+        name: (preproc_keyword)
+        argument: (int_literal))
+      (union_case
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier))))
+      (preproc_directive
+        name: (preproc_keyword)
+        argument: (int_literal))
+      (union_case
+        name: (identifier)
+        (union_case_named_fields
+          (union_case_field
+            name: (identifier)
+            type: (postfix_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))))

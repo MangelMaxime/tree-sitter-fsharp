@@ -843,11 +843,16 @@ export default grammar({
         // `|`-prefixed cases. The `| A | B` and multi-line `| A`⏎`| B` forms go
         // straight through `repeat1($.union_case)`. A bare first case is kept
         // attribute-LESS so it can't be confused with an attributed type member.
-        union_type_defn: $ => seq(
+        // prec.right: a `#nowarn`-style directive right after the last case is
+        // absorbed into the union body (greedy) rather than ending it — either
+        // reading is fine for highlighting, the parser just has to pick one.
+        union_type_defn: $ => prec.right(seq(
             optional($.access_modifier),
             choice(
                 // `| A | B` and multi-line `| A`⏎`| B` (leading-pipe form).
-                repeat1($.union_case),
+                // `#nowarn`/`#warnon` directives may sit BETWEEN cases
+                // (Argu tests wrap obsolete cases in warning suppressions).
+                repeat1(choice($.union_case, $.preproc_directive)),
                 // Bare FIELD-LESS first case: `A | B`. A field-less bare name
                 // alone (`type X = A`) is a type abbreviation, so this form
                 // REQUIRES at least one following `|`-case (the `repeat1`); a
@@ -865,7 +870,7 @@ export default grammar({
                     repeat($.union_case),
                 ),
             ),
-        ),
+        )),
 
         union_case_bare: $ => prec.right(seq(
             field('name', $.identifier),
@@ -1932,9 +1937,13 @@ export default grammar({
                 $.type_parameter,
                 ":",
                 "(",
-                optional("static"),
-                "member",
-                field('member_name', choice($.identifier, $.operator_name)),
+                choice(
+                    seq(optional("static"), "member",
+                        field('member_name', choice($.identifier, $.operator_name))),
+                    // `(^R : (new : seq<'t> -> ^R) x)` — constructor-constraint
+                    // call: `new` REPLACES `member name` (FSharpPlus Collection).
+                    field('member_name', "new"),
+                ),
                 ":",
                 field('member_type', $.type_expression),
                 ")",
@@ -1952,9 +1961,13 @@ export default grammar({
                 ")",
                 ":",
                 "(",
-                optional("static"),
-                "member",
-                field('member_name', choice($.identifier, $.operator_name)),
+                choice(
+                    seq(optional("static"), "member",
+                        field('member_name', choice($.identifier, $.operator_name))),
+                    // `(^R : (new : seq<'t> -> ^R) x)` — constructor-constraint
+                    // call: `new` REPLACES `member name` (FSharpPlus Collection).
+                    field('member_name', "new"),
+                ),
                 ":",
                 field('member_type', $.type_expression),
                 ")",
@@ -2552,10 +2565,15 @@ export default grammar({
 
         // `name : type` element of a parenthesised tuple pattern (the tuple's
         // own parens stand in for the per-element parens `typed_pattern` needs).
+        // The optional constraint clause covers a typed element inside a
+        // PARENTHESIZED tuple pattern: `((x: '``M<'T>`` when '``M<'T>`` :
+        // (static member (>>=) : …), f: 'T->'U), _mthd)` — the FSharpPlus
+        // Control/Functor overload idiom (tuple_param has the same clause).
         tuple_typed_pattern: $ => seq(
             field('pattern', choice($.long_identifier, $.wildcard_pattern)),
             ":",
             field('type', $.type_expression),
+            optional($._when_constraints),
         ),
 
         // Elements of unparenthesized_tuple_pattern. Excludes identifier_pattern's
@@ -2919,7 +2937,7 @@ export default grammar({
             seq($.type_parameter, ":", "(",
                 optional("static"),
                 "member",
-                field('member_name', choice($.identifier, $.operator_name)),
+                field('member_name', choice($.identifier, $.operator_name, "new")),
                 ":",
                 field('member_type', $.type_expression),
                 ")"),
@@ -2937,7 +2955,7 @@ export default grammar({
                 "(",
                 optional("static"),
                 "member",
-                field('member_name', choice($.identifier, $.operator_name)),
+                field('member_name', choice($.identifier, $.operator_name, "new")),
                 ":",
                 field('member_type', $.type_expression),
                 ")",
