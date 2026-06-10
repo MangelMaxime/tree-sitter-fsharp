@@ -73,6 +73,15 @@ module L03_Functions =
     // bodies; `(e : T)` stays a parenthesised typed_expression (not shadowed).
     let singletonAsc value = [ value ] : int list
     let mapAsc f x = box (f x) : obj
+    // …and on a LAMBDA body (`fun x -> … : T`), incl. after a `let … in`.
+    let lambdaAsc g = fun x -> g x : int
+    let lambdaLetInAsc f g = fun x -> let r = f x in g r : string
+
+    // `when` constraint on a tuple-param element FOLLOWED BY more params —
+    // the FSharpPlus Control/* `Default1` overload idiom.
+    let inline applyDefault (_output: ^t when ^t: null and ^t: struct, _mthd: int) = ()
+    type ApplyLike =
+        static member inline Ap (f: 't when 't: comparison, _mthd: obj) = f
 
     // Member access directly on a literal.
     let litLen = "abc".Length

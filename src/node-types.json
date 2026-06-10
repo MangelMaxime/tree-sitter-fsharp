@@ -1699,6 +1699,10 @@
         {
           "type": "_expression",
           "named": true
+        },
+        {
+          "type": "type_ascription_expression",
+          "named": true
         }
       ]
     }
@@ -2101,6 +2105,10 @@
         "types": [
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "type_ascription_expression",
             "named": true
           }
         ]
@@ -4625,6 +4633,10 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         },
@@ -5746,6 +5758,10 @@
         "types": [
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "type_ascription_expression",
             "named": true
           }
         ]

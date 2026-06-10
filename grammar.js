@@ -583,7 +583,11 @@ export default grammar({
             ),
             // `value: string | null` — nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.
-            optional(seq(":", choice($.type_expression, $.nullable_type))),
+            // The optional constraint clause covers `(x: ^t when ^t: null and
+            // ^t: struct, _mthd: Default1)` — the FSharpPlus Control/* idiom:
+            // a `when` after a param's type can only be a constraint here.
+            optional(seq(":", choice($.type_expression, $.nullable_type),
+                optional($._when_constraints))),
         ),
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
@@ -1545,7 +1549,10 @@ export default grammar({
         // alternative is gone — it created an ambiguity where an inline body could
         // reduce WITHOUT a layout close, so e.g. `if a then b`⏎`else …` reduced the
         // `if` before the `else` could attach.
-        _indented_or_inline_body: $ => seq($._expr_open, $._expression, $._layout_end),
+        // `type_ascription_expression` is allowed here like in `_ascribable_body`:
+        // a LAMBDA body may carry the FSharpPlus return-type suffix
+        // (`fun x -> let f' = f x in f' (g x) : 'U` — Control/Applicative style).
+        _indented_or_inline_body: $ => seq($._expr_open, choice($._expression, $.type_ascription_expression), $._layout_end),
 
         if_expression: $ => prec.right(PREC.IF_EXPR, choice(
             prec(2, seq(
@@ -1735,6 +1742,12 @@ export default grammar({
             choice(
                 seq(
                     field('binding', $.let_decl_indented),
+                    // The scanner CLOSES the binding's S_EXPR body at an inline
+                    // `in`, but the literal keyword still needs consuming here —
+                    // without this slot it lexes as an IDENTIFIER and the
+                    // continuation silently misparses (`in x * 2` became the
+                    // application `(in x) * 2` with `in` as a plain variable).
+                    optional("in"),
                     field('continuation', $._expression),
                 ),
                 seq(

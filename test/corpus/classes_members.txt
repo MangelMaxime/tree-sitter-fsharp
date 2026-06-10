@@ -593,3 +593,95 @@ let f (_: int, x: string) = x
               (identifier))))))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Member params with when-constraints and a lambda body with return ascription
+================================================================================
+
+type Apply =
+    static member inline Ap (f: ^t when ^t: null and ^t: struct, _mthd: Default1) = id
+    static member Map (struct (f: int -> int, g: int -> string), _output: int -> string) = fun x -> let r = f x in g r : string
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (type_parameter))
+            (type_constraint
+              (type_parameter))
+            (type_constraint
+              (type_parameter)))
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (long_identifier
+        (identifier)))
+    (member_defn
+      name: (identifier)
+      parameters: (parameter
+        (tuple_pattern
+          (pattern
+            (struct_tuple_pattern
+              (tuple_typed_pattern
+                pattern: (long_identifier
+                  (identifier))
+                type: (type_expression
+                  (function_type
+                    (type_expression
+                      (long_identifier
+                        (identifier)))
+                    (type_expression
+                      (long_identifier
+                        (identifier))))))
+              (tuple_typed_pattern
+                pattern: (long_identifier
+                  (identifier))
+                type: (type_expression
+                  (function_type
+                    (type_expression
+                      (long_identifier
+                        (identifier)))
+                    (type_expression
+                      (long_identifier
+                        (identifier))))))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (function_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (type_expression
+                  (long_identifier
+                    (identifier))))))))
+      body: (lambda_expression
+        (parameter
+          (identifier))
+        body: (type_ascription_expression
+          (let_expression
+            binding: (let_decl_indented
+              name: (identifier)
+              body: (application_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier))))
+            continuation: (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (long_identifier
+              (identifier))))))))
