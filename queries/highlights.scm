@@ -138,6 +138,8 @@
   ","
 ] @punctuation.delimiter
 
+(fsi_terminator) @punctuation.delimiter
+
 (preproc_keyword) @keyword.directive
 (preproc_if_kw) @keyword.directive
 (preproc_elif_kw) @keyword.directive

@@ -488,6 +488,10 @@ module L14_NestedModules =
     module WithSemis =
         open System;
         let value = 1
+        // `;;` is the FSI/script interaction terminator — skippable (an extra), so it
+        // can trail any statement and doesn't collide with the single-`;` separator.
+        let scriptVal = [ 1; 2; 3 ];;
+        printfn "%A" scriptVal;;
 
 // ── Decl: classes & members ─────────────────────────────────────────────────
 module L15_Classes =

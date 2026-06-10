@@ -5904,6 +5904,11 @@
     "named": true
   },
   {
+    "type": "fsi_terminator",
+    "named": true,
+    "extra": true
+  },
+  {
     "type": "fun",
     "named": false
   },

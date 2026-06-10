@@ -183,6 +183,10 @@ export default grammar({
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
+        // `;;` is the FSI / script interaction terminator — pure punctuation with no
+        // semantic content, so it's skippable anywhere (like a comment). Longer-match
+        // beats the single `;` separator, and a bare `; ;` never occurs in valid F#.
+        $.fsi_terminator,
         // Conditional-compilation directives are skippable anywhere (see preproc_if).
         $.preproc_if, $.preproc_elif, $.preproc_else_kw, $.preproc_endif_kw],
 
@@ -249,6 +253,11 @@ export default grammar({
 
     rules: {
         source_file: $ => repeat($._token),
+
+        // `;;` — FSI / script interaction terminator. An `extra` (skippable anywhere),
+        // so it doesn't need a slot in every statement/expression position. `token`
+        // makes it a single 2-char lexeme that out-prioritises the `;` separator.
+        fsi_terminator: _ => token(";;"),
 
         import_decl: ($) => seq("open", optional("type"), $.long_identifier),
 

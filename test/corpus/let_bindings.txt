@@ -437,3 +437,26 @@ let singleton value = [ value ] : int list
               (identifier)))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+FSI double-semicolon terminator (;;)
+================================================================================
+
+let x = 1;;
+printfn "%A" x;;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal)
+    (fsi_terminator))
+  (application_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))
+    (long_identifier
+      (identifier)))
+  (fsi_terminator))
