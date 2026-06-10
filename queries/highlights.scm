@@ -150,8 +150,9 @@
 
 (preproc_keyword) @keyword.directive
 (preproc_if_kw) @keyword.directive
-(preproc_elif_kw) @keyword.directive
-(preproc_else_kw) @keyword.directive
+; The inactive `#elif`/`#else`…`#endif` region is one trivia token — colour it
+; like a comment (the IDE convention for inactive conditional code).
+(preproc_inactive) @comment
 (preproc_endif_kw) @keyword.directive
 ; the `#if`/`#elif` condition (`FABLE_COMPILER || …`) is left UNCOLOURED (default)
 ; — only the directive keyword is highlighted, not the symbols in the condition.

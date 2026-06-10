@@ -1060,3 +1060,30 @@ pipeline "Deploy" {
 #time
 
 seq { 1..100 } |> Seq.map id |> ignore
+
+// === L25: #if/#else — inactive branch is ONE trivia token (preproc_inactive) ===
+module L25_PreprocBranches =
+    let pick flag =
+#if CHECK_A
+        flag && true
+#else
+        flag || false
+#endif
+
+    let describe value : string =
+        match value with
+#if CHECK_A
+        | Some text -> text
+#else
+        | Some text -> text + "!"
+#endif
+        | None -> "none"
+
+    let chained =
+#if CHECK_A
+        1
+#elif CHECK_B
+        2
+#else
+        3
+#endif

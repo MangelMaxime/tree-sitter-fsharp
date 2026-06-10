@@ -48,6 +48,7 @@ typedef enum {
     ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
     CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
+    PREPROC_INACTIVE,     // `#else`/`#elif` … up to (excl.) the matching `#endif` — inactive branch as one trivia token
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -112,6 +113,13 @@ static void push(Scanner *s, uint8_t sort, uint32_t col) {
 // line. Returns false at EOF. Reused verbatim from the old scanner (handles `//`
 // line comments, `(* *)` nested block comments, and `#if/#elif/#else/#endif`
 // conditional-compilation lines which are extras transparent to the offside rule).
+// When set (main line-boundary call only), next_line_indent STOPS at an
+// `#else`/`#elif` inactive-region start (sentinel *first = 1) instead of
+// skipping the region — the caller then tokenizes it as PREPROC_INACTIVE.
+// Peek callers (body-col probes, open helpers) leave it false and get the
+// region-skipping geometry.
+static bool g_region_stop = false;
+
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
@@ -168,7 +176,33 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             // consumed by the grammar where it allows `preproc_directive`.
             // NOT `#load`/`#r`: those are top-level statements that RELY on
             // the dedent-close firing at their line.
-            if (strcmp(w, "if") == 0 || strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 || strcmp(w, "endif") == 0 ||
+            // `#elif`/`#else` open an INACTIVE region — skip THE WHOLE region
+            // (depth-aware) up to the matching `#endif` line, mirroring the
+            // PREPROC_INACTIVE token, so layout geometry never sees inactive code.
+            if (strcmp(w, "elif") == 0 || strcmp(w, "else") == 0) {
+                if (g_region_stop) { if (first) *first = 1; *col = indent; return true; }
+                int pdepth = 1, pguard = 0;
+                for (;;) {
+                    if (++pguard > 100000) return false;
+                    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                    if (lexer->lookahead == 0) return false;
+                    if (lexer->lookahead == '\r') lexer->advance(lexer, true);
+                    if (lexer->lookahead == '\n') lexer->advance(lexer, true);
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    if (lexer->lookahead == '#') {
+                        lexer->advance(lexer, true);
+                        char d[8]; size_t dn = 0;
+                        while (dn < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { d[dn++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
+                        d[dn] = '\0';
+                        if (strcmp(d, "if") == 0) pdepth++;
+                        else if (strcmp(d, "endif") == 0 && --pdepth == 0) break;   // #endif line: skip its tail below
+                    }
+                }
+                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                if (lexer->lookahead == 0) return false;
+                continue;
+            }
+            if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0) {
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
@@ -707,6 +741,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[INTERP_VERBATIM_TEXT]) { bool ok = scan_interp_text(lexer, TX_VERBATIM); if (ok) lexer->result_symbol = INTERP_VERBATIM_TEXT; return ok; }
     if (valid[INTERP_TRIPLE_TEXT])   { bool ok = scan_interp_text(lexer, TX_TRIPLE);   if (ok) lexer->result_symbol = INTERP_TRIPLE_TEXT;   return ok; }
 
+
+
     Ctx *top = s->n > 0 ? &s->stk[s->n - 1] : NULL;
 
     // CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
@@ -1138,11 +1174,44 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     }
 
     uint32_t col; int32_t first = 0;
-    if (!next_line_indent(lexer, &col, &first)) {           // EOF after trailing blanks
+    g_region_stop = true;
+    bool nli = next_line_indent(lexer, &col, &first);
+    g_region_stop = false;
+    if (!nli) {                                             // EOF after trailing blanks
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
         return false;
+    }
+    if (first == 1) {
+        // The next content line opens an INACTIVE `#else`/`#elif` region (the
+        // active branch was taken). Tokenize the whole region — up to but NOT
+        // including the matching `#endif` line — as ONE trivia token, BEFORE any
+        // close/semi: extras are transparent, so closes fire equally after it.
+        // Lookahead sits just past the directive word (skip-consumed: the token
+        // starts at the first non-skip advance below).
+        if (!valid[PREPROC_INACTIVE]) return false;
+        int rdepth = 1, rguard = 0;
+        for (;;) {
+            if (++rguard > 100000) return false;
+            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+                lexer->advance(lexer, false);
+            if (lexer->lookahead == 0) { lexer->mark_end(lexer); lexer->result_symbol = PREPROC_INACTIVE; return true; }
+            if (lexer->lookahead == '\r') lexer->advance(lexer, false);
+            if (lexer->lookahead == '\n') lexer->advance(lexer, false);
+            lexer->mark_end(lexer);          // tentative end: this line's start
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, false);
+            if (lexer->lookahead == '#') {
+                lexer->advance(lexer, false);
+                char d[8]; size_t dn = 0;
+                while (dn < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
+                    d[dn++] = (char)lexer->lookahead; lexer->advance(lexer, false);
+                }
+                d[dn] = '\0';
+                if (strcmp(d, "if") == 0) rdepth++;
+                else if (strcmp(d, "endif") == 0 && --rdepth == 0) { lexer->result_symbol = PREPROC_INACTIVE; return true; }
+            }
+        }
     }
     if (!top) {
         // Top-level (no layout context on the stack): a new statement on this line that

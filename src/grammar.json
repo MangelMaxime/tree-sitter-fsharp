@@ -12945,46 +12945,6 @@
         }
       }
     },
-    "preproc_elif_kw": {
-      "type": "TOKEN",
-      "content": {
-        "type": "PREC",
-        "value": 1,
-        "content": {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "#elif"
-            },
-            {
-              "type": "PATTERN",
-              "value": "[ \\t]*"
-            }
-          ]
-        }
-      }
-    },
-    "preproc_else_kw": {
-      "type": "TOKEN",
-      "content": {
-        "type": "PREC",
-        "value": 1,
-        "content": {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "#else"
-            },
-            {
-              "type": "PATTERN",
-              "value": "[ \\t]*"
-            }
-          ]
-        }
-      }
-    },
     "preproc_endif_kw": {
       "type": "TOKEN",
       "content": {
@@ -13028,23 +12988,6 @@
           }
         }
       ]
-    },
-    "preproc_elif": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "preproc_elif_kw"
-        },
-        {
-          "type": "FIELD",
-          "name": "condition",
-          "content": {
-            "type": "SYMBOL",
-            "name": "preproc_expression"
-          }
-        }
-      ]
     }
   },
   "extras": [
@@ -13078,11 +13021,7 @@
     },
     {
       "type": "SYMBOL",
-      "name": "preproc_elif"
-    },
-    {
-      "type": "SYMBOL",
-      "name": "preproc_else_kw"
+      "name": "preproc_inactive"
     },
     {
       "type": "SYMBOL",
@@ -13274,6 +13213,10 @@
     {
       "type": "SYMBOL",
       "name": "_ce_brace_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "preproc_inactive"
     }
   ],
   "inline": [],
