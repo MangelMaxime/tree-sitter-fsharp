@@ -1538,6 +1538,10 @@
       "required": true,
       "types": [
         {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         }

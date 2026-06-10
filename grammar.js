@@ -239,6 +239,11 @@ export default grammar({
         // `tuple_param` wildcard (OOP/member param, `member _.M(_: int, …)`).
         [$.tuple_param, $.pattern],
         [$.tuple_param, $.destructure_parameter],
+        // A function-type RETURN can be a nullable `T | null`; in a DU case
+        // (`type X = A of int -> 'a | B`) the `|` could instead start the next union
+        // case. GLR explores both — `null` after `|` → nullable, otherwise the type
+        // ends and `|` is the case separator.
+        [$.type_expression, $.nullable_type],
     ],
 
 
@@ -2543,8 +2548,11 @@ export default grammar({
         struct_tuple_type: $ => seq("struct", "(", $.tuple_type, ")"),
 
         // int -> string  (right-assoc: int -> string -> bool = int -> (string -> bool))
+        // The RETURN may be a nullable `T | null` (F# 9): `int -> string | null`. (A
+        // nullable on the LEFT needs parens — `(string | null) -> int` — so `|` there
+        // isn't ambiguous; only the return position accepts a bare nullable.)
         function_type: $ => prec.right(TYPE_PREC.FUNCTION, seq(
-            $.type_expression, "->", $.type_expression,
+            $.type_expression, "->", choice($.type_expression, $.nullable_type),
         )),
 
         // int * string  (flat: int * string * bool stays flat via repeat)

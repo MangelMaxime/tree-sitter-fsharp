@@ -397,6 +397,10 @@ module L13_Types =
     // inside a union case).
     let orNull (s: string | null) : string | null = s
     type Holder = { value: string | null }
+    // Nullable as the RETURN of a function type (`A -> T | null`), incl. inside a DU
+    // case alongside a following case (the `|` after `'a` is the next case, not a nullable).
+    let parseOpt (f: string -> int | null) = f
+    type Parser = A of (int -> string | null) | B of int
     type Outcome =
         | Ok of int
         | Failed of (string | null)

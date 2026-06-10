@@ -393,3 +393,27 @@ type U =
             (nullable_type
               (long_identifier
                 (identifier)))))))))
+
+================================================================================
+Function type returning a nullable (A -> T | null)
+================================================================================
+
+let f (g: int -> string | null) = g
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (nullable_type
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier))))
