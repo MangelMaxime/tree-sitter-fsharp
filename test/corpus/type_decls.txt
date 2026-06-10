@@ -968,3 +968,33 @@ type NonEmptyMap<'K when 'K: comparison> =
           (identifier))
         index: (long_identifier
           (identifier))))))
+
+================================================================================
+Type alias with trailing and standalone comments
+================================================================================
+
+type ILCodeLabel = int // an alias with a trailing comment
+
+// a standalone comment between declarations
+
+type Token = First // comment after the bare first case
+           | Second
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (long_identifier
+        (identifier))))
+  (line_comment)
+  (line_comment)
+  (type_decl
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier))
+      (line_comment)
+      (union_case
+        name: (identifier)))))

@@ -872,10 +872,21 @@ export default grammar({
             ),
         )),
 
-        union_case_bare: $ => prec.right(seq(
+        // NO static prec.right here (unlike union_case below): with it, an
+        // ALIAS `type A = int` followed by a line comment deterministically
+        // shifts the comment into this rule's repeat — committing to the
+        // bare-union reading, which then dies at the next decl and strands the
+        // comment in an ERROR. The declared conflict lets GLR fork instead:
+        // the union version dies unless a `|`-case actually follows.
+        // NO `repeat($.line_comment)` here (unlike union_case below): with a
+        // shiftable comment, an ALIAS `type A = int // c` (or with the comment
+        // on the next line) commits to the bare-union reading and strands the
+        // comment in an ERROR when no `|`-case follows. Without the shift the
+        // comment is a plain extra; `A // c⏎| B` still parses (the `|` case
+        // list continues after the skipped extra).
+        union_case_bare: $ => seq(
             field('name', $.identifier),
-            repeat($.line_comment),
-        )),
+        ),
 
         union_case_bare_fields: $ => prec.dynamic(2, prec.right(seq(
             field('name', $.identifier),

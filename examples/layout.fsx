@@ -658,6 +658,12 @@ module L13_Types =
 
     type MyInt = int
     type Pair = int * string
+    // A type ALIAS may carry a trailing comment — and a standalone comment
+    // between an alias and the next declaration must stay an extra (this was
+    // the old `type A = B // comment` wall: union_case_bare used to SHIFT the
+    // comment and commit to a doomed bare-union reading).
+    type ILCodeLabel = int // a label
+    type Offset = int
 
     // Enum with the FIRST case bare on one line (FsCheck test style).
     type ByteFlags = A = 1uy | B = 2uy | C = 4uy
