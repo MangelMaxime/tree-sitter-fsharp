@@ -512,3 +512,28 @@ let x = seq { for x in xs do yield x }
         body: (ce_result_expr
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Bare element DSL as a non-first top-level statement
+================================================================================
+
+let a = 1
+pipeline "x" {
+    run y
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal))
+  (computation_expression
+    builder: (long_identifier
+      (identifier))
+    args: (string_literal)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))

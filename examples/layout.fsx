@@ -700,3 +700,14 @@ module L22_BraceArgDisambiguation =
     // NOT be mistaken for the Fun.Build element DSL (the brace content decides).
     let equalRec a = expectEqual "msg" { a with Line = a.Line + 1 }
     let equalRec2 () = expectEqual "msg" { Name = "x" }
+
+// ── Brackets: bare element-DSL as a top-level statement (build.fsx pattern) ──
+// A col-0 element-DSL that is NOT the first top-level item (it follows another
+// declaration / dedents out of a module). At the top-level line boundary the marker
+// must still fire — otherwise `pipeline "x"` reduces to an application and `{ … }` errors.
+let private topLevelCfg = 0
+
+pipeline "Deploy" {
+    description "top-level element DSL after a declaration"
+    runIfOnlySpecified true
+}

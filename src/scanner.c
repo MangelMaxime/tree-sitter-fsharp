@@ -1020,7 +1020,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
         return false;
     }
-    if (!top) return false;
+    if (!top) {
+        // Top-level (no layout context on the stack): a new statement on this line that
+        // is an element-DSL builder (`pipeline "x" {` / `div() {` as a NON-first
+        // top-level item) still needs its `_element_dsl_open` marker. There's no context
+        // to emit a separator, so probe here at the line's first token; otherwise
+        // `pipeline "x"` reduces to a plain application and the `{ … }` body errors.
+        if (try_element_dsl(lexer, valid)) return true;
+        return false;
+    }
 
     // A leading `|` is a match arm UNLESS it is `|]` (array close) or `|}` (anon
     // record close). We can't cheaply peek the 2nd char here (next_line_indent
