@@ -1193,7 +1193,10 @@ export default grammar({
         optional_named_arg: $ => seq("?", $.identifier),
 
         // &expr — address-of / byref argument  someFunc(&mutableVal)
-        address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._expression)),
+        // The operand is `_simple_expression` (like `deref_expression`'s) so
+        // `&x` binds tighter than application and works as an application
+        // ARGUMENT (`seekReadInt32Adv &addr` — byref-heavy reader code).
+        address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._simple_expression)),
 
         // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics.
         // The keyword is fused with its REQUIRED adjacent `<` into a single
@@ -1294,6 +1297,8 @@ export default grammar({
             // `S (^X: (static member F: ^X -> ^X) x)` — an SRTP call as an
             // application argument (FSharpPlus TypeLevel style).
             $.srtp_call_expression,
+            // `f &addr` — address-of / byref argument.
+            $.address_of_expression,
             $.deref_expression,
             $.prefix_bang_expression,
             $.inline_il_expression,
@@ -2082,8 +2087,13 @@ export default grammar({
         // would bind outside the `do`, but that form is degenerate for `do`.)
         do_expression: $ => prec.right(2, seq("do", $._expression)),
 
-        // begin expr end  — sequenced block (equivalent to parenthesized)
-        begin_end_expression: $ => prec(PREC.PAREN_EXPR, seq("begin", $._expression, "end")),
+        // begin expr end  — sequenced block (equivalent to parenthesized).
+        // Layout body so the MULTI-LINE form works: `begin`⏎`  a ()`⏎`  b ()`⏎
+        // `end` — the body opens at the first statement's column and the
+        // dedented `end` closes it (the scanner also closes an inline S_EXPR
+        // body at a mid-line `end`, which is a reserved word).
+        begin_end_expression: $ => prec(PREC.PAREN_EXPR,
+            seq("begin", $._expr_open, $._expression, $._layout_end, "end")),
 
         // function | pat -> expr …  — shorthand for fun x -> match x with
         function_expression: $ => prec.right(PREC.MATCH_EXPR,

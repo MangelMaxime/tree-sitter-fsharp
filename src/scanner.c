@@ -1017,7 +1017,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 w[n] = '\0';
                 if (top && valid[LAYOUT_END]) {
-                    if (top->sort == S_EXPR && (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in"))) {
+                    if (top->sort == S_EXPR && (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in") ||
+                                                !strcmp(w, "end"))) {   // `begin work () end` — inline block close
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {

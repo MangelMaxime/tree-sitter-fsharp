@@ -403,6 +403,20 @@ module L09_Loops =
         while i < 3 do
             i <- i + 1
 
+    // Multi-line `begin … end` block (with a trailing `;` statement
+    // terminator) — the body opens at the first statement's column and the
+    // dedented `end` closes it.
+    let beginBlock () =
+        begin
+            stepA ()
+            stepB ()
+        end;
+        next ()
+
+    // `&addr` address-of as an application ARGUMENT (byref reader style).
+    let readToken big =
+        if big then seekReadInt32Adv &addr else seekReadUInt16AsInt32Adv &addr
+
     // `:=` ref-cell assignment (and `do`-statement form).
     let refLoop () =
         let counter = ref 0

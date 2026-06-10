@@ -3789,7 +3789,7 @@
           },
           {
             "type": "SYMBOL",
-            "name": "_expression"
+            "name": "_simple_expression"
           }
         ]
       }
@@ -4128,6 +4128,10 @@
         {
           "type": "SYMBOL",
           "name": "srtp_call_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "address_of_expression"
         },
         {
           "type": "SYMBOL",
@@ -7641,7 +7645,15 @@
           },
           {
             "type": "SYMBOL",
+            "name": "_expr_open"
+          },
+          {
+            "type": "SYMBOL",
             "name": "_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_layout_end"
           },
           {
             "type": "STRING",

@@ -280,6 +280,10 @@
         "named": true
       },
       {
+        "type": "address_of_expression",
+        "named": true
+      },
+      {
         "type": "anonymous_record_expression",
         "named": true
       },
@@ -480,7 +484,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "_simple_expression",
           "named": true
         }
       ]

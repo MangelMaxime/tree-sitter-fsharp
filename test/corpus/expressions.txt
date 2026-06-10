@@ -2327,3 +2327,59 @@ let arr = [| 1; 2; |]
     body: (array_expression
       (int_literal)
       (int_literal))))
+
+================================================================================
+Multi-line begin-end block and address-of arguments
+================================================================================
+
+let wrapped () =
+    begin
+        stepA ()
+        stepB ()
+    end;
+    next ()
+
+let readToken big =
+    if big then seekReadInt32Adv &addr else seekReadUInt16AsInt32Adv &addr
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (sequence_expression
+      (begin_end_expression
+        (sequence_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (if_expression
+      (long_identifier
+        (identifier))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (address_of_expression
+          (long_identifier
+            (identifier))))
+      else: (application_expression
+        (long_identifier
+          (identifier))
+        (address_of_expression
+          (long_identifier
+            (identifier)))))))
