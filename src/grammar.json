@@ -11792,10 +11792,6 @@
                     {
                       "type": "SYMBOL",
                       "name": "int_literal"
-                    },
-                    {
-                      "type": "SYMBOL",
-                      "name": "long_identifier"
                     }
                   ]
                 }

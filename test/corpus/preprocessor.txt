@@ -242,3 +242,22 @@ let pick x =
       (preproc_expression))
     (bool_literal))
   (preproc_endif_kw))
+
+================================================================================
+Directive does not swallow the next line as its argument
+================================================================================
+
+#time
+seq { 1..100 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_directive
+    name: (preproc_keyword))
+  (computation_expression
+    builder: (long_identifier
+      (identifier))
+    (binary_expression
+      left: (int_literal)
+      right: (int_literal))))

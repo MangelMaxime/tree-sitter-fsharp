@@ -2987,7 +2987,12 @@ export default grammar({
 
         preproc_directive: $ => prec.right(seq(
             field('name', $.preproc_keyword),
-            optional(field('argument', choice($.string_literal, $.int_literal, $.long_identifier))),
+            // Argument is a string/int literal (`#r "…"`, `#load "…"`, `#nowarn "25"`).
+            // A bare `long_identifier` is NOT accepted: no standard directive takes one,
+            // and because whitespace/newlines are `extras`, it would greedily grab the
+            // next line's first identifier as the argument (`#time⏎ seq { … }` →
+            // `#time(arg = seq)`, breaking the following statement).
+            optional(field('argument', choice($.string_literal, $.int_literal))),
         )),
 
         // Unix-style shebang at the top of an `.fsx` script — `#!/usr/bin/env -S dotnet fsi`.

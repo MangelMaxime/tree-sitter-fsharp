@@ -711,3 +711,9 @@ pipeline "Deploy" {
     description "top-level element DSL after a declaration"
     runIfOnlySpecified true
 }
+
+// A `#time` (or any no-argument) directive must NOT swallow the next line's first
+// identifier as its argument — the following bare expression stays its own statement.
+#time
+
+seq { 1..100 } |> Seq.map id |> ignore

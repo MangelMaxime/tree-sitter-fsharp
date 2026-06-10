@@ -3469,10 +3469,6 @@
             "named": true
           },
           {
-            "type": "long_identifier",
-            "named": true
-          },
-          {
             "type": "string_literal",
             "named": true
           }
