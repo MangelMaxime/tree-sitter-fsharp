@@ -93,6 +93,11 @@ module L03_Functions =
     let add = (+)
     let combine = List.reduce (+)
     let typeName = typeof<int>.Name
+    // Multidimensional array types: in generic args and annotations.
+    let rankName = typeof<int[,,]>.Name
+    let transpose (m: float[,]) = m
+    // KNOWN GAP: `o :?> byte[]` (no space) misparses — write `byte []` or `(byte[])`.
+    let asBytes (o: obj) = o :?> byte []
 
     // Member access on a collection / record literal.
     let listLen = [ 1; 2; 3 ].Length
@@ -494,6 +499,11 @@ module L12_ComputationExpr =
             else
                 return! fallback ()
         }
+
+    // `use mutable` binding (FSharp.Data.Adaptive enumerator style).
+    let copyAll (src) =
+        use mutable buffer = rent 1024
+        fill src buffer
 
     let asyncUseDo () =
         async {

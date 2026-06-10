@@ -504,3 +504,63 @@ type IntsOnly = JsonProvider<""" [1, 2, 3] """>
           (identifier))
         (static_type_argument
           (triple_quoted_string))))))
+
+================================================================================
+Multidimensional array types and use mutable
+================================================================================
+
+let dims = typeof<int[,,]>.Name
+
+let transpose (m: float[,]) = m
+
+let copyAll (src: Stream) =
+    use mutable buffer = rent 1024
+    fill src buffer
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (dot_expression
+      object: (type_keyword_expression
+        (type_intrinsic)
+        (type_expression
+          (array_type
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      member: (identifier)))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (array_type
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    body: (long_identifier
+      (identifier)))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    body: (use_binding
+      name: (identifier)
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (int_literal))
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))

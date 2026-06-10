@@ -1764,7 +1764,7 @@ export default grammar({
 
         // `use r = resource` — auto-disposes r at end of enclosing scope.
         use_expression: $ => prec.right(PREC.LET_EXPR,
-            seq("use", optional(token.immediate("!")), field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $.identifier), "=", $._expression),
         ),
 
         // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
@@ -1867,6 +1867,11 @@ export default grammar({
 
         // ── Type casts ────────────────────────────────────────────────────────
         // expr :> Type   upcast;  expr :?> Type   downcast;  expr :? Type   type test
+        // KNOWN GAP: `o :?> byte[]` with NO space before `[` — the `[` lexes as
+        // the dotless-index immediate `[` after this rule reduces (`byte []` and
+        // `(byte[])` both parse). An in-rule immediate suffix and an immediate
+        // alternative on array_type were both tried (2026-06-10) — the table
+        // still resolves toward the index reduce; not worth more machinery.
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
             seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
@@ -2265,7 +2270,7 @@ export default grammar({
         // (no operator names, active patterns, lists, or arrays).
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
-            seq("use", optional(token.immediate("!")), field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $.identifier), "=", $._expression),
         ),
 
         // match! expr with | pat -> expr …
@@ -2743,9 +2748,14 @@ export default grammar({
         ),
 
         // int[]
+        // `repeat(",")` = multidimensional ranks (`int[,]`, `int[,,]`).
+        // The `token.immediate` alternative covers `o :?> byte[]` — with no
+        // space the `[` would otherwise lex as the dotless-index immediate `[`
+        // (which then dies on an empty index, leaving an error).
         array_type: $ => prec(TYPE_PREC.APP, seq(
             $.type_expression,
-            "[",
+            choice("[", token.immediate("[")),
+            repeat(","),
             "]",
         )),
 
