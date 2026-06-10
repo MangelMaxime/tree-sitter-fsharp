@@ -1231,8 +1231,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             return false;
         case S_MATCH:
             // Close the arm-list when a line dedents below the arm column, or sits
-            // at the arm column but does NOT start a new `|` arm.
-            if (valid[MATCH_END] && (col < top->col || (col == top->col && !bar_arm))) { s->n--; lexer->result_symbol = MATCH_END; return true; }
+            // at the arm column but does NOT start a new `|` arm. EXCEPTION: a
+            // `|` exactly TWO columns left of the arm column is a continuation
+            // arm whose PATTERN aligns with the (inline) first arm's pattern —
+            // Hopac house style:
+            //   … >>= function Cons (_, i) -> push xM i x
+            //                | Nil -> imp ()
+            if (valid[MATCH_END] && (col < top->col || (col == top->col && !bar_arm)) &&
+                !(bar_arm && col + 2 == top->col)) { s->n--; lexer->result_symbol = MATCH_END; return true; }
             return false;
         case S_LAYOUT:
         case S_TYPEBODY:

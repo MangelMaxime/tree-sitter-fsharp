@@ -1375,6 +1375,10 @@ export default grammar({
             // ambiguous with an optional named arg `f ?x`; the no-space dynamic
             // form `o?member` is `dynamic_expression`.)
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', alias("$", $.symbolic_op)), field('right', $._expression))),
+            // Single-char `^` infix (Hopac's high-precedence apply, `f ^ x`).
+            // RIGHT-assoc per F#'s `^`-op rule. Spaced use only — `^ident` is a
+            // typar token (longer match) and `^^^`/`^=` etc. are symbolic_op.
+            prec.right(PREC.INFIX_OP,      seq(field('left', $._expression), field('operator', alias("^", $.symbolic_op)), field('right', $._expression))),
             prec.right(PREC.LARROW,        seq(field('left', $._expression), field('operator', "<-"), field('right', $._expression))),
             prec.right(1,                  seq(field('left', $._expression), field('operator', ".."), field('right', $._expression))),
         ),
@@ -2734,11 +2738,15 @@ export default grammar({
         ),
 
         // cm^3  m^-1  (measure type raised to a power)
-        measure_power_type: $ => seq(
+        // prec(TYPE_PREC.APP + 1): after a bare type (`e :> cm`), a following
+        // `^` extends into the measure power rather than ending the type for
+        // the expression-level infix `^` (Hopac apply) — the measure reading
+        // wins deterministically in type positions.
+        measure_power_type: $ => prec(TYPE_PREC.APP + 1, seq(
             $.long_identifier,
             "^",
             choice($.int_literal, $.negative_literal),
-        ),
+        )),
 
         // Compound measure expressions: `m/s` `kg*m/s^2` `'u` `1`. Juxtaposition
         // (`kg m`) is unsupported — write `kg*m` instead.

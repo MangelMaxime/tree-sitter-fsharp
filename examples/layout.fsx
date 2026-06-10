@@ -329,6 +329,13 @@ module L07_Lambda =
         | 0 -> "zero"
         | _ -> "other"
 
+    // Inline FIRST arm with continuation arms whose `|` sits two columns left
+    // (patterns align — Hopac house style).
+    let setAligned xM x = xM.mvar >>= function Cons (_, i) -> push xM i x
+                                             | Nil -> imp ()
+    // Single-char `^` infix (Hopac's right-assoc apply).
+    let conss x xs = Promise.start ^ xs >>- fun t -> Cons (x, t)
+
     let mapMatch m2 =
         Map.map (fun k v ->
             match v with

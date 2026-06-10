@@ -1082,3 +1082,62 @@ let matchTargets x =
         (pattern
           (wildcard_pattern))
         body: (int_literal)))))
+
+================================================================================
+Aligned continuation arms under an inline first arm
+================================================================================
+
+module Streams =
+    let set xM x = xM.mvar >>= function Cons (_, i) -> push xM i x
+                                      | Nil -> imp ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    name: (long_identifier
+      (identifier))
+    (let_binding
+      name: (identifier)
+      parameters: (parameter
+        (identifier))
+      parameters: (parameter
+        (identifier))
+      body: (binary_expression
+        left: (long_identifier
+          (identifier)
+          (identifier))
+        operator: (symbolic_op)
+        right: (function_expression
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))
+                (tuple_pattern
+                  (pattern
+                    (wildcard_pattern))
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier)))))))
+            body: (application_expression
+              (application_expression
+                (application_expression
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier))))
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            body: (application_expression
+              (long_identifier
+                (identifier))
+              (unit))))))))
