@@ -1076,13 +1076,26 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // bracket / match arm-list keeps newline-as-element/arm separator). They
         // are unary/prefix-capable. Excluded forms: `->` (lambda/match arrow),
         // `@"…"` (verbatim string), `@>` / `@@>` (code-quotation close).
+        // `@@` followed by anything but `>` is the custom path-concat operator
+        // (FAKE's `dir @@ file` written leading) — a continuation.
         if (layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
             lexer->advance(lexer, true);
             int32_t c1 = lexer->lookahead;
             if (first == '+') return false;
             if (first == '-' && c1 != '>') return false;
-            if (first == '@' && c1 != '"' && c1 != '>' && c1 != '@') return false;
+            if (first == '@') {
+                if (c1 != '"' && c1 != '>' && c1 != '@') return false;
+                if (c1 == '@') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead != '>') return false;   // `@@…` operator, not `@@>`
+                }
+            }
         }
+
+        // A leading `.` is always a continuation: a fluent member chain on its
+        // own line (`builder⏎ .Method()`), a `.`-led custom operator (`.>>.`,
+        // FParsec style), or a `..` range — no F# statement can START with `.`.
+        if (layoutish(top->sort) && first == '.') return false;
     }
 
     switch (top->sort) {

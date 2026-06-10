@@ -263,3 +263,56 @@ let r = (+) 1 2
         (operator_name)
         (int_literal))
       (int_literal))))
+
+================================================================================
+Leading two-char and dot-led operators continue the previous line
+================================================================================
+
+let deployPath =
+    baseDir
+    @@ "artifacts"
+    @@ version
+
+let parser =
+    header
+    .>>. body
+
+let client =
+    builder
+    .AddThing(1)
+    .Build()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      left: (binary_expression
+        left: (long_identifier
+          (identifier))
+        operator: (symbolic_op)
+        right: (string_literal))
+      operator: (symbolic_op)
+      right: (long_identifier
+        (identifier))))
+  (let_binding
+    name: (identifier)
+    body: (binary_expression
+      left: (long_identifier
+        (identifier))
+      operator: (symbolic_op)
+      right: (long_identifier
+        (identifier))))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (int_literal)))
+        member: (identifier))
+      (unit))))

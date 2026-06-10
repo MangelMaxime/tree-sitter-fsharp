@@ -344,6 +344,22 @@ module L09_Loops =
     let pipeline (xs) = xs |> List.map ((+) 1) |> List.filter ((<) 0) |> List.sum
     let composed = (fun x -> x + 1) >> (fun x -> x * 2)
 
+    // LEADING two-char / dot-led operators at the body column continue the
+    // previous line (FAKE's `@@` path-concat, FParsec's `.>>.`) — they must not
+    // be split into a new statement. A fluent member chain on its own lines
+    // (`.AddThing(…)`) is the same rule with plain member access.
+    let deployPath (baseDir) (version) =
+        baseDir
+        @@ "artifacts"
+        @@ version
+    let parsed (header) (body) =
+        header
+        .>>. body
+    let client (builder) =
+        builder
+        .AddThing(1)
+        .Build()
+
 // ── Brackets: lists / arrays ────────────────────────────────────────────────
 module L10_ListsArrays =
     let inlineList = [ 1; 2; 3 ]
