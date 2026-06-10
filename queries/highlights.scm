@@ -357,6 +357,12 @@
 (nullable_type "null" @type)
 (type_parameter) @type.parameter
 
+; Type-provider static arguments: the parameter name of a named arg
+; (`CsvProvider<…, Separators=";">`); a named VALUE that is a `[<Literal>]`
+; constant referenced by name (literal values keep their own literal scopes).
+(static_type_argument name: (identifier) @variable.parameter)
+(static_type_argument value: (long_identifier) @constant)
+
 ; Unit identifiers in measure types and literals
 (measure_power_type (long_identifier) @type)
 (measure_expression (long_identifier) @type)

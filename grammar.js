@@ -2652,10 +2652,46 @@ export default grammar({
         generic_type: $ => prec(TYPE_PREC.APP, seq(
             $.long_identifier,
             "<",
-            choice(prec.dynamic(1, $.type_expression), $.nullable_type, $.measure_expression),
-            repeat(seq(",", choice(prec.dynamic(1, $.type_expression), $.nullable_type, $.measure_expression))),
+            $._generic_type_arg,
+            repeat(seq(",", $._generic_type_arg)),
             ">",
         )),
+
+        _generic_type_arg: $ => choice(
+            prec.dynamic(1, $.type_expression),
+            $.nullable_type,
+            $.measure_expression,
+            $.static_type_argument,
+        ),
+
+        // Type-provider STATIC arguments inside `<…>`: literal values
+        // (`JsonProvider<""" [1] """>`) and named constants
+        // (`CsvProvider<"f.csv", Separators=";">`, `TypeNat<value = 4>`).
+        // Bare ints / identifiers in `<…>` already parse via measure_expression /
+        // type_expression, so the positional branch lists only the OTHER literal
+        // kinds; the named value additionally accepts int and `[<Literal>]`
+        // constants referenced by (dotted) name.
+        static_type_argument: $ => choice(
+            $._static_arg_literal,
+            seq(
+                field('name', $.identifier),
+                "=",
+                field('value', choice(
+                    $._static_arg_literal,
+                    $.int_literal,
+                    $.long_identifier,
+                )),
+            ),
+        ),
+        _static_arg_literal: $ => choice(
+            $.float_literal,
+            $.char_literal,
+            $.string_literal,
+            $.verbatim_string,
+            $.triple_quoted_string,
+            $.bool_literal,
+            seq("-", choice($.int_literal, $.float_literal)),
+        ),
 
         // int[]
         array_type: $ => prec(TYPE_PREC.APP, seq(

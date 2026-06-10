@@ -453,3 +453,54 @@ let f (g: int -> string | null) = g
               (identifier))))))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Type-provider static arguments (literal and named)
+================================================================================
+
+type Stocks = CsvProvider<"data/items.csv", Separators=";">
+type Nat = TypeNat<value = 4>
+type Person = JsonProvider<Schema=PersonSchemaLiteral>
+type IntsOnly = JsonProvider<""" [1, 2, 3] """>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (static_type_argument
+          (string_literal))
+        (static_type_argument
+          name: (identifier)
+          value: (string_literal)))))
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (static_type_argument
+          name: (identifier)
+          value: (int_literal)))))
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (static_type_argument
+          name: (identifier)
+          value: (long_identifier
+            (identifier))))))
+  (type_decl
+    name: (identifier)
+    alias: (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (static_type_argument
+          (triple_quoted_string))))))

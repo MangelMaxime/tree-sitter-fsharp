@@ -537,6 +537,15 @@ module L13_Types =
     // `new 'T()` — construct a generic type parameter (needs a `new` constraint).
     let inline createDefault<'T when 'T: (new: unit -> 'T)> () = new 'T()
 
+    // Type-provider STATIC arguments: positional literals (string / triple-quoted)
+    // and named constants (`Name=value`, spaces allowed, value may be a literal,
+    // an int, or a `[<Literal>]` constant referenced by name).
+    type Stocks = CsvProvider<"data/items.csv", Separators=";">
+    type Sample = JsonProvider<""" [1, 2, 3] """>
+    type Nat = TypeNat<value = 4>
+    type Person = JsonProvider<Schema=PersonSchemaLiteral, InferTypesFromValues=true>
+    type Bank = WorldBankDataProvider<"Indicators", Asynchronous=true>
+
 // ── Decl: nested modules ────────────────────────────────────────────────────
 module L14_NestedModules =
     module Inner =
