@@ -1016,6 +1016,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
+                    // KNOWN GAP: a mid-line `with` after a NEXT-LINE record type
+                    // body (`type M =⏎  { fields } with⏎  member …`, FSharpPlus
+                    // NonEmptyMap). Closing S_TYPEBODY here was tried 2026-06-10
+                    // and mis-fired on 23 bench files (interface_impl /
+                    // member-accessor `with` forms share the state) — reverted.
+                    // The same-line `= { … } with` form parses.
                     // `finally` is owned EXCLUSIVELY by try/finally (unlike
                     // `with`), so when an S_TRY is open SOMEWHERE below, every
                     // inner inline body must close first — one per invocation —
@@ -1071,6 +1077,31 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         uint32_t ncol; int32_t nfirst = 0;
                         if (!next_line_indent(lexer, &ncol, &nfirst) || ncol < top->col) {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                        }
+                    }
+                }
+                return false;                           // not trailing: literal `;`
+            }
+            // Same disease, BRACKET flavor: a trailing `;` right before the
+            // closing delimiter of a CE / list / array body (`seq { yield x; }`,
+            // `yield 1;`⏎`}`) — the grammar's own trailing-`;` optional never
+            // fires (the `;` shift commits to extending the LAST STATEMENT's
+            // expression into a sequence), so consume the `;` INTO the
+            // BRACKET_CLOSE. Same-line (`; }`) and next-line-closer forms.
+            if (c == ';' && valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) {
+                lexer->advance(lexer, false);           // consume `;`
+                if (lexer->lookahead != ';') {          // leave `;;` to the extras
+                    lexer->mark_end(lexer);             // token = just the `;`
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    int32_t a = lexer->lookahead;
+                    if (is_close_bracket(a) || a == '}' || a == ']') {
+                        s->n--; lexer->result_symbol = BRACKET_CLOSE; return true;
+                    }
+                    if (a == '\n' || a == '\r' || a == 0) {
+                        uint32_t ncol; int32_t nfirst = 0;
+                        if (next_line_indent(lexer, &ncol, &nfirst) &&
+                            (is_close_bracket(nfirst) || nfirst == '}' || nfirst == ']')) {
+                            s->n--; lexer->result_symbol = BRACKET_CLOSE; return true;
                         }
                     }
                 }

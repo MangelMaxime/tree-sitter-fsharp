@@ -600,3 +600,50 @@ let attrs =
               (long_identifier
                 (identifier)
                 (identifier)))))))))
+
+================================================================================
+Trailing semicolon before a CE or list closing delimiter
+================================================================================
+
+let inline' x = seq { yield x; yield! rest; }
+
+let block =
+    seq {
+        yield 1;
+    }
+
+let listBlock =
+    [
+        1;
+        2;
+    ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (ce_result_expr
+        (sequence_expression
+          (long_identifier
+            (identifier))
+          (ce_result_expr
+            (long_identifier
+              (identifier)))))))
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (ce_result_expr
+        (int_literal))))
+  (let_binding
+    name: (identifier)
+    body: (list_expression
+      (int_literal)
+      (int_literal))))

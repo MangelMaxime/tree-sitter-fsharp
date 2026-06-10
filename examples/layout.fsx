@@ -177,6 +177,15 @@ module L04_Sequences =
     verify 1 =! 1;
     verify 2 =! 2;
 
+    // Trailing `;` right before a CE / list CLOSING delimiter — same-line and
+    // next-line `}` (FSharpPlus NonEmptyList style; the scanner folds the `;`
+    // into the bracket close).
+    let toSeqSemi x = seq { yield x; yield! others; }
+    let blockSemi =
+        seq {
+            yield 1;
+        }
+
 // ── Then: if / elif / else ──────────────────────────────────────────────────
 module L05_If =
     let inlineIf a = if a then 1 else 0
