@@ -5233,6 +5233,10 @@
                       },
                       {
                         "type": "SYMBOL",
+                        "name": "application_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
                         "name": "bracket_index_expression"
                       },
                       {
@@ -5249,6 +5253,52 @@
                 {
                   "type": "SYMBOL",
                   "name": "_record_fields"
+                }
+              ]
+            },
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "_layout_open"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "base",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "_simple_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "application_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "bracket_index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "index_expression"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "STRING",
+                  "value": "with"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_record_fields"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_layout_end"
                 }
               ]
             },
@@ -5920,6 +5970,10 @@
         {
           "type": "SYMBOL",
           "name": "wildcard_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unit"
         }
       ]
     },
@@ -7543,6 +7597,18 @@
                     "name": "type_expression"
                   }
                 ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_type_augmentation"
               },
               {
                 "type": "BLANK"
@@ -11690,7 +11756,7 @@
           },
           {
             "type": "PATTERN",
-            "value": "``[^`\\n\\r\\t]+``"
+            "value": "``([^`\\n\\r\\t]|`[^`\\n\\r\\t])+``"
           }
         ]
       }

@@ -2434,3 +2434,98 @@ let primes =
       (int_literal)
       (block_comment)
       (int_literal))))
+
+================================================================================
+Anon-record copy-update bases, exception augmentation, let-bang unit, inner backticks
+================================================================================
+
+let inlineCopy = {| route.Create(name) with properties = props |}
+
+type Resource =
+    member this.JsonModel = {|
+        routes.Create(this.Name) with
+            properties = this.Props
+    |}
+
+exception WrappedError of exn * string with
+    override this.Message = "wrapped"
+
+let bound = async {
+    let! () = start ()
+    return 1
+}
+
+let ``returns an error if `--remote-XXX` is missing`` () = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (anonymous_record_expression
+      base: (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (parenthesized_expression
+          (long_identifier
+            (identifier))))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (long_identifier
+          (identifier)))))
+  (type_decl
+    name: (identifier)
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      body: (anonymous_record_expression
+        base: (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (long_identifier
+              (identifier)
+              (identifier))))
+        (record_field
+          name: (long_identifier
+            (identifier))
+          value: (long_identifier
+            (identifier)
+            (identifier))))))
+  (exception_decl
+    name: (identifier)
+    (type_expression
+      (tuple_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      body: (string_literal)))
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (let_binding
+        name: (unit)
+        body: (application_expression
+          (long_identifier
+            (identifier))
+          (unit)))
+      (ce_result_expr
+        (int_literal))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (int_literal)))

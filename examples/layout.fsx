@@ -809,6 +809,21 @@ module L16_Augmentation =
         member this.Item k = this.Value.[k]
         static member Create v = { Value = v }
 
+// ── Decl: exceptions & special binders ──────────────────────────────────────
+module L23_ExceptionsAndBinders =
+    // Exception with member augmentation (FCS DiagnosticsLogger idiom).
+    exception WrappedError of exn * string with
+        override this.Message = "wrapped"
+
+    // `let! ()` — unit pattern forcing evaluation (FsToolkit test style).
+    let bound = async {
+        let! () = start ()
+        return 1
+    }
+
+    // Double-backtick name containing INNER single-backticks (BDD test names).
+    let ``returns an error if `--remote-XXX` is missing`` () = 1
+
 // ── Accumulated-state regressions (must stay 0 errors) ──────────────────────
 module L17_AccumulatedState =
     // The `dd` repro: class-lets + member + two if-then blocks with do!/use.
@@ -988,6 +1003,13 @@ module L22_BraceArgDisambiguation =
     // Application whose argument is an anonymous record / copy-update anon record.
     let writeAnon () = writeJson {| Name = "a"; Age = 1 |}
     let writeAnonCopy r = writeJson {| r with Name = "b" |}
+    // Anon-record copy-update with an APPLICATION base, inline and with the
+    // base on its own line after `{|` (farmer ARM-resource style).
+    let inlineCopy = {| route.Create(name) with properties = props |}
+    let jsonModel () = {|
+        routes.Create(name) with
+            properties = props
+    |}
 
     // Standalone object expression / record / copy-update (no head) — unchanged.
     let disposable = { new System.IDisposable with member _.Dispose() = () }

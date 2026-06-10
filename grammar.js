@@ -1508,9 +1508,20 @@ export default grammar({
             "{|",
             choice(
                 seq(
-                    field('base', choice($._simple_expression, $.bracket_index_expression, $.index_expression)),
+                    // Base may be an application (`{| routes.Create(n) with … |}`,
+                    // farmer style) — same shapes record_expression accepts.
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
                     "with",
                     $._record_fields,
+                ),
+                // Block form: `= {|`⏎`  base with`⏎`    field = …`⏎`|}` —
+                // mirror of record_expression's own-line-base branch.
+                seq(
+                    $._layout_open,
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
+                    "with",
+                    $._record_fields,
+                    $._layout_end,
                 ),
                 $._record_fields,
             ),
@@ -1659,6 +1670,9 @@ export default grammar({
             // (first tuple element type-annotated); `tuple_pattern` already handles
             // the untyped-first / later-typed cases.
             $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+            // `let () = init ()` / `let! () = start ()` — unit pattern, forces
+            // evaluation of a unit-returning expression (FsToolkit test style).
+            $.unit,
         ),
 
         // `[inline/mutable] name [type-params] params [:return-type]` — the middle of a
@@ -2052,6 +2066,9 @@ export default grammar({
             "exception",
             field('name', $.identifier),
             optional(seq("of", $.type_expression)),
+            // `exception WrappedError of exn * range with`⏎`  override this.Message = …`
+            // — member augmentation on the exception (FCS DiagnosticsLogger idiom).
+            optional($._type_augmentation),
         )),
 
         // Arm list shared by match / try-with / function. `_match_open` pushes a
@@ -3045,10 +3062,12 @@ export default grammar({
         // is a good practical approximation that covers `π`, `accentué`,
         // `café`, `数学`, etc. without enumerating script ranges by hand.
         // The backtick form `` `…` `` accepts almost anything between the
-        // delimiters and is unchanged.
+        // delimiters; the name ends at the next DOUBLE backtick, so SINGLE
+        // backticks are allowed inside (``returns an error if `--flag` is
+        // missing`` — BDD-style test names).
         identifier: _ => token(choice(
             /[\p{L}_][\p{L}\p{Nd}_']*/,
-            /``[^`\n\r\t]+``/,
+            /``([^`\n\r\t]|`[^`\n\r\t])+``/,
         )),
 
         // Pure-identifier chains of 1–2 segments stay as one long_identifier.
