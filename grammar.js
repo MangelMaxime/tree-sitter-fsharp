@@ -179,6 +179,7 @@ export default grammar({
         $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
         $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
         $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
+        $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -2040,6 +2041,13 @@ export default grammar({
                         )),
                     ),
                 ),
+                // Zero-width `_ce_brace_open` LEADS the body `{`: the scanner emits it
+                // (then tree-sitter lexes the literal `{`) ONLY when the brace content
+                // is a CE body — not a record field / `new` object-expr / copy-update.
+                // When the scanner declines, the CE alternative can't start (it needs
+                // this marker), `head` reduces to `_expression`, and `head { … }` parses
+                // as application(head, record/object_expression) with the literal `{`.
+                $._ce_brace_open,
                 "{",
                 optional(choice(
                     // Multi-line `builder {`⏎ statements ⏎`}`. `reserved('query_ce')`

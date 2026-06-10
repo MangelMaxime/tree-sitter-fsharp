@@ -620,3 +620,46 @@ module L21b_InlineFirstComprehension =
     let items =
         seq { yield head
               yield! tail }
+
+// ── Brackets: `head { … }` — CE vs application(object-expression / record) ───
+// A `{` right after a value is a CE body ONLY when its content is a CE body; when
+// the content is an object expression (`{ new … }`), a record (`{ field = … }`), or
+// a copy-update (`{ base with … }`), `head { … }` is an APPLICATION whose argument is
+// that object/record. The scanner classifies the brace content (CE_BRACE_OPEN) so the
+// builder stays a plain name and the genuine CE forms below keep working.
+module L22_BraceArgDisambiguation =
+    // Application whose argument is an OBJECT EXPRESSION (the case that used to cascade
+    // errors). Both a dotted head and a bare head.
+    let accept (shape: Shape) =
+        shape.Accept { new IVisitor with
+                         member _.Visit() = 1 }
+
+    let make () =
+        build { new IWidget with
+                  member _.Render() = "" }
+
+    // Application whose argument is a RECORD / a COPY-UPDATE record.
+    let writeRec () = writeJson { Name = "a"; Age = 1 }
+    let writeCopy r = writeJson { r with Name = "b" }
+    // Application whose argument is an anonymous record / copy-update anon record.
+    let writeAnon () = writeJson {| Name = "a"; Age = 1 |}
+    let writeAnonCopy r = writeJson {| r with Name = "b" |}
+
+    // Standalone object expression / record / copy-update (no head) — unchanged.
+    let disposable = { new System.IDisposable with member _.Dispose() = () }
+    let point = { X = 1; Y = 2 }
+    let moved p = { p with X = 42 }
+
+    // Genuine computation expressions must STILL parse as CEs (content is a CE body):
+    let ceReturn = task { return 1 }
+    let ceBind () = task { let! x = fetch () in return x }
+    let ceFor xs = seq { for x in xs do yield x * 2 }
+    let ceCons head tail = seq { yield head; yield! tail }     // `;`-separated
+    let ceConsExpr h t = seq { h :: t }                        // `::` is cons, not a record `:`
+    let ceRange = seq { 1..100 }
+    let ceApp x = async { return! finish x }
+
+    // Builder applied to a string/expr arg before a record/copy-update argument must
+    // NOT be mistaken for the Fun.Build element DSL (the brace content decides).
+    let equalRec a = expectEqual "msg" { a with Line = a.Line + 1 }
+    let equalRec2 () = expectEqual "msg" { Name = "x" }

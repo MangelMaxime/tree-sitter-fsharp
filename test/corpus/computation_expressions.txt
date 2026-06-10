@@ -379,3 +379,111 @@ let s = stage "x" { run "y" }
         (long_identifier
           (identifier))
         (string_literal)))))
+
+================================================================================
+Object expression as an application argument (head { new ... })
+================================================================================
+
+let x = shape.Accept { new IVisitor with member _.Visit() = 1 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (object_expression
+        type: (long_identifier
+          (identifier))
+        (member_defn
+          self: (member_self_ident
+            (identifier))
+          name: (identifier)
+          parameters: (parameter
+            (unit))
+          body: (int_literal))))))
+
+================================================================================
+Record as an application argument (head { field = ... })
+================================================================================
+
+let x = writeJson { Name = "a" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (record_expression
+        (record_field
+          name: (long_identifier
+            (identifier))
+          value: (string_literal))))))
+
+================================================================================
+Anonymous record as an application argument (head {| field = ... |})
+================================================================================
+
+let x = writeJson {| Name = "a" |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (anonymous_record_expression
+        (record_field
+          name: (long_identifier
+            (identifier))
+          value: (string_literal))))))
+
+================================================================================
+Cons in a CE body is not mistaken for a record field
+================================================================================
+
+let x = seq { h :: t }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (binary_expression
+        left: (long_identifier
+          (identifier))
+        right: (long_identifier
+          (identifier))))))
+
+================================================================================
+Plain computation expression still parses as a CE (for body)
+================================================================================
+
+let x = seq { for x in xs do yield x }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier
+          (identifier))
+        body: (ce_result_expr
+          (long_identifier
+            (identifier)))))))

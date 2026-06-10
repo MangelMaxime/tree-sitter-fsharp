@@ -7527,6 +7527,10 @@
             ]
           },
           {
+            "type": "SYMBOL",
+            "name": "_ce_brace_open"
+          },
+          {
             "type": "STRING",
             "value": "{"
           },
@@ -12053,6 +12057,10 @@
     {
       "type": "SYMBOL",
       "name": "_paren_field_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_ce_brace_open"
     }
   ],
   "inline": [],

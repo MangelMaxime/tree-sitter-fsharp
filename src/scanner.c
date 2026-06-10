@@ -47,6 +47,7 @@ typedef enum {
     LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
     ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
+    CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -491,6 +492,9 @@ static bool edsl_skip_name(TSLexer *lexer) {
 // token so the over-advance is discarded and the real tokens are re-lexed. This
 // scanner-side lookahead is what lets the parser tell `div() { … }` (element DSL)
 // from `a()`⏎`b()` (two applications): the LR table can't peek past the args/chain
+// Forward decl: classify the content after a `{` as a CE body vs record/object/copy-update.
+static bool ce_brace_content_is_ce_body(TSLexer *lexer);
+
 // for the `{`. Tail of element_dsl_ahead: the caller has consumed the first name
 // segment; check the optional `.seg` qualification, then `( … )( .m( … ) )* {`.
 static bool element_dsl_parens_brace(TSLexer *lexer) {
@@ -517,7 +521,16 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
     // `.method( … )` chain link may continue (those CAN sit on their own lines).
     for (;;) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-        if (lexer->lookahead == '{') return true;
+        if (lexer->lookahead == '{') {
+            // Only an element-DSL if the brace holds a CE body — NOT a record /
+            // object-expr / copy-update. Otherwise `f "msg" { x with … }` /
+            // `f "s" { name = 1 }` must stay application(f, "msg", record/copy-update).
+            lexer->advance(lexer, true);                  // past `{`
+            if (lexer->lookahead == '|') return false;    // `{|` anon record
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            return ce_brace_content_is_ce_body(lexer);
+        }
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
         if (lexer->lookahead != '.') return false;        // not a chain link → not a DSL
@@ -549,6 +562,52 @@ static bool element_dsl_ahead(TSLexer *lexer) {
 static inline bool try_element_dsl(TSLexer *lexer, const bool *valid) {
     if (valid[ELEMENT_DSL_OPEN] && element_dsl_ahead(lexer)) { lexer->result_symbol = ELEMENT_DSL_OPEN; return true; }
     return false;
+}
+
+// Classify the content right after a `{` (lexer positioned at the first non-ws char)
+// as a computation-expression BODY (true) vs a record / object-expression / copy-update
+// (false). Used to decide whether to emit CE_BRACE_OPEN so `head { … }` forks to a CE
+// vs application(head, record/object). Destructive peek — only ever called right before a
+// `return false` (on no-match) or a zero-width `return true`, so the advances are
+// discarded by the caller's mark_end baseline.
+//
+//   CE body   → true:  `return …`, `let x = …`, `yield …`, `if …`, `for …`, `x`,
+//                       `f x`, `x :: xs`, `(…)`, `[ … ]`, `1`, …  (and empty `{}`)
+//   record    → false: `ident = …`  /  `ident : ty`  (NOT `::`)
+//   object    → false: `new …`
+//   copy-update → false: `base with …`
+static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
+    int32_t c = lexer->lookahead;
+    if (c == '}') return true;                 // empty CE body `{ }`
+    if (!is_name_start(c)) return true;        // literal / paren / bracket / operator → CE expr
+    char w0[12] = {0};
+    peek_name_capture(lexer, w0, sizeof(w0));
+    if (!strcmp(w0, "new")) return false;      // object expression `{ new T … }`
+    // CE statement keywords (reserved → can never be a record field name). `let!`,
+    // `use!`, `do!`, `match!`, `yield!`, `return!` share the base word read here.
+    static const char *kw[] = {"let","use","do","return","yield","if","for","while",
+                               "match","try","fun","function","lazy","assert", NULL};
+    for (int i = 0; kw[i]; i++) if (!strcmp(w0, kw[i])) return true;
+    // Otherwise scan the leading expression: `=`/`:` (record field) or a later `with`
+    // (copy-update) ⇒ NOT a CE; anything else ⇒ CE bare-expression body.
+    for (int guard = 0; guard < 64; guard++) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        int32_t d = lexer->lookahead;
+        if (d == '=') return false;                 // record field `name = …`
+        if (d == ':') {                             // `:` field type, but `::` is cons (CE)
+            lexer->advance(lexer, true);
+            return lexer->lookahead == ':';         // `::` → CE ; `:` → record field
+        }
+        if (d == '.') { lexer->advance(lexer, true); continue; }   // qualified name / member access
+        if (is_name_start(d)) {
+            char w[8] = {0};
+            peek_name_capture(lexer, w, sizeof(w));
+            if (!strcmp(w, "with")) return false;   // copy-update `base with …`
+            continue;                               // application arg / next path segment
+        }
+        return true;                                // `}`/`;`/newline/`(`/`[`/literal/op → CE
+    }
+    return true;
 }
 
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
@@ -880,6 +939,25 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
                     lexer->result_symbol = ELEMENT_DSL_OPEN; return true;
+                }
+            }
+            // CE_BRACE_OPEN (zero-width): the `{` of a computation_expression body.
+            // Emitted ONLY when the brace content is a CE body — NOT a record field
+            // (`ident =`/`ident :`), NOT an object expression (`new …`), NOT a
+            // copy-update (`base with …`). Lets `head { new … }` / `head { f = … }`
+            // divert to application(head, object_expression/record) while
+            // `head { return … }` / `async { … }` stay a computation_expression.
+            // Zero-width (mark_end still at baseline): the advances below only PEEK;
+            // on a match tree-sitter then lexes the literal `{`, on no-match we fall
+            // through to `return false` and the literal `{` is lexed for the
+            // record/object/application path.
+            if (c == '{' && valid[CE_BRACE_OPEN]) {
+                lexer->advance(lexer, true);            // past `{`
+                // `{|` is an anonymous-record opener, never a CE body `{`.
+                if (lexer->lookahead != '|') {
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                           lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+                    if (ce_brace_content_is_ce_body(lexer)) { lexer->result_symbol = CE_BRACE_OPEN; return true; }
                 }
             }
             return false; // other same-line content: layout doesn't apply
