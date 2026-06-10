@@ -2030,6 +2030,8 @@ export default grammar({
             choice(
                 seq(
                     choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
+                        // `for struct(k, v) in elements do …` — struct-tuple binder.
+                        $.struct_tuple_pattern,
                         // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
                         $.as_pattern,
                         // Parenthesised / bare-single typed binder:
@@ -2293,11 +2295,14 @@ export default grammar({
         ),
 
         // struct (a, b)  — destructure a struct tuple in match/let
+        // Elements are `_tuple_pattern_item` (not bare `pattern`) so they may be
+        // TYPED without per-element parens — `struct (a: int, b: int)`, the
+        // FSharp.Data.Adaptive `for struct(k, v) in …` / member-param idiom.
         struct_tuple_pattern: $ => seq(
             "struct",
             "(",
-            $.pattern,
-            repeat(seq(",", $.pattern)),
+            $._tuple_pattern_item,
+            repeat(seq(",", $._tuple_pattern_item)),
             ")",
         ),
 

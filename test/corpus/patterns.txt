@@ -910,3 +910,95 @@ let f x =
         (pattern
           (wildcard_pattern))
         body: (int_literal)))))
+
+================================================================================
+Struct tuple patterns with typed elements and as a for binder
+================================================================================
+
+let f (struct (a: int, b: int)) = a + b
+
+let sumPairs pairs =
+    for struct(k, v) in pairs do
+        printfn "%d %d" k v
+
+let g x =
+    match x with
+    | struct (a: int, b) -> a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_pattern
+        (pattern
+          (struct_tuple_pattern
+            (tuple_typed_pattern
+              pattern: (long_identifier
+                (identifier))
+              type: (type_expression
+                (long_identifier
+                  (identifier))))
+            (tuple_typed_pattern
+              pattern: (long_identifier
+                (identifier))
+              type: (type_expression
+                (long_identifier
+                  (identifier))))))))
+    body: (binary_expression
+      left: (long_identifier
+        (identifier))
+      right: (long_identifier
+        (identifier))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (for_expression
+      (struct_tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier))
+      body: (application_expression
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (string_literal))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (struct_tuple_pattern
+            (tuple_typed_pattern
+              pattern: (long_identifier
+                (identifier))
+              type: (type_expression
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))))
+        body: (binary_expression
+          left: (long_identifier
+            (identifier))
+          right: (long_identifier
+            (identifier)))))))

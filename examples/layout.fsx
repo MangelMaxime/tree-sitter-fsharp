@@ -296,6 +296,16 @@ module L09_Loops =
         for KeyValue(k, v) in dict do
             printfn "%A %A" k v
 
+    // Struct-tuple binder (`for struct(k, v) in …`, FSharp.Data.Adaptive style),
+    // and typed struct-tuple elements in a parameter / match pattern.
+    let forStruct (elements) =
+        for struct(k, v) in elements do
+            printfn "%A %A" k v
+    let addStruct (struct (a: int, b: int)) = a + b
+    let matchStruct x =
+        match x with
+        | struct (a: int, b) -> a + b
+
     // Binder with an `as` alias capturing the whole element.
     let forAs (rows) =
         for (col, _, _) as item in rows do

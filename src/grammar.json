@@ -7373,6 +7373,10 @@
                       },
                       {
                         "type": "SYMBOL",
+                        "name": "struct_tuple_pattern"
+                      },
+                      {
+                        "type": "SYMBOL",
                         "name": "as_pattern"
                       },
                       {
@@ -8543,7 +8547,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "pattern"
+          "name": "_tuple_pattern_item"
         },
         {
           "type": "REPEAT",
@@ -8556,7 +8560,7 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "pattern"
+                "name": "_tuple_pattern_item"
               }
             ]
           }

@@ -73,6 +73,16 @@
 ((tuple_param (tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))
  (#match? @local.definition.variable.parameter "^[a-z_]"))
 
+; Struct-tuple PARAMETER elements (`let f (struct (a: int, b)) = …`) — class the
+; definitions as parameters so body uses recolour as @variable.parameter (after
+; the generic identifier_pattern / tuple_typed_pattern rules so these win here).
+((parameter (tuple_pattern (pattern (struct_tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+(parameter (tuple_pattern (pattern (struct_tuple_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable.parameter))))))
+((destructure_parameter (struct_tuple_pattern (pattern (identifier_pattern (long_identifier (identifier) @local.definition.variable.parameter)))))
+ (#match? @local.definition.variable.parameter "^[a-z_]"))
+(destructure_parameter (struct_tuple_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable.parameter))))
+
 ; ── References ────────────────────────────────────────────────────────────────
 ; Root segment of an identifier path (so `x` in `x.Length` is a reference, but
 ; `.Length` is not).

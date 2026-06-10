@@ -241,6 +241,12 @@
 ((for_expression (tuple_typed_pattern pattern: (long_identifier (identifier) @variable)))
  (#match? @variable "^[a-z_]"))
 
+; Typed struct-tuple element binder (`| struct (a: int, b) ->` in a match) —
+; same reasoning as the for-binder above. In PARAMETER position the
+; parameter-scoped rules further down override this to @variable.parameter.
+((struct_tuple_pattern (tuple_typed_pattern pattern: (long_identifier (identifier) @variable)))
+ (#match? @variable "^[a-z_]"))
+
 ; Tuple-destructured binding names — `let a, b, c = …` (and `let (a, b) = …`).
 ; Colour them like the single-name binding form so destructured bindings don't
 ; render uncoloured. The unparenthesized form holds the names as direct
@@ -498,6 +504,28 @@
    (tuple_pattern
      (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter)))))
  (#match? @variable.parameter "^[a-z_]"))
+
+; Struct-tuple parameter elements (`let f (struct (a: int, b)) = …`) — the same
+; destructure one level deeper, in both the bare and `name: type` element forms.
+((parameter
+   (tuple_pattern
+     (pattern
+       (struct_tuple_pattern
+         (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter)))))))
+ (#match? @variable.parameter "^[a-z_]"))
+(parameter
+  (tuple_pattern
+    (pattern
+      (struct_tuple_pattern
+        (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))))
+; …and inside a typed destructure parameter (`(struct (a, b): struct(int * int))`).
+((destructure_parameter
+   (struct_tuple_pattern
+     (pattern (identifier_pattern (long_identifier (identifier) @variable.parameter)))))
+ (#match? @variable.parameter "^[a-z_]"))
+(destructure_parameter
+  (struct_tuple_pattern
+    (tuple_typed_pattern pattern: (long_identifier (identifier) @variable.parameter))))
 
 ; For-loop variable binding (`for item in xs`) — coloured @variable so it (and
 ; locals-resolved uses of it) read consistently.

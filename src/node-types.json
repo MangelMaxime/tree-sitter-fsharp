@@ -4462,7 +4462,15 @@
       "required": true,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
           "named": true
         }
       ]
