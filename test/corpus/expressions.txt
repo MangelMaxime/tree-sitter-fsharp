@@ -2269,3 +2269,61 @@ let getDirectory (basePath) =
             (unit)))
         (long_identifier
           (identifier))))))
+
+================================================================================
+New without parens, bare brace ranges, trailing semicolons in collections
+================================================================================
+
+let token = new CancellationToken true
+let boom = new System.Exception "boom"
+
+let small = decompile <@ {1..3} @>
+let stepped = {1..2..10}
+
+let pair = [ 1; 2; ]
+let arr = [| 1; 2; |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (new_expression
+      (long_identifier
+        (identifier))
+      (bool_literal)))
+  (let_binding
+    name: (identifier)
+    body: (new_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (string_literal)))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (typed_quotation
+        (computation_expression
+          (binary_expression
+            left: (int_literal)
+            right: (int_literal))))))
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      (binary_expression
+        left: (int_literal)
+        right: (binary_expression
+          left: (int_literal)
+          right: (int_literal)))))
+  (let_binding
+    name: (identifier)
+    body: (list_expression
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    name: (identifier)
+    body: (array_expression
+      (int_literal)
+      (int_literal))))

@@ -1434,6 +1434,7 @@ export default grammar({
                 seq(
                     $._expression,
                     repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
+                    optional(prec(PREC.PAREN_EXPR, ";")),   // `[ 1; 2; ]` trailing
                 ),
             )),
             "]",
@@ -1454,6 +1455,7 @@ export default grammar({
                 seq(
                     $._expression,
                     repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
+                    optional(prec(PREC.PAREN_EXPR, ";")),   // `[| 1; 2; |]` trailing
                 ),
             )),
             "|]",
@@ -1951,9 +1953,23 @@ export default grammar({
                 // `new 'T()` — construct a generic type parameter (used with a
                 // `'T: (new: unit -> 'T)` constraint).
                 choice($.generic_type, $.long_identifier, $.type_parameter),
-                "(",
-                optional(seq($._expression, repeat(seq(",", $._expression)))),
-                ")",
+                choice(
+                    seq(
+                        "(",
+                        optional(seq($._expression, repeat(seq(",", $._expression)))),
+                        ")",
+                    ),
+                    // Single UN-parenthesised atomic argument:
+                    // `new System.Exception "boom"`, `new CancellationToken true`.
+                    // NOT `_simple_expression` or `_literal`: both include
+                    // `unit`, whose `()` token would out-lex the no-arg `( )`
+                    // pair above and turn every `new T()` into a unit-arg call.
+                    $.int_literal, $.float_literal, $.char_literal,
+                    $.string_literal, $.verbatim_string, $.triple_quoted_string,
+                    $.interpolated_string, $.bool_literal, $.null_literal,
+                    $.long_identifier,
+                    $.parenthesized_expression,
+                ),
             ),
         ),
 
@@ -2146,7 +2162,12 @@ export default grammar({
         // remain plain identifiers in every other parse state.
         computation_expression: $ => prec(PREC.CE_EXPR,
             seq(
-                choice(
+                // The whole builder head is OPTIONAL: a bare `{1..3}` /
+                // `{e1..e2..e3}` is sequence-range sugar with no builder —
+                // the unquote test style. Safe because the CE fork is gated by
+                // the scanner's `_ce_brace_open` marker: record / object-expr /
+                // copy-update braces decline it and keep their literal `{`.
+                optional(choice(
                     field('builder', $.long_identifier),
                     // Builder-is-an-APPLICATION CE: `div() { … }` / `div(attrs) { … }`
                     // (Oxpecker element DSL) and `stage "x" { … }` / `pipeline "B" { … }`
@@ -2169,7 +2190,7 @@ export default grammar({
                             field('method_args', choice($.unit, $.parenthesized_expression)),
                         )),
                     ),
-                ),
+                )),
                 // Zero-width `_ce_brace_open` LEADS the body `{`: the scanner emits it
                 // (then tree-sitter lexes the literal `{`) ONLY when the brace content
                 // is a CE body — not a record field / `new` object-expr / copy-update.

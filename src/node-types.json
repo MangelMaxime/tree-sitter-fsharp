@@ -1035,7 +1035,7 @@
       },
       "builder": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "long_identifier",
@@ -3172,11 +3172,47 @@
           "named": true
         },
         {
+          "type": "bool_literal",
+          "named": true
+        },
+        {
+          "type": "char_literal",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
           "type": "generic_type",
           "named": true
         },
         {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "interpolated_string",
+          "named": true
+        },
+        {
+          "type": "null_literal",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
           "type": "type_parameter",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
           "named": true
         }
       ]

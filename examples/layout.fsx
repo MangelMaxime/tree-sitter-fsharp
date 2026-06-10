@@ -83,6 +83,21 @@ module L03_Functions =
     type ApplyLike =
         static member inline Ap (f: 't when 't: comparison, _mthd: obj) = f
 
+    // `new T arg` — single un-parenthesised atomic constructor argument.
+    let cancelToken = new CancellationToken true
+    let boom = new System.Exception "boom"
+    let columns = [| new DataColumn "id"; new DataColumn "name" |]
+
+    // Bare brace range (no builder) — `{e1..e2}` / `{e1..e2..e3}` sequence
+    // sugar (unquote test style), incl. inside a quotation.
+    let smallRange = {1..3}
+    let stepped = {1..2..10}
+    let quoted = decompile <@ {1..3} @>
+
+    // Trailing `;` after the last element of an inline list / array.
+    let pairList = [ 1; 2; ]
+    let pairArr = [| 1; 2; |]
+
     // Member access directly on a literal.
     let litLen = "abc".Length
     let litChars = "bcd".ToCharArray()

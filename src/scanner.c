@@ -635,6 +635,23 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             return lexer->lookahead == ':';         // `::` → CE ; `:` → record field
         }
         if (d == '.') { lexer->advance(lexer, true); continue; }   // qualified name / member access
+        // A bracketed/parenthesised APPLICATION ARGUMENT before a possible
+        // `with` (`{ createEx [] doQuery with X = h }` — copy-update whose base
+        // is an application): skip the balanced group and keep scanning.
+        if (d == '[' || d == '(') {
+            int32_t open = d, close = (d == '[') ? ']' : ')';
+            int depth = 0, bguard = 0;
+            for (;;) {
+                if (++bguard > 4096) return true;
+                int32_t e = lexer->lookahead;
+                if (e == 0) return true;
+                if (e == '"') { edsl_skip_dquote(lexer); continue; }
+                if (e == open) depth++;
+                else if (e == close && --depth == 0) { lexer->advance(lexer, true); break; }
+                lexer->advance(lexer, true);
+            }
+            continue;
+        }
         if (is_name_start(d)) {
             char w[8] = {0};
             peek_name_capture(lexer, w, sizeof(w));
