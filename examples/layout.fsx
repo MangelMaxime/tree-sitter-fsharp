@@ -493,6 +493,19 @@ module L12_ComputationExpr =
                 yield x * 2
         }
 
+    // CE with the `{` on its OWN line below the builder (FAKE/WiX legacy style)
+    // — the brace-content classification must still pick the CE fork, incl.
+    // a match statement between yields.
+    let attrs (w) =
+        seq
+            {
+                yield ("Id", w.Id)
+                match w.Remove with
+                | Never -> ()
+                | _ -> yield ("Remove", string w.Remove)
+                yield ("Wait", string w.Wait)
+            }
+
 // ── Decl: types (DU / record / alias) ───────────────────────────────────────
 module L13_Types =
     type Shape =

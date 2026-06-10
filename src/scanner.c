@@ -646,6 +646,21 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     return true;
 }
 
+// Probe a LEADING `{` (lookahead == first == '{') for the CE-body
+// classification — the line-boundary twin of the mid-line CE_BRACE_OPEN
+// dispatch, for a builder whose `{` sits on the NEXT line (`seq`⏎`    {`).
+// Zero-width (mark_end stays at the baseline): advances only peek. Call it
+// LAST before `return false` — it consumes lookahead even on a miss.
+static bool try_ce_brace(TSLexer *lexer, const bool *valid, int32_t first) {
+    if (first != '{' || !valid[CE_BRACE_OPEN]) return false;
+    lexer->advance(lexer, true);                  // past `{`
+    if (lexer->lookahead == '|') return false;    // `{|` anonymous record
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+           lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+    if (ce_brace_content_is_ce_body(lexer)) { lexer->result_symbol = CE_BRACE_OPEN; return true; }
+    return false;
+}
+
 bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
@@ -1035,6 +1050,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // to emit a separator, so probe here at the line's first token; otherwise
         // `pipeline "x"` reduces to a plain application and the `{ … }` body errors.
         if (try_element_dsl(lexer, valid)) return true;
+        // Top-level builder with its `{` on the next line (`seq`⏎`{ … }`).
+        if (try_ce_brace(lexer, valid, first)) return true;
         return false;
     }
 
@@ -1168,6 +1185,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // Element DSL as the first statement of an indented let/expr body
             // (`let page =⏎ div() {…}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;
+            // CE body `{` on its OWN line below the builder (`seq`⏎`    {`⏎
+            // `        yield …` — FAKE/WiX style): the mid-line CE_BRACE_OPEN
+            // dispatch is unreachable from here, so classify the brace content
+            // now. Records / object expressions keep the literal `{` (no token).
+            if (try_ce_brace(lexer, valid, first)) return true;
             return false;
     }
     return false;

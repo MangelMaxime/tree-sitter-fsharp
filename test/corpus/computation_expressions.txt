@@ -537,3 +537,66 @@ pipeline "x" {
         (identifier))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Computation expression with the opening brace on its own line
+================================================================================
+
+let attrs =
+    seq
+        {
+            yield ("Id", w.Id)
+            match w.Remove with
+            | Never -> ()
+            | _ -> yield ("Remove", string w.Remove)
+            yield ("Wait", string w.Wait)
+        }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      (ce_result_expr
+        (parenthesized_expression
+          (tuple_expression
+            (string_literal)
+            (long_identifier
+              (identifier)
+              (identifier)))))
+      (match_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          body: (unit))
+        (match_arm
+          (pattern
+            (wildcard_pattern))
+          body: (ce_result_expr
+            (parenthesized_expression
+              (tuple_expression
+                (string_literal)
+                (application_expression
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier)
+                    (identifier))))))))
+      (ce_result_expr
+        (parenthesized_expression
+          (tuple_expression
+            (string_literal)
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)
+                (identifier)))))))))
