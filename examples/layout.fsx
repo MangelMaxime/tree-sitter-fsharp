@@ -56,6 +56,9 @@ module L03_Functions =
     let unwrap (Url url: Url) = url
     // Wildcard `_` in a tuple parameter (OOP-style multi-arg).
     let ignoreFirst (_: int, x: string) = x
+    // A non-first tuple-param element may carry redundant parens (here around a
+    // function-typed param): `(x, (f: A -> B), y)`.
+    let parenElem (x: int, (pc: int -> int option), y: int) = x
     let curriedOwnLine a b =
         a * b
 

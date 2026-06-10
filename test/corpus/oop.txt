@@ -460,3 +460,36 @@ let inline add< ^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T)
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Parenthesized (non-first) tuple-parameter element
+================================================================================
+
+let walk (x: int, (pc: int -> int), y) = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (identifier)
+          (type_expression
+            (function_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))
+        (tuple_param
+          (identifier))))
+    body: (long_identifier
+      (identifier))))

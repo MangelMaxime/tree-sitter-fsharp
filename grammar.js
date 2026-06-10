@@ -516,7 +516,11 @@ export default grammar({
             "(",
             optional(seq(
                 $.tuple_param,
-                repeat(seq(",", $.tuple_param)),
+                // A non-first element may carry redundant parens
+                // (`member M(x: int, (posChange: A -> B option), y)`). Only post-comma:
+                // a parenthesized FIRST element would collide with the curried
+                // `(ident: type)` parameter form.
+                repeat(seq(",", choice($.tuple_param, seq("(", $.tuple_param, ")")))),
             )),
             ")",
         ),

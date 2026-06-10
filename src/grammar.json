@@ -1080,8 +1080,30 @@
                         "value": ","
                       },
                       {
-                        "type": "SYMBOL",
-                        "name": "tuple_param"
+                        "type": "CHOICE",
+                        "members": [
+                          {
+                            "type": "SYMBOL",
+                            "name": "tuple_param"
+                          },
+                          {
+                            "type": "SEQ",
+                            "members": [
+                              {
+                                "type": "STRING",
+                                "value": "("
+                              },
+                              {
+                                "type": "SYMBOL",
+                                "name": "tuple_param"
+                              },
+                              {
+                                "type": "STRING",
+                                "value": ")"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
