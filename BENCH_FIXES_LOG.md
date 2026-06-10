@@ -48,3 +48,27 @@ MEASUREMENT WARNING (re-learned the hard way): `tree-sitter parse` MUST run with
 cwd = THIS repo. A sweep that `cd`s into the bench repos reports 0 errors for
 EVERYTHING (no grammar resolves — false pass). A "275→0 all clean" result is
 the bug, not a miracle.
+
+## Fix 2 — operator-as-value forms + as-pattern in let tuples (Optimizer.fs 630→0)
+
+Three related gaps, found by peeling Optimizer.fs:
+1. **Qualified operator value** `Unchecked.(+)` / `A.B.C.(>>=)`: new
+   `qualified_operator_expression` = `long_identifier` + `operator_member`,
+   where the tail `.(+)` is ONE token (same trick as `active_pattern_member`,
+   so it never competes with a long_identifier's own `.`). Wired into both
+   `_simple_expression` (arg slots) and `_expression` (standalone/head).
+   Spaces allowed: `Unchecked.( * )` (spaced to dodge the `(*` comment opener).
+2. **`(~~~)` as a value**: `unary_expression`'s STRING token "~~~" beats
+   symbolic_op's regex at the lexer, so `operator_name`/`_value_operator_name`
+   list "~~~" explicitly — identical string tokens unify, and GLR picks by
+   what follows (`)` = operator name, expr = unary). `( * )` added likewise.
+3. **as-pattern as a tuple ELEMENT** in let bindings (`let bindR, binfo as
+   bindInfo, env = …`): F# binds `as` tighter than `,` here
+   (headBindingPattern). New `as_tuple_elem_pattern` (prec.right 1, aliased to
+   `as_pattern`) in `_tuple_elem_pattern` + standalone in `_let_name_pattern`
+   (the prec bump diverts `let a as b` from its old route).
+
+Bench: 258→250 files, 3603→2873 nodes (−730), 0 regressions, 0 worsened.
+Optimizer.fs 628→0, PrimitivesTests 17→0, BigInt.fs 13→0. Corpus 431
+(+2 tests), layout.fsx L26_OperatorValues, highlights: (operator_member)
+@operator + "~~~"/"*" in operator_name.

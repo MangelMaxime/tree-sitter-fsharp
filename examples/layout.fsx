@@ -1087,3 +1087,14 @@ module L25_PreprocBranches =
 #else
         3
 #endif
+
+// === L26: operator values — qualified (Module.(+)), spaced, tilde-led; as-in-tuple ===
+module L26_OperatorValues =
+    let combine g a b = binaryOp g Unchecked.(+) Unchecked.( * ) a b
+    let sorted xs = List.sortWith Operators.(<) xs
+    let bound = A.B.C.(>>=) m k
+    let applied = Unchecked.(+) 1 2
+    let masked = unaryOp (~~~) (~~~) value
+    let product = List.fold ( * ) 1 [ 1; 2; 3 ]
+
+    let first, second as pair, rest = splitThree input

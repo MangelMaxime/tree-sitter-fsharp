@@ -62,7 +62,10 @@
 ; Single-char custom operators inside an `(op)` name (`($)`, `(?)`, `(~)`, …) —
 ; anonymous tokens the global operator-token list below doesn't include, so
 ; without this they render as plain text between the parens.
-(operator_name ["$" "?" "&" "|" "^" "~" "!"] @operator)
+(operator_name ["$" "?" "&" "|" "^" "~" "!" "~~~" "*"] @operator)
+
+; `Unchecked.(+)` — the qualified-operator tail `.(+)` is one token.
+(operator_member) @operator
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)

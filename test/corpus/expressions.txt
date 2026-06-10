@@ -2529,3 +2529,111 @@ let ``returns an error if `--remote-XXX` is missing`` () = 1
     parameters: (parameter
       (unit))
     body: (int_literal)))
+
+================================================================================
+Qualified operator as a value (Module.(+), spaced, tilde-led)
+================================================================================
+
+let a = f g Unchecked.(+) Unchecked.( * ) a b
+let b = List.sortWith Operators.(<) xs
+let c = A.B.C.(>>=) m k
+let d = Unchecked.(+) 1 2
+let e = f g (~~~) (~~~) a
+let h = (~~~) mask
+let i = List.fold ( * ) 1 xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (application_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (qualified_operator_expression
+              (long_identifier
+                (identifier))
+              (operator_member)))
+          (qualified_operator_expression
+            (long_identifier
+              (identifier))
+            (operator_member)))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (qualified_operator_expression
+          (long_identifier
+            (identifier))
+          (operator_member)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (qualified_operator_expression
+          (long_identifier
+            (identifier)
+            (identifier)
+            (identifier))
+          (operator_member))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (qualified_operator_expression
+          (long_identifier
+            (identifier))
+          (operator_member))
+        (int_literal))
+      (int_literal)))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (operator_name))
+        (operator_name))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (operator_application
+      (operator_name)
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (operator_name))
+        (int_literal))
+      (long_identifier
+        (identifier)))))

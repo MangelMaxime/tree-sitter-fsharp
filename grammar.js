@@ -1105,6 +1105,9 @@ export default grammar({
             // `(+)`, `(>>)` — a bare operator as a first-class value (`let add =
             // (+)`, `(+) >> id`). The applied form above wins when args follow.
             $._operator_value,
+            // `Unchecked.(+)` standalone / as an application head
+            // (`Unchecked.(+) 1 2`); the arg-slot form lives in _simple_expression.
+            $.qualified_operator_expression,
             // `not` as a first-class function value (`not >> g`, `not |> f`).
             $.not_function,
             $.list_expression,
@@ -1311,7 +1314,8 @@ export default grammar({
         _value_operator_name: $ => seq(
             "(",
             choice($.symbolic_op, $.bang_op, "+", "-", "*", "/", "%", "=", "<", ">",
-                "$", "?"),     // single-char custom ops: `($)` apply, `(?)` dynamic lookup
+                "$", "?",      // single-char custom ops: `($)` apply, `(?)` dynamic lookup
+                "~~~"),        // `(~~~) x y` — see operator_name
             ")",
         ),
 
@@ -1352,6 +1356,8 @@ export default grammar({
             $.operator_name,
             // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value.
             $.active_pattern_expression,
+            // `Unchecked.(+)` — qualified operator as a value.
+            $.qualified_operator_expression,
             // `not` as a first-class function value (`not >> g`, `f not`).
             $.not_function,
             $.object_expression,
@@ -1657,6 +1663,9 @@ export default grammar({
                 "=", "<", ">",
                 "&", "|", "^",
                 "$", "~", "!", "?",   // single-char custom operators (`($)`, `(?)`, `(!)`)
+                "~~~",   // shares unary_expression's STRING token — symbolic_op's
+                         // regex loses the lex to it, so list it explicitly
+                "*",     // `( * )` — spaced to dodge the `(*` comment opener
             ),
             ")",
         ),
@@ -1683,6 +1692,14 @@ export default grammar({
             "|)",
         )),
 
+        // `Module.(+)` / `Unchecked.(+)` — a QUALIFIED operator used as a value
+        // (`IntegerBinaryOp g Unchecked.(+) …`, FCS Optimizer style). Same
+        // single-token trick as `active_pattern_member`: the tail `.(+)` is ONE
+        // token, so it never competes with a `long_identifier`'s own `.` (a
+        // plain `.Sub` has no operator chars before `)`).
+        qualified_operator_expression: $ => seq($.long_identifier, $.operator_member),
+        operator_member: _ => token(seq(".", "(", /[ \t]*/, /[!%&*+\-./<=>?@^|~$?]+/, /[ \t]*/, ")")),
+
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
@@ -1694,6 +1711,10 @@ export default grammar({
             // `let () = init ()` / `let! () = start ()` — unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
             $.unit,
+            // `let a as b = …` — bare as-pattern name (as_tuple_elem_pattern
+            // wins the lex-prec race over the pattern-route as_pattern, so it
+            // must be a valid standalone name too).
+            alias($.as_tuple_elem_pattern, $.as_pattern),
         ),
 
         // `[inline/mutable] name [type-params] params [:return-type]` — the middle of a
@@ -2641,7 +2662,18 @@ export default grammar({
             $.record_pattern,
             $.list_pattern,
             $.array_pattern,
+            // `binfo as bindInfo` as ONE tuple element (`let bindR, binfo as
+            // bindInfo, env = …`, FCS Optimizer style): F# binds `as` tighter
+            // than `,` here (a tuple element is a headBindingPattern).
+            alias($.as_tuple_elem_pattern, $.as_pattern),
         ),
+
+        as_tuple_elem_pattern: $ => prec.right(1, seq(
+            choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern,
+                $.record_pattern, $.list_pattern, $.array_pattern),
+            "as",
+            $.identifier,
+        )),
 
         // `a, b` or `a, b, c` — bare tuple pattern without outer parens. Valid as the
         // bound name in let/let!/and!. Deliberately NOT included in $.pattern: match

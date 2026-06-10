@@ -3459,6 +3459,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "qualified_operator_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "not_function"
         },
         {
@@ -4158,6 +4162,10 @@
             {
               "type": "STRING",
               "value": "?"
+            },
+            {
+              "type": "STRING",
+              "value": "~~~"
             }
           ]
         },
@@ -4285,6 +4293,10 @@
         {
           "type": "SYMBOL",
           "name": "active_pattern_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "qualified_operator_expression"
         },
         {
           "type": "SYMBOL",
@@ -5855,6 +5867,14 @@
             {
               "type": "STRING",
               "value": "?"
+            },
+            {
+              "type": "STRING",
+              "value": "~~~"
+            },
+            {
+              "type": "STRING",
+              "value": "*"
             }
           ]
         },
@@ -5947,6 +5967,51 @@
         ]
       }
     },
+    "qualified_operator_expression": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "operator_member"
+        }
+      ]
+    },
+    "operator_member": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "."
+          },
+          {
+            "type": "STRING",
+            "value": "("
+          },
+          {
+            "type": "PATTERN",
+            "value": "[ \\t]*"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[!%&*+\\-./<=>?@^|~$?]+"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[ \\t]*"
+          },
+          {
+            "type": "STRING",
+            "value": ")"
+          }
+        ]
+      }
+    },
     "_let_name_pattern": {
       "type": "CHOICE",
       "members": [
@@ -6001,6 +6066,15 @@
         {
           "type": "SYMBOL",
           "name": "unit"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "as_tuple_elem_pattern"
+          },
+          "named": true,
+          "value": "as_pattern"
         }
       ]
     },
@@ -9866,8 +9940,63 @@
         {
           "type": "SYMBOL",
           "name": "array_pattern"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "as_tuple_elem_pattern"
+          },
+          "named": true,
+          "value": "as_pattern"
         }
       ]
+    },
+    "as_tuple_elem_pattern": {
+      "type": "PREC_RIGHT",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "wildcard_pattern"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "tuple_pattern"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "record_pattern"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "list_pattern"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "array_pattern"
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": "as"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        ]
+      }
     },
     "unparenthesized_tuple_pattern": {
       "type": "SEQ",

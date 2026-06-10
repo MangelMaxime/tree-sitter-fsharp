@@ -1141,3 +1141,59 @@ module Streams =
               (long_identifier
                 (identifier))
               (unit))))))))
+
+================================================================================
+as-pattern as a tuple element in a let binding
+================================================================================
+
+let bindR, binfo as bindInfo, env = optimize cenv env bind
+let a, b as c = f x
+let p as q = f x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (as_pattern
+        (long_identifier
+          (identifier))
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (as_pattern
+        (long_identifier
+          (identifier))
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (as_pattern
+      (long_identifier
+        (identifier))
+      (identifier))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))
