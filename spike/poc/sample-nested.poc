@@ -1,7 +1,0 @@
-let outer =
-    let inner =
-        let deep =
-            1
-        2
-    3
-let sibling = 4
