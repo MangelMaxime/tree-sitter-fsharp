@@ -1472,6 +1472,10 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -1481,6 +1485,10 @@
         },
         {
           "type": "literal_pattern",
+          "named": true
+        },
+        {
+          "type": "pattern",
           "named": true
         },
         {
@@ -1497,6 +1505,10 @@
         },
         {
           "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
           "named": true
         },
         {

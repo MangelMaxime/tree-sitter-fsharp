@@ -1995,3 +1995,31 @@ let f x =
             (pattern
               (wildcard_pattern))
             body: (int_literal)))))))
+
+================================================================================
+For loop with a type-annotated binder
+================================================================================
+
+let f xs = for x: string in xs do ignore x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (for_expression
+      (tuple_typed_pattern
+        pattern: (long_identifier
+          (identifier))
+        type: (type_expression
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

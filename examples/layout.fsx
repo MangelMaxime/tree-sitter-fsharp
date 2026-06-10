@@ -252,6 +252,16 @@ module L09_Loops =
         for k, v in pairs do
             printfn "%A %A" k v
 
+    // Type-annotated for-binders: bare (`for s: string in`), parenthesised
+    // (`for (line: string) in`), and a typed unparenthesised tuple (`for k: T, r in`).
+    let forTyped (xs) (rows) =
+        for s: string in xs do
+            ignore s
+        for (line: string) in xs do
+            ignore line
+        for k: string, r: string in rows do
+            ignore (k, r)
+
     // Union-case / active-pattern application binder, e.g. iterating a dictionary.
     let forKeyValue (dict) =
         for KeyValue(k, v) in dict do

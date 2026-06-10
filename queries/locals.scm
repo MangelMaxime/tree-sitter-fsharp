@@ -52,6 +52,12 @@
 ((identifier_pattern (long_identifier (identifier) @local.definition.variable))
  (#match? @local.definition.variable "^[a-z_]"))
 
+; Type-annotated binder name (`for s: string in`, `for k: T, r: T in`,
+; `let (a: int, b)`) — the bound name sits directly in tuple_typed_pattern's
+; `pattern`, so it isn't covered by identifier_pattern above.
+((tuple_typed_pattern pattern: (long_identifier (identifier) @local.definition.variable))
+ (#match? @local.definition.variable "^[a-z_]"))
+
 ; ── References ────────────────────────────────────────────────────────────────
 ; Root segment of an identifier path (so `x` in `x.Length` is a reference, but
 ; `.Length` is not).

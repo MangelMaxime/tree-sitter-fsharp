@@ -227,6 +227,13 @@
 ; The `as`-alias binds a name (`… as item`, `Some x as y`) — colour it @variable.
 (as_pattern (identifier) @variable)
 
+; Type-annotated for-loop binder name (`for s: string in`, `for k: T, r: T in`) —
+; the bare `tuple_typed_pattern` isn't nested in `identifier_pattern`, so colour its
+; bound name @variable here. Scoped to `for_expression` so it doesn't affect the
+; let-tuple form (`let (a: int, b)`, coloured @function elsewhere).
+((for_expression (tuple_typed_pattern pattern: (long_identifier (identifier) @variable)))
+ (#match? @variable "^[a-z_]"))
+
 ; Tuple-destructured binding names — `let a, b, c = …` (and `let (a, b) = …`).
 ; Colour them like the single-name binding form so destructured bindings don't
 ; render uncoloured. The unparenthesized form holds the names as direct

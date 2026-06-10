@@ -1974,6 +1974,14 @@ export default grammar({
                         $.unparenthesized_tuple_pattern,
                         // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
                         $.as_pattern,
+                        // Typed binder: `for (line: string) in xs do …` (parenthesised),
+                        // `for s: string in xs do …` (bare single), and
+                        // `for k: string, r: string in …` / `for g: G, pkgs in …`
+                        // (bare typed tuple — first element typed). The `:` distinguishes
+                        // it from the plain-identifier binder; `in` ends the type.
+                        $.typed_pattern,
+                        $.tuple_typed_pattern,
+                        seq($.tuple_typed_pattern, repeat1(seq(",", $._tuple_pattern_item))),
                         // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
                         // application binder (the bare `long_identifier` form is omitted:
                         // a no-arg binder is already covered by `$.identifier`).
