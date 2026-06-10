@@ -447,6 +447,31 @@ let x = writeJson {| Name = "a" |}
           value: (string_literal))))))
 
 ================================================================================
+Element DSL with an anonymous-record argument (Component {| props |} { children })
+================================================================================
+
+let x = navLink {| Class = "c" |} { span() { "h" } }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (computation_expression
+      builder: (long_identifier
+        (identifier))
+      args: (anonymous_record_expression
+        (record_field
+          name: (long_identifier
+            (identifier))
+          value: (string_literal)))
+      (computation_expression
+        builder: (long_identifier
+          (identifier))
+        args: (unit)
+        (string_literal)))))
+
+================================================================================
 Cons in a CE body is not mistaken for a record field
 ================================================================================
 

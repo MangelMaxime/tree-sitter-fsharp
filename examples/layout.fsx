@@ -568,6 +568,14 @@ module L20_ElementDSL =
             stage "Compile" { run "dotnet build" }
         }
 
+    // Oxpecker.Solid component: the builder argument is an ANONYMOUS RECORD of props,
+    // followed by a `{ … }` children body (`Component {| props |} { children }`).
+    let component_ =
+        navLink {| Class = "nav-link"; Href = "/" |} {
+            span(class'="icon") { "icon" }
+            " Home"
+        }
+
     // Fluent method chain on the builder before the body — chain links may sit on
     // their own lines (`.hxBoost`/`.hxTarget` are Oxpecker.Htmx modifiers).
     let chained =

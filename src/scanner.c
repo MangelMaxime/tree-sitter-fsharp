@@ -472,6 +472,35 @@ static bool edsl_skip_balanced_parens(TSLexer *lexer) {
     }
 }
 
+// Skip the rest of a brace-balanced `{| … |}` anonymous-record argument — the caller
+// has ALREADY consumed the opening `{` (depth starts at 1). Counts `{`/`}` (so
+// `{|`/`|}` and nested records balance) and skips strings/comments. Used for the
+// Oxpecker.Solid component DSL arg form `Component {| props |} { children }`.
+static bool edsl_skip_braces_after_open(TSLexer *lexer) {
+    int depth = 1, guard = 0;
+    for (;;) {
+        if (++guard > 8192) return false;
+        int32_t c = lexer->lookahead;
+        if (c == 0) return false;
+        if (c == '"') { edsl_skip_dquote(lexer); continue; }
+        if (c == '@') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '$') lexer->advance(lexer, true);
+            if (lexer->lookahead == '"') edsl_skip_verbatim(lexer);
+            continue;
+        }
+        if (c == '$') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '@') { lexer->advance(lexer, true); if (lexer->lookahead == '"') edsl_skip_verbatim(lexer); }
+            else if (lexer->lookahead == '"') edsl_skip_dquote(lexer);
+            continue;
+        }
+        if (c == '{') { lexer->advance(lexer, true); depth++; continue; }
+        if (c == '}') { lexer->advance(lexer, true); depth--; if (depth == 0) return true; continue; }
+        lexer->advance(lexer, true);
+    }
+}
+
 // Consume a (possibly qualified) identifier with the lexer at its first char.
 static bool edsl_skip_name(TSLexer *lexer) {
     if (!is_name_start(lexer->lookahead)) return false;
@@ -513,6 +542,13 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         lexer->advance(lexer, true);
         if (lexer->lookahead != '"') return false;
         edsl_skip_verbatim(lexer);                        // @"verbatim"
+    } else if (lexer->lookahead == '{') {
+        // Oxpecker.Solid component: `Component {| props |} { children }` — the
+        // builder argument is an anonymous record. Require `{|` (not a plain `{`,
+        // which would be the body).
+        lexer->advance(lexer, true);
+        if (lexer->lookahead != '|') return false;
+        if (!edsl_skip_braces_after_open(lexer)) return false;
     } else {
         return false;
     }

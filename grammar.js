@@ -2032,7 +2032,9 @@ export default grammar({
                         $._element_dsl_open,
                         field('builder', $.long_identifier),
                         field('args', choice($.unit, $.parenthesized_expression,
-                                             $.string_literal, $.verbatim_string, $.triple_quoted_string)),
+                                             $.string_literal, $.verbatim_string, $.triple_quoted_string,
+                                             // Oxpecker.Solid component: `Component {| props |} { children }`
+                                             $.anonymous_record_expression)),
                         // Fluent method chain before the body: `div(attrs).hxTarget("#x").hxSwap("y") { … }`
                         repeat(seq(
                             ".",

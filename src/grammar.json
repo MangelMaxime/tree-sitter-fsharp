@@ -7481,6 +7481,10 @@
                         {
                           "type": "SYMBOL",
                           "name": "triple_quoted_string"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "anonymous_record_expression"
                         }
                       ]
                     }

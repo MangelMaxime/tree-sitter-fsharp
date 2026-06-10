@@ -988,6 +988,10 @@
         "required": false,
         "types": [
           {
+            "type": "anonymous_record_expression",
+            "named": true
+          },
+          {
             "type": "parenthesized_expression",
             "named": true
           },
