@@ -3312,6 +3312,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "multidollar_string"
+        },
+        {
+          "type": "SYMBOL",
           "name": "bool_literal"
         },
         {
@@ -4103,6 +4107,10 @@
         {
           "type": "SYMBOL",
           "name": "interpolated_triple_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "multidollar_string"
         },
         {
           "type": "SYMBOL",
@@ -12147,6 +12155,30 @@
           "value": "\""
         }
       ]
+    },
+    "multidollar_string": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "\\$\\$+"
+          },
+          {
+            "type": "STRING",
+            "value": "\"\"\""
+          },
+          {
+            "type": "PATTERN",
+            "value": "([^\"]|\"[^\"]|\"\"[^\"])*"
+          },
+          {
+            "type": "STRING",
+            "value": "\"\"\""
+          }
+        ]
+      }
     },
     "interpolated_triple_string": {
       "type": "SEQ",

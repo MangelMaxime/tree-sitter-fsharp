@@ -1041,6 +1041,7 @@ export default grammar({
             $.interpolated_string,
             $.interpolated_verbatim_string,
             $.interpolated_triple_string,
+            $.multidollar_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -1288,6 +1289,7 @@ export default grammar({
             $.interpolated_string,
             $.interpolated_verbatim_string,
             $.interpolated_triple_string,
+            $.multidollar_string,
             $.bool_literal,
             $.unit,
             $.null_literal,
@@ -3140,6 +3142,15 @@ export default grammar({
             )),
             '"',
         ),
+
+        // `$$"""…{{hole}}…"""` (and more dollars) — F# 8 extended string
+        // interpolation. With N dollars the hole delimiters are N braces and
+        // single braces are TEXT, so the plain-brace interpolation machinery
+        // would mangle the content. Parsed as ONE opaque string token: correct
+        // string coloring, no per-hole highlighting (0 benchmark occurrences —
+        // build a dedicated scanner text mode only if real demand appears).
+        // The token out-lexes the `$$` symbolic_op via longest-match.
+        multidollar_string: _ => token(seq(/\$\$+/, '"""', /([^"]|"[^"]|""[^"])*/, '"""')),
 
         // $"""triple %fmt{expr} {expr}"""
         interpolated_triple_string: $ => seq(

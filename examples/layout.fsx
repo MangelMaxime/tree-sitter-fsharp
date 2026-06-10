@@ -27,6 +27,17 @@ module L01_InlineLet =
     let continued = "the quick brown fox \
                      jumps over the lazy dog"
 
+    // F# 8 multi-dollar interpolation (`$$"""…"""`): with N dollars the hole
+    // delimiters are N braces; single braces are TEXT. Parsed as one opaque
+    // string token (whole thing colors @string; holes are not sub-highlighted).
+    let jsonTpl (value) = $$"""json { "key": 1 } and {{value}}"""
+    let braceSoup (hole) = $$$"""brace soup { } {{ }} {{{hole}}}"""
+    let multiline (hole) =
+        $$"""
+        line { one }
+        {{hole}}
+        """
+
 // ── Decl: own-line let bodies ───────────────────────────────────────────────
 module L02_OwnLineLet =
     let single =

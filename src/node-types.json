@@ -246,6 +246,10 @@
         "named": true
       },
       {
+        "type": "multidollar_string",
+        "named": true
+      },
+      {
         "type": "null_literal",
         "named": true
       },
@@ -333,6 +337,10 @@
       },
       {
         "type": "measure_literal",
+        "named": true
+      },
+      {
+        "type": "multidollar_string",
         "named": true
       },
       {
@@ -6305,6 +6313,10 @@
   {
     "type": "module",
     "named": false
+  },
+  {
+    "type": "multidollar_string",
+    "named": true
   },
   {
     "type": "mutable",

@@ -171,6 +171,7 @@
 (interpolated_string) @string
 (interpolated_verbatim_string) @string
 (interpolated_triple_string) @string
+(multidollar_string) @string
 (interpolation "{" @punctuation.special)
 (interpolation "}" @punctuation.special)
 (interpolation (format_string) @string.special)

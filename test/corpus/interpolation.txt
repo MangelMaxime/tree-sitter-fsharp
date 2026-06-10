@@ -238,3 +238,20 @@ let s = $"{System.DateTime.UtcNow:``yyyy-MM-dd``}"
           (identifier)
           (identifier))
         (format_string)))))
+
+================================================================================
+Multi-dollar interpolated triple-quoted strings
+================================================================================
+
+let two = $$"""json { "key": 1 } and {{value}}"""
+let three = $$$"""brace soup { } {{ }} {{{hole}}}"""
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (multidollar_string))
+  (let_binding
+    name: (identifier)
+    body: (multidollar_string)))
