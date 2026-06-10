@@ -1235,7 +1235,8 @@ export default grammar({
         // as applied operators and not worth the parse ambiguity.
         _value_operator_name: $ => seq(
             "(",
-            choice($.symbolic_op, $.bang_op, "+", "-", "*", "/", "%", "=", "<", ">"),
+            choice($.symbolic_op, $.bang_op, "+", "-", "*", "/", "%", "=", "<", ">",
+                "$", "?"),     // single-char custom ops: `($)` apply, `(?)` dynamic lookup
             ")",
         ),
 
@@ -1304,6 +1305,12 @@ export default grammar({
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', choice(">", "<", ">=", "<=", "=", "<>")), field('right', $._expression))),
             prec.right(PREC.INFIX_OP,      seq(field('left', $._expression), field('operator', "::"), field('right', $._expression))),
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', $.symbolic_op), field('right', $._expression))),
+            // Custom single-char `$` infix (FSharpPlus `Idiomatic $ x`). Aliased to
+            // symbolic_op so queries treat it like every other custom operator.
+            // (`?` is NOT given a spaced-infix form: `f ? x` would be genuinely
+            // ambiguous with an optional named arg `f ?x`; the no-space dynamic
+            // form `o?member` is `dynamic_expression`.)
+            prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', alias("$", $.symbolic_op)), field('right', $._expression))),
             prec.right(PREC.LARROW,        seq(field('left', $._expression), field('operator', "<-"), field('right', $._expression))),
             prec.right(1,                  seq(field('left', $._expression), field('operator', ".."), field('right', $._expression))),
         ),
@@ -1548,7 +1555,7 @@ export default grammar({
                 "+", "-", "*", "/", "%",
                 "=", "<", ">",
                 "&", "|", "^",
-                "$", "~", "!",   // single-char custom operators (`($)`, `(~)`, `(!)`)
+                "$", "~", "!", "?",   // single-char custom operators (`($)`, `(?)`, `(!)`)
             ),
             ")",
         ),

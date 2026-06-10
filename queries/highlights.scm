@@ -59,6 +59,10 @@
 ; `!`-led custom operator as a value / name (`(!!)`, `(!%)`) — colour it like
 ; `(symbolic_op)` so it reads as an operator everywhere, not just in prefix use.
 (operator_name (bang_op) @operator)
+; Single-char custom operators inside an `(op)` name (`($)`, `(?)`, `(~)`, …) —
+; anonymous tokens the global operator-token list below doesn't include, so
+; without this they render as plain text between the parens.
+(operator_name ["$" "?" "&" "|" "^" "~" "!"] @operator)
 
 (type_constraint ["null" "struct" "comparison" "equality" "unmanaged" "enum" "delegate"] @keyword)
 (type_constraint "not" @keyword.operator)

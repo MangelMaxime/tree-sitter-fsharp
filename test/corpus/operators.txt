@@ -316,3 +316,52 @@ let client =
             (int_literal)))
         member: (identifier))
       (unit))))
+
+================================================================================
+Single-char custom operators dollar and question mark
+================================================================================
+
+let (?) lookup key = lookup key
+
+let applied = (Idiomatic $ x) (sfi <*> si)
+
+let dollarVal = ($)
+let qmarkVal = (?)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (operator_name)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (parenthesized_expression
+        (binary_expression
+          left: (long_identifier
+            (identifier))
+          operator: (symbolic_op)
+          right: (long_identifier
+            (identifier))))
+      (parenthesized_expression
+        (binary_expression
+          left: (long_identifier
+            (identifier))
+          operator: (symbolic_op)
+          right: (long_identifier
+            (identifier))))))
+  (let_binding
+    name: (identifier)
+    body: (operator_name))
+  (let_binding
+    name: (identifier)
+    body: (operator_name)))

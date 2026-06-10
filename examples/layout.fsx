@@ -350,6 +350,14 @@ module L09_Loops =
         let mapVal = (<!>)
         chained, mapped, bindVal, mapVal
 
+    // Single-char `$` custom operator (FSharpPlus apply): definition, spaced
+    // infix use, and as a first-class value.
+    let ($) f x = f x
+    let dollarOps (idio) (x) (sfi) (si) =
+        let applied = (idio $ x) (sfi <*> si)
+        let dollarVal = ($)
+        applied, dollarVal
+
     // Pipe / compose operators (built-in symbolic) for contrast.
     let pipeline (xs) = xs |> List.map ((+) 1) |> List.filter ((<) 0) |> List.sum
     let composed = (fun x -> x + 1) >> (fun x -> x * 2)
@@ -709,6 +717,12 @@ module L19_DynamicAccess =
     // `%`/`%%` splice (anti-quotation) prefix — in real quotations and Fable.
     let spliceInQuote (e) = <@ %e + 1 @>
     let spliceField (this) = { Order.Id = %this.Id }
+
+    // The `(?)` operator itself: definable and usable as a first-class value
+    // (the FSharp.Data convention backing `o?member`). No spaced-infix form —
+    // `f ? x` would collide with an optional named arg `f ?x`.
+    let (?) (doc) (key: string) = doc.GetProperty key
+    let qmarkVal = (?)
 
 // ── Expr: element-DSL computation expression (Oxpecker-style) ───────────────
 module L20_ElementDSL =

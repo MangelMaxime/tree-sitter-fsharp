@@ -3992,6 +3992,14 @@
             {
               "type": "STRING",
               "value": ">"
+            },
+            {
+              "type": "STRING",
+              "value": "$"
+            },
+            {
+              "type": "STRING",
+              "value": "?"
             }
           ]
         },
@@ -4444,6 +4452,44 @@
                 "content": {
                   "type": "SYMBOL",
                   "name": "symbolic_op"
+                }
+              },
+              {
+                "type": "FIELD",
+                "name": "right",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "PREC_LEFT",
+          "value": 4,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "left",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              },
+              {
+                "type": "FIELD",
+                "name": "operator",
+                "content": {
+                  "type": "ALIAS",
+                  "content": {
+                    "type": "STRING",
+                    "value": "$"
+                  },
+                  "named": true,
+                  "value": "symbolic_op"
                 }
               },
               {
@@ -5502,6 +5548,10 @@
             {
               "type": "STRING",
               "value": "!"
+            },
+            {
+              "type": "STRING",
+              "value": "?"
             }
           ]
         },
