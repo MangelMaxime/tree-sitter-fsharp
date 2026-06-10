@@ -130,8 +130,9 @@ module L03_Functions =
     // Multidimensional array types: in generic args and annotations.
     let rankName = typeof<int[,,]>.Name
     let transpose (m: float[,]) = m
-    // KNOWN GAP: `o :?> byte[]` (no space) misparses — write `byte []` or `(byte[])`.
-    let asBytes (o: obj) = o :?> byte []
+    // Cast to an array type — no-space `byte[]` included (fparsec style).
+    let asBytes (o: obj) = o :?> byte[]
+    let asStates (s: obj) = box s :?> Cloner.State[]
 
     // Member access on a collection / record literal.
     let listLen = [ 1; 2; 3 ].Length

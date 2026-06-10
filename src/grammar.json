@@ -10916,8 +10916,12 @@
               {
                 "type": "IMMEDIATE_TOKEN",
                 "content": {
-                  "type": "STRING",
-                  "value": "["
+                  "type": "PREC",
+                  "value": 1,
+                  "content": {
+                    "type": "STRING",
+                    "value": "["
+                  }
                 }
               }
             ]

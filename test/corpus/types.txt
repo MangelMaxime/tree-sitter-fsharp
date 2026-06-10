@@ -564,3 +564,50 @@ let copyAll (src: Stream) =
               (identifier)))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Cast to an array type with no space before the bracket
+================================================================================
+
+let bytes = resp.Body :?> byte[]
+let states2 = box states :?> Cloner.State[]
+let grid = o :?> int[,]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (typecast_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (type_expression
+        (array_type
+          (type_expression
+            (long_identifier
+              (identifier)))))))
+  (let_binding
+    name: (identifier)
+    body: (typecast_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (type_expression
+        (array_type
+          (type_expression
+            (long_identifier
+              (identifier)
+              (identifier)))))))
+  (let_binding
+    name: (identifier)
+    body: (typecast_expression
+      (long_identifier
+        (identifier))
+      (type_expression
+        (array_type
+          (type_expression
+            (long_identifier
+              (identifier))))))))

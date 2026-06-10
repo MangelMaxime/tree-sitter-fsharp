@@ -1921,11 +1921,8 @@ export default grammar({
 
         // ── Type casts ────────────────────────────────────────────────────────
         // expr :> Type   upcast;  expr :?> Type   downcast;  expr :? Type   type test
-        // KNOWN GAP: `o :?> byte[]` with NO space before `[` — the `[` lexes as
-        // the dotless-index immediate `[` after this rule reduces (`byte []` and
-        // `(byte[])` both parse). An in-rule immediate suffix and an immediate
-        // alternative on array_type were both tried (2026-06-10) — the table
-        // still resolves toward the index reduce; not worth more machinery.
+        // (`o :?> byte[]` no-space works via array_type's prec'd immediate-`[`
+        // — the token-level tie-break; see array_type.)
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
             seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
@@ -2879,9 +2876,14 @@ export default grammar({
         // The `token.immediate` alternative covers `o :?> byte[]` — with no
         // space the `[` would otherwise lex as the dotless-index immediate `[`
         // (which then dies on an empty index, leaving an error).
+        // The immediate-`[` alternative carries token prec 1: in a CAST tail
+        // (`box s :?> Cloner.State[]`, no space) BOTH this token and
+        // bracket_index_expression's immediate-`[` are valid and tie on length —
+        // the precedence makes the ARRAY reading win the lex (third attempt;
+        // adding competing parse paths alone never flipped the table).
         array_type: $ => prec(TYPE_PREC.APP, seq(
             $.type_expression,
-            choice("[", token.immediate("[")),
+            choice("[", token.immediate(prec(1, "["))),
             repeat(","),
             "]",
         )),
