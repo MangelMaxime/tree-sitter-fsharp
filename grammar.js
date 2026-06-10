@@ -2274,9 +2274,7 @@ export default grammar({
         // starting a new field over extending the previous value via identifier_pattern.
         record_pattern: $ => seq(
             "{",
-            $.record_field_pattern,
-            repeat(prec.dynamic(2, seq(optional(";"), $.record_field_pattern))),
-            optional(";"),
+            indentedOrInlineFieldList($, $.record_field_pattern, 2, {}),
             "}",
         ),
 

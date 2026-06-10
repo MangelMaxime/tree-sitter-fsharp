@@ -154,6 +154,16 @@ module L06_Match =
             trivia = t) -> p, t
         | _ -> failwith "?"
 
+    // Multi-line RECORD pattern: fields on their own lines (offside, no `;`), and a
+    // field value that is itself an or-pattern (`A | B`). Also nested in a `::` cons.
+    let recordPat token =
+        match token with
+        | { Kind = Ident
+            Token = t } -> t
+        | { Kind = Other | Dot
+            Token = t } :: _ -> t
+        | _ -> ""
+
     let nested g a c =
         match g with
         | 1 ->

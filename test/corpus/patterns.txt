@@ -860,3 +860,53 @@ let f x =
         (pattern
           (wildcard_pattern))
         body: (int_literal)))))
+
+================================================================================
+Multi-line record pattern with newline-separated fields and an or-pattern field
+================================================================================
+
+let f x =
+    match x with
+    | { Kind = A | B
+        Tok = t } -> t
+    | _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (record_pattern
+            (record_field_pattern
+              name: (long_identifier
+                (identifier))
+              value: (pattern
+                (or_pattern
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier))))
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier)))))))
+            (record_field_pattern
+              name: (long_identifier
+                (identifier))
+              value: (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))))
+        body: (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        body: (int_literal)))))
