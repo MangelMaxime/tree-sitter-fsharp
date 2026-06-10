@@ -1832,7 +1832,9 @@ export default grammar({
         type_ascription_expression: $ => prec.right(seq($._expression, ":", $.type_expression)),
 
         // A binding/member body that may carry a trailing return-type ascription.
-        _ascribable_body: $ => choice($._expression, $.type_ascription_expression),
+        // A trailing `;` after the body is a no-op statement terminator
+        // (`let getDir () = … directory;` — Paket style). Accept and discard it.
+        _ascribable_body: $ => seq(choice($._expression, $.type_ascription_expression), optional(";")),
 
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),

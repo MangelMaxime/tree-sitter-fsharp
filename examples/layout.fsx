@@ -117,6 +117,10 @@ module L04_Sequences =
 
     let explicitSemi () = stepA (); stepB (); stepC ()
 
+    // A trailing `;` after a binding body is a no-op statement terminator.
+    let trailingSemi () = compute ();
+    let trailingSemiInline = 1;
+
 // ── Then: if / elif / else ──────────────────────────────────────────────────
 module L05_If =
     let inlineIf a = if a then 1 else 0

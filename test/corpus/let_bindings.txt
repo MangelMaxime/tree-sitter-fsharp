@@ -476,6 +476,25 @@ let singleton value = [ value ] : int list
             (identifier)))))))
 
 ================================================================================
+Trailing semicolon after a binding body
+================================================================================
+
+let f () =
+    compute ();
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (unit))
+    body: (application_expression
+      (long_identifier
+        (identifier))
+      (unit))))
+
+================================================================================
 FSI double-semicolon terminator (;;)
 ================================================================================
 
