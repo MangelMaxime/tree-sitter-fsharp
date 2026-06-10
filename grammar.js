@@ -694,11 +694,15 @@ export default grammar({
                 decoration($),
                 $._static_member_prefix, $._accessor_body,
             )),
-            // Auto-property — instance/static differ only by the `static` prefix.
+            // Auto-property — instance/static differ only by the `static` prefix;
+            // `override val` / `default val` implement an abstract auto-property.
             prec.dynamic(1, seq(
                 decoration($),
-                optional("static"),
-                "member",
+                choice(
+                    seq(optional("static"), "member"),
+                    "override",
+                    "default",
+                ),
                 "val",
                 optional($.access_modifier),   // `member val public N = …`
                 field('name', $.identifier),

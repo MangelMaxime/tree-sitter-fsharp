@@ -1827,17 +1827,35 @@
                 "type": "CHOICE",
                 "members": [
                   {
-                    "type": "STRING",
-                    "value": "static"
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "CHOICE",
+                        "members": [
+                          {
+                            "type": "STRING",
+                            "value": "static"
+                          },
+                          {
+                            "type": "BLANK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "STRING",
+                        "value": "member"
+                      }
+                    ]
                   },
                   {
-                    "type": "BLANK"
+                    "type": "STRING",
+                    "value": "override"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "default"
                   }
                 ]
-              },
-              {
-                "type": "STRING",
-                "value": "member"
               },
               {
                 "type": "STRING",

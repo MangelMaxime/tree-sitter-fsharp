@@ -585,6 +585,14 @@ module L15_Classes =
         // Access modifier on an auto-property.
         member val public Third = 0 with get, set
 
+    // `override val` / `default val` auto-properties implementing an abstract
+    // property (the fantomas SyntaxOak idiom — a leaf node overriding Children).
+    type LeafNode(content: string) =
+        inherit NodeBase()
+        member val Content = content
+        override val Children = Array.empty
+        default val Extra = 0 with get, set
+
     // Object expression whose `{` ends the line, with `new` on the next.
     type Factory() =
         member _.Make () = {

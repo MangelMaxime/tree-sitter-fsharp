@@ -162,6 +162,45 @@ type Counter() =
       (auto_property_accessors))))
 
 ================================================================================
+Override and default auto-implemented properties
+================================================================================
+
+type StringNode(content: string) =
+    inherit NodeBase()
+    member val Content = content
+    override val Children = Array.empty
+    default val Extra = 0 with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (inherit_decl
+      base: (type_expression
+        (long_identifier
+          (identifier))))
+    (member_defn
+      name: (identifier)
+      body: (long_identifier
+        (identifier)))
+    (member_defn
+      name: (identifier)
+      body: (long_identifier
+        (identifier)
+        (identifier)))
+    (member_defn
+      name: (identifier)
+      body: (int_literal)
+      (auto_property_accessors))))
+
+================================================================================
 Type extension simple
 ================================================================================
 
