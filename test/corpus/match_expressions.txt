@@ -1,0 +1,127 @@
+================================================================================
+Over-indented continuation arm of an outer match
+================================================================================
+
+let check expr =
+    match expr with
+    | App (f, argsl) ->
+        if reportErrors then
+            match f with
+            | Coerce v -> warn v
+            | _ -> ()
+        | _ -> ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))))
+        (if_expression
+          (long_identifier
+            (identifier))
+          (match_expression
+            (long_identifier
+              (identifier))
+            (match_arm
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier))))
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier))))
+            (match_arm
+              (pattern
+                (wildcard_pattern))
+              (unit)))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (unit)))))
+
+================================================================================
+Leading |-led custom operator continues the arm body
+================================================================================
+
+let fieldSearch lid =
+    match lid with
+    | id :: rest ->
+        lookupField recdTy id
+        |?> List.map (fun x -> id, x, rest)
+    | _ -> NoResults
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (cons_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))))
+        (binary_expression
+          (application_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (long_identifier
+              (identifier)))
+          (symbolic_op)
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (parenthesized_expression
+              (lambda_expression
+                (parameter
+                  (identifier))
+                (tuple_expression
+                  (tuple_expression
+                    (long_identifier
+                      (identifier))
+                    (long_identifier
+                      (identifier)))
+                  (long_identifier
+                    (identifier))))))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (long_identifier
+          (identifier))))))

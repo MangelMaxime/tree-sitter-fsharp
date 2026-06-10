@@ -1098,3 +1098,21 @@ module L26_OperatorValues =
     let product = List.fold ( * ) 1 [ 1; 2; 3 ]
 
     let first, second as pair, rest = splitThree input
+
+// === L27: over-indented continuation arm (FSC permits arms right of their match) ===
+module L27_OverIndentedArm =
+    let categorize expr =
+        match expr with
+        | Apply (fn, args) ->
+            if strictMode then
+                match fn with
+                | Direct name -> warnOnce name
+                | _ -> ()
+            | _ -> ()
+
+    let searched lid =
+        match lid with
+        | id :: rest ->
+            lookupField recdTy id
+            |?> List.map (fun x -> id, x, rest)
+        | _ -> NoResults

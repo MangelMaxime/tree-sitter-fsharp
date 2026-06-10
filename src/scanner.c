@@ -1252,7 +1252,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             lexer->advance(lexer, true);
             int32_t c1 = lexer->lookahead;
             bool infix = false;
-            if (c0 == '|')      infix = (c1 == '>' || c1 == '|');           // |> ||
+            // `|` + any operator char = a custom `|`-led infix operator
+            // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, …). A match-arm
+            // `|` is followed by whitespace or a pattern char instead.
+            if (c0 == '|')      infix = (c1 == '>' || c1 == '|' || c1 == '?' ||
+                                         c1 == '@' || c1 == '!' || c1 == '%' ||
+                                         c1 == '&' || c1 == '*' || c1 == '+' ||
+                                         c1 == '-' || c1 == '.' || c1 == '/' ||
+                                         c1 == '<' || c1 == '=' || c1 == '^' ||
+                                         c1 == '~' || c1 == '$');
             else if (c0 == '&') infix = (c1 == '&');                        // &&
             else if (c0 == ':') infix = (c1 == ':' || c1 == '>' || c1 == '?'); // :: :> :?
             else                infix = true;                              // = < > * / % ^
@@ -1315,6 +1323,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_DECL:
         case S_TRY:
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            // A leading `|` arm marker AT the body column: FSC permits
+            // continuation arms MORE indented than their match (`| _ -> ()` at
+            // col 8, match arms at col 4 — FCS PostInferenceChecks style). The
+            // body must close so the over-indented arm reaches the enclosing
+            // match. Gated on such a match existing further left, and NOT
+            // S_TYPEBODY (DU cases legitimately lead with `|` at the body col).
+            if (valid[LAYOUT_END] && bar_arm && col == top->col && top->sort != S_TYPEBODY) {
+                for (int i = (int)s->n - 2; i >= 0; i--) {
+                    if (s->stk[i].sort == S_MATCH && s->stk[i].col < col) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    if (s->stk[i].col < col && s->stk[i].sort != S_MATCH) break;
+                }
+            }
             // A leading close delimiter `)`/`]`/`}` ends the enclosing construct,
             // so an open layout body must close first — even at == body col, where
             // neither the dedent above nor a separator (semi_blocked on closers)

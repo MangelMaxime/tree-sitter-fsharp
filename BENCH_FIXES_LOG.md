@@ -72,3 +72,26 @@ Bench: 258→250 files, 3603→2873 nodes (−730), 0 regressions, 0 worsened.
 Optimizer.fs 628→0, PrimitivesTests 17→0, BigInt.fs 13→0. Corpus 431
 (+2 tests), layout.fsx L26_OperatorValues, highlights: (operator_member)
 @operator + "~~~"/"*" in operator_name.
+
+## Fix 3 — over-indented continuation arms + |-led custom-operator continuations
+
+Two scanner changes, found via PostInferenceChecks.fs (260 nodes):
+1. **Over-indented arm**: FSC permits a continuation arm MORE indented than its
+   match (`| _ -> ()` at col 8 attaching to a match whose arms sit at col 4 —
+   it closes the inner if-body/arm-body first). New close rule in the layoutish
+   case: a leading `|` (bar_arm) at EXACTLY the body column emits LAYOUT_END,
+   gated on (a) not S_TYPEBODY (DU cases lead with `|` at body col), and (b) an
+   enclosing S_MATCH further left on the stack (walk stops at a non-match
+   context left of the bar — the bar would belong to that body instead).
+2. **`|?>`-style continuations**: the leading-`|` infix detection knew only
+   `|>`/`||`; `|?>` (FCS NameResolution) classified as an arm marker, and rule
+   1 then closed the body it continued (25→29 regression caught by the sweep
+   A/B diff). Now `|` + ANY operator char = infix continuation.
+
+Bench: 250→249 files, 2873→2537 nodes (−336), 0 regressions, 0 worsened.
+PostInferenceChecks.fs 260→0; TypedTreeOps/IlxGen/CheckExpressions improved.
+Corpus 433 (+2), layout.fsx L27_OverIndentedArm + |?> example.
+
+GOTCHA (again, third time): a scanner compile ERROR leaves the stale cached
+parser silently answering — `tree-sitter test` surfaces the compile error,
+plain `parse` does not. Check `tree-sitter test` after every scanner edit.
