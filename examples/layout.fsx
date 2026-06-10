@@ -141,8 +141,12 @@ module L03_Functions =
     // Single-character custom operator definition.
     let ($) (f: obj) (x: obj) : obj = f
 
-    // Code quotation as an application argument (`f <@ … @>`).
+    // Code quotation as an application argument (`f <@ … @>`), and a
+    // trailing `;` before the quotation close (unquote test style).
     let evalq = eval <@ 1 + 2 @>
+    let quotSemi = decompile <@ 1; 2; 3; @>
+    // Unary `+` prefix.
+    let posSum = +(2 + 3)
 
     // Inline IL intrinsic `(# "opcode" args : type #)`.
     let inline retype (x: 'a) : 'b = (# "" x : 'b #)
@@ -495,6 +499,15 @@ module L10_ListsArrays =
         [|
             10
             20
+        |]
+
+    // Comment-LED element lines (`(* n *) value`, PriorityQueue-style aligned
+    // tables) — the line's layout column is the comment's start.
+    let primeSizes =
+        [|
+            (*  prime no.   prime *)
+            (*  4 *) 7
+            (*  6 *) 13
         |]
 
     let withSideEffectElem = [ (sideEffect (); value); other ]

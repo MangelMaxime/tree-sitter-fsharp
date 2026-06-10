@@ -2383,3 +2383,54 @@ let readToken big =
         (address_of_expression
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Quotation trailing semicolons, unary plus, comment-led array elements
+================================================================================
+
+let q = <@ 1; 2; 3; @>
+let n = <@@ f x; @@>
+
+let p = +(2 + 3)
+
+let primes =
+    [|
+        (*  prime no.   prime *)
+        (*  4 *) 7
+        (*  6 *) 13
+    |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (typed_quotation
+      (sequence_expression
+        (int_literal)
+        (sequence_expression
+          (int_literal)
+          (int_literal)))))
+  (let_binding
+    name: (identifier)
+    body: (untyped_quotation
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    name: (identifier)
+    body: (unary_expression
+      (parenthesized_expression
+        (binary_expression
+          left: (int_literal)
+          right: (int_literal)))))
+  (let_binding
+    name: (identifier)
+    body: (array_expression
+      (block_comment)
+      (block_comment)
+      (int_literal)
+      (block_comment)
+      (int_literal))))

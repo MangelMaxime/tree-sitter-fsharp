@@ -143,7 +143,16 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { depth--; lexer->advance(lexer, true); } }
                 else lexer->advance(lexer, true);
             }
-            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+            // CONTENT may follow the comment on the same line — a comment-LED
+            // element (`(* 4 *) 7`, PriorityQueue-style aligned arrays). The
+            // line then counts: its column is the COMMENT's start indent (where
+            // the element visually begins) and `first` is the first real char.
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+                if (first) *first = lexer->lookahead;
+                *col = indent;
+                return true;
+            }
             if (lexer->lookahead == 0) return false;
             continue;
         }

@@ -1183,11 +1183,17 @@ export default grammar({
             ")",
         )),
 
-        // <@ expr @>   — typed quotation (Expr<'T>)
-        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression, "@>")),
+        // <@ expr @>   — typed quotation (Expr<'T>). The compound `;@>` closer
+        // absorbs a trailing statement terminator (`<@ 1; 2; 3; @>`, unquote
+        // tests): a grammar-level optional can never catch it (the lone `;`
+        // shifts into the nested sequence repeat first), but the LONGER
+        // compound token out-lexes the single `;` whenever the close follows.
+        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression,
+            choice("@>", alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
         // <@@ expr @@>  — untyped quotation (Expr)
-        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression, "@@>")),
+        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
+            choice("@@>", alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
         // ?identifier — optional named argument reference  f(?name = Some value)
         optional_named_arg: $ => seq("?", $.identifier),
@@ -1401,7 +1407,7 @@ export default grammar({
             // NOTE: `!` (ref-cell deref) is NOT here — it's a HIGH-precedence prefix
             // (see `deref_expression`) so it can be an application argument; the ops
             // here are low-precedence (`f - x` must stay a subtraction, not `f (-x)`).
-            choice("not", "~~~", "-", "%%", "%"),
+            choice("not", "~~~", "-", "+", "%%", "%"),
             $._expression,
         )),
 

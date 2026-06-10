@@ -3737,8 +3737,38 @@
             "name": "_expression"
           },
           {
-            "type": "STRING",
-            "value": "@>"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "@>"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "TOKEN",
+                  "content": {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": ";"
+                      },
+                      {
+                        "type": "PATTERN",
+                        "value": "[ \\t\\r\\n]*"
+                      },
+                      {
+                        "type": "STRING",
+                        "value": "@>"
+                      }
+                    ]
+                  }
+                },
+                "named": false,
+                "value": "@>"
+              }
+            ]
           }
         ]
       }
@@ -3758,8 +3788,38 @@
             "name": "_expression"
           },
           {
-            "type": "STRING",
-            "value": "@@>"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "@@>"
+              },
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "TOKEN",
+                  "content": {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": ";"
+                      },
+                      {
+                        "type": "PATTERN",
+                        "value": "[ \\t\\r\\n]*"
+                      },
+                      {
+                        "type": "STRING",
+                        "value": "@@>"
+                      }
+                    ]
+                  }
+                },
+                "named": false,
+                "value": "@@>"
+              }
+            ]
           }
         ]
       }
@@ -4777,6 +4837,10 @@
               {
                 "type": "STRING",
                 "value": "-"
+              },
+              {
+                "type": "STRING",
+                "value": "+"
               },
               {
                 "type": "STRING",
