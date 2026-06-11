@@ -19,16 +19,14 @@ jobs:
           cache: npm
 
       - name: Install tree-sitter CLI (locked version)
-        run: |
-          npm ci
-          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+        run: npm ci
 
       # grammar.js / scanner.c edited but src/ not regenerated → fail early,
       # before testing stale artifacts. Deterministic: the CLI version comes
       # from package-lock.json, the same one `npx tree-sitter` uses locally.
       - name: Check generated files are up to date
         run: |
-          tree-sitter generate grammar.js
+          npx tree-sitter generate grammar.js
           git diff --exit-code --stat src/ || {
             echo "::error::src/ is stale — run 'npx tree-sitter generate grammar.js' and commit the result"
             exit 1
@@ -36,15 +34,15 @@ jobs:
 
       # Corpus (tree structure) + highlight assertions (query captures).
       - name: Corpus and highlight tests
-        run: tree-sitter test
+        run: npx tree-sitter test
 
       # The living showcase must parse without a single error node.
       - name: layout.fsx parses clean
         run: |
-          errors=$(tree-sitter parse examples/layout.fsx | grep -cE 'ERROR|MISSING' || true)
+          errors=$(npx tree-sitter parse examples/layout.fsx | grep -cE 'ERROR|MISSING' || true)
           if [ "$errors" -ne 0 ]; then
             echo "::error::examples/layout.fsx has $errors ERROR/MISSING nodes"
-            tree-sitter parse examples/layout.fsx | grep -E 'ERROR|MISSING'
+            npx tree-sitter parse examples/layout.fsx | grep -E 'ERROR|MISSING'
             exit 1
           fi
 

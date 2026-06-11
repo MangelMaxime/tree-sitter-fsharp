@@ -140,7 +140,7 @@ def run_test(name, src, expected):
         f.write(clean + "\n")
         tmp = f.name
     sexp = subprocess.run(
-        ["tree-sitter", "parse", tmp],
+        ["npx", "tree-sitter", "parse", tmp],
         cwd=REPO,
         capture_output=True,
         text=True,
