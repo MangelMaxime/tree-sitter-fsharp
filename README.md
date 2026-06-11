@@ -162,14 +162,43 @@ rainbow-brackets = true
 
 ## Testing
 
-The test corpus lives in `test/corpus/*.txt` - one file per topic,
-multiple named tests per file. Each test is an F# snippet plus the
-expected parse-tree shape.
-
 ```bash
 npx tree-sitter test                  # run everything
 npx tree-sitter test -i some_test     # match by name (substring)
 ```
+
+### Corpus tests
+
+The standard tree-sitter tests: `test/corpus/*.txt` — one file per topic,
+multiple named tests per file. Each test is an F# snippet plus the expected
+parse tree:
+
+```
+================================================================================
+Simple let binding
+================================================================================
+
+let answer = 42
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal)))
+```
+
+To add one: write the section with the snippet, leave the tree empty, then
+generate it from the actual parse and review the result:
+
+```bash
+npx tree-sitter test -u -i "Simple let binding"   # writes the expected tree
+npx tree-sitter test -i "Simple let binding"      # confirms it passes
+```
+
+`-u` overwrites expected trees with whatever the parser currently produces —
+only run it filtered (`-i`) on the tests you mean to (re)generate, and read
+the diff before committing.
 
 ### Highlight tests
 
