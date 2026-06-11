@@ -121,7 +121,6 @@ let inline add3<^T when ^T : (static member (+): ^T * ^T -> ^T)> (a: ^T) (b: ^T)
         (identifier))
       (string_literal))))
 
-
 ================================================================================
 Constructor (new) SRTP constraint
 ================================================================================
@@ -348,3 +347,44 @@ type Args =
                   (identifier)))
               (long_identifier
                 (identifier)))))))))
+
+================================================================================
+When-constraint on a body-level type ascription
+================================================================================
+
+type T =
+    static member inline Max (x: 'F, _impl: Default2) = x |> ToSeq.Invoke |> Seq.max : 'T when 'T : comparison
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (type_parameter)))
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      (type_ascription_expression
+        (binary_expression
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)
+              (identifier)))
+          (long_identifier
+            (identifier)
+            (identifier)))
+        (type_expression
+          (type_parameter))
+        (type_constraint
+          (type_parameter))))))

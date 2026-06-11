@@ -2003,7 +2003,9 @@ export default grammar({
         // SCOPED to body positions (reached via `_ascribable_body`, NOT `_expression`)
         // so it does NOT shadow `typed_expression` for `(e : t)` and doesn't turn a
         // trailing `T[]` into an index. `prec.right` so the `:` extends the body.
-        type_ascription_expression: $ => prec.right(seq($._expression, ":", $.type_expression)),
+        // The optional trailing when-constraint covers `… : 'T when 'T :
+        // comparison` body ascriptions (FSharpPlus Foldable style).
+        type_ascription_expression: $ => prec.right(seq($._expression, ":", $.type_expression, optional($._when_constraints))),
 
         // A binding/member body that may carry a trailing return-type ascription.
         // A trailing `;` after the body is a no-op statement terminator

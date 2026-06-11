@@ -1199,3 +1199,5 @@ module L33_Extern =
                   )
 
     let timesAll = List.fold (*) 1 [ 2; 3; 4 ]
+
+    let inline maxOf source = source |> Seq.max : 'T when 'T : comparison

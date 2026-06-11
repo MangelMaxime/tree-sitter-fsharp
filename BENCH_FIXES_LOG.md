@@ -294,3 +294,10 @@ Logging.fs 18→0. Corpus 449.
 Bench: 195→191 files, 1127→1088 nodes, 0 regressions (ProvidedTypes +6 /
 TypeTests +1 recovery reshuffle). MSBuildHelper 24→0, Symbols.fs 18→0.
 Corpus 452.
+
+## Fix 19 — when-constraint on a body-level type ascription
+
+`… = Seq.max x : 'T when 'T : comparison` (FSharpPlus Foldable):
+type_ascription_expression gained optional($._when_constraints).
+Bench: 191→190 files, 1088→1073 nodes, 0 regressions (Collection.fs +2 =
+reshuffle in its parked aligned-spaces site). Foldable.fs 15→0. Corpus 453.

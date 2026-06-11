@@ -5177,6 +5177,10 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         }
