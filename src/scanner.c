@@ -53,6 +53,7 @@ typedef enum {
     BLOCK_DOC_COMMENT,    // `(** … *)` doc form
     THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)
     LAZY_OPEN,            // lazy block-body open — S_EXPR, declines INLINE bodies
+    CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` — only when `ident ( … ) ,` follows
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -1360,6 +1361,45 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                 }
                 return false;                           // not trailing: literal `;`
+            }
+            // CTOR_TUPLE_GATE (zero-width): at a let-binding NAME position,
+            // `ident(.ident)* ( … ) ,` means `let Ctor(a, b), rest = …` — a
+            // tuple DECONSTRUCTION (fn defs never have `,` after params). At
+            // this consumption-safe tail the word-branch above may have eaten
+            // the first ≤9 identifier chars; resume from wherever we are.
+            if (valid[CTOR_TUPLE_GATE] &&
+                ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')) {
+                while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                       (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
+                       (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                       lexer->lookahead == '_' || lexer->lookahead == '\'' ||
+                       lexer->lookahead == '.') lexer->advance(lexer, true);
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                if (lexer->lookahead == '(') {
+                    lexer->advance(lexer, true);
+                    int pdepth = 1, guard = 0;
+                    bool ok = true;
+                    while (pdepth > 0 && ok) {
+                        if (++guard > 20000 || lexer->lookahead == 0 ||
+                            lexer->lookahead == '\n' || lexer->lookahead == '\r') { ok = false; break; }
+                        if (lexer->lookahead == '(') pdepth++;
+                        else if (lexer->lookahead == ')') pdepth--;
+                        else if (lexer->lookahead == '"') {
+                            lexer->advance(lexer, true);
+                            while (lexer->lookahead != '"' && lexer->lookahead != 0 && lexer->lookahead != '\n') {
+                                if (lexer->lookahead == '\\') lexer->advance(lexer, true);
+                                lexer->advance(lexer, true);
+                            }
+                            if (lexer->lookahead != '"') { ok = false; break; }
+                        }
+                        lexer->advance(lexer, true);
+                    }
+                    if (ok) {
+                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
+                    }
+                }
+                return false;   // consumption-safe: this is a return-false tail
             }
             // Same-line block comment after code (`1 (* a (* b *) *)`): the
             // external must lex it (nesting); nothing else fires for `(`.

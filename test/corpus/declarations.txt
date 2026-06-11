@@ -162,3 +162,41 @@ type B() =
       (parameter
         (unit))
       (unit))))
+
+================================================================================
+Ascribed attribute argument with a nullable type
+================================================================================
+
+type T() =
+    member _.M([<Optional; DefaultParameterValue(null: string | null)>] rid: string | null) = rid
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (attribute
+          (attribute_target
+            (long_identifier
+              (identifier)))
+          (attribute_target
+            (long_identifier
+              (identifier))
+            (type_ascription_expression
+              (null_literal)
+              (nullable_type
+                (long_identifier
+                  (identifier))))))
+        (identifier)
+        (nullable_type
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))))

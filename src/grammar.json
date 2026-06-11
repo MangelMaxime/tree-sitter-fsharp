@@ -329,7 +329,7 @@
                           "members": [
                             {
                               "type": "SYMBOL",
-                              "name": "_expression"
+                              "name": "_attr_paren_arg"
                             },
                             {
                               "type": "REPEAT",
@@ -342,7 +342,7 @@
                                   },
                                   {
                                     "type": "SYMBOL",
-                                    "name": "_expression"
+                                    "name": "_attr_paren_arg"
                                   }
                                 ]
                               }
@@ -372,6 +372,50 @@
             },
             {
               "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "_attr_paren_arg": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_expression"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attr_ascribed_arg"
+          },
+          "named": true,
+          "value": "type_ascription_expression"
+        }
+      ]
+    },
+    "attr_ascribed_arg": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_expression"
+        },
+        {
+          "type": "STRING",
+          "value": ":"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "type_expression"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "nullable_type"
             }
           ]
         }
@@ -6259,6 +6303,15 @@
           "name": "unparenthesized_tuple_pattern"
         },
         {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "ctor_first_tuple_pattern"
+          },
+          "named": true,
+          "value": "unparenthesized_tuple_pattern"
+        },
+        {
           "type": "SYMBOL",
           "name": "record_pattern"
         },
@@ -10517,6 +10570,47 @@
         }
       ]
     },
+    "ctor_first_tuple_pattern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_ctor_tuple_gate"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tuple_pattern"
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_tuple_elem_pattern"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_tuple_elem_pattern"
+              }
+            ]
+          }
+        }
+      ]
+    },
     "as_tuple_elem_pattern": {
       "type": "PREC_RIGHT",
       "value": 1,
@@ -14170,6 +14264,10 @@
     {
       "type": "SYMBOL",
       "name": "_lazy_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_ctor_tuple_gate"
     }
   ],
   "inline": [],

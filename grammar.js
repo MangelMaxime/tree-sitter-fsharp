@@ -185,6 +185,7 @@ export default grammar({
         $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
         $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
         $._lazy_open,         // lazy block-body open — like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
+        $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = …` — only when `ident ( … ) ,` follows (fn defs never have `,` after params)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -339,13 +340,22 @@ export default grammar({
                 // arithmetic, arrays, `typeof<…>`, several comma-separated args).
                 seq(
                     "(",
-                    optional(seq($._expression, repeat(seq(",", $._expression)))),
+                    optional(seq($._attr_paren_arg, repeat(seq(",", $._attr_paren_arg)))),
                     ")",
                 ),
                 // `[<Direct @"…">]` / `[<Foo "x">]` — bare single-argument form
                 field('argument', $._attribute_arg),
             )),
         ),
+
+        // A parenthesised-attribute argument: any expression, or an ascribed
+        // one — `DefaultParameterValue(null: string | null)` (F# 9 nullness,
+        // FCS DependencyProvider). The ascription type may be nullable.
+        _attr_paren_arg: $ => choice(
+            $._expression,
+            alias($.attr_ascribed_arg, $.type_ascription_expression),
+        ),
+        attr_ascribed_arg: $ => seq($._expression, ":", choice($.type_expression, $.nullable_type)),
 
         // Atomic argument for the bare (no-parens) attribute form. Deliberately
         // narrower than `_expression`: only forms that neither start with `(`
@@ -1758,7 +1768,7 @@ export default grammar({
             // `tuple_typed_first_pattern` covers `let (a: int, b) = …` / `let! (r: T, line: string) = …`
             // (first tuple element type-annotated); `tuple_pattern` already handles
             // the untyped-first / later-typed cases.
-            $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+            $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, alias($.ctor_first_tuple_pattern, $.unparenthesized_tuple_pattern), $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
             // `let () = init ()` / `let! () = start ()` — unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
             $.unit,
@@ -2779,6 +2789,23 @@ export default grammar({
             // bindInfo, env = …`, FCS Optimizer style): F# binds `as` tighter
             // than `,` here (a tuple element is a headBindingPattern).
             alias($.as_tuple_elem_pattern, $.as_pattern),
+        ),
+
+        // `let CheckedBindingInfo(a, b, …), tpenv = …` (FCS) — a constructor
+        // deconstruction as the FIRST element of a let-bound tuple. The comma
+        // lives INSIDE the rule so plain `let f(a, b) = …` function definitions
+        // (no comma after the parens) stay untouched.
+        // Gated by a SCANNER token (the CTOR_ATTR trick): emitted only when
+        // `ident ( … ) ,` truly follows — a fn def can never have `,` after its
+        // params, so the gate is deterministic and the fn-def LR path is never
+        // disturbed (two ungated encodings silently starved it — see log).
+        ctor_first_tuple_pattern: $ => seq(
+            $._ctor_tuple_gate,
+            $.long_identifier,
+            $.tuple_pattern,
+            ",",
+            $._tuple_elem_pattern,
+            repeat(seq(",", $._tuple_elem_pattern)),
         ),
 
         as_tuple_elem_pattern: $ => prec.right(1, seq(

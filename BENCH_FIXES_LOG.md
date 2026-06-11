@@ -524,3 +524,22 @@ events, indexers, delegates, quotation splices, computed ranges — parses.
 
 Suites unchanged (the gaps were bench-absent; prim-types ±1 recovery wobble).
 Corpus 464.
+
+## Fix 30 — review-table items 7+8 (ctor-tuple destructuring + ascribed attr args)
+
+1. **`let CheckedBindingInfo(a, b, …), tpenv = …`** (the twice-failed item) —
+   cracked with the SCANNER-GATE pattern (CTOR_ATTR's trick): a zero-width
+   `_ctor_tuple_gate` emitted only when `ident(.ident)* ( …balanced… ) ,`
+   genuinely follows (fn defs never have `,` after params, so the gate is
+   deterministic and the fn-def LR path is untouched). The conflict was
+   invisible to `conflicts:` declarations because hidden-rule inlining merges
+   the items. First placement (early in the scan) regressed FParsec's
+   split-binder files (`#if LOW_TRUST⏎ let⏎#else⏎ use⏎#endif`) by
+   short-circuiting the preproc-region emission — moved to the consumption-safe
+   MID-LINE TAIL, resuming after the word-branch's partial identifier consume.
+2. **`DefaultParameterValue(null: string | null)`** — parenthesised attribute
+   args accept an ascribed form whose type may be nullable
+   (alias → type_ascription_expression).
+
+23-repo: 174→172 / 910→905; fsharp-src: 30→28 / 143→138; 0 regressions.
+DependencyProvider 3→0 and CheckExpressions 2→0 in BOTH suites. Corpus 466.

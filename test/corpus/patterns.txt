@@ -1275,3 +1275,95 @@ type T() =
                     (identifier))))))))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Constructor deconstruction as the first element of a let-bound tuple
+================================================================================
+
+let CheckedBindingInfo(inlineFlag, attribs, ExplicitTyparInfo(_, declaredTypars, _), rhsExpr, _, m), tpenv = checkIt x
+let Wrapped (a, b), rest = make x
+let wrapped(a, b) = a + b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (tuple_pattern
+              (pattern
+                (wildcard_pattern))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (wildcard_pattern)))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (wildcard_pattern))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (parameter
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))

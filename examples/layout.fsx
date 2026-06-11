@@ -1254,3 +1254,6 @@ type L35_DoAssign() =
     let gravity (x: float<m s^-2>) = x
     let column = matrix[*, 2]
     let label = nameof<MyGeneric>
+
+    let CheckedInfo(flag, attribs, rhs), tpenv = checkBinding x
+    let resolveRid ([<Optional; DefaultParameterValue(null: string | null)>] rid: string | null) = rid
