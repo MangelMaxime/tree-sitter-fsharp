@@ -174,6 +174,7 @@ static bool word_is_decl_kw(const char *w) {
 
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     g_skipped_doc_lines = false;
+    bool marked_line_start = false;
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
     if (lexer->lookahead == 0) return false;
@@ -184,6 +185,13 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { indent++; lexer->advance(lexer, true); }
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') continue;
         if (lexer->lookahead == '/') {
+            // MAIN boundary call: move the zero-width baseline to the first
+            // comment/doc line's start. Tokens this scan emits (CASE/AND doc
+            // gates, closes) then anchor AT the `///` block, so a documented
+            // case/and-clause node STARTS at its docs (expand-selection
+            // extents). The scan RESUMES from here afterwards — the mid-line
+            // doc-resume dispatch in the scan body handles that position.
+            if (g_region_stop && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
@@ -1446,6 +1454,42 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                 }
                 return false;                           // not trailing: literal `;`
+            }
+            // DOC-RESUME dispatch: a previous zero-width token (a close, or an
+            // earlier gate) was anchored AT this `///` line — the scan resumes
+            // mid-line ON the docs. Skip the doc block (+ blank lines), compute
+            // the post-doc line's first/col, and run the same dispatch the
+            // boundary path uses (CASE/AND gates, typebody-close-at-docs). On
+            // no-match return false: the parser lexes the doc itself next.
+            if (c == '/' && valid[CASE_DOCS_OPEN] + valid[AND_DOCS_OPEN] + valid[LAYOUT_END] + valid[LAYOUT_SEMI] > 0) {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '/') {
+                    lexer->advance(lexer, true);
+                    if (lexer->lookahead == '/') {
+                        g_skipped_doc_lines = true;
+                        // consume the rest of this doc line, then any further
+                        // doc-only / blank lines
+                        for (;;) {
+                            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+                                lexer->advance(lexer, true);
+                            if (lexer->lookahead == 0) return false;
+                            if (lexer->lookahead == '\r') lexer->advance(lexer, true);
+                            if (lexer->lookahead == '\n') lexer->advance(lexer, true);
+                            uint32_t ind2 = 0;
+                            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { ind2++; lexer->advance(lexer, true); }
+                            if (lexer->lookahead == '\n' || lexer->lookahead == '\r') continue;
+                            if (lexer->lookahead == '/') {
+                                lexer->advance(lexer, true);
+                                if (lexer->lookahead == '/') { lexer->advance(lexer, true); continue; }
+                                return false;
+                            }
+                            // post-doc real line
+                            if (try_and_docs(s, lexer, valid, lexer->lookahead, ind2, top)) return true;
+                            return false;
+                        }
+                    }
+                }
+                return false;
             }
             // CTOR_TUPLE_GATE (zero-width): at a let-binding NAME position,
             // `ident(.ident)* ( … ) ,` means `let Ctor(a, b), rest = …` — a

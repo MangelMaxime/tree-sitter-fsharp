@@ -641,3 +641,32 @@ required (comment in grammar.js).
 
 Suites: 23-repo byte-identical (190/1010); fsharp-src 29/160 (±1 recovery
 wobble in prim-types' known GADT residue). Corpus 467.
+
+## Fix 34 — documented union cases / and-clauses start AT their docs
+
+Review feedback: expanding from `float` in a documented union case gave
+case → (a node starting right after the `=`) instead of case → docs+case.
+Cause: the scanner-gated doc markers (CASE_DOCS_OPEN / AND_DOCS_OPEN) are
+zero-width and anchored at the scan baseline — the END of the PREVIOUS line —
+so the docs+case wrapper's extent began there.
+
+Attempt 1 (de-gate the wrappers so real doc tokens anchor the node) was
+REVERTED: a doc after the LAST case shifts into a phantom next case, exactly
+as the stash-era post-mortem warned; conflict declarations don't help because
+the doc-shift state lacks the sibling items.
+
+Landed design keeps the gates and fixes the anchor in two coordinated parts:
+1. next_line_indent (MAIN boundary call) moves the zero-width baseline to the
+   first `///`/`//` line's start — gates AND closes emitted by that scan
+   anchor at the doc block.
+2. Because the scan then RESUMES mid-line ON the docs, a new MID-LINE
+   doc-resume dispatch skips the doc block (+ blank lines) forward and runs
+   the same try_and_docs dispatch (gates, typebody-close-at-docs) from there;
+   on no-match the parser just lexes the doc itself. (Without part 2 the
+   resumed scan never reached the boundary dispatch and the and-clause
+   detached — the trap that sank the first anchoring attempt.)
+
+Extents now: outer union_case = [doc-line .. case-end]; type_and_decl =
+[doc-line .. clause-end]. Expansion: float → case → docs+case → cases → type.
+Suites: 23-repo 190/989 (−21 nodes, recovery improvements), fsharp-src
+identical; 0 regressions. Corpus 467.

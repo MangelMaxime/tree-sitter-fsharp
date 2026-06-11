@@ -1022,9 +1022,11 @@ export default grammar({
         // absorbing the comment.
         union_case: $ => prec.right(choice(
             // Doc block GATED by the scanner (docs + `|` ahead) — ungated, a
-            // doc after the LAST case greedily commits to a phantom next case.
-            // The CODE part nests as an inner union_case (expand-selection:
-            // case first, then case+docs).
+            // doc after the LAST case shifts into a phantom next case (tried
+            // and reverted twice; conflict declarations don't help because the
+            // doc-shift state lacks the sibling items). The gate token is
+            // anchored AT the doc line (scanner moves the zero-width baseline)
+            // so the node's extent starts at the docs.
             seq($._case_docs_open, repeat1($.xml_doc_comment), field('decl', alias($._union_case_core, $.union_case))),
             $._union_case_core,
         )),
