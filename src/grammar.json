@@ -7221,8 +7221,17 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "_index_arg"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_index_arg"
+            },
+            {
+              "type": "STRING",
+              "value": "*"
+            }
+          ]
         },
         {
           "type": "REPEAT",
@@ -7234,8 +7243,17 @@
                 "value": ","
               },
               {
-                "type": "SYMBOL",
-                "name": "_index_arg"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_index_arg"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "*"
+                  }
+                ]
               }
             ]
           }
@@ -7721,15 +7739,44 @@
       }
     },
     "nameof_expression": {
-      "type": "SEQ",
+      "type": "CHOICE",
       "members": [
         {
-          "type": "STRING",
-          "value": "nameof"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "nameof"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_simple_expression"
+            }
+          ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_simple_expression"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "nameof"
+            },
+            {
+              "type": "IMMEDIATE_TOKEN",
+              "content": {
+                "type": "STRING",
+                "value": "<"
+              }
+            },
+            {
+              "type": "SYMBOL",
+              "name": "type_expression"
+            },
+            {
+              "type": "STRING",
+              "value": ">"
+            }
+          ]
         }
       ]
     },
@@ -11122,6 +11169,23 @@
               {
                 "type": "STRING",
                 "value": "*"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
+              }
+            ]
+          }
+        },
+        {
+          "type": "PREC_LEFT",
+          "value": 3,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "measure_expression"
               },
               {
                 "type": "SYMBOL",

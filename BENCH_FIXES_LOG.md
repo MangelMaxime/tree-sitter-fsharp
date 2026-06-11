@@ -510,3 +510,17 @@ REMINDER that a slice ending in a trailing inner `let` with no continuation
 is INVALID F# and errors correctly); General.fs (29, compound, prefix-bisect
 non-monotonic); ProvidedTypes (230, own session); TypeNat/Collection (parked
 SRTP/aligned-spaces).
+
+## Fix 29 — spec-battery gaps: measure juxtaposition, wildcard slices, nameof<T>
+
+A systematic F# language-reference battery (60+ probes over bindings, types,
+patterns, CEs, OO, strings, literals, quotations, F# 7/8/9 features) found
+only THREE parse gaps — none of which appear in either bench suite:
+`float<m s^-2>` (juxtaposed measure product, spec 9.5), `m[*, 2]`
+(whole-dimension slice), `nameof<T>` (explicit type-arg form). All fixed.
+Everything else in the battery — IWSAM, `_.Name` shorthand, `while!`,
+string interpolation variants, active patterns, byref/inref/outref, fixed,
+events, indexers, delegates, quotation splices, computed ranges — parses.
+
+Suites unchanged (the gaps were bench-absent; prim-types ±1 recovery wobble).
+Corpus 464.

@@ -1250,3 +1250,7 @@ type L35_DoAssign() =
             (isNotNull checksum)
             ("-Checksum " + checksum)
         |> toText
+
+    let gravity (x: float<m s^-2>) = x
+    let column = matrix[*, 2]
+    let label = nameof<MyGeneric>

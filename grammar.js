@@ -2003,8 +2003,8 @@ export default grammar({
         )),
 
         _index_args: $ => seq(
-            $._index_arg,
-            repeat(seq(",", $._index_arg)),
+            choice($._index_arg, "*"),   // `m[*, 2]` — whole-dimension slice
+            repeat(seq(",", choice($._index_arg, "*"))),
         ),
 
         // `expr..`, `..expr`, or `expr..expr` inside index args. Preferred over
@@ -2121,7 +2121,11 @@ export default grammar({
         )),
 
         // nameof expr  — returns the string name of the identifier/member at compile time
-        nameof_expression: $ => seq("nameof", $._simple_expression),
+        nameof_expression: $ => choice(
+            seq("nameof", $._simple_expression),
+            // `nameof<MyGeneric>` — explicit type-argument form.
+            seq("nameof", token.immediate("<"), $.type_expression, ">"),
+        ),
 
         // new TypeName(args)  or  new TypeName<T>(args)
         // Type is restricted to long_identifier/generic_type so the `(` can't be
@@ -2911,6 +2915,8 @@ export default grammar({
         measure_expression: $ => choice(
             prec.left(1, seq($.measure_expression, "/", $.measure_expression)),
             prec.left(2, seq($.measure_expression, "*", $.measure_expression)),
+            // `m s^-2` — juxtaposition is a product (spec 9.5); binds tightest.
+            prec.left(3, seq($.measure_expression, $.measure_expression)),
             $.measure_power_type,
             $.int_literal,
             $.type_parameter,

@@ -3142,3 +3142,71 @@ let content =
       (long_identifier
         (identifier)
         (identifier)))))
+
+================================================================================
+Spec-battery gaps: measure juxtaposition, wildcard slices, nameof<T>
+================================================================================
+
+let conv (x: float<m s^-2>) = x
+let lit = 9.8<m s^-2>
+let s6 = m[*, 2]
+let s7 = m.[*, 1..2]
+let n3 = nameof<MyGeneric>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (generic_type
+          (long_identifier
+            (identifier))
+          (measure_expression
+            (measure_expression
+              (long_identifier
+                (identifier)))
+            (measure_expression
+              (measure_power_type
+                (long_identifier
+                  (identifier))
+                (negative_literal
+                  (int_literal))))))))
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (measure_literal
+      (float_literal)
+      (measure_expression
+        (measure_expression
+          (long_identifier
+            (identifier)))
+        (measure_expression
+          (measure_power_type
+            (long_identifier
+              (identifier))
+            (negative_literal
+              (int_literal)))))))
+  (let_binding
+    (identifier)
+    (bracket_index_expression
+      (long_identifier
+        (identifier))
+      (int_literal)))
+  (let_binding
+    (identifier)
+    (index_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (int_literal)
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (nameof_expression
+      (type_expression
+        (long_identifier
+          (identifier))))))

@@ -956,6 +956,10 @@
         "required": true,
         "types": [
           {
+            "type": "*",
+            "named": false
+          },
+          {
             "type": ",",
             "named": false
           },
@@ -1910,6 +1914,10 @@
         "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "*",
+            "named": false
+          },
           {
             "type": ",",
             "named": false
@@ -3383,6 +3391,10 @@
       "types": [
         {
           "type": "_simple_expression",
+          "named": true
+        },
+        {
+          "type": "type_expression",
           "named": true
         }
       ]
