@@ -233,3 +233,27 @@ let prod = List.fold (*) 1 xs
       (int_literal)
       (long_identifier
         (identifier)))))
+
+================================================================================
+Empty line comment does not swallow the next line
+================================================================================
+
+module O =
+    //
+    let next = 1 //
+    let after = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier))
+    (line_comment)
+    (let_binding
+      (identifier)
+      (int_literal)
+      (line_comment))
+    (let_binding
+      (identifier)
+      (int_literal))))

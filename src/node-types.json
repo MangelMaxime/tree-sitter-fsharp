@@ -2294,6 +2294,10 @@
             "named": true
           },
           {
+            "type": "static_optimization",
+            "named": true
+          },
+          {
             "type": "type_ascription_expression",
             "named": true
           }
@@ -2423,6 +2427,10 @@
           },
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "static_optimization",
             "named": true
           },
           {
@@ -2931,6 +2939,10 @@
             "named": true
           },
           {
+            "type": "static_optimization",
+            "named": true
+          },
+          {
             "type": "type_ascription_expression",
             "named": true
           }
@@ -3062,6 +3074,10 @@
           },
           {
             "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "static_optimization",
             "named": true
           },
           {
@@ -3929,6 +3945,10 @@
             "named": true
           },
           {
+            "type": "static_optimization",
+            "named": true
+          },
+          {
             "type": "type_ascription_expression",
             "named": true
           }
@@ -4408,6 +4428,10 @@
             "named": true
           },
           {
+            "type": "static_optimization",
+            "named": true
+          },
+          {
             "type": "type_ascription_expression",
             "named": true
           }
@@ -4571,6 +4595,29 @@
       "types": [
         {
           "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "static_optimization",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "_expression",
+          "named": true
+        },
+        {
+          "type": "type_expression",
           "named": true
         },
         {

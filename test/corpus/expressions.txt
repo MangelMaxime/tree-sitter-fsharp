@@ -2908,3 +2908,126 @@ let r uri =
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Inline IL type args and static-optimization equations (FSharp.Core)
+================================================================================
+
+let inline unboxPrim<'T>(x: obj) = (# "unbox.any !0" type ('T) x : 'T #)
+
+let inline GenericComparisonFast (x:'T) (y:'T) : int =
+     GenericComparisonIntrinsic x y
+     when 'T : bool = (# "cgt" x y : int #)
+     when 'T : char = (# "cgt" x y : int #)
+
+let inline (+) (x: ^T) (y: ^U) : ^V =
+     AdditionDynamic x y
+     when ^T : int32 and ^U : int32 = (# "add" x y : int32 #)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (inline_il_expression
+      (string_literal)
+      (type_expression
+        (type_parameter))
+      (long_identifier
+        (identifier))
+      (type_expression
+        (type_parameter))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier)))
+    (static_optimization
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (inline_il_expression
+        (string_literal)
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (static_optimization
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (inline_il_expression
+        (string_literal)
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (operator_name)
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (type_expression
+      (type_parameter))
+    (application_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (long_identifier
+        (identifier)))
+    (static_optimization
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (inline_il_expression
+        (string_literal)
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (type_expression
+          (long_identifier
+            (identifier)))))))

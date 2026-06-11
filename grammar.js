@@ -1289,7 +1289,9 @@ export default grammar({
         inline_il_expression: $ => seq(
             token(prec(2, "(#")),
             $.string_literal,
-            repeat($._simple_expression),
+            // `type ('T)` IL type arguments (`(# "unbox.any !0" type ('T) x : 'T #)`,
+            // FSharp.Core prim-types style).
+            repeat(choice($._simple_expression, seq("type", "(", $.type_expression, ")"))),
             optional(seq(":", $.type_expression)),
             token(prec(2, "#)")),
         ),
@@ -2010,7 +2012,27 @@ export default grammar({
         // A binding/member body that may carry a trailing return-type ascription.
         // A trailing `;` after the body is a no-op statement terminator
         // (`let getDir () = … directory;` — Paket style). Accept and discard it.
-        _ascribable_body: $ => seq(choice($._expression, $.type_ascription_expression), optional(";")),
+        _ascribable_body: $ => seq(
+            choice($._expression, $.type_ascription_expression),
+            // FSharp.Core-only "static optimization" equations (prim-types.fs):
+            //   let inline GenericComparisonFast (x:'T) (y:'T) : int =
+            //        GenericComparisonIntrinsic x y
+            //        when 'T : bool = (# "cgt" x y : int #)
+            //        when 'T : char = …
+            repeat($.static_optimization),
+            optional(";"),
+        ),
+
+        static_optimization: $ => seq(
+            "when",
+            $.type_parameter,
+            ":",
+            $.type_expression,
+            // `when ^T : int32 and ^U : int32 = …` — multi-typar equations
+            repeat(seq("and", $.type_parameter, ":", $.type_expression)),
+            "=",
+            $._expression,
+        ),
 
         // upcast expr / downcast expr — keyword forms (type inferred by compiler)
         keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),
@@ -3391,7 +3413,9 @@ export default grammar({
 
         // token prec 1: `//&&` must lex as a COMMENT, not as symbolic_op
         // (same length tie — F# forbids `//`-leading custom operators anyway).
-        line_comment: _ => token(prec(1, seq("//", choice(/[^/].*/, "")))),
+        // `[^/]` must EXCLUDE newline (a bare `//` line otherwise swallows the
+        // newline + the whole next line — `[^x]` classes match \n in regexes!).
+        line_comment: _ => token(prec(1, seq("//", choice(/[^/\n\r].*/, "")))),
 
         // prec 2 > line_comment's 1 (lexical prec OVERRIDES match length!).
         xml_doc_comment: _ => token(prec(2, seq("///", /.*/))),

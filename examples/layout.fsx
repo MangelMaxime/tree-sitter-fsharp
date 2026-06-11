@@ -1201,3 +1201,11 @@ module L33_Extern =
     let timesAll = List.fold (*) 1 [ 2; 3; 4 ]
 
     let inline maxOf source = source |> Seq.max : 'T when 'T : comparison
+
+// === L34: FSharp.Core inline IL + static optimizations ===
+module L34_StaticOptimizations =
+    //
+    let inline compareFast (x:'T) (y:'T) : int =
+         compareIntrinsic x y
+         when 'T : bool = (# "cgt" x y : int #)
+         when 'T : char = (# "cgt" x y : int #)

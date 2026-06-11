@@ -322,3 +322,24 @@ idiom — known hard).
 
 The doc-comment attachment feature from last session remains in `stash@{0}`,
 to be reviewed/applied separately (see memory project_bench2_sweep).
+
+## Fix 20 — dotnet/fsharp onboarding: IL type args, static optimizations, `//`-newline lexer bug
+
+New suite: dotnet/fsharp src/ (260 files; tests/ is ADVISORY ONLY — it contains
+intentionally-invalid fixtures and never joins the regression gate). Baseline
+was 48 failing / 1220 nodes, dominated by FSharp.Core prim-types.fs (825).
+
+1. **Inline IL type arguments**: `(# "unbox.any !0" type ('T) x : 'T #)`.
+2. **Static-optimization equations** (FSharp.Core-only syntax):
+   `let inline f (x:'T) = body⏎ when 'T : bool = …⏎ when ^T : int32 and
+   ^U : int32 = …` — new static_optimization rule repeated in
+   _ascribable_body; scanner blocks LAYOUT_SEMI before `when`.
+3. **line_comment newline bug**: the regex alternative /[^/].*/ matched the
+   NEWLINE (negated classes match \n!), so an EMPTY `//` comment swallowed the
+   whole next line. Latent forever; exposed when prec-boosting made the regex
+   win more ties.
+
+prim-types.fs 825→17. fsharp-src: 48→43 files / 1220→363 nodes. 23-repo:
+190→187 / 1073→1035, 0 regressions both (fsi.fs +8/+7 in both = recovery
+reshuffle around a PRE-EXISTING `do x <- if…else` site — verified by A/B
+stash). Corpus 455, layout L34.

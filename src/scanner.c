@@ -429,7 +429,8 @@ static bool semi_blocked(TSLexer *lexer, int32_t first) {
         }
         w[n] = '\0';
         if (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "then") ||
-            !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and"))
+            !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and") ||
+            !strcmp(w, "when"))   // static-optimization equations / arm-guard continuations
             return true;
     }
     return false;
