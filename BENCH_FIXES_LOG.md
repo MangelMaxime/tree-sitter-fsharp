@@ -301,3 +301,24 @@ Corpus 452.
 type_ascription_expression gained optional($._when_constraints).
 Bench: 191→190 files, 1088→1073 nodes, 0 regressions (Collection.fs +2 =
 reshuffle in its parked aligned-spaces site). Foldable.fs 15→0. Corpus 453.
+
+---
+
+## Session summary (2026-06-11 overnight)
+
+**Bench: 275 → 190 failing files (3654 total = 94.8% clean), 3695 → 1073 error
+nodes (−71%).** 19 commits, each gated on: corpus green, layout.fsx 0 errors,
+full-bench sweep with zero new failing files. Corpus grew 428 → 453 tests;
+layout.fsx gained L25–L33 plus several inline examples.
+
+Remaining top (all triaged): ProvidedTypes.fs 230 (giant vendored TP file,
+recovery-noise-dominated — own session), IlxGen.fs 52 (multi-line tuple
+pattern in arms — passes in isolation, context-dependent), TypeNat 42 (parked
+SRTP-as-arg), General.fs 31 (compound), fcs codegen/pars.fs 31 (fsyacc
+long-lines), Collection.fs 29 (parked aligned-spaces), CheckExpressions 26
+(parked `let Ctor(a,b), rest =` — two attempts broke fn-defs), Chocolatey 24
+(compound pipe-match), NameResolution 17 (FSC "undentation" arm-body-at-arm-col
+idiom — known hard).
+
+The doc-comment attachment feature from last session remains in `stash@{0}`,
+to be reviewed/applied separately (see memory project_bench2_sweep).
