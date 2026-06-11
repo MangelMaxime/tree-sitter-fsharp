@@ -565,25 +565,27 @@ and Forest = Tree list
 (source_file
   (type_decl
     (xml_doc_comment)
-    (identifier)
-    (union_type_defn
-      (union_case
-        (identifier))
-      (union_case
-        (identifier)
-        (type_expression
-          (long_identifier
-            (identifier)))))
-    (type_and_decl
-      (xml_doc_comment)
+    (type_decl
       (identifier)
-      (type_expression
-        (postfix_type
+      (union_type_defn
+        (union_case
+          (identifier))
+        (union_case
+          (identifier)
           (type_expression
             (long_identifier
-              (identifier)))
-          (long_identifier
-            (identifier)))))))
+              (identifier)))))
+      (type_and_decl
+        (xml_doc_comment)
+        (type_and_decl
+          (identifier)
+          (type_expression
+            (postfix_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))))
 
 ================================================================================
 Inline `with` augmentation on the same line (interface impl)

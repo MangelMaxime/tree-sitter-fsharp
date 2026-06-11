@@ -433,9 +433,19 @@
     "type": "abstract_member_defn",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "abstract_member_defn",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -1472,9 +1482,19 @@
     "type": "enum_case",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "enum_case",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -1484,7 +1504,7 @@
       },
       "value": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "char_literal",
@@ -1535,9 +1555,19 @@
     "type": "exception_decl",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "exception_decl",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -2053,9 +2083,19 @@
     "type": "interface_impl",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "interface_impl",
+            "named": true
+          }
+        ]
+      },
       "type": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "type_expression",
@@ -2381,9 +2421,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "let_and_binding",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "active_pattern_name",
@@ -2525,9 +2575,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "let_binding",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "active_pattern_name",
@@ -3188,9 +3248,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_defn",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -3305,9 +3375,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "module_decl",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "long_identifier",
@@ -4563,9 +4643,19 @@
     "type": "record_type_field",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "record_type_field",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -4575,7 +4665,7 @@
       },
       "type": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "nullable_type",
@@ -4609,7 +4699,7 @@
     "fields": {
       "body": {
         "multiple": true,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": ";",
@@ -4629,9 +4719,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "secondary_constructor",
+            "named": true
+          }
+        ]
+      },
       "parameters": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "tuple_params",
@@ -5318,9 +5418,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_and_decl",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -5605,9 +5715,19 @@
           }
         ]
       },
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_decl",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -5800,9 +5920,19 @@
     "type": "type_extension",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_extension",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "type_extension_name",
@@ -6029,6 +6159,16 @@
     "type": "union_case",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "union_case",
+            "named": true
+          }
+        ]
+      },
       "fields": {
         "multiple": false,
         "required": false,
@@ -6041,7 +6181,7 @@
       },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -6312,9 +6452,19 @@
     "type": "val_field",
     "named": true,
     "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "val_field",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",

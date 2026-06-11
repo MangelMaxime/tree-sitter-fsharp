@@ -14,14 +14,14 @@
 [
   (let_decl_indented)
   (use_binding)
-  (secondary_constructor)
+  (secondary_constructor !decl)
 ] @indent
 
 ; `let x =` (no body yet) and `and x =` (no body yet) — mid-edit shape.
 ; `!body` matches only when the body field is absent, so completed bindings
 ; like `let x = 1` (body field present) don't trigger this @indent @extend.
-((let_binding !body) @indent @extend)
-((let_and_binding !body) @indent @extend)
+((let_binding !body !decl) @indent @extend)
+((let_and_binding !body !decl) @indent @extend)
 
 ; ── Functions, lambdas, members ───────────────────────────────────────────────
 ; member_defn is now a CHILD of type_decl, so when a member has its body the
@@ -29,8 +29,8 @@
 ; (sibling-member column). The mid-edit case (`member this.Foo() =` with no
 ; body yet, body field absent) still needs @indent @extend so the next line
 ; lands at the body indent.
-((member_defn !body) @indent @extend)
-((abstract_member_defn) @indent @extend)
+((member_defn !body !decl) @indent @extend)
+((abstract_member_defn !decl) @indent @extend)
 ((property_accessor !body) @indent @extend)
 
 [

@@ -283,42 +283,48 @@ and Forest = Tree list
 (source_file
   (let_binding
     (xml_doc_comment)
-    name: (identifier)
-    parameters: (parameter
-      (identifier))
-    parameters: (parameter
-      (identifier))
-    body: (binary_expression
-      left: (long_identifier
-        (identifier))
-      right: (long_identifier
-        (identifier))))
-  (type_decl
-    (xml_doc_comment)
-    name: (identifier)
-    (union_type_defn
-      (union_case
-        (xml_doc_comment)
-        name: (identifier)
-        fields: (type_expression
-          (long_identifier
-            (identifier))))
-      (union_case
-        (xml_doc_comment)
-        name: (identifier))))
-  (type_decl
-    (xml_doc_comment)
-    name: (identifier)
-    (union_type_defn
-      (union_case
-        name: (identifier)))
-    (type_and_decl
-      (xml_doc_comment)
+    decl: (let_binding
       name: (identifier)
-      alias: (type_expression
-        (postfix_type
-          (type_expression
-            (long_identifier
-              (identifier)))
-          (long_identifier
-            (identifier)))))))
+      parameters: (parameter
+        (identifier))
+      parameters: (parameter
+        (identifier))
+      body: (binary_expression
+        left: (long_identifier
+          (identifier))
+        right: (long_identifier
+          (identifier)))))
+  (type_decl
+    (xml_doc_comment)
+    decl: (type_decl
+      name: (identifier)
+      (union_type_defn
+        (union_case
+          (xml_doc_comment)
+          decl: (union_case
+            name: (identifier)
+            fields: (type_expression
+              (long_identifier
+                (identifier)))))
+        (union_case
+          (xml_doc_comment)
+          decl: (union_case
+            name: (identifier))))))
+  (type_decl
+    (xml_doc_comment)
+    decl: (type_decl
+      name: (identifier)
+      (union_type_defn
+        (union_case
+          name: (identifier)))
+      (type_and_decl
+        (xml_doc_comment)
+        decl: (type_and_decl
+          name: (identifier)
+          alias: (type_expression
+            (postfix_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))))

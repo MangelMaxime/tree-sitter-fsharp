@@ -224,10 +224,13 @@ export default grammar({
         // …and the class-body twin of the same fork (incl. type bodies where a
         // doc could open a union/enum case OR a member).
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
+        // (the generator mislabels this one "unnecessary" via the core→alias
+        // display name, but removing it fails the build — keep it)
+        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
-        [$.record_type_field, $.postfix_type],
+        [$._record_field_core, $.postfix_type],
         // After `name: T` in a named union field, `*` could start the next field or
         // extend T into a tuple_type.
         [$._union_field_type, $.type_expression],
@@ -235,15 +238,15 @@ export default grammar({
         // inside generic args or aliases.
         [$.measure_expression, $.type_expression],
         // After `type Foo`, the following `=` chooses type_decl, `with` chooses type_extension.
-        [$.type_decl, $.type_extension_name],
+        [$._type_decl_core, $.type_extension_name],
         // After `module M =`, the identifier is either a module abbreviation target
         // or the first declaration of a nested module body.
-        [$.module_decl],
+        [$._module_decl_core],
         // Attribute / doc-comment prefix: at top level the same `[<…>]` or `///`
         // token could be a standalone `_decl_or_comment` child OR the start of
         // a decl's decoration prefix. GLR explores both; we bias toward
         // attachment via `prec.dynamic` on the decl branch.
-        [$._decl_or_comment, $.let_binding, $.module_decl, $.exception_decl],
+        [$._decl_or_comment, $._let_binding_core, $._module_decl_core, $._exception_decl_core],
         // Same situation inside a class/type body — `[<…>]` or `///` could be
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
@@ -308,8 +311,13 @@ export default grammar({
         //
         // After `=` we choose between an abbreviation target (inline
         // long_identifier) and an indented body (declarations as children).
-        module_decl: $ => seq(
-            decoration($),
+        module_decl: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._module_decl_core, $.module_decl))),
+            $._module_decl_core,
+        ),
+
+        _module_decl_core: $ => seq(
+            repeat($.attribute),
             "module",
             // `module [<AutoOpen>]SeqTOperations =` — attributes may sit BETWEEN
             // the keyword and the name (FSharpPlus style).
@@ -420,8 +428,12 @@ export default grammar({
         // This makes class/extension members CHILDREN of `type_decl` rather than
         // `_token` siblings — fixes expand-selection (member → type → file) and
         // gives "Enter after a member" the correct indent (the member's own column).
-        type_decl: $ => prec.right(seq(
-            repeat($.xml_doc_comment),   // `/// docs` attach to the type_decl
+        type_decl: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._type_decl_core, $.type_decl))),
+            $._type_decl_core,
+        ),
+
+        _type_decl_core: $ => prec.right(seq(
             "type",
             repeat($.attribute),
             // `type private Foo = …` — visibility of the TYPE itself, before
@@ -475,8 +487,12 @@ export default grammar({
         // between two ORDINARY declarations commits to a doomed and-clause.
         _and_docs: $ => seq($._and_docs_open, repeat1($.xml_doc_comment)),
 
-        type_and_decl: $ => prec.right(seq(
-            optional($._and_docs),
+        type_and_decl: $ => prec.right(choice(
+            seq($._and_docs, field('decl', alias($._type_and_core, $.type_and_decl))),
+            $._type_and_core,
+        )),
+
+        _type_and_core: $ => prec.right(seq(
             "and",
             repeat($.attribute),
             optional($.access_modifier),
@@ -515,8 +531,12 @@ export default grammar({
         // follows the `with` and is wrapped by `_body_indent`/`_body_dedent` so
         // members are children of `type_extension`, not siblings.
         //   type Foo with             type Foo<'T> with             type System.String with
-        type_extension: $ => seq(
-            repeat($.xml_doc_comment),
+        type_extension: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._type_extension_core, $.type_extension))),
+            $._type_extension_core,
+        ),
+
+        _type_extension_core: $ => seq(
             "type",
             repeat($.attribute),
             field('name', $.type_extension_name),
@@ -665,8 +685,13 @@ export default grammar({
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
         // Distinct from new_expression: that one requires a type name between `new` and `(`.
-        secondary_constructor: $ => prec.right(prec.dynamic(1, seq(
-            decoration($),
+        secondary_constructor: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._secondary_ctor_core, $.secondary_constructor))),
+            $._secondary_ctor_core,
+        ),
+
+        _secondary_ctor_core: $ => prec.right(prec.dynamic(1, seq(
+            repeat($.attribute),
             optional($.access_modifier),
             "new",
             field('parameters', $.tuple_params),
@@ -761,26 +786,31 @@ export default grammar({
         // standalone `_class_body_member` siblings (which is the competing
         // reading at the choice point).
         member_defn: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._member_defn_core, $.member_defn))),
+            $._member_defn_core,
+        ),
+
+        _member_defn_core: $ => choice(
             prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 $._instance_member_prefix, $._method_body,
             )),
             prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 $._static_member_prefix, $._method_body,
             )),
             prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 $._instance_member_prefix, $._accessor_body,
             )),
             prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 $._static_member_prefix, $._accessor_body,
             )),
             // Auto-property — instance/static differ only by the `static` prefix;
             // `override val` / `default val` implement an abstract auto-property.
             prec.dynamic(1, prec.right(seq(
-                decoration($),
+                repeat($.attribute),
                 choice(
                     seq(optional("static"), "member"),
                     "override",
@@ -835,8 +865,13 @@ export default grammar({
         // abstract member F<'T>: 'T -> 'T                     — generic method
         // Reuses `auto_property_accessors` for the `with get [, set]` clause —
         // the syntax is identical to the one on member-val auto-properties.
-        abstract_member_defn: $ => prec.dynamic(1, prec.right(seq(
-            decoration($),
+        abstract_member_defn: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._abstract_member_core, $.abstract_member_defn))),
+            $._abstract_member_core,
+        ),
+
+        _abstract_member_core: $ => prec.dynamic(1, prec.right(seq(
+            repeat($.attribute),
             optional("static"),
             "abstract",
             optional("member"),
@@ -871,8 +906,12 @@ export default grammar({
         // member impls following `with` become children of the `interface_impl`
         // node, so expand-selection walks identifier → member_defn →
         // interface_impl → enclosing class/object_expression.
-        interface_impl: $ => prec.right(seq(
-            repeat($.xml_doc_comment),
+        interface_impl: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._interface_impl_core, $.interface_impl))),
+            $._interface_impl_core,
+        ),
+
+        _interface_impl_core: $ => prec.right(seq(
             "interface",
             field('type', $.type_expression),
             // `with` members: INDENTED on the next line(s), or INLINE on the same
@@ -896,8 +935,13 @@ export default grammar({
         //   val mutable field: int
         //   [<DefaultValue>] val mutable field : int
         //   [<DefaultValue>] static val mutable private field : int
-        val_field: $ => seq(
-            decoration($),
+        val_field: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._val_field_core, $.val_field))),
+            $._val_field_core,
+        ),
+
+        _val_field_core: $ => seq(
+            repeat($.attribute),
             optional("static"),
             "val",
             optional("mutable"),
@@ -976,10 +1020,16 @@ export default grammar({
         // case's end has no shift for `line_comment` other than as extras).
         // `prec.right` resolves the shift/reduce conflict in favour of
         // absorbing the comment.
-        union_case: $ => prec.right(seq(
+        union_case: $ => prec.right(choice(
             // Doc block GATED by the scanner (docs + `|` ahead) — ungated, a
             // doc after the LAST case greedily commits to a phantom next case.
-            optional(seq($._case_docs_open, repeat1($.xml_doc_comment))),
+            // The CODE part nests as an inner union_case (expand-selection:
+            // case first, then case+docs).
+            seq($._case_docs_open, repeat1($.xml_doc_comment), field('decl', alias($._union_case_core, $.union_case))),
+            $._union_case_core,
+        )),
+
+        _union_case_core: $ => prec.right(seq(
             "|",
             repeat($.attribute),   // `| [<DefaultValue>] X` — attribute on a DU case
             field('name', $.identifier),
@@ -1094,8 +1144,12 @@ export default grammar({
             field('return_type', $.type_expression),
         ),
 
-        enum_case: $ => seq(
-            optional(seq($._case_docs_open, repeat1($.xml_doc_comment))),
+        enum_case: $ => choice(
+            seq($._case_docs_open, repeat1($.xml_doc_comment), field('decl', alias($._enum_case_core, $.enum_case))),
+            $._enum_case_core,
+        ),
+
+        _enum_case_core: $ => seq(
             "|",
             field('name', $.identifier),
             "=",
@@ -1135,8 +1189,12 @@ export default grammar({
 
         // prec(POSTFIX) on the field ties its REDUCE precedence with postfix_type's SHIFT
         // precedence, letting prec.dynamic in record_type_defn resolve the conflict.
-        record_type_field: $ => prec(TYPE_PREC.POSTFIX, seq(
-            repeat($.xml_doc_comment),     // `/// docs` attach to the field
+        record_type_field: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._record_field_core, $.record_type_field))),
+            $._record_field_core,
+        ),
+
+        _record_field_core: $ => prec(TYPE_PREC.POSTFIX, seq(
             repeat($.attribute),           // `[<JsonRequired>] Age: int` — attribute on a record field
             optional("mutable"),
             field('name', $.identifier),
@@ -1849,9 +1907,19 @@ export default grammar({
         // `let [rec]` and the binding name. Both forms are equivalent:
         //   [<Literal>] let X = 11
         //   let [<Literal>] X = 11
+        // When `///` docs precede the binding, the CODE part nests as an inner
+        // let_binding node so Helix expand-selection stops at the code first,
+        // then grows to include the docs (user-requested two-step expansion).
+        // Without docs the hidden core's children splice in flat — the tree
+        // shape is unchanged.
         let_binding: ($) => prec.right(PREC.LET_DECL, choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._let_binding_core, $.let_binding))),
+            $._let_binding_core,
+        )),
+
+        _let_binding_core: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 optional("static"),
                 "let",
                 optional(token.immediate("!")),
@@ -1867,7 +1935,7 @@ export default grammar({
                 repeat($.let_and_binding),
             ))),
             prec(1, prec.dynamic(1, seq(
-                decoration($),
+                repeat($.attribute),
                 optional("static"),
                 "let",
                 optional(token.immediate("!")),
@@ -1889,10 +1957,15 @@ export default grammar({
         // `and [<return: Struct>] (|BoolExpr|_|) = …` — attributes may sit
         // between `and` and the name (FCS IlxGen peephole actives).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq(optional($._and_docs), "and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
+            seq($._and_docs, field('decl', alias($._let_and_core, $.let_and_binding))),
+            $._let_and_core,
+        )),
+
+        _let_and_core: ($) => prec.right(PREC.LET_DECL, choice(
+            prec(2, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
                 seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             )),
-            prec(1, seq(optional($._and_docs), "and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
+            prec(1, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
         )),
 
         // A let binding inside let_expression. Two body forms, chosen by the scanner
@@ -1924,8 +1997,12 @@ export default grammar({
             repeat(alias($._and_decl_indented, $.let_and_binding)),
         ),
 
-        _and_decl_indented: ($) => seq(
-            optional($._and_docs),
+        _and_decl_indented: ($) => choice(
+            seq($._and_docs, field('decl', alias($._and_decl_core, $.let_and_binding))),
+            $._and_decl_core,
+        ),
+
+        _and_decl_core: ($) => seq(
             "and",
             optional(token.immediate("!")),
             repeat($.attribute),
@@ -2255,8 +2332,13 @@ export default grammar({
         _extern_type: $ => prec.right(seq($.long_identifier, repeat(choice("*", "&", seq("[", "]"))))),
         _extern_param: $ => seq(repeat($.attribute), alias($._extern_type, $.type_expression), optional($.identifier)),
 
-        exception_decl: $ => prec.dynamic(1, seq(
-            decoration($),
+        exception_decl: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._exception_decl_core, $.exception_decl))),
+            $._exception_decl_core,
+        ),
+
+        _exception_decl_core: $ => prec.dynamic(1, seq(
+            repeat($.attribute),
             "exception",
             field('name', $.identifier),
             optional(seq("of", $.type_expression)),

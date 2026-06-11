@@ -615,3 +615,29 @@ ctors keep their ungated path.
 23-repo: 197→190 files / 1023→1010 nodes (7 FAKE-legacy files fixed by
 attachment), fsharp-src unchanged, ZERO regressions. Corpus 467 (the stash's
 doc test included), layout.fsx gained L24_DocComments.
+
+## Fix 33 — two-step expand-selection for documented declarations
+
+Review feedback: from inside `let multiDoc = 1` under a `///` block,
+expand-selection jumped straight to docs+let. Wanted: code first, then docs.
+
+The docs were direct children of the declaration node, so no intermediate
+"code-only" node existed. Now every doc-bearing rule (let_binding, type_decl,
+member_defn, abstract_member_defn, module_decl, exception_decl,
+type_extension, interface_impl, union_case, enum_case, record_type_field,
+let_and_binding, _and_decl_indented, type_and_decl, val_field,
+secondary_constructor — 16 wrappers) nests the code part as an inner
+SAME-NAMED node under a `decl:` field when docs are present:
+
+    (let_binding (xml_doc_comment)+ decl: (let_binding name: … body: …))
+
+Without docs the hidden core's children splice in flat — tree unchanged.
+Expansion: code → code+docs → scope. Query fallout: indents.scm patterns that
+matched field-less nodes (`!body`, bare node) gained `!decl` so the docs
+wrapper never double-indents; field-anchored highlights match the inner node
+unchanged; locals' doubled @local.scope is harmless. Conflict sets renamed to
+the `_core` rules; one set is mislabeled "unnecessary" by the generator but
+required (comment in grammar.js).
+
+Suites: 23-repo byte-identical (190/1010); fsharp-src 29/160 (±1 recovery
+wobble in prim-types' known GADT residue). Corpus 467.
