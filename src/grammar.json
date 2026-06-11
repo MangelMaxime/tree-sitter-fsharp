@@ -14780,14 +14780,6 @@
       "let_binding"
     ],
     [
-      "_decl_or_comment",
-      "_secondary_ctor_core",
-      "_member_defn_core",
-      "_abstract_member_core",
-      "_val_field_core",
-      "_let_binding_core"
-    ],
-    [
       "_class_body_member",
       "secondary_constructor",
       "member_defn",
@@ -14796,6 +14788,14 @@
       "val_field",
       "record_type_defn",
       "let_binding"
+    ],
+    [
+      "_decl_or_comment",
+      "_secondary_ctor_core",
+      "_member_defn_core",
+      "_abstract_member_core",
+      "_val_field_core",
+      "_let_binding_core"
     ],
     [
       "_record_field_core",

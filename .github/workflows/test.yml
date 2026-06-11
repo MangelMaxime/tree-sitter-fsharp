@@ -25,12 +25,16 @@ jobs:
       # before testing stale artifacts. Deterministic: the CLI version comes
       # from package-lock.json, the same one `npx tree-sitter` uses locally.
       - name: Check generated files are up to date
+        # checksum-based (not `git diff`) so it also works under `act`, whose
+        # container doesn't get a usable git context
         run: |
+          before=$(cat src/parser.c src/grammar.json src/node-types.json | sha256sum)
           npx tree-sitter generate grammar.js
-          git diff --exit-code --stat src/ || {
+          after=$(cat src/parser.c src/grammar.json src/node-types.json | sha256sum)
+          if [ "$before" != "$after" ]; then
             echo "::error::src/ is stale — run 'npx tree-sitter generate grammar.js' and commit the result"
             exit 1
-          }
+          fi
 
       # Corpus (tree structure) + highlight assertions (query captures).
       - name: Corpus and highlight tests

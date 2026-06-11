@@ -224,10 +224,14 @@ export default grammar({
         // …and the class-body twin of the same fork (incl. type bodies where a
         // doc could open a union/enum case OR a member).
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
-        // (the generator mislabels this one "unnecessary" via the core→alias
-        // display name, but removing it fails the build — keep it)
-        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
+        // KEEP despite the generator's "unnecessary conflicts" warning: the
+        // checker reports the core rules under their ALIAS display names
+        // (let_binding, member_defn, …) and then fails to recognise this set
+        // as covering them. Removing it is a build ERROR (try it: `type X =
+        // [<attr>] member …` becomes an unresolved conflict). Verified
+        // 2026-06-11, tree-sitter-cli 0.26.x.
+        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$._record_field_core, $.postfix_type],
