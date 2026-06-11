@@ -1209,3 +1209,8 @@ module L34_StaticOptimizations =
          compareIntrinsic x y
          when 'T : bool = (# "cgt" x y : int #)
          when 'T : char = (# "cgt" x y : int #)
+
+type L35_DoAssign() =
+    do configB.platform <- if IntPtr.Size = 8 then Some AMD64 else Some X86
+
+    let syphon = StdinSyphon(errorWriter)

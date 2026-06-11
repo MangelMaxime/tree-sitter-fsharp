@@ -183,6 +183,7 @@ export default grammar({
         $.preproc_inactive,   // `#else`/`#elif` … up to (excl.) the matching `#endif` — the INACTIVE branch as one trivia token (depth-aware, scanner)
         $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
         $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
+        $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1650,17 +1651,24 @@ export default grammar({
         // (`fun x -> let f' = f x in f' (g x) : 'U` — Control/Applicative style).
         _indented_or_inline_body: $ => seq($._expr_open, choice($._expression, $.type_ascription_expression), $._layout_end),
 
+        // then/elif bodies: same shape, but the scanner flags the context so a
+        // MID-LINE `else` may close it (`if c then a else b` — the else belongs
+        // to THIS if). Other inline S_EXPR bodies (do/lambda/while/else) must
+        // NOT close there: in `do x <- if c then a else b` the else belongs to
+        // the inner if, and closing the do-body orphaned it (fsi.fs).
+        _then_body: $ => seq($._then_open, choice($._expression, $.type_ascription_expression), $._layout_end),
+
         if_expression: $ => prec.right(PREC.IF_EXPR, choice(
             prec(2, seq(
                 "if",
                 $._expression,
                 "then",
-                $._indented_or_inline_body,
+                $._then_body,
                 // `else if c then …` ≡ `elif c then …` (F#). The scanner suppresses
                 // `_else_open` before `if`, so the final-else branch below can't take
                 // `else if`; it flattens here, keeping the chain at one level (an
                 // else-body-nested if would over-close at a later dedented `elif`).
-                repeat(seq(choice("elif", seq("else", "if")), $._expression, "then", $._indented_or_inline_body)),
+                repeat(seq(choice("elif", seq("else", "if")), $._expression, "then", $._then_body)),
                 // Final else: a non-`if` body (uses `_else_open`, which the scanner
                 // declines before `if`).
                 // The else body, like _indented_or_inline_body, accepts a

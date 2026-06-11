@@ -343,3 +343,17 @@ prim-types.fs 825→17. fsharp-src: 48→43 files / 1220→363 nodes. 23-repo:
 190→187 / 1073→1035, 0 regressions both (fsi.fs +8/+7 in both = recovery
 reshuffle around a PRE-EXISTING `do x <- if…else` site — verified by A/B
 stash). Corpus 455, layout L34.
+
+## Fix 21 — mid-line `else` may only close THEN/ELIF bodies
+
+`do x <- if c then Some AMD64 else Some X86` (fsi.fs, both copies): the do-body
+is an inline S_EXPR, so the mid-line else close (fix 4's rule) popped it too —
+the else detached from the inner if SILENTLY (the "passing" variant produced a
+garbage tree with `else` as an identifier, zero ERROR nodes — count-clean ≠
+correct!). New `_then_open` external (appended at externals END) gives then/
+elif bodies a `thn` Ctx flag; the mid-line else/elif close now requires
+`top->inl && top->thn`. do/lambda/while/else bodies keep their else for the
+inner if.
+
+23-repo: 187→186 / 1035→1013; fsharp-src: 43→42 / 363→345; 0 regressions.
+fsi.fs 18→0 in BOTH suites. Corpus 456, layout L35.

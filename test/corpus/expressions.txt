@@ -3031,3 +3031,49 @@ let inline (+) (x: ^T) (y: ^U) : ^V =
         (type_expression
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Inline if-else inside a do-assignment keeps its else
+================================================================================
+
+type C() =
+    do tcConfigB.platform <- if IntPtr.Size = 8 then Some AMD64 else Some X86
+
+    let fsiStdinSyphon = FsiStdinSyphon(errorWriter)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (do_stmt
+      (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (if_expression
+          (binary_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (int_literal))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))
+    (let_binding
+      (identifier)
+      (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (long_identifier
+            (identifier)))))))
