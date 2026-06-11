@@ -1156,3 +1156,7 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
     private (name: string, weight: float) =
 
     member _.label = name
+
+    let initialized =
+        {new Handler() with
+            member _.Run x = upcast handle x}.InternalInit(job)

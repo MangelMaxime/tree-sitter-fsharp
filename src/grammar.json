@@ -6908,6 +6908,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "object_expression"
+        },
+        {
+          "type": "SYMBOL",
           "name": "list_expression"
         },
         {

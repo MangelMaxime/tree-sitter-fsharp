@@ -1912,6 +1912,9 @@ export default grammar({
             $.dynamic_expression,
             // `[1; 2].GetHashCode()` / `[|1; 2|].Length` — member access on a
             // list / array / record literal.
+            // `{new Foo() with member _.Bar = 1}.Run()` — and on an object
+            // expression (Hopac continuation style).
+            $.object_expression,
             $.list_expression,
             $.array_expression,
             $.record_expression,

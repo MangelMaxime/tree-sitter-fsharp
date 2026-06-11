@@ -1363,6 +1363,10 @@
             "named": true
           },
           {
+            "type": "object_expression",
+            "named": true
+          },
+          {
             "type": "parenthesized_expression",
             "named": true
           },

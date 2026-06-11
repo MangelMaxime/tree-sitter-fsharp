@@ -197,3 +197,9 @@ between the attrs and the `(`.
 
 Bench: 227→226 files, 1551→1512 nodes, 0 regressions. ImportTests.fs 39→0.
 Corpus 441, layout L31.
+
+## Fix 11 — member access on an object expression
+
+`{new Foo() with member _.Bar = 1}.Run()` (Hopac continuation style):
+object_expression added to _dot_object. Hopac.fs 43→5 (rest is separate).
+Bench: 226 files, 1512→1474 nodes, 0 regressions. Corpus 442.

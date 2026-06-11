@@ -2728,3 +2728,27 @@ let z = [(* note *) 1; 2]
       (block_comment)
       (int_literal)
       (int_literal))))
+
+================================================================================
+Member access on an object expression
+================================================================================
+
+let j = {new Foo() with member _.Bar = 1}.Run()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (dot_expression
+        (object_expression
+          (long_identifier
+            (identifier))
+          (member_defn
+            (member_self_ident
+              (identifier))
+            (identifier)
+            (int_literal)))
+        (identifier))
+      (unit))))
