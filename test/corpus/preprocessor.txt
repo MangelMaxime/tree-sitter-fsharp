@@ -35,9 +35,12 @@ let x = 2
     (preproc_expression))
   (let_binding
     (identifier)
-    (int_literal)
-    (preproc_inactive)
-    (preproc_endif_kw)))
+    (int_literal))
+  (preproc_else_kw)
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if elif else endif
@@ -59,9 +62,18 @@ let x = 3
     (preproc_expression))
   (let_binding
     (identifier)
-    (int_literal)
-    (preproc_inactive)
-    (preproc_endif_kw)))
+    (int_literal))
+  (preproc_elif
+    (preproc_elif_kw)
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_else_kw)
+  (let_binding
+    (identifier)
+    (int_literal))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor if with logical and
@@ -181,9 +193,33 @@ let isEnabled x =
     (preproc_if
       (preproc_if_kw)
       (preproc_expression))
-    (bool_literal)
-    (preproc_inactive)
-    (preproc_endif_kw)))
+    (sequence_expression
+      (bool_literal)
+      (preproc_else_kw)
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (match_expression
+            (long_identifier
+              (identifier))
+            (match_arm
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (list_expression
+                (int_literal)
+                (int_literal)))))
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier))))))
+  (preproc_endif_kw))
 
 ================================================================================
 Preprocessor #if/#endif single-branch body
@@ -298,9 +334,31 @@ let inline zipV x y : V<'E, 'T> =
                 (long_identifier
                   (identifier)))
               (long_identifier
-                (identifier)))))
-        (preproc_inactive)
-        (preproc_endif_kw))
+                (identifier))))))
+      (preproc_else_kw)
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (parenthesized_expression
+            (binary_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))))
+      (preproc_endif_kw)
       (match_arm
         (pattern
           (identifier_pattern
@@ -370,9 +428,31 @@ let inline zipV x y : V<'E, 'T> =
                 (long_identifier
                   (identifier)))
               (long_identifier
-                (identifier)))))
-        (preproc_inactive)
-        (preproc_endif_kw))
+                (identifier))))))
+      (preproc_else_kw)
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (parenthesized_expression
+            (binary_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))))
+      (preproc_endif_kw)
       (match_arm
         (pattern
           (identifier_pattern

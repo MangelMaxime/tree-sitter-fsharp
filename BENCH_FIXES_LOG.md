@@ -569,3 +569,27 @@ Effort estimate: ONE dedicated session in the style of this branch —
 Alternative if grammar conflicts prove nasty: a separate `fsharp_signature`
 grammar in this repo (ionide's approach — two grammars sharing the scanner),
 at the cost of duplicate maintenance. Recommendation: try in-grammar first.
+
+## Fix 31 — DESIGN PIVOT (user decision): both `#if/#else` branches parse as code
+
+Review feedback: the inactive-branch-as-trivia model (fix 1) grays out the
+whole `#else` branch — unacceptable for Fable-style dual-path projects where
+that branch is full-sized real code. Reverted to both-branches-as-code:
+`preproc_elif`/`preproc_else_kw` restored as extras, the directive LINES skip
+in geometry, `preproc_inactive` stays DECLARED (extern enum stability) but is
+never emitted. The original fix-1 motivation (consecutive functions with
+#if-guarded arms) now parses fine as-code — the intervening scanner fixes
+(over-indented arms, |-classification, then/lazy gating) had solved the real
+geometry bugs.
+
+Measured cost of the pivot, accepted by review: 23-repo 172→197 files /
+905→1023 nodes; fsharp-src 28→29 / 138→159. ALL regressions are the
+"alternative-header splice" class — duplicate ctor headers (`(paramsA) =` /
+`(paramsB) =` per branch, prim-parsing), member-signature splices (Thoth
+Decode.Auto), unbalanced parens across branches (`(` vs `lock … (fun () ->`,
+range.fs), keyword splices (FParsec let/use) — shapes that CANNOT compose as
+sequential code by construction. A repeat-primary-ctor liberalization was
+tried and reverted (the spliced headers each carry their own `=`).
+In exchange, every dual-branch `#else` in user code colors fully.
+
+Corpus 466 (4 preproc trees re-shaped to dual-code), layout.fsx L25 updated.

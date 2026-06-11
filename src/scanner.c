@@ -48,7 +48,7 @@ typedef enum {
     ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
     CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
-    PREPROC_INACTIVE,     // `#else`/`#elif` … up to (excl.) the matching `#endif` — inactive branch as one trivia token
+    PREPROC_INACTIVE,     // RESERVED (never emitted; kept so enum indexes match the externals array)
     BLOCK_COMMENT,        // `(* … *)` NESTED (regex can't nest)
     BLOCK_DOC_COMMENT,    // `(** … *)` doc form
     THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)
@@ -148,11 +148,10 @@ static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
     return true;
 }
 
-// When set (main line-boundary call only), next_line_indent STOPS at an
-// `#else`/`#elif` inactive-region start (sentinel *first = 1) instead of
-// skipping the region — the caller then tokenizes it as PREPROC_INACTIVE.
-// Peek callers (body-col probes, open helpers) leave it false and get the
-// region-skipping geometry.
+// When set (main line-boundary call only), next_line_indent STOPS at a
+// line-start block comment (sentinel *first = 2) so the boundary path can
+// emit it as one token. Peek callers (body-col probes, open helpers) leave
+// it false and get plain skipping geometry.
 static bool g_region_stop = false;
 static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**` doc form
 
@@ -254,33 +253,16 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             // consumed by the grammar where it allows `preproc_directive`.
             // NOT `#load`/`#r`: those are top-level statements that RELY on
             // the dedent-close firing at their line.
-            // `#elif`/`#else` open an INACTIVE region — skip THE WHOLE region
-            // (depth-aware) up to the matching `#endif` line, mirroring the
-            // PREPROC_INACTIVE token, so layout geometry never sees inactive code.
-            if (strcmp(w, "elif") == 0 || strcmp(w, "else") == 0) {
-                if (g_region_stop) { if (first) *first = 1; *col = indent; return true; }
-                int pdepth = 1, pguard = 0;
-                for (;;) {
-                    if (++pguard > 100000) return false;
-                    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
-                    if (lexer->lookahead == 0) return false;
-                    if (lexer->lookahead == '\r') lexer->advance(lexer, true);
-                    if (lexer->lookahead == '\n') lexer->advance(lexer, true);
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-                    if (lexer->lookahead == '#') {
-                        lexer->advance(lexer, true);
-                        char d[8]; size_t dn = 0;
-                        while (dn < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { d[dn++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
-                        d[dn] = '\0';
-                        if (strcmp(d, "if") == 0) pdepth++;
-                        else if (strcmp(d, "endif") == 0 && --pdepth == 0) break;   // #endif line: skip its tail below
-                    }
-                }
-                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
-                if (lexer->lookahead == 0) return false;
-                continue;
-            }
+            // `#if`-family / `#nowarn` / `#line` lines are skipped like
+            // comment lines so they never dedent-close an open body.
+            // `#elif`/`#else`: BOTH branches parse as real code (user choice:
+            // Fable-style dual-path projects carry full-sized #else branches
+            // that deserve real highlighting). The directive LINE is skipped
+            // for geometry, exactly like the `#if` family below. Known cost:
+            // exotic keyword-splices (`#if A⏎let⏎#else⏎use⏎#endif`, FParsec)
+            // don't parse — rare and accepted.
             if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
+                strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
                 strcmp(w, "line") == 0) {
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
@@ -1438,36 +1420,6 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         lexer->result_symbol = (g_comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
                              : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
         return true;
-    }
-    if (first == 1) {
-        // The next content line opens an INACTIVE `#else`/`#elif` region (the
-        // active branch was taken). Tokenize the whole region — up to but NOT
-        // including the matching `#endif` line — as ONE trivia token, BEFORE any
-        // close/semi: extras are transparent, so closes fire equally after it.
-        // Lookahead sits just past the directive word (skip-consumed: the token
-        // starts at the first non-skip advance below).
-        if (!valid[PREPROC_INACTIVE]) return false;
-        int rdepth = 1, rguard = 0;
-        for (;;) {
-            if (++rguard > 100000) return false;
-            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-                lexer->advance(lexer, false);
-            if (lexer->lookahead == 0) { lexer->mark_end(lexer); lexer->result_symbol = PREPROC_INACTIVE; return true; }
-            if (lexer->lookahead == '\r') lexer->advance(lexer, false);
-            if (lexer->lookahead == '\n') lexer->advance(lexer, false);
-            lexer->mark_end(lexer);          // tentative end: this line's start
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, false);
-            if (lexer->lookahead == '#') {
-                lexer->advance(lexer, false);
-                char d[8]; size_t dn = 0;
-                while (dn < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
-                    d[dn++] = (char)lexer->lookahead; lexer->advance(lexer, false);
-                }
-                d[dn] = '\0';
-                if (strcmp(d, "if") == 0) rdepth++;
-                else if (strcmp(d, "endif") == 0 && --rdepth == 0) { lexer->result_symbol = PREPROC_INACTIVE; return true; }
-            }
-        }
     }
     if (!top) {
         // Top-level (no layout context on the stack): a new statement on this line that

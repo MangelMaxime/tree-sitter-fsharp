@@ -3966,6 +3966,33 @@
     }
   },
   {
+    "type": "preproc_elif",
+    "named": true,
+    "extra": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "preproc_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "preproc_elif_kw",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "preproc_if",
     "named": true,
     "extra": true,
@@ -6818,6 +6845,15 @@
     "named": false
   },
   {
+    "type": "preproc_elif_kw",
+    "named": true
+  },
+  {
+    "type": "preproc_else_kw",
+    "named": true,
+    "extra": true
+  },
+  {
     "type": "preproc_endif_kw",
     "named": true,
     "extra": true
@@ -6829,11 +6865,6 @@
   {
     "type": "preproc_if_kw",
     "named": true
-  },
-  {
-    "type": "preproc_inactive",
-    "named": true,
-    "extra": true
   },
   {
     "type": "preproc_keyword",

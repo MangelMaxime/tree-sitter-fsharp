@@ -180,7 +180,7 @@ export default grammar({
         $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
         $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
         $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
-        $.preproc_inactive,   // `#else`/`#elif` … up to (excl.) the matching `#endif` — the INACTIVE branch as one trivia token (depth-aware, scanner)
+        $.preproc_inactive,   // RESERVED (not emitted, not in extras): kept declared so external enum indexes stay stable
         $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
         $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
         $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
@@ -194,13 +194,13 @@ export default grammar({
         // semantic content, so it's skippable anywhere (like a comment). Longer-match
         // beats the single `;` separator, and a bare `; ;` never occurs in valid F#.
         $.fsi_terminator,
-        // Conditional-compilation directives are skippable anywhere (see preproc_if).
-        // The ACTIVE branch's guard (`#if cond`) and the closing `#endif` stay
-        // individual extras; everything from `#elif`/`#else` to the matching
-        // `#endif` is ONE `preproc_inactive` trivia token (the scanner counts
-        // nested `#if` depth) — the inactive branch is never parsed, which is
-        // what real-world dual-branch code (Fable's fcs tree) requires.
-        $.preproc_if, $.preproc_inactive, $.preproc_endif_kw],
+        // Conditional-compilation directives are skippable anywhere (see
+        // preproc_if). BOTH branches of `#if/#else` parse as REAL code (the
+        // editor can't know the build defines, and Fable-style dual-path
+        // projects carry full-sized `#else` branches that deserve real
+        // highlighting); the directive lines themselves are trivia. The
+        // scanner's geometry skips directive LINES so they never close layout.
+        $.preproc_if, $.preproc_elif, $.preproc_else_kw, $.preproc_endif_kw],
 
     // Conflict declarations enable GLR exploration where LALR(1) is insufficient.
     // Without them, prec.dynamic is silently ignored.
@@ -3551,6 +3551,8 @@ export default grammar({
         // Structural directives — prec(1) > preproc_keyword's prec 0 when both match
         // the same string. Longer matches still win, so `#ifdef` falls to preproc_keyword.
         preproc_if_kw: _ => token(prec(1, seq("#if", /[ \t]*/))),
+        preproc_elif_kw: _ => token(prec(1, seq("#elif", /[ \t]*/))),
+        preproc_else_kw: _ => token(prec(1, seq("#else", /[ \t]*/))),
         preproc_endif_kw: _ => token(prec(1, seq("#endif", /[ \t]*/))),
 
         // The `#if`/`#elif` condition — the rest of the directive line as a SINGLE
@@ -3568,5 +3570,6 @@ export default grammar({
         // siblings); for a highlighting grammar that's exactly what we want, and it
         // avoids the cascade of errors a body-wrapping form caused inside `[ … ]`.
         preproc_if: $ => seq($.preproc_if_kw, field('condition', $.preproc_expression)),
+        preproc_elif: $ => seq($.preproc_elif_kw, field('condition', $.preproc_expression)),
     }
 });

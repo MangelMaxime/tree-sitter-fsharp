@@ -13972,6 +13972,46 @@
         }
       }
     },
+    "preproc_elif_kw": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "#elif"
+            },
+            {
+              "type": "PATTERN",
+              "value": "[ \\t]*"
+            }
+          ]
+        }
+      }
+    },
+    "preproc_else_kw": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "#else"
+            },
+            {
+              "type": "PATTERN",
+              "value": "[ \\t]*"
+            }
+          ]
+        }
+      }
+    },
     "preproc_endif_kw": {
       "type": "TOKEN",
       "content": {
@@ -14005,6 +14045,23 @@
         {
           "type": "SYMBOL",
           "name": "preproc_if_kw"
+        },
+        {
+          "type": "FIELD",
+          "name": "condition",
+          "content": {
+            "type": "SYMBOL",
+            "name": "preproc_expression"
+          }
+        }
+      ]
+    },
+    "preproc_elif": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "preproc_elif_kw"
         },
         {
           "type": "FIELD",
@@ -14052,7 +14109,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "preproc_inactive"
+      "name": "preproc_elif"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "preproc_else_kw"
     },
     {
       "type": "SYMBOL",

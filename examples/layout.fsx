@@ -1061,7 +1061,7 @@ pipeline "Deploy" {
 
 seq { 1..100 } |> Seq.map id |> ignore
 
-// === L25: #if/#else — inactive branch is ONE trivia token (preproc_inactive) ===
+// === L25: #if/#else — BOTH branches parse (and color) as real code ===
 module L25_PreprocBranches =
     let pick flag =
 #if CHECK_A
