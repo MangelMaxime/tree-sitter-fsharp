@@ -1147,3 +1147,7 @@ module [<AutoOpen>] L29_KeywordAttrs =
         function
         | Const b -> ValueSome b
         | _ -> ValueNone
+
+# 100 "layout.fsx"
+module L30_LineDirectives =
+    let generated = 1

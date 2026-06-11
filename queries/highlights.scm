@@ -156,6 +156,7 @@
 ; The inactive `#elif`/`#else`…`#endif` region is one trivia token — colour it
 ; like a comment (the IDE convention for inactive conditional code).
 (preproc_inactive) @comment
+(line_directive) @keyword.directive
 (preproc_endif_kw) @keyword.directive
 ; the `#if`/`#elif` condition (`FABLE_COMPILER || …`) is left UNCOLOURED (default)
 ; — only the directive keyword is highlighted, not the symbols in the condition.

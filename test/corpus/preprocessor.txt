@@ -395,3 +395,31 @@ let inline zipV x y : V<'E, 'T> =
                 (identifier))
               (long_identifier
                 (identifier)))))))))
+
+================================================================================
+fsyacc line directives (# 14 "pars.fs") are trivia
+================================================================================
+
+# 14 "pars.fs"
+type token =
+  | DECR
+  | LPAREN
+
+# 30 "pars.fs"
+let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (line_directive)
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier))))
+  (line_directive)
+  (let_binding
+    (identifier)
+    (int_literal)))

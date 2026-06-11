@@ -186,6 +186,7 @@ export default grammar({
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
+        $.line_directive,
         // `;;` is the FSI / script interaction terminator — pure punctuation with no
         // semantic content, so it's skippable anywhere (like a comment). Longer-match
         // beats the single `;` separator, and a bare `; ;` never occurs in valid F#.
@@ -3365,6 +3366,10 @@ export default grammar({
         // Non-structural directives: `#nowarn`, `#r`, `#load`, `#line`, … Structural
         // directives `#if/#elif/#else/#endif` use dedicated higher-priority tokens.
         preproc_keyword: _ => token(seq("#", /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
+
+        // `# 14 "pars.fs"` — fsyacc/fslex LINE directives (also `#line 14 "f"`).
+        // Pure trivia: an EXTRA token, skipped by the scanner's geometry too.
+        line_directive: _ => token(seq("#", /[ \t]*/, /[0-9]+/, optional(seq(/[ \t]+/, '"', /[^"\n]*/, '"')))),
 
         preproc_directive: $ => prec.right(seq(
             field('name', $.preproc_keyword),

@@ -6441,6 +6441,11 @@
     "extra": true
   },
   {
+    "type": "line_directive",
+    "named": true,
+    "extra": true
+  },
+  {
     "type": "match",
     "named": false
   },

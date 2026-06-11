@@ -176,3 +176,14 @@ both Feliz DateParsing clones 2→0. Corpus 437, layout L29.
 Bench: 230→228 files, 1678→1641 nodes, 0 regressions. fable-library-rust
 Set.fs 24→0 (nested comments), IlxGen 48→45 (remaining: multi-line tuple
 pattern in an arm — separate issue). Corpus 439 (+2).
+
+## Fix 9 — fsyacc/fslex line directives (`# 14 "pars.fs"`)
+
+Generated parser/lexer files interleave `# <num> "<file>"` directives at col 0
+throughout the code. New `line_directive` extra token (`#` + digits + optional
+quoted file), and next_line_indent skips those lines (plus `#line`) like the
+`#if` family so they never participate in offside geometry.
+
+Bench: 228→227 files, 1641→1551 nodes, 0 regressions. LexYacc lex.fs 42→0,
+pars.fs 49→1; the fcs codegen pars.fs (31) has separate issues. Corpus 440,
+layout L30, highlight @keyword.directive.

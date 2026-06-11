@@ -273,10 +273,21 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 continue;
             }
             if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
-                strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0) {
+                strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
+                strcmp(w, "line") == 0) {
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
                 continue;
+            }
+            // `# 14 "pars.fs"` — fsyacc/fslex line directive: trivia, skip the line.
+            if (wi == 0) {
+                int32_t dl = lexer->lookahead;
+                while (dl == ' ' || dl == '\t') { lexer->advance(lexer, true); dl = lexer->lookahead; }
+                if (dl >= '0' && dl <= '9') {
+                    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                    if (lexer->lookahead == 0) return false;
+                    continue;
+                }
             }
             if (first) *first = '#'; *col = indent; return true;
         }
