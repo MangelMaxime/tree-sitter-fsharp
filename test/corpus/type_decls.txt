@@ -1078,3 +1078,70 @@ type MyJsClassWithOptionsOverload [<ParamObject; Emit("$0")>]
                 (identifier)))
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Empty anonymous record and block copy-update with named-arg base
+================================================================================
+
+let e = {| |}
+let t = {||}
+
+let arm =
+    {|
+        profiles.Create(this.Name, Location.Global, tags = this.Tags) with
+            sku = {| name = string this.Sku |}
+            properties = {| |}
+    |}
+    |> box
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (anonymous_record_expression))
+  (let_binding
+    (identifier)
+    (anonymous_record_expression))
+  (let_binding
+    (identifier)
+    (binary_expression
+      (anonymous_record_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (tuple_expression
+              (tuple_expression
+                (long_identifier
+                  (identifier)
+                  (identifier))
+                (long_identifier
+                  (identifier)
+                  (identifier)))
+              (binary_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier)
+                  (identifier))))))
+        (record_field
+          (long_identifier
+            (identifier))
+          (anonymous_record_expression
+            (record_field
+              (long_identifier
+                (identifier))
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier)
+                  (identifier))))))
+        (record_field
+          (long_identifier
+            (identifier))
+          (anonymous_record_expression)))
+      (long_identifier
+        (identifier)))))

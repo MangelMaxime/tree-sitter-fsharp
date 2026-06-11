@@ -210,3 +210,15 @@ Bench: 226 files, 1512→1474 nodes, 0 regressions. Corpus 442.
 clause took $._expression only; it now also accepts $.type_ascription_expression
 (like _indented_or_inline_body). Indexable.fs 25→0. Bench: 226→225 files,
 1474→1437 nodes, 0 regressions. Corpus 443.
+
+## Fix 13 — empty anonymous record `{| |}`
+
+anonymous_record_expression required at least one field; `blank()` added to the
+choice. Cleared 5 farmer files (Cdn 20→0, Web 9→0, Dashboard, ResourceGroup,
+CognitiveServices). Bench: 225→220 files, 1437→1398 nodes, 0 regressions.
+Corpus 444.
+
+Also PARKED this stretch (in memory project_fix_backlog): `let Ctor(a, b), rest
+= …` destructuring (two attempts silently broke `let f(a, b) =` fn defs);
+ReflectionTests.fs / General.fs / MSBuildHelper.fs / Chocolatey.fs are
+compound (pieces pass in isolation, full files fail — context-dependent).

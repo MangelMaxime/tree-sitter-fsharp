@@ -1559,6 +1559,8 @@ export default grammar({
                     $._layout_end,
                 ),
                 $._record_fields,
+                // `{| |}` — the EMPTY anonymous record (farmer `properties = {| |}`).
+                blank(),
             ),
             "|}",
         ),

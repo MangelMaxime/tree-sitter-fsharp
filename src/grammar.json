@@ -5363,6 +5363,9 @@
             {
               "type": "SYMBOL",
               "name": "_record_fields"
+            },
+            {
+              "type": "BLANK"
             }
           ]
         },

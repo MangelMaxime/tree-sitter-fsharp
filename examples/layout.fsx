@@ -1162,3 +1162,11 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
             member _.Run x = upcast handle x}.InternalInit(job)
 
     let tryAt n (xs: int []) = if n >= 0 && n < xs.Length then Some xs.[n] else None : int option
+
+    let emptyBag = {| |}
+    let armResource =
+        {|
+            profiles.Create(name, Location.Global, tags = tags) with
+                sku = {| name = string sku |}
+                properties = {| |}
+        |}
