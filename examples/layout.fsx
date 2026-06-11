@@ -1116,3 +1116,15 @@ module L27_OverIndentedArm =
             lookupField recdTy id
             |?> List.map (fun x -> id, x, rest)
         | _ -> NoResults
+
+// === L28: dangling else — inline if/else inside an indented then-body ===
+module L28_DanglingElse =
+    let compareBoth x1 x2 =
+        if isEmpty x1 then
+            if isEmpty x2 then equal () else lesser ()
+        elif isEmpty x2 then
+            greater ()
+        else
+            match x1 with
+            | Node n -> compareNodes n x2
+            | _ -> compareKeys x1 x2

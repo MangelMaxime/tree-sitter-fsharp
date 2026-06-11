@@ -95,3 +95,20 @@ Corpus 433 (+2), layout.fsx L27_OverIndentedArm + |?> example.
 GOTCHA (again, third time): a scanner compile ERROR leaves the stale cached
 parser silently answering — `tree-sitter test` surfaces the compile error,
 plain `parse` does not. Check `tree-sitter test` after every scanner edit.
+
+## Fix 4 — dangling else: inline if/else inside an indented then-body
+
+`if a then⏎    if p then x else y⏎else …` (TaggedCollections/FCS style): the
+scanner's mid-line `else` close greedily popped the OUTER then-body, handing
+the inline else to the outer if and stranding the real `else` line. Externals
+preempt keyword lexing, so GLR never saw the inner attachment — the fix must
+be scanner-side.
+
+Mechanism: `Ctx` gains an `inl` flag (fits in struct padding — serialization
+layout unchanged) set when EXPR_OPEN/ELSE_OPEN open a body INLINE (same line
+as its opener). The mid-line `else`/`elif` close now fires only on inline
+bodies; an indented then-body is never closed by a same-line else, which by
+construction belongs to an inner if. `in`/`end` keep the unconditional close.
+
+Bench: 249→238 files, 2537→2310 nodes, 0 regressions. TaggedCollections.fs
+158→0, TypeRelations.fs 16→0, 8 Paket files cleared. Corpus 434, layout L28.

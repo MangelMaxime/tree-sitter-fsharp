@@ -74,7 +74,7 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY }
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
-typedef struct { uint32_t col; uint8_t sort; } Ctx;
+typedef struct { uint32_t col; uint8_t sort; uint8_t inl; } Ctx;  // inl: body opened INLINE (same line as its opener keyword)
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
@@ -106,7 +106,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, u
 }
 
 static void push(Scanner *s, uint8_t sort, uint32_t col) {
-    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->n++; }
+    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->n++; }
 }
 
 // Compute the indent + first significant char of the NEXT non-blank, non-comment
@@ -790,7 +790,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         push(s, S_LAYOUT, bc); lexer->result_symbol = FOR_OPEN; return true;
     }
-    if (valid[EXPR_OPEN])   { push(s, S_EXPR,   peek_body_col(lexer)); lexer->result_symbol = EXPR_OPEN;   return true; }
+    if (valid[EXPR_OPEN])   {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+                   lexer->lookahead != '/'  && lexer->lookahead != 0;
+        push(s, S_EXPR, peek_body_col(lexer));
+        if (inl && s->n) s->stk[s->n - 1].inl = 1;
+        lexer->result_symbol = EXPR_OPEN;   return true;
+    }
     if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
     if (valid[ELSE_OPEN]) {
         // Final-else body. An INLINE `else if` (same line) flattens to an elif clause —
@@ -812,7 +819,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (!word) return false;  // inline `else if …` → flat elif clause
             }
         }
-        push(s, S_EXPR, col); lexer->result_symbol = ELSE_OPEN; return true;
+        push(s, S_EXPR, col);
+        if (!nl_before && s->n) s->stk[s->n - 1].inl = 1;
+        lexer->result_symbol = ELSE_OPEN; return true;
     }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
 
@@ -1062,8 +1071,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 w[n] = '\0';
                 if (top && valid[LAYOUT_END]) {
-                    if (top->sort == S_EXPR && (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "in") ||
-                                                !strcmp(w, "end"))) {   // `begin work () end` — inline block close
+                    // `else`/`elif` close only an INLINE body: a same-line `else`
+                    // after an INDENTED then-body belongs to an INNER if on this
+                    // line (`if a then⏎    if p then x else y` — dangling else;
+                    // the greedy close handed it to the OUTER if and stranded the
+                    // outer `else` line, TaggedCollections/FCS style). `in`/`end`
+                    // keep the unconditional close.
+                    if (top->sort == S_EXPR && ((!strcmp(w, "else") || !strcmp(w, "elif")) ? top->inl != 0
+                                                : (!strcmp(w, "in") || !strcmp(w, "end")))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {

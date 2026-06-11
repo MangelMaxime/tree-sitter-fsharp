@@ -2637,3 +2637,59 @@ let i = List.fold ( * ) 1 xs
         (int_literal))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Dangling else: inline if-else inside an indented then-body
+================================================================================
+
+let g x1 x2 =
+    if isEmpty x1 then
+        if p then a else b
+    else
+        match x1 with
+        | X n -> cont ()
+        | _ -> cont ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (if_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (if_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (match_expression
+        (long_identifier
+          (identifier))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit)))
+        (match_arm
+          (pattern
+            (wildcard_pattern))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit)))))))
