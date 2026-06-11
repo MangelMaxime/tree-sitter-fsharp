@@ -154,6 +154,16 @@ static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
 // emit it as one token. Peek callers (body-col probes, open helpers) leave
 // it false and get plain skipping geometry.
 static bool g_region_stop = false;
+// Set per-scan before the MAIN next_line_indent call: a doc-attachment gate
+// (CASE_DOCS_OPEN / AND_DOCS_OPEN) is valid, so the doc-line baseline anchor
+// is worth taking. Ordinary closes must NOT anchor at the docs (it drags the
+// CLOSED node's extent forward to the next declaration's doc block).
+static bool g_doc_gate_possible = false;
+// The layout-stack top column at the time of the MAIN call: docs INDENTED AT
+// OR PAST it can decorate a case/and at that level (mark-worthy); docs LEFT of
+// it belong to a declaration after a dedent-close, which must keep its tight
+// old-baseline anchor.
+static uint32_t g_top_col_for_docs = 0;
 static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**` doc form
 
 // Set when next_line_indent skips one or more `///` doc-comment lines on its
@@ -191,7 +201,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             // case/and-clause node STARTS at its docs (expand-selection
             // extents). The scan RESUMES from here afterwards — the mid-line
             // doc-resume dispatch in the scan body handles that position.
-            if (g_region_stop && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
+            if (g_region_stop && g_doc_gate_possible && indent >= g_top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
@@ -1552,6 +1562,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
 
     uint32_t col; int32_t first = 0;
     g_region_stop = true;
+    g_doc_gate_possible = valid[CASE_DOCS_OPEN] || valid[AND_DOCS_OPEN];
+    g_top_col_for_docs = top ? top->col : 0;
     bool nli = next_line_indent(lexer, &col, &first);
     g_region_stop = false;
     if (!nli) {                                             // EOF after trailing blanks

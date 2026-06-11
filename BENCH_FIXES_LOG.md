@@ -670,3 +670,24 @@ Extents now: outer union_case = [doc-line .. case-end]; type_and_decl =
 [doc-line .. clause-end]. Expansion: float → case → docs+case → cases → type.
 Suites: 23-repo 190/989 (−21 nodes, recovery improvements), fsharp-src
 identical; 0 regressions. Corpus 467.
+
+## Fix 35 — tight extents: declarations no longer bleed into the next doc block
+
+Review screenshots showed every declaration FOLLOWED by a documented one
+over-extending across the blank line to the next `///` line's start —
+fix 34's doc anchoring moved the baseline for ALL zero-width tokens of a
+doc-skipping scan, including the LAYOUT_END that closes the PREVIOUS binding
+(the close's anchor IS the closed node's end).
+
+The anchor is now taken only when a doc gate can actually fire:
+1. `g_doc_gate_possible` — CASE_DOCS_OPEN or AND_DOCS_OPEN is valid in this
+   scan (a let-body close scan has neither: the and-clause item only appears
+   AFTER the body reduces, so ordinary closes keep the tight old baseline);
+2. `indent >= top->col` — docs at/right of the layout column decorate a
+   case/and AT that level; docs LEFT of it belong to a declaration after a
+   dedent-close (`type … | Point⏎⏎/// next⏎let …`), which must close tight.
+
+Extents now: `let multiDoc = 1` ends at the `1`; `type Shape` ends at
+`| Point`; documented cases/and-clauses still START at their docs.
+Suites: 23-repo 190 files (ProvidedTypes ±21 = its usual recovery
+oscillation), fsharp-src identical; corpus 467, layout 0.
