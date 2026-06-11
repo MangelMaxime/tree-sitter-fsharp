@@ -43,6 +43,7 @@ module Helpers =
 // <- keyword
 //     ^ namespace
     let inline private combine (x: int) = x
+    // <- keyword
     //  ^ keyword
     //         ^ keyword.control.access
     //                          ^ variable.parameter
