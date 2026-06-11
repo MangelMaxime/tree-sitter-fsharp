@@ -720,3 +720,14 @@ the cursor (smallest first, same-range parents deduped — precisely Helix's
 walk), and diffs the chain against the steps. Six fixtures pin this cycle's
 behaviors: multiDoc two-step, doc+attr grouping, the union-case chain,
 no-trailing-bleed, dangling-doc-in-module, record-field docs.
+
+## Fix 38 — highlight assertion tests (native tree-sitter mechanism)
+
+`test/highlight/basics.fsx`: 27 assertions over keywords, function names,
+parameters (locals-driven), operators, constructors, types, doc comments,
+attributes, strings, numerics, booleans, preproc directives and access
+modifiers — using tree-sitter's `// <-` / `// ^` comment assertions, which
+run as part of `tree-sitter test` (no harness needed; tree-sitter.json
+already pointed at the queries). Writing the file immediately surfaced the
+ACTUAL capture names (`comment.line.documentation`, `keyword.control.access`,
+let-names are always @function) — the assertions now document them.

@@ -196,6 +196,22 @@ npx tree-sitter test                  # run everything
 npx tree-sitter test -i some_test     # match by name (substring)
 ```
 
+### Highlight tests
+
+`test/highlight/*.fsx` use tree-sitter's native assertion comments — they run
+automatically as part of `npx tree-sitter test`:
+
+```fsharp
+let add a b = a + b
+// <- keyword
+//  ^ function
+//      ^ variable.parameter
+```
+
+`<-` asserts the capture at the start of the line above; `^` asserts at its
+own column. The expected name must be one of the captures the queries
+produce at that position (e.g. `comment.line.documentation`, not a prefix).
+
 ### Expansion tests
 
 Helix's expand-selection walks the parse tree's node *extents* — something
