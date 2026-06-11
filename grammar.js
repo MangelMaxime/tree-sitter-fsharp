@@ -377,6 +377,9 @@ export default grammar({
             $.class_type_defn,
             $.interface_type_defn,
             field('alias', $.measure_expression),
+            // `type ``[,]``<'T> = (# "!0[0 ...,0 ...]" #)` — IL array type
+            // definitions (FSharp.Core prim-types-prelude only).
+            field('alias', $.inline_il_expression),
             prec.dynamic(1, field('alias', $.type_expression)),
         ),
 
@@ -1044,12 +1047,13 @@ export default grammar({
             "|",
             field('name', $.identifier),
             "=",
-            field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
+            // `(1uL <<< 9)` — computed flag values (FCS WellKnownAttribs style).
+            field('value', choice($.int_literal, $.negative_literal, $.char_literal, $.parenthesized_expression)),
         ),
         _enum_case_bare: $ => seq(
             field('name', $.identifier),
             "=",
-            field('value', choice($.int_literal, $.negative_literal, $.char_literal)),
+            field('value', choice($.int_literal, $.negative_literal, $.char_literal, $.parenthesized_expression)),
         ),
 
         // {| Name: string; Age: int |}  (anonymous record type expression)

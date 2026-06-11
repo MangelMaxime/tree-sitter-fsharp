@@ -1180,3 +1180,41 @@ type C() =
       (identifier)
       (string_literal)
       (auto_property_accessors))))
+
+================================================================================
+Enum cases with computed values; IL array type definitions
+================================================================================
+
+type Flags =
+    | CustomComparisonAttribute = (1uL <<< 9)
+    | ReferenceEqualityAttribute = (1uL <<< 10)
+
+type ``[,]``<'T> =
+    (# "!0[0 ...,0 ...]" #)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (enum_type_defn
+      (enum_case
+        (identifier)
+        (parenthesized_expression
+          (binary_expression
+            (int_literal)
+            (symbolic_op)
+            (int_literal))))
+      (enum_case
+        (identifier)
+        (parenthesized_expression
+          (binary_expression
+            (int_literal)
+            (symbolic_op)
+            (int_literal))))))
+  (type_decl
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (inline_il_expression
+      (string_literal))))

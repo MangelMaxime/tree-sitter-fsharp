@@ -1457,6 +1457,10 @@
           {
             "type": "negative_literal",
             "named": true
+          },
+          {
+            "type": "parenthesized_expression",
+            "named": true
           }
         ]
       }
@@ -5067,6 +5071,10 @@
         "required": false,
         "types": [
           {
+            "type": "inline_il_expression",
+            "named": true
+          },
+          {
             "type": "measure_expression",
             "named": true
           },
@@ -5337,6 +5345,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "inline_il_expression",
+            "named": true
+          },
           {
             "type": "measure_expression",
             "named": true

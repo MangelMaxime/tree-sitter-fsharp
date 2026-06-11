@@ -1214,3 +1214,7 @@ type L35_DoAssign() =
     do configB.platform <- if IntPtr.Size = 8 then Some AMD64 else Some X86
 
     let syphon = StdinSyphon(errorWriter)
+
+    type L36Flags =
+        | HasComparison = (1uL <<< 9)
+        | HasEquality = (1uL <<< 10)

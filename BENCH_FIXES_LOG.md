@@ -357,3 +357,13 @@ inner if.
 
 23-repo: 187→186 / 1035→1013; fsharp-src: 43→42 / 363→345; 0 regressions.
 fsi.fs 18→0 in BOTH suites. Corpus 456, layout L35.
+
+## Fix 22 — computed enum values + IL array type definitions
+
+`| CustomComparisonAttribute = (1uL <<< 9)` (FCS flag enums — WellKnownAttribs
+99→0, il.fs 27→0): enum_case values accept parenthesized_expression.
+`type ``[,]``<'T> = (# "!0[0 ...,0 ...]" #)` (prim-types-prelude 21→0):
+inline_il_expression as a type-alias body.
+
+fsharp-src: 42→39 files / 345→198 nodes; 23-repo unchanged (1013), 0
+regressions. Corpus 457, layout L36.

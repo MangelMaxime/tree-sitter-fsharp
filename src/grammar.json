@@ -466,6 +466,14 @@
           }
         },
         {
+          "type": "FIELD",
+          "name": "alias",
+          "content": {
+            "type": "SYMBOL",
+            "name": "inline_il_expression"
+          }
+        },
+        {
           "type": "PREC_DYNAMIC",
           "value": 1,
           "content": {
@@ -3096,6 +3104,10 @@
               {
                 "type": "SYMBOL",
                 "name": "char_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "parenthesized_expression"
               }
             ]
           }
@@ -3134,6 +3146,10 @@
               {
                 "type": "SYMBOL",
                 "name": "char_literal"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "parenthesized_expression"
               }
             ]
           }
