@@ -464,3 +464,23 @@ char is infix there too. Both NameResolution copies 17→0.
 
 23-repo: 176→175 / 951→934; fsharp-src: 31→30 / 159→142; 0 regressions.
 Corpus 462.
+
+## Fix 28 — pipeline through a match (the Chocolatey compound, solved)
+
+`builder |> match … with⏎ | arm -> …⏎ |> next (args on continuation lines)`:
+three coordinated scanner changes —
+1. The leading-infix continuation now mirrors FSC's offside GRACE: an op
+   dedented more than ~(token+1) below an S_LAYOUT body column is offside and
+   CLOSES the body (previously S_LAYOUT bodies never closed for leading ops,
+   so the dedented `|>` extended the LAST ARM and the next pipe's continuation
+   ARGUMENT lines mis-lexed as arm patterns).
+2. S_MATCH: an op at OR below the arm column ends the arm list first
+   (`≤`, so `| false -> b⏎|> g` at the arm col pipes the whole match).
+3. bar classification unified: `|` + any operator char is never an arm marker,
+   peeked ONCE where bar_arm is computed (the S_MATCH close previously saw
+   `|>` as a new arm via first=='|').
+Two corpus expected-trees updated — the new shape `binary_expression(match, g)`
+is the F#-correct attachment (the old trees nested the pipe inside the arm).
+
+23-repo: 175→174 files / 934→910 nodes (Chocolatey 24→0), fsharp-src
+unchanged, 0 regressions. Corpus 463.

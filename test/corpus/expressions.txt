@@ -938,24 +938,24 @@ let icon =
 (source_file
   (let_binding
     name: (identifier)
-    body: (match_expression
-      (long_identifier
-        (identifier))
-      (match_arm
-        (pattern
-          (literal_pattern
-            (bool_literal)))
-        body: (long_identifier
-          (identifier)))
-      (match_arm
-        (pattern
-          (literal_pattern
-            (bool_literal)))
-        body: (binary_expression
-          left: (long_identifier
-            (identifier))
-          right: (long_identifier
-            (identifier)))))))
+    body: (binary_expression
+      left: (match_expression
+        (long_identifier
+          (identifier))
+        (match_arm
+          (pattern
+            (literal_pattern
+              (bool_literal)))
+          body: (long_identifier
+            (identifier)))
+        (match_arm
+          (pattern
+            (literal_pattern
+              (bool_literal)))
+          body: (long_identifier
+            (identifier))))
+      right: (long_identifier
+        (identifier)))))
 
 ================================================================================
 Leading pipe at the arm column after function
@@ -972,22 +972,22 @@ let icon =
 (source_file
   (let_binding
     name: (identifier)
-    body: (function_expression
-      (match_arm
-        (pattern
-          (literal_pattern
-            (bool_literal)))
-        body: (long_identifier
-          (identifier)))
-      (match_arm
-        (pattern
-          (literal_pattern
-            (bool_literal)))
-        body: (binary_expression
-          left: (long_identifier
-            (identifier))
-          right: (long_identifier
-            (identifier)))))))
+    body: (binary_expression
+      left: (function_expression
+        (match_arm
+          (pattern
+            (literal_pattern
+              (bool_literal)))
+          body: (long_identifier
+            (identifier)))
+        (match_arm
+          (pattern
+            (literal_pattern
+              (bool_literal)))
+          body: (long_identifier
+            (identifier))))
+      right: (long_identifier
+        (identifier)))))
 
 ================================================================================
 Active pattern name as a value expression (qualified and unqualified)
@@ -3077,3 +3077,68 @@ type C() =
         (parenthesized_expression
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Pipeline through a match with multi-line trailing arguments
+================================================================================
+
+let content =
+    builder
+    |> match x with
+       | Zip -> append "zip"
+       | _ -> append "pkg"
+    |> StringBuilder.appendIfTrueWithoutQuotes
+        (isNotNull parameters.Checksum)
+        ("-Checksum " + parameters.Checksum)
+    |> StringBuilder.toText
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (match_expression
+            (long_identifier
+              (identifier))
+            (match_arm
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (string_literal)))
+            (match_arm
+              (pattern
+                (wildcard_pattern))
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (string_literal)))))
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (parenthesized_expression
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier)
+                  (identifier)))))
+          (parenthesized_expression
+            (binary_expression
+              (string_literal)
+              (long_identifier
+                (identifier)
+                (identifier))))))
+      (long_identifier
+        (identifier)
+        (identifier)))))

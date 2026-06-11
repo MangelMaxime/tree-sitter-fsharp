@@ -1446,17 +1446,42 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // already advanced), so treat `|` as an arm marker; the bracket cases are
     // handled by BRACKET_CLOSE above/below via valid-gating.
     bool bar_arm = (first == '|');
+    // `|>` `||` `|?>` … — a `|`-led OPERATOR is never an arm marker; peek the
+    // char after the `|` once, here, so BOTH the infix check below and the
+    // S_MATCH close (`|>` at exactly the arm column pipes the WHOLE match) see
+    // the same classification. `|]`/`|}` stay arm-ish (bracket closers handle).
+    int32_t bar_c1 = 0;
+    if (bar_arm) {
+        lexer->advance(lexer, true);
+        bar_c1 = lexer->lookahead;
+        if (bar_c1 == '>' || bar_c1 == '|' || bar_c1 == '?' || bar_c1 == '@' ||
+            bar_c1 == '!' || bar_c1 == '%' || bar_c1 == '&' || bar_c1 == '*' ||
+            bar_c1 == '+' || bar_c1 == '-' || bar_c1 == '.' || bar_c1 == '/' ||
+            bar_c1 == '<' || bar_c1 == '=' || bar_c1 == '^' || bar_c1 == '~' ||
+            bar_c1 == '$') bar_arm = false;
+    }
 
     // A leading infix operator continues the previous expression (F#'s
     // leading-operator rule) — UNLESS it DEDENTS below an EXPRESSION body
-    // (S_EXPR: then/elif/else/lambda/let-in value), in which case that body must
-    // close first and re-invocation continues the OUTER chain. This pipes the
-    // whole if in `if c then a else b⏎ |> f` (close the inline else-body, then
-    // `|>` applies to the if) instead of binding `|>` to just `b`. Restricted to
-    // S_EXPR: a match arm body / decl body (S_LAYOUT) keeps the previous
-    // behaviour (the operator continues the inner body, e.g. `match … | B -> 2⏎
-    // |> g` keeps `2 |> g`).
-    bool infix_continues = !(top->sort == S_EXPR && col < top->col);
+    // (S_EXPR: then/elif/else/lambda/let-in value) or below a match ARM column
+    // (S_MATCH), in which case that body/arm-list must close first and
+    // re-invocation continues the OUTER chain. This pipes the whole if in
+    // `if c then a else b⏎ |> f`, and the whole match in `|> match … with⏎
+    // | arm -> …⏎ |> next` (Chocolatey pipeline style) — without the S_MATCH
+    // case the dedented `|>` extended the LAST ARM's body, and continuation
+    // ARGUMENT lines after it then mis-lexed as new arm patterns. A decl body
+    // (S_LAYOUT) keeps the previous behaviour.
+    // S_EXPR/S_MATCH: any dedent closes first. S_LAYOUT (arm/decl bodies):
+    // FSC grants infix tokens limited offside GRACE (token length + 1), so a
+    // mildly-dedented op still continues the body — but one dedented WELL below
+    // (`|>` at the pipeline col under a match arm body, Chocolatey style) is
+    // offside and must close the body/arm-list first.
+    bool infix_continues = !(top->sort == S_EXPR && col < top->col) &&
+                           // ≤ for S_MATCH: an op AT the arm column can't be an
+                           // arm — the arm-list must END so the op continues the
+                           // whole match (`| false -> b⏎|> g` at the arm col).
+                           !(top->sort == S_MATCH && col <= top->col) &&
+                           !(top->sort == S_LAYOUT && col + 4 < top->col);
 
     // `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/… arithmetic, `::` cons.
     // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
@@ -1465,8 +1490,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t c0 = first;
         if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
             c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':') {
-            lexer->advance(lexer, true);
-            int32_t c1 = lexer->lookahead;
+            int32_t c1;
+            if (c0 == '|') c1 = bar_c1;                  // already peeked above
+            else { lexer->advance(lexer, true); c1 = lexer->lookahead; }
             bool infix = false;
             // `|` + any operator char = a custom `|`-led infix operator
             // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, …). A match-arm

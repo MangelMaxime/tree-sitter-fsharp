@@ -1240,3 +1240,13 @@ type L35_DoAssign() =
             let t2 = t1 |?> List.choose (function a, b, rest -> Some rest | _ -> None)
             t2
         | _ -> NoResults
+
+    let chocoScript =
+        builder
+        |> match installerType with
+           | Zip -> appendLine "Install-Zip $url"
+           | _ -> appendLine "Install-Pkg $url"
+        |> appendIfTrueWithoutQuotes
+            (isNotNull checksum)
+            ("-Checksum " + checksum)
+        |> toText
