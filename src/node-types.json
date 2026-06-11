@@ -1768,6 +1768,10 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         }
@@ -2384,6 +2388,10 @@
         "required": false,
         "types": [
           {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
+          {
             "type": "nullable_type",
             "named": true
           },
@@ -2520,6 +2528,10 @@
         "required": false,
         "types": [
           {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
+          {
             "type": "nullable_type",
             "named": true
           },
@@ -2651,6 +2663,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
           {
             "type": "nullable_type",
             "named": true
@@ -2785,6 +2801,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
           {
             "type": "nullable_type",
             "named": true
@@ -3119,6 +3139,10 @@
         "required": false,
         "types": [
           {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
+          {
             "type": "nullable_type",
             "named": true
           },
@@ -3443,6 +3467,25 @@
     "type": "null_literal",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "nullable_tuple_type",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
+          "type": "type_expression",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "nullable_type",
@@ -3972,6 +4015,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "nullable_tuple_type",
+            "named": true
+          },
           {
             "type": "nullable_type",
             "named": true
@@ -5045,6 +5092,10 @@
         "required": true,
         "types": [
           {
+            "type": "nullable_type",
+            "named": true
+          },
+          {
             "type": "type_expression",
             "named": true
           }
@@ -5705,6 +5756,10 @@
       "types": [
         {
           "type": "_expression",
+          "named": true
+        },
+        {
+          "type": "nullable_type",
           "named": true
         },
         {

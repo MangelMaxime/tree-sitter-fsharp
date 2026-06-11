@@ -1479,6 +1479,10 @@
               {
                 "type": "SYMBOL",
                 "name": "nullable_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "nullable_tuple_type"
               }
             ]
           }
@@ -4126,8 +4130,17 @@
           "value": ":"
         },
         {
-          "type": "SYMBOL",
-          "name": "type_expression"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "type_expression"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "nullable_type"
+            }
+          ]
         },
         {
           "type": "STRING",
@@ -10262,8 +10275,17 @@
           "type": "FIELD",
           "name": "type",
           "content": {
-            "type": "SYMBOL",
-            "name": "type_expression"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "type_expression"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "nullable_type"
+              }
+            ]
           }
         },
         {
@@ -11257,6 +11279,107 @@
         ]
       }
     },
+    "nullable_tuple_type": {
+      "type": "PREC_RIGHT",
+      "value": 2,
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "nullable_type"
+              },
+              {
+                "type": "REPEAT1",
+                "content": {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "*"
+                    },
+                    {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SYMBOL",
+                          "name": "type_expression"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "nullable_type"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "type_expression"
+              },
+              {
+                "type": "STRING",
+                "value": "*"
+              },
+              {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "SYMBOL",
+                      "name": "type_expression"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "*"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "SYMBOL",
+                "name": "nullable_type"
+              },
+              {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": "*"
+                    },
+                    {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SYMBOL",
+                          "name": "type_expression"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "nullable_type"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
     "postfix_type": {
       "type": "PREC_LEFT",
       "value": 3,
@@ -11337,6 +11460,32 @@
         {
           "type": "SYMBOL",
           "name": "static_type_argument"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "subtype_type_arg"
+          },
+          "named": true,
+          "value": "type_constraint"
+        }
+      ]
+    },
+    "subtype_type_arg": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "type_parameter"
+        },
+        {
+          "type": "STRING",
+          "value": ":>"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_expression"
         }
       ]
     },

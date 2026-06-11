@@ -643,7 +643,7 @@ export default grammar({
         //       = …
         _return_type_annot: $ => seq(
             ":",
-            field('return_type', choice($.type_expression, $.nullable_type)),
+            field('return_type', choice($.type_expression, $.nullable_type, $.nullable_tuple_type)),
             optional(seq(
                 "when",
                 $.type_constraint,
@@ -1303,7 +1303,7 @@ export default grammar({
 
         // (expr : type)  — inline type annotation, always parenthesised.
         // Disambiguated from parenthesized_expression by the ":" after the expression.
-        typed_expression: $ => seq("(", $._expression, ":", $.type_expression, ")"),
+        typed_expression: $ => seq("(", $._expression, ":", choice($.type_expression, $.nullable_type), ")"),
 
         // Argument restricted to _simple_expression (no let/if/match/lambda/binary)
         // so that adjacent let bindings or trailing expressions aren't pulled into
@@ -2727,7 +2727,8 @@ export default grammar({
             // the ascription as ONE element (Aether lens compose style).
             field('pattern', choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern)),
             ":",
-            field('type', $.type_expression),
+            // nullable_type: `outputDir: string | null` (F# nullness syntax).
+            field('type', choice($.type_expression, $.nullable_type)),
             optional($._when_constraints),
         ),
 
@@ -2956,6 +2957,18 @@ export default grammar({
             repeat(seq("*", $.type_expression)),
         )),
 
+        // `string | null * IDep | null` (F# 9 nullness, FCS DependencyProvider):
+        // a tuple type whose elements may be nullable. NOT part of the general
+        // type_expression — a bare `|` after a labelled union-field type means
+        // the NEXT DU case, so this shape is only reachable from annotation
+        // slots that already accept nullable_type (returns, typed patterns).
+        nullable_tuple_type: $ => prec.right(TYPE_PREC.TUPLE, choice(
+            // ≥1 element must be nullable (plain tuples stay tuple_type):
+            seq($.nullable_type, repeat1(seq("*", choice($.type_expression, $.nullable_type)))),
+            seq($.type_expression, "*", repeat(seq($.type_expression, "*")),
+                $.nullable_type, repeat(seq("*", choice($.type_expression, $.nullable_type)))),
+        )),
+
         // int list, int option  (left-assoc: int list option = (int list) option)
         postfix_type: $ => prec.left(TYPE_PREC.POSTFIX, seq(
             $.type_expression,
@@ -2980,7 +2993,12 @@ export default grammar({
             $.nullable_type,
             $.measure_expression,
             $.static_type_argument,
+            // `seq<'U :> seq<'T>>` — inline subtype constraint on a typar
+            // (FSharp.Core seqcore style).
+            alias($.subtype_type_arg, $.type_constraint),
         ),
+
+        subtype_type_arg: $ => seq($.type_parameter, ":>", $.type_expression),
 
         // Type-provider STATIC arguments inside `<…>`: literal values
         // (`JsonProvider<""" [1] """>`) and named constants

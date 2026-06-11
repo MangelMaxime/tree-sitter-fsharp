@@ -1218,3 +1218,6 @@ type L35_DoAssign() =
     type L36Flags =
         | HasComparison = (1uL <<< 9)
         | HasEquality = (1uL <<< 10)
+
+    let combineAll (sources: seq<'U :> seq<'T>>) = mkSeq sources
+    let tryDescribe (name: string | null) : string | null * int = find name

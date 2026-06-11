@@ -367,3 +367,15 @@ inline_il_expression as a type-alias body.
 
 fsharp-src: 42→39 files / 345→198 nodes; 23-repo unchanged (1013), 0
 regressions. Corpus 457, layout L36.
+
+## Fix 23 — F# 9 nullness annotations + subtype constraints in generic args
+
+`seq<'U :> seq<'T>>` (seqcore), `outputDir: string | null` in member params
+(tuple_typed_pattern's type slot), `: string | null * IDep | null =` nullable
+TUPLE returns (dedicated nullable_tuple_type — must contain ≥1 nullable element;
+extending the general tuple_type conflicts with `|` starting the next DU case
+after a labelled union field), and typed_expression accepts nullable too.
+PARKED: `DefaultParameterValue(null: string | null)` — attribute args use a
+separate restricted expression path (3 nodes, DependencyProvider).
+
+23-repo: 185/1006; fsharp-src: 36/178; 0 regressions. Corpus 458.
