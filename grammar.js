@@ -291,6 +291,9 @@ export default grammar({
         module_decl: $ => seq(
             decoration($),
             "module",
+            // `module [<AutoOpen>]SeqTOperations =` — attributes may sit BETWEEN
+            // the keyword and the name (FSharpPlus style).
+            repeat($.attribute),
             optional($.access_modifier),
             optional("rec"),
             field('name', $.long_identifier),

@@ -48,7 +48,6 @@ module private P = My.Internal
       (identifier)
       (identifier))))
 
-
 ================================================================================
 Open declaration with a trailing semicolon
 ================================================================================
@@ -61,3 +60,46 @@ open System;
   (import_decl
     (long_identifier
       (identifier))))
+
+================================================================================
+Attribute between the module keyword and the name
+================================================================================
+
+module [<AutoOpen>] SeqTOperations =
+    let inline run x = x
+
+module [<AutoOpen>]TightOperations =
+    let inline lift x = wrap x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (parameter
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (module_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (parameter
+        (identifier))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

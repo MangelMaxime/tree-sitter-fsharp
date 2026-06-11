@@ -1135,3 +1135,7 @@ module L28_DanglingElse =
         | Error e -> Error e
 
     let published = makeVal env [(* no attributes *)] XmlDoc.Empty
+
+// === L29: attribute between `module`/`type` keyword and the name ===
+module [<AutoOpen>] L29_KeywordAttrs =
+    let inline runT x = unwrap x

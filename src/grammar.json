@@ -95,6 +95,13 @@
           "value": "module"
         },
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
+        },
+        {
           "type": "CHOICE",
           "members": [
             {

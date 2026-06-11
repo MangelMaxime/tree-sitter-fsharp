@@ -137,3 +137,13 @@ comment's column.
 
 Bench: 235→233 files, 1883→1760 nodes, 0 regressions. CheckIncrementalClasses
 84→0, fantomas CheckDeclarations 19→0. Corpus 436.
+
+## Fix 7 — attribute between the `module` keyword and the name
+
+`module [<AutoOpen>]SeqTOperations =` (FSharpPlus style): module_decl had no
+attribute slot after the keyword, so the name went MISSING and the body
+collapsed. Added `repeat($.attribute)` after "module". (`type [<AutoOpen>]X`
+already worked via the type-decl decoration path.)
+
+Bench: 233→230 files, 1760→1678 nodes, 0 regressions. FSharpPlus Seq.fs 78→0,
+both Feliz DateParsing clones 2→0. Corpus 437, layout L29.
