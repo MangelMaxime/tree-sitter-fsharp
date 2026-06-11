@@ -906,6 +906,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // next char closes the bracket immediately (`[]`/`[| |]`/`{}` empty, or a
         // leading `|`/`}`/`]`), which has no element to anchor a context.
         if (inline_first == ']' || inline_first == '}' || inline_first == '|' || inline_first == 0) return false;
+        // A leading BLOCK COMMENT is not an element: skip it (depth-aware) and
+        // re-decide — `[(* no attributes *)]` (FCS) is an EMPTY list, comment
+        // then newline defers to the block form, real content anchors at the
+        // comment's column (comment-led element convention).
+        if (inline_first == '(') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '*') {
+                lexer->advance(lexer, true);
+                int cdepth = 1;
+                while (cdepth > 0) {
+                    if (lexer->lookahead == 0) return false;
+                    if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
+                    else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
+                    else lexer->advance(lexer, true);
+                }
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                if (lexer->lookahead == ']' || lexer->lookahead == '}' || lexer->lookahead == '|' || lexer->lookahead == 0) return false;
+                if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+                    uint32_t col;
+                    if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
+                    return false;
+                }
+            }
+        }
         push(s, S_BRACKET, inline_col);
         lexer->result_symbol = BRACKET_OPEN; return true;
     }

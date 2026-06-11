@@ -126,3 +126,14 @@ comment-led-element rule); only a true end-of-line defers to next_line_indent.
 Bench: 238→235 files, 2310→1883 nodes (−427), 0 regressions. DiagnosticsLogger
 174→0, TypedTreeOps 180→0, ilwrite 73→0 (one tiny shared idiom carried three of
 the biggest FCS files). Corpus 435, layout example added to L28's module file.
+
+## Fix 6 — bracket containing only a block comment (`[(* no attributes *)]`)
+
+The BRACKET_OPEN probe saw `(` as inline content and opened a block context, so
+the grammar's block form demanded an element and the `]` errored. Now a leading
+`(*…*)` is skipped (depth-aware): a closer after it = no context (empty
+list/array), a newline defers to the block form, real content anchors at the
+comment's column.
+
+Bench: 235→233 files, 1883→1760 nodes, 0 regressions. CheckIncrementalClasses
+84→0, fantomas CheckDeclarations 19→0. Corpus 436.

@@ -2693,3 +2693,38 @@ let g x1 x2 =
             (long_identifier
               (identifier))
             (unit)))))))
+
+================================================================================
+List and array with only a block comment inside
+================================================================================
+
+let x = f a [(* no attributes*)] b
+let y = [|(* empty *)|]
+let z = [(* note *) 1; 2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (list_expression
+          (block_comment)))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (array_expression
+      (block_comment)))
+  (let_binding
+    (identifier)
+    (list_expression
+      (block_comment)
+      (int_literal)
+      (int_literal))))

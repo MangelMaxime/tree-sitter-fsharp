@@ -1133,3 +1133,5 @@ module L28_DanglingElse =
         match res with
         | Ok value -> (* tailcall *) f value
         | Error e -> Error e
+
+    let published = makeVal env [(* no attributes *)] XmlDoc.Empty
