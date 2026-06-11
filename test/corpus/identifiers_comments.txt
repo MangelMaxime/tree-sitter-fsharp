@@ -144,3 +144,43 @@ let f x =
         (pattern
           (wildcard_pattern))
         body: (string_literal)))))
+
+================================================================================
+Nested block comments (line-start and mid-line)
+================================================================================
+
+let f x =
+    match x with
+    | 1 -> A
+    (* outer (* inner *) tail *)
+    | 2 -> B
+
+let y = 1 (* a (* b *) c *)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (long_identifier
+          (identifier))
+        (block_comment))
+      (match_arm
+        (pattern
+          (literal_pattern
+            (int_literal)))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (int_literal)
+    (block_comment)))

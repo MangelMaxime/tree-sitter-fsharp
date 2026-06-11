@@ -147,3 +147,32 @@ already worked via the type-decl decoration path.)
 
 Bench: 233→230 files, 1760→1678 nodes, 0 regressions. FSharpPlus Seq.fs 78→0,
 both Feliz DateParsing clones 2→0. Corpus 437, layout L29.
+
+## Fix 8 — nested block comments (external token) + attributes after `and`
+
+1. **Nested `(* a (* b *) c *)`**: the block_comment token regex stops at the
+   first `*)` — F# comments nest. block_comment/block_doc_comment are now ALSO
+   external tokens (appended at the END of externals — enum indexes preserved);
+   the internal regexes remain as the FALLBACK when the scanner declines (this
+   external-name-matches-internal-rule fallback is core tree-sitter behavior).
+   The scanner owns: (a) line-start comment-ONLY lines — next_line_indent's
+   stop-mode consumes the whole comment with advance(false) and the boundary
+   path emits it as one token BEFORE any close (sentinel 2, same machinery as
+   PREPROC_INACTIVE); (b) same-line comments after code — emitted at the
+   midline tail. Comment-LED lines (`(* 4 *) 7`) keep the geometry-first
+   convention and fall back to the internal regex.
+   HARD-WON RULES: (i) tree-sitter calls externals only at the token start —
+   whitespace is skipped INSIDE the internal lex, so a probe gated on
+   lookahead=='(' never fires after a space; (ii) advance(false) before a
+   ZERO-WIDTH emission is harmless (token start commits, but zero-width tokens
+   never re-mark) — this is what lets next_line_indent pre-consume `(*` to
+   classify; (iii) mark_end may move ONLY on the path that emits the comment —
+   marking before the comment-led geometry return made the next BRACKET_SEMI
+   swallow the comment text (PriorityQueue aligned-arrays corpus caught it).
+   KNOWN GAP: a NESTED comment on a comment-LED line truncates in the fallback.
+2. **`and [<return: Struct>] (|BoolExpr|_|) =`**: let_and_binding and
+   _and_decl_indented gained repeat($.attribute) after `and` (FCS IlxGen).
+
+Bench: 230→228 files, 1678→1641 nodes, 0 regressions. fable-library-rust
+Set.fs 24→0 (nested comments), IlxGen 48→45 (remaining: multi-line tuple
+pattern in an arm — separate issue). Corpus 439 (+2).

@@ -49,6 +49,8 @@ typedef enum {
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
     CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
     PREPROC_INACTIVE,     // `#else`/`#elif` … up to (excl.) the matching `#endif` — inactive branch as one trivia token
+    BLOCK_COMMENT,        // `(* … *)` NESTED (regex can't nest)
+    BLOCK_DOC_COMMENT,    // `(** … *)` doc form
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -113,12 +115,42 @@ static void push(Scanner *s, uint8_t sort, uint32_t col) {
 // line. Returns false at EOF. Reused verbatim from the old scanner (handles `//`
 // line comments, `(* *)` nested block comments, and `#if/#elif/#else/#endif`
 // conditional-compilation lines which are extras transparent to the offside rule).
+// Consume a block comment from just AFTER its `(*` (already advanced with
+// advance(false), so the token starts at the `(`) through the MATCHING `*)`
+// (nesting-aware) and emit BLOCK_COMMENT / BLOCK_DOC_COMMENT. External because
+// a token regex cannot nest. Returns false on EOF (unterminated) or when
+// neither symbol is valid — the reset internal lexer takes over.
+static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
+    if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
+    bool doc = false;
+    if (lexer->lookahead == '*') {                 // `(**` — doc form…
+        lexer->advance(lexer, false);
+        doc = (lexer->lookahead != ')');           // …unless `(**)`: EMPTY normal comment
+    }
+    int cdepth = 1;
+    while (cdepth > 0) {
+        if (lexer->lookahead == 0) return false;   // unterminated
+        if (lexer->lookahead == '(') {
+            lexer->advance(lexer, false);
+            if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, false); }
+        } else if (lexer->lookahead == '*') {
+            lexer->advance(lexer, false);
+            if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, false); }
+        } else lexer->advance(lexer, false);
+    }
+    lexer->mark_end(lexer);
+    lexer->result_symbol = (doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
+                         : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
+    return true;
+}
+
 // When set (main line-boundary call only), next_line_indent STOPS at an
 // `#else`/`#elif` inactive-region start (sentinel *first = 1) instead of
 // skipping the region — the caller then tokenizes it as PREPROC_INACTIVE.
 // Peek callers (body-col probes, open helpers) leave it false and get the
 // region-skipping geometry.
 static bool g_region_stop = false;
+static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**` doc form
 
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
@@ -141,8 +173,46 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             if (first) *first = '/'; *col = indent; return true;
         }
         if (lexer->lookahead == '(') {
-            lexer->advance(lexer, true);
+            lexer->advance(lexer, !g_region_stop);
             if (lexer->lookahead != '*') { if (first) *first = '('; *col = indent; return true; }
+            if (g_region_stop) {
+                // Line-start block comment, MAIN boundary call. Consume it with
+                // advance(false) — the token (if emitted) starts at the `(`; for
+                // any OTHER outcome those advances are harmless (zero-width
+                // layout tokens never re-mark past the baseline).
+                lexer->advance(lexer, false);          // the `*`
+                g_comment_doc = (lexer->lookahead == '*');
+                int sdepth = 1;
+                while (sdepth > 0) {
+                    if (lexer->lookahead == 0) return false;
+                    if (lexer->lookahead == '(') {
+                        lexer->advance(lexer, false);
+                        if (lexer->lookahead == '*') { sdepth++; lexer->advance(lexer, false); }
+                    } else if (lexer->lookahead == '*') {
+                        lexer->advance(lexer, false);
+                        if (lexer->lookahead == ')') { sdepth--; lexer->advance(lexer, false); }
+                    } else lexer->advance(lexer, false);
+                }
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
+                    lexer->mark_end(lexer);            // full comment span (+trailing ws)
+                    // mark_end ONLY here: in the comment-LED branch below the
+                    // baseline must stay at the scan start, or the next
+                    // zero-width close/semi would SWALLOW the comment text.
+                    // Comment-ONLY line: emit it as ONE token BEFORE any close
+                    // (extras are transparent; closes fire on re-scan with
+                    // post-comment geometry). Handles NESTING — the reason the
+                    // internal regex fallback can't do this one.
+                    if (first) *first = 2; *col = indent; return true;
+                }
+                // Comment-LED line (`(* 4 *) 7`, aligned arrays): geometry first
+                // — col is the COMMENT's start indent, first the real char; the
+                // comment itself lexes via the internal-regex fallback later.
+                // (KNOWN GAP: a NESTED comment here truncates in the fallback.)
+                if (first) *first = lexer->lookahead;
+                *col = indent;
+                return true;
+            }
             lexer->advance(lexer, true);
             int depth = 1;
             while (depth > 0) {
@@ -1218,6 +1288,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 return false;                           // not trailing: literal `;`
             }
+            // Same-line block comment after code (`1 (* a (* b *) *)`): the
+            // external must lex it (nesting); nothing else fires for `(`.
+            if (c == '(') {
+                lexer->advance(lexer, false);
+                if (lexer->lookahead == '*') { lexer->advance(lexer, false); return finish_block_comment(lexer, valid); }
+                return false;
+            }
             return false; // other same-line content: layout doesn't apply
         }
     }
@@ -1240,6 +1317,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
         return false;
+    }
+    if (first == 2) {
+        // Line-start comment-ONLY line — next_line_indent consumed the whole
+        // comment with advance(false) and mark_end'ed at its `*)`.
+        if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
+        lexer->result_symbol = (g_comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
+                             : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
+        return true;
     }
     if (first == 1) {
         // The next content line opens an INACTIVE `#else`/`#elif` region (the

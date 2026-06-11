@@ -6398,6 +6398,13 @@
                   ]
                 },
                 {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "attribute"
+                  }
+                },
+                {
                   "type": "SYMBOL",
                   "name": "_let_signature"
                 },
@@ -6453,6 +6460,13 @@
                       "type": "BLANK"
                     }
                   ]
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "attribute"
+                  }
                 },
                 {
                   "type": "SYMBOL",
@@ -6575,6 +6589,13 @@
               "type": "BLANK"
             }
           ]
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
         },
         {
           "type": "SYMBOL",
@@ -13353,6 +13374,14 @@
     {
       "type": "SYMBOL",
       "name": "preproc_inactive"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "block_comment"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "block_doc_comment"
     }
   ],
   "inline": [],

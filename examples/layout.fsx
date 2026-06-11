@@ -1139,3 +1139,11 @@ module L28_DanglingElse =
 // === L29: attribute between `module`/`type` keyword and the name ===
 module [<AutoOpen>] L29_KeywordAttrs =
     let inline runT x = unwrap x
+
+    (* keep (* nested comments *) colored *)
+    let rec genTail cenv x = ignore x
+
+    and [<Inline>] (|BoolLit|_|) =
+        function
+        | Const b -> ValueSome b
+        | _ -> ValueNone

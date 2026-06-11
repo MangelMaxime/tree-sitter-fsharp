@@ -181,6 +181,8 @@ export default grammar({
         $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
         $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
         $.preproc_inactive,   // `#else`/`#elif` … up to (excl.) the matching `#endif` — the INACTIVE branch as one trivia token (depth-aware, scanner)
+        $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
+        $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1785,11 +1787,13 @@ export default grammar({
         // absorbs the FOLLOWING sibling `let` declaration into the and-binding's
         // body as a `let_expression` continuation (wrong, and an error when that
         // `let` has no continuation of its own).
+        // `and [<return: Struct>] (|BoolExpr|_|) = …` — attributes may sit
+        // between `and` and the name (FCS IlxGen peephole actives).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq("and", optional(token.immediate("!")), $._let_signature, "=",
+            prec(2, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
                 seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             )),
-            prec(1, seq("and", optional(token.immediate("!")), $._let_signature, "=")),
+            prec(1, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
         )),
 
         // A let binding inside let_expression. Two body forms, chosen by the scanner
@@ -1824,6 +1828,7 @@ export default grammar({
         _and_decl_indented: ($) => seq(
             "and",
             optional(token.immediate("!")),
+            repeat($.attribute),
             $._let_signature,
             "=",
             choice(
@@ -3349,10 +3354,11 @@ export default grammar({
         // Non-nesting block comment. Nested comments `(* (* … *) *)` aren't supported —
         // the outer closes at the first `*)`. Keeping this as a single token() avoids a
         // recursive extras rule, which would inflate every parser state's item set.
+        // block_comment / block_doc_comment are ALSO external tokens: the
+        // scanner handles NESTED comments (a token regex cannot nest) at the
+        // positions it controls; when it declines, these internal regexes lex
+        // the simple (non-nested) cases as a fallback.
         block_comment: _ => token(seq("(*", /([^*]|\*+[^)*])*\*+/, ")")),
-
-        // Starts with `(**`. prec(1) wins over block_comment when both match the same
-        // length (e.g. `(** doc *)` matches both).
         block_doc_comment: _ => token(prec(1, seq("(**", /([^*]|\*+[^)*])*\*+/, ")"))),
 
 

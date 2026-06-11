@@ -1,0 +1,60 @@
+================================================================================
+Attribute between `and` and the binding name (let rec chain)
+================================================================================
+
+let rec GenExpr cenv x = ignore x
+
+and [<return: Struct>] (|BoolExpr|_|) =
+    function
+    | Expr.Const(Const.Bool b1, _, _) -> ValueSome b1
+    | _ -> ValueNone
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (let_and_binding
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (active_pattern_name)
+      (function_expression
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier)
+                (identifier))
+              (tuple_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier)
+                      (identifier))
+                    (long_identifier
+                      (identifier))))
+                (pattern
+                  (wildcard_pattern))
+                (pattern
+                  (wildcard_pattern)))))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (match_arm
+          (pattern
+            (wildcard_pattern))
+          (long_identifier
+            (identifier)))))))

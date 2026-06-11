@@ -2339,6 +2339,10 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "type_constraint",
           "named": true
         },
