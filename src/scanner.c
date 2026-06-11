@@ -159,6 +159,8 @@ static bool g_region_stop = false;
 // is worth taking. Ordinary closes must NOT anchor at the docs (it drags the
 // CLOSED node's extent forward to the next declaration's doc block).
 static bool g_doc_gate_possible = false;
+// Indent of the FIRST skipped `///` line (valid when g_skipped_doc_lines).
+static uint32_t g_doc_indent = 0;
 // The layout-stack top column at the time of the MAIN call: docs INDENTED AT
 // OR PAST it can decorate a case/and at that level (mark-worthy); docs LEFT of
 // it belong to a declaration after a dedent-close, which must keep its tight
@@ -205,7 +207,10 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
-                if (lexer->lookahead == '/') g_skipped_doc_lines = true;   // a `///` doc line
+                if (lexer->lookahead == '/') {
+                    if (!g_skipped_doc_lines) g_doc_indent = indent;        // first doc line
+                    g_skipped_doc_lines = true;                             // a `///` doc line
+                }
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                     lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
@@ -1567,6 +1572,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     bool nli = next_line_indent(lexer, &col, &first);
     g_region_stop = false;
     if (!nli) {                                             // EOF after trailing blanks
+        // Dangling `///` docs at EOF inside this body: let them lex as a
+        // standalone statement before the body closes (see the dedent twin).
+        if (g_skipped_doc_lines && top && layoutish(top->sort) && g_doc_indent >= top->col) return false;
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
@@ -1733,6 +1741,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_EXPR:
         case S_DECL:
         case S_TRY:
+            // DANGLING DOC: skipped `///` lines sit AT/INSIDE this body, but
+            // the line after them dedents — the docs belong to THIS body (a
+            // floating doc statement), not to the dedented declaration. Hold
+            // the close; the doc lexes as a standalone statement (the wrapper
+            // fork dies at the close that follows), then the dedent re-fires.
+            if (valid[LAYOUT_END] && col < top->col &&
+                g_skipped_doc_lines && g_doc_indent >= top->col) return false;
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A leading `|` arm marker AT the body column: FSC permits
             // continuation arms MORE indented than their match (`| _ -> ()` at

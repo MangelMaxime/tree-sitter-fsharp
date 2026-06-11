@@ -328,3 +328,31 @@ and Forest = Tree list
                   (identifier)))
               (long_identifier
                 (identifier)))))))))
+
+================================================================================
+Dangling doc at the end of a module stays inside the module
+================================================================================
+
+module L24 =
+    let documented a = a
+
+    /// A dangling doc at the end of the module.
+
+let after = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier))
+    (let_binding
+      (identifier)
+      (parameter
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (xml_doc_comment))
+  (let_binding
+    (identifier)
+    (int_literal)))

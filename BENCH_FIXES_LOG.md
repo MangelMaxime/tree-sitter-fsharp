@@ -691,3 +691,18 @@ Extents now: `let multiDoc = 1` ends at the `1`; `type Shape` ends at
 `| Point`; documented cases/and-clauses still START at their docs.
 Suites: 23-repo 190 files (ProvidedTypes ±21 = its usual recovery
 oscillation), fsharp-src identical; corpus 467, layout 0.
+
+## Fix 36 — dangling docs stay inside their module/type body
+
+Review feedback: a trailing `/// dangling doc` at the end of a module wasn't a
+child of the module — worse, it decorated the NEXT (dedented!) declaration,
+because the body's LAYOUT_END fired on post-doc geometry and the doc then
+lexed outside, where the next decl's wrapper grabbed it.
+
+Now, when skipped `///` lines sit AT/INSIDE the body column but the line after
+them dedents (or EOF follows), the close is HELD (return false): the doc lexes
+as a standalone statement inside the body (the decl-wrapper GLR fork dies at
+the close that follows), and the dedent close re-fires on the next scan.
+Applied to both the dedent path and the EOF-after-trailing-blanks path.
+
+Suites byte-identical; corpus 468 (new dangling-doc test); layout 0.
