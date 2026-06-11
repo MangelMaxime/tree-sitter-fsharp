@@ -23,6 +23,7 @@
   "use"
   "new"
   "exception"
+  "extern"
   "do!"
   "get" "set" "and"
   "begin" "end"

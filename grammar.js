@@ -2127,6 +2127,23 @@ export default grammar({
         // ── Exceptions ────────────────────────────────────────────────────────
 
         // exception MyErr  or  exception MyErr of string * int
+        // P/Invoke: `[<DllImport("Kernel32")>]`⏎`extern bool private
+        // GetConsoleMode(void* _h, int* _mode)` (expecto Logging style).
+        // C-style types: name + `*` pointer / `[]` array suffixes.
+        extern_decl: $ => seq(
+            // (attributes parse as standalone _decl_or_comment items, like
+            // other module-level declarations)
+            "extern",
+            field('return_type', alias($._extern_type, $.type_expression)),
+            optional($.access_modifier),
+            field('name', $.identifier),
+            "(",
+            optional(seq($._extern_param, repeat(seq(",", $._extern_param)))),
+            ")",
+        ),
+        _extern_type: $ => prec.right(seq($.long_identifier, repeat(choice("*", "&", seq("[", "]"))))),
+        _extern_param: $ => seq(repeat($.attribute), alias($._extern_type, $.type_expression), optional($.identifier)),
+
         exception_decl: $ => prec.dynamic(1, seq(
             decoration($),
             "exception",
@@ -3120,6 +3137,7 @@ export default grammar({
             $.type_decl,
             $.type_extension,
             $.exception_decl,
+            $.extern_decl,         // P/Invoke `extern bool GetConsoleMode(…)`
 
             // Value-level declarations not shared with class bodies
             $.use_binding,

@@ -261,3 +261,17 @@ constructs.
 
 Bench: 207→197 files, 1225→1130 nodes, 0 regressions. 10 files cleared
 (3× ReflectionTests, MonadTrans 17→0, Tuple, Functor, Enumerator…). Corpus 448.
+
+## Fix 17 — P/Invoke `extern` declarations
+
+`[<DllImport("Kernel32")>]`⏎`extern bool private GetConsoleMode(void* _h, int*
+_mode)` (expecto Logging, FAKE Process/integration tests): new extern_decl in
+the module-level decl list — C-style return/param types as long_identifier +
+`*`/`&`/`[]` suffixes, optional access modifier, `[<Out>]`-style param attrs.
+Leading attributes parse as standalone items (a repeat($.attribute) inside the
+rule conflicted with module_decl's). "extern" added to the keyword highlights.
+
+Bench: 197→195 files, 1130→1127 nodes, 0 regressions; ProvidedTypes +14 /
+IlxGen +7 are recovery reshuffle (both contain `extern` ONLY in comments; both
+already fail massively — their states shifted, not their real parses).
+Logging.fs 18→0. Corpus 449.

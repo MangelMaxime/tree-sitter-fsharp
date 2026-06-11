@@ -1540,6 +1540,54 @@
     }
   },
   {
+    "type": "extern_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "return_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "type_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "flexible_type",
     "named": true,
     "fields": {},
@@ -3167,6 +3215,10 @@
           "named": true
         },
         {
+          "type": "extern_decl",
+          "named": true
+        },
+        {
           "type": "import_decl",
           "named": true
         },
@@ -4429,6 +4481,10 @@
         },
         {
           "type": "exception_decl",
+          "named": true
+        },
+        {
+          "type": "extern_decl",
           "named": true
         },
         {
@@ -6332,6 +6388,10 @@
   },
   {
     "type": "exists",
+    "named": false
+  },
+  {
+    "type": "extern",
     "named": false
   },
   {

@@ -1186,3 +1186,7 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
         |> wrapReader
 
 type L32_InlineMemberBody = static member inline Invoke (x: int) = lift x
+
+module L33_Extern =
+    [<DllImport("Kernel32")>]
+    extern bool private GetConsoleMode(void* _hConsoleHandle, int* _lpMode)

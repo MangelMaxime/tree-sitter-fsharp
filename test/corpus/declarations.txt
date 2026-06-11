@@ -58,3 +58,72 @@ and [<return: Struct>] (|BoolExpr|_|) =
             (wildcard_pattern))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+P/Invoke extern declarations
+================================================================================
+
+module Native =
+    [<DllImport("Kernel32")>]
+    extern void* private GetStdHandle(int _nStdHandle)
+
+    [<DllImport("Kernel32")>]
+    extern bool private GetConsoleMode(void* _hConsoleHandle, int* _lpMode)
+
+[<DllImport("user32.dll")>]
+extern int GetSystemMetrics(int nIndex)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)))
+    (extern_decl
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (access_modifier)
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (identifier))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)))
+    (extern_decl
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (access_modifier)
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (identifier)))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))
+      (string_literal)))
+  (extern_decl
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (identifier)
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (identifier)))
