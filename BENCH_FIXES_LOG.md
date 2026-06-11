@@ -706,3 +706,17 @@ the close that follows), and the dedent close re-fires on the next scan.
 Applied to both the dedent path and the EOF-after-trailing-blanks path.
 
 Suites byte-identical; corpus 468 (new dangling-doc test); layout 0.
+
+## Fix 37 — expansion test harness
+
+There was no way to test expand-selection behavior: Helix's walk is pure
+tree-traversal (no .scm), and corpus tests assert STRUCTURE but not EXTENTS —
+which is exactly what every doc-attachment bug in this review cycle was.
+
+New harness: `scripts/test-expansion.py` + `test/expansion/*.txt`. Fixtures
+hold F# source with a `‸` cursor marker and the exact text of each expected
+expansion step; the runner parses the source, collects the nodes containing
+the cursor (smallest first, same-range parents deduped — precisely Helix's
+walk), and diffs the chain against the steps. Six fixtures pin this cycle's
+behaviors: multiDoc two-step, doc+attr grouping, the union-case chain,
+no-trailing-bleed, dangling-doc-in-module, record-field docs.

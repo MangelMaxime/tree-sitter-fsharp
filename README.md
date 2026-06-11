@@ -196,6 +196,18 @@ npx tree-sitter test                  # run everything
 npx tree-sitter test -i some_test     # match by name (substring)
 ```
 
+### Expansion tests
+
+Helix's expand-selection walks the parse tree's node *extents* — something
+the corpus tests can't assert (they compare structure only). The fixtures in
+`test/expansion/*.txt` pin the exact selection text of each expansion step
+from a `‸` cursor marker:
+
+```bash
+python3 scripts/test-expansion.py             # run all
+python3 scripts/test-expansion.py -i multiDoc # filter by substring
+```
+
 ## Licence
 
 Apache 2.0

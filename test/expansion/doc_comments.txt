@@ -1,0 +1,122 @@
+================================================================================
+multiDoc: two-step expansion — code first, then docs
+================================================================================
+/// Multi-line docs:
+/// every line of the block
+/// belongs to the same declaration.
+let multiDoc = ‸1
+--------------------------------------------------------------------------------
+>> step
+1
+>> step
+let multiDoc = 1
+>> step
+/// Multi-line docs:
+/// every line of the block
+/// belongs to the same declaration.
+let multiDoc = 1
+
+================================================================================
+doc then attribute — attr stays with the code step
+================================================================================
+/// Doc THEN attribute — both decorate the binding.
+[<Obsolete>]
+let docAndAttr () = ‸1
+--------------------------------------------------------------------------------
+>> step
+1
+>> step
+[<Obsolete>]
+let docAndAttr () = 1
+>> step
+/// Doc THEN attribute — both decorate the binding.
+[<Obsolete>]
+let docAndAttr () = 1
+
+================================================================================
+union case: case, then docs+case, then all cases, then type, then docs+type
+================================================================================
+/// Attaches to the type declaration.
+type Shape =
+    /// Attaches to the Circle case.
+    | Circle of flo‸at
+    /// Attaches to the Point case.
+    | Point
+--------------------------------------------------------------------------------
+>> step
+float
+>> step
+| Circle of float
+>> step
+/// Attaches to the Circle case.
+    | Circle of float
+>> step
+/// Attaches to the Circle case.
+    | Circle of float
+    /// Attaches to the Point case.
+    | Point
+>> step
+type Shape =
+    /// Attaches to the Circle case.
+    | Circle of float
+    /// Attaches to the Point case.
+    | Point
+>> step
+/// Attaches to the type declaration.
+type Shape =
+    /// Attaches to the Circle case.
+    | Circle of float
+    /// Attaches to the Point case.
+    | Point
+
+================================================================================
+no trailing bleed: binding before a documented binding ends at its own code
+================================================================================
+let first = ‸1
+
+/// docs for the second
+let second = 2
+--------------------------------------------------------------------------------
+>> step
+1
+>> step
+let first = 1
+
+================================================================================
+dangling doc stays inside the module
+================================================================================
+module M =
+    let documented a = ‸a
+
+    /// A dangling doc at the end of the module.
+
+let after = 1
+--------------------------------------------------------------------------------
+>> step
+a
+>> step
+let documented a = a
+>> step
+module M =
+    let documented a = a
+
+    /// A dangling doc at the end of the module.
+
+================================================================================
+record field: field, then docs+field
+================================================================================
+type Point2 =
+    {
+        /// The X coordinate.
+        X: i‸nt
+        /// The Y coordinate.
+        Y: int
+    }
+--------------------------------------------------------------------------------
+>> step
+int
+>> step
+X: int
+>> step
+/// The X coordinate.
+        X: int
