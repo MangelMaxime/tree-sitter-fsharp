@@ -257,3 +257,68 @@ module O =
     (let_binding
       (identifier)
       (int_literal))))
+
+================================================================================
+Doc comments attach to their declarations
+================================================================================
+
+/// Adds two numbers.
+let add a b = a + b
+
+/// A shape.
+type Shape =
+    /// A circle.
+    | Circle of float
+    /// A point.
+    | Point
+
+/// The tree.
+type Tree =
+    | Leaf
+/// A forest.
+and Forest = Tree list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (xml_doc_comment)
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    parameters: (parameter
+      (identifier))
+    body: (binary_expression
+      left: (long_identifier
+        (identifier))
+      right: (long_identifier
+        (identifier))))
+  (type_decl
+    (xml_doc_comment)
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        (xml_doc_comment)
+        name: (identifier)
+        fields: (type_expression
+          (long_identifier
+            (identifier))))
+      (union_case
+        (xml_doc_comment)
+        name: (identifier))))
+  (type_decl
+    (xml_doc_comment)
+    name: (identifier)
+    (union_type_defn
+      (union_case
+        name: (identifier)))
+    (type_and_decl
+      (xml_doc_comment)
+      name: (identifier)
+      alias: (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))

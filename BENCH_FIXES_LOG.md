@@ -593,3 +593,25 @@ tried and reverted (the spliced headers each carry their own `=`).
 In exchange, every dual-branch `#else` in user code colors fully.
 
 Corpus 466 (4 preproc trees re-shaped to dual-code), layout.fsx L25 updated.
+
+## Fix 32 — doc-comment attachment merged from the stash (+ known gap CLOSED)
+
+The stashed doc-attachment feature (docs become CHILDREN of their declarations
+so Helix expand-selection walks doc → decl → scope) applied onto the new main
+with only 4 conflict hunks: let_and_binding (stash's `_and_docs` + our
+`repeat($.attribute)` — both kept), scanner globals block (both sides kept),
+and two corpus hunks (both tests kept). Git auto-merged the externals/enum
+insertions consistently (AND_DOCS_OPEN/CASE_DOCS_OPEN at index 23/24 — 33/33
+alignment verified). Generated files regenerated rather than merged. Two
+stash-era conflict declarations had become unnecessary and were dropped.
+
+BONUS: the stash's documented known gap — docs between a type NAME and its
+primary ctor (`type StringSyntaxAttribute⏎ ///<param …>⏎ (syntax, …) =`,
+4 vendored Feliz files; three mechanisms failed in the stash era) — is now
+CLOSED by generalizing fix 25's CTOR_ATTR probe: any mix of attr rows and
+//-or-/// lines may precede the ctor `(`, requiring ≥1 such row so plain
+ctors keep their ungated path.
+
+23-repo: 197→190 files / 1023→1010 nodes (7 FAKE-legacy files fixed by
+attachment), fsharp-src unchanged, ZERO regressions. Corpus 467 (the stash's
+doc test included), layout.fsx gained L24_DocComments.

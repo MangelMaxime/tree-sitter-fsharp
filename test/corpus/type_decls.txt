@@ -563,8 +563,8 @@ and Forest = Tree list
 --------------------------------------------------------------------------------
 
 (source_file
-  (xml_doc_comment)
   (type_decl
+    (xml_doc_comment)
     (identifier)
     (union_type_defn
       (union_case
@@ -574,8 +574,8 @@ and Forest = Tree list
         (type_expression
           (long_identifier
             (identifier)))))
-    (xml_doc_comment)
     (type_and_decl
+      (xml_doc_comment)
       (identifier)
       (type_expression
         (postfix_type

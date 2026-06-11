@@ -463,6 +463,10 @@
         {
           "type": "type_parameter_list",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -1071,6 +1075,10 @@
         {
           "type": "val_field",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -1178,6 +1186,10 @@
         },
         {
           "type": "query_operator",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -1492,6 +1504,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1566,6 +1588,10 @@
         },
         {
           "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -2077,6 +2103,10 @@
         {
           "type": "val_field",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -2123,6 +2153,10 @@
         },
         {
           "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -2457,6 +2491,10 @@
         {
           "type": "type_parameter_list",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -2600,6 +2638,10 @@
         },
         {
           "type": "type_parameter_list",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -3226,6 +3268,10 @@
         {
           "type": "type_parameter_list",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -3328,6 +3374,10 @@
         },
         {
           "type": "type_extension",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -3623,6 +3673,10 @@
         },
         {
           "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4041,6 +4095,10 @@
         },
         {
           "type": "unit",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4493,6 +4551,10 @@
         {
           "type": "record_type_field",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -4532,6 +4594,10 @@
       "types": [
         {
           "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4588,6 +4654,10 @@
         },
         {
           "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4667,6 +4737,10 @@
         },
         {
           "type": "type_extension",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -4980,6 +5054,10 @@
         },
         {
           "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -5348,6 +5426,10 @@
         {
           "type": "val_field",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -5635,6 +5717,10 @@
         {
           "type": "val_field",
           "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -5767,6 +5853,10 @@
         },
         {
           "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -5974,6 +6064,10 @@
         },
         {
           "type": "union_case_named_fields",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]
@@ -6247,6 +6341,10 @@
         },
         {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
           "named": true
         }
       ]

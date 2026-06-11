@@ -1,7 +1,6 @@
 #include "tree_sitter/parser.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 // ============================================================================
@@ -46,6 +45,8 @@ typedef enum {
     TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
     LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
     ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
+    AND_DOCS_OPEN,        // zero-width: `///` doc lines followed by the word `and` — docs attach to the and-clause
+    CASE_DOCS_OPEN,       // zero-width: `///` doc lines followed by `|` — docs attach to the union/enum case
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
     CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
     PREPROC_INACTIVE,     // RESERVED (never emitted; kept so enum indexes match the externals array)
@@ -155,7 +156,24 @@ static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
 static bool g_region_stop = false;
 static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**` doc form
 
+// Set when next_line_indent skips one or more `///` doc-comment lines on its
+// way to the next real line — transient (read within the same scan only).
+static bool g_skipped_doc_lines = false;
+// The word read by the docs probe (try_and_docs) right after skipped doc
+// lines — used by the LAYOUT_SEMI check to suppress a sequence separator
+// before `/// docs⏎ <decl keyword>` (the docs belong to a DECLARATION; a
+// separator would let the decl nest inside the previous statement's body).
+static char g_post_doc_word[10] = {0};
+
+static bool word_is_decl_kw(const char *w) {
+    return !strcmp(w, "let") || !strcmp(w, "type") || !strcmp(w, "open") ||
+           !strcmp(w, "module") || !strcmp(w, "exception") || !strcmp(w, "member") ||
+           !strcmp(w, "static") || !strcmp(w, "override") || !strcmp(w, "abstract") ||
+           !strcmp(w, "val") || !strcmp(w, "interface") || !strcmp(w, "new");
+}
+
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
+    g_skipped_doc_lines = false;
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
     if (lexer->lookahead == 0) return false;
@@ -168,6 +186,8 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
         if (lexer->lookahead == '/') {
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '/') g_skipped_doc_lines = true;   // a `///` doc line
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                     lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
@@ -804,6 +824,71 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     return true;
 }
 
+// Probe for AND_DOCS_OPEN: at a line boundary where next_line_indent SKIPPED
+// `///` doc lines (g_skipped_doc_lines) and the next real line starts with the
+// word `and`, emit the zero-width marker that lets the docs shift into the
+// and-clause slot (`_and_docs`). The lexer sits AT the first char after
+// next_line_indent; reading the word only consumes peeked lookahead (the
+// marker is zero-width — mark_end stays at the baseline). Call LAST.
+// Dispatch for `///` doc lines at a layout boundary (g_skipped_doc_lines):
+// the post-doc word decides where the docs belong. Reads the word
+// destructively — every taken branch RETURNS a token, and the lone
+// fall-through (no branch applies) only loses position for checks that
+// re-derive it themselves.
+static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
+                         int32_t first, uint32_t col, Ctx *top) {
+    g_post_doc_word[0] = '\0';
+    if (!g_skipped_doc_lines) return false;
+    // Docs followed by a `|` case — union/enum case attachment.
+    if (valid[CASE_DOCS_OPEN] && first == '|') {
+        lexer->result_symbol = CASE_DOCS_OPEN; return true;
+    }
+
+    // Word-led dispatch (`and` / decl keywords / member words).
+    if (first >= 'a' && first <= 'z') {
+        char w[10]; size_t n = 0; int32_t lk = lexer->lookahead;
+        while (n < 9 && ((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
+                         (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'')) {
+            w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead;
+        }
+        w[n] = '\0';
+        { size_t i = 0; for (; w[i] && i < 9; i++) g_post_doc_word[i] = w[i]; g_post_doc_word[i] = '\0'; }
+        // docs + `and` — the and-clause attachment marker.
+        if (valid[AND_DOCS_OPEN] && !strcmp(w, "and")) {
+            lexer->result_symbol = AND_DOCS_OPEN; return true;
+        }
+        // Inside a TYPE body at the body column, docs + a DECL keyword mean
+        // the body ends here and the docs decorate the NEXT declaration —
+        // close the body BEFORE the docs (`type V =⏎| A⏎⏎/// d⏎[<A>]⏎type W`).
+        // NOT `let`: class bodies legitimately contain let-members.
+        if (top && top->sort == S_TYPEBODY && valid[LAYOUT_END] && col <= top->col &&
+            (!strcmp(w, "type") || !strcmp(w, "open") ||
+             !strcmp(w, "module") || !strcmp(w, "namespace") || !strcmp(w, "exception"))) {
+            s->n--; lexer->result_symbol = LAYOUT_END; return true;
+        }
+        return false;
+    }
+    // docs + `[<` attribute: could decorate a MEMBER (body continues) or the
+    // NEXT declaration (body ends). At the body column inside a TYPE body the
+    // attribute alone is ambiguous — peek PAST the attr group to the word.
+    if (first == '[' && top && top->sort == S_TYPEBODY && col <= top->col &&
+        (valid[LAYOUT_END] || valid[LAYOUT_SEMI])) {
+        if (!skip_bracket_attrs(lexer)) return false;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        char w[10]; size_t n = 0; int32_t lk = lexer->lookahead;
+        while (n < 9 && lk >= 'a' && lk <= 'z') { w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
+        w[n] = '\0';
+        if (valid[LAYOUT_END] &&
+            (!strcmp(w, "type") || !strcmp(w, "open") ||
+             !strcmp(w, "module") || !strcmp(w, "namespace") || !strcmp(w, "exception"))) {
+            s->n--; lexer->result_symbol = LAYOUT_END; return true;
+        }
+        return false;
+    }
+    return false;
+}
+
 // Probe a LEADING `{` (lookahead == first == '{') for the CE-body
 // classification — the line-boundary twin of the mid-line CE_BRACE_OPEN
 // dispatch, for a builder whose `{` sits on the NEXT line (`seq`⏎`    {`).
@@ -843,11 +928,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // declaration (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]`
     // is followed by `type`). Zero-width, so the attributes/`(` are re-lexed after.
     if (valid[CTOR_ATTR]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
-        if (!skip_bracket_attrs(lexer)) return false;
-        // Skip ws/newlines and `//` trailing comments between the attrs and the
-        // `(` (`[<ParamObject>] // …⏎ [<Emit("$0")>] // …⏎ (params) =`, Feliz docs).
+        // Any mix of `[<attr>]` rows, `///` doc lines and `//` comments may
+        // precede a primary ctor's `(` (`type StringSyntaxAttribute⏎ ///<param
+        // …>⏎ (syntax: string, …) =` — Feliz StringSyntax; `[<ParamObject>] //
+        // …⏎ (params) =` — Feliz POJO). Require at least ONE such row so a
+        // PLAIN ctor `type T (x) =` keeps its ordinary ungated path.
+        bool seen_row = false;
         for (;;) {
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                    lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
@@ -856,14 +942,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead != '/') return false;
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                     lexer->advance(lexer, true);
+                seen_row = true;
                 continue;
             }
-            if (lexer->lookahead == '[') {        // another attribute row
+            if (lexer->lookahead == '[') {        // an attribute row
                 if (!skip_bracket_attrs(lexer)) return false;
+                seen_row = true;
                 continue;
             }
             break;
         }
+        if (!seen_row) return false;
         // Optional access modifier between the attrs and the `(`:
         // `type T [<ParamObject; Emit("$0")>]⏎ private (…)`.
         if (lexer->lookahead == 'p' || lexer->lookahead == 'i') {
@@ -1099,6 +1188,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             nl = true;
             if (!next_line_indent(lexer, &col, NULL)) return false;
+        }
+        // A field may lead with `///` doc lines (`{ /// docs⏎  Field: T … }`):
+        // skip them (to the NEXT line's content) so the field-shape check
+        // still fires; `col` stays at the doc's column — where fields align.
+        while (lexer->lookahead == '/' ) {
+            // only a /// doc line: peek two more slashes
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '/') return false;   // a field can't start with `/`
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '/') return false;   // `//` plain comment: bail (rare inside `{`)
+            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+            uint32_t c2; if (!next_line_indent(lexer, &c2, NULL)) return false;
+            col = c2;   // the FIELD's column, not the doc's (`{ /// doc⏎    Field: T`)
+            nl = true;
         }
         int32_t c = lexer->lookahead;
         bool ok = false;
@@ -1427,6 +1530,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // top-level item) still needs its `_element_dsl_open` marker. There's no context
         // to emit a separator, so probe here at the line's first token; otherwise
         // `pipeline "x"` reduces to a plain application and the `{ … }` body errors.
+        // `///`-docs probe FIRST: try_element_dsl consumes lookahead reading
+        // words on a miss, which would corrupt the and/case word check.
+        if (try_and_docs(s, lexer, valid, first, col, NULL)) return true;
         if (try_element_dsl(lexer, valid)) return true;
         // Top-level builder with its `{` on the next line (`seq`⏎`{ … }`).
         if (try_ce_brace(lexer, valid, first)) return true;
@@ -1452,6 +1558,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             bar_c1 == '<' || bar_c1 == '=' || bar_c1 == '^' || bar_c1 == '~' ||
             bar_c1 == '$') bar_arm = false;
     }
+
+    // `///` docs followed by `and` — gate the and-clause doc slot. FIRST: by
+    // the time the per-sort logic runs, semi/decl-starter branches treat `and`
+    // specially and the grammar may reduce the preceding decl, dropping the
+    // docs to the standalone net. Strictly gated (valid + docs-were-skipped +
+    // exact word `and`), so it cannot preempt closes that matter: when an
+    // enclosing body still has to close first, AND_DOCS_OPEN isn't valid yet.
+    if (try_and_docs(s, lexer, valid, first, col, top)) return true;
 
     // A leading infix operator continues the previous expression (F#'s
     // leading-operator rule) — UNLESS it DEDENTS below an EXPRESSION body
@@ -1620,7 +1734,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // new `_token`, not a `sequence_expression` continuation of the prior
             // bare-expression statement.
             if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
-            if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+            if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first) &&
+                !(g_skipped_doc_lines && word_is_decl_kw(g_post_doc_word))) { lexer->result_symbol = LAYOUT_SEMI; return true; }
             // Element DSL as the first statement of an indented let/expr body
             // (`let page =⏎ div() {…}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;

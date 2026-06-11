@@ -62,7 +62,10 @@ const PREC = {
 // the tree, but never terminating a rule. Cost: a leading `///` doesn't nest in
 // its decl, so `maf`/`mat` won't select it (attributes still nest).
 function decoration($) {
-    return repeat($.attribute);
+    // Leading `///` doc comments ATTACH to the decorated declaration (so
+    // Helix expand-selection walks doc -> decl -> scope). xml_doc_comment
+    // stays in extras too: where no slot is valid the comment is trivia.
+    return seq(repeat($.xml_doc_comment), repeat($.attribute));
 }
 
 // "Indented or inline" field list — a record-like body that's either:
@@ -178,6 +181,8 @@ export default grammar({
         $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
         $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
         $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
+        $._and_docs_open,     // zero-width gate: `///` docs followed by `and` — docs attach to the and-clause (scanner peeks past the doc lines)
+        $._case_docs_open,    // zero-width gate: `///` docs followed by a `|` case — docs attach to the union/enum case
         $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
         $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
         $.preproc_inactive,   // RESERVED (not emitted, not in extras): kept declared so external enum indexes stay stable
@@ -211,6 +216,15 @@ export default grammar({
         // when no expression follows the `;`, and prec.dynamic(1) on
         // sequence_expression prefers the one-statement reading when one does.
         [$.sequence_expression, $._token],
+        // A leading `///` doc: decoration of the FOLLOWING declaration
+        // (preferred — the standalone _token alternative carries
+        // prec.dynamic(-1)) vs a standalone doc statement (survives alone at
+        // end-of-scope / before un-slotted constructs).
+        [$.module_decl, $.type_decl, $.type_extension, $.let_binding, $.exception_decl, $._token],
+        // …and the class-body twin of the same fork (incl. type bodies where a
+        // doc could open a union/enum case OR a member).
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$.record_type_field, $.postfix_type],
@@ -407,6 +421,7 @@ export default grammar({
         // `_token` siblings — fixes expand-selection (member → type → file) and
         // gives "Enter after a member" the correct indent (the member's own column).
         type_decl: $ => prec.right(seq(
+            repeat($.xml_doc_comment),   // `/// docs` attach to the type_decl
             "type",
             repeat($.attribute),
             // `type private Foo = …` — visibility of the TYPE itself, before
@@ -428,6 +443,11 @@ export default grammar({
             // single optional alternative (high prec) rather than two
             // independent optionals — helps when extras (comments) sit
             // between the name and the constructor.
+            // KNOWN GAP: `type X⏎ /// <param …>⏎ (ctor) =` — docs between the
+            // name and the primary constructor do NOT attach (and the ctor
+            // mis-parses): three gating mechanisms were tried 2026-06-11 (un-
+            // gated slot, scanner marker, split alternatives) — the marker is
+            // never offered in the name-tail state. 2 vendored files affected.
             optional(prec(20, seq(
                 optional($.access_modifier),
                 $.primary_constructor,
@@ -448,7 +468,15 @@ export default grammar({
         )),
 
         // and Even = ...  (mutual type recursion continuation)
+        // Doc block for the `and`-clause slots, GATED by a zero-width scanner
+        // marker: `_and_docs_open` is emitted ONLY when the scanner peeks doc
+        // lines followed by the word `and`. Without the gate, the doc-shift
+        // here is statically preferred (prec.right LET_DECL ties) and a doc
+        // between two ORDINARY declarations commits to a doomed and-clause.
+        _and_docs: $ => seq($._and_docs_open, repeat1($.xml_doc_comment)),
+
         type_and_decl: $ => prec.right(seq(
+            optional($._and_docs),
             "and",
             repeat($.attribute),
             optional($.access_modifier),
@@ -488,6 +516,7 @@ export default grammar({
         // members are children of `type_extension`, not siblings.
         //   type Foo with             type Foo<'T> with             type System.String with
         type_extension: $ => seq(
+            repeat($.xml_doc_comment),
             "type",
             repeat($.attribute),
             field('name', $.type_extension_name),
@@ -559,6 +588,9 @@ export default grammar({
             $.secondary_constructor,
             $.val_field,
             $._decl_or_comment,
+            // SAFETY NET (see _token): un-attachable `///` docs (e.g. trailing
+            // at the end of a class body) become their own member.
+            prec.dynamic(-1, $.xml_doc_comment),
         ),
 
         type_extension_name: $ => choice(
@@ -597,7 +629,9 @@ export default grammar({
             seq(
                 // `type T [<ParamObject; Emit("$0")>]⏎ private (…)` — an access
                 // modifier may follow the ctor attributes (Fable interop).
-                optional(seq($._ctor_attr, repeat1($.attribute), optional($.access_modifier))),
+                // The gated group may be docs-only, attrs-only, or both —
+                // the scanner requires ≥1 doc/attr row before the `(`.
+                optional(seq($._ctor_attr, repeat($.xml_doc_comment), repeat($.attribute), optional($.access_modifier))),
                 "(",
                 $.tuple_param,
                 repeat(seq(",", $.tuple_param)),
@@ -838,6 +872,7 @@ export default grammar({
         // node, so expand-selection walks identifier → member_defn →
         // interface_impl → enclosing class/object_expression.
         interface_impl: $ => prec.right(seq(
+            repeat($.xml_doc_comment),
             "interface",
             field('type', $.type_expression),
             // `with` members: INDENTED on the next line(s), or INLINE on the same
@@ -942,6 +977,9 @@ export default grammar({
         // `prec.right` resolves the shift/reduce conflict in favour of
         // absorbing the comment.
         union_case: $ => prec.right(seq(
+            // Doc block GATED by the scanner (docs + `|` ahead) — ungated, a
+            // doc after the LAST case greedily commits to a phantom next case.
+            optional(seq($._case_docs_open, repeat1($.xml_doc_comment))),
             "|",
             repeat($.attribute),   // `| [<DefaultValue>] X` — attribute on a DU case
             field('name', $.identifier),
@@ -1057,6 +1095,7 @@ export default grammar({
         ),
 
         enum_case: $ => seq(
+            optional(seq($._case_docs_open, repeat1($.xml_doc_comment))),
             "|",
             field('name', $.identifier),
             "=",
@@ -1084,6 +1123,9 @@ export default grammar({
         // a newline (e.g. `unit -> unit` followed by `A : 'A` was parsed as
         // `unit -> (unit A)` via postfix_type, erroring on the trailing `:`).
         record_type_defn: $ => seq(
+            // `type X =⏎  /// doc⏎  { Field … }` — docs between `=` and the
+            // `{` attach to the record definition.
+            repeat($.xml_doc_comment),
             // `type X = private { … }` — private record representation.
             optional($.access_modifier),
             "{",
@@ -1094,6 +1136,7 @@ export default grammar({
         // prec(POSTFIX) on the field ties its REDUCE precedence with postfix_type's SHIFT
         // precedence, letting prec.dynamic in record_type_defn resolve the conflict.
         record_type_field: $ => prec(TYPE_PREC.POSTFIX, seq(
+            repeat($.xml_doc_comment),     // `/// docs` attach to the field
             repeat($.attribute),           // `[<JsonRequired>] Age: int` — attribute on a record field
             optional("mutable"),
             field('name', $.identifier),
@@ -1846,10 +1889,10 @@ export default grammar({
         // `and [<return: Struct>] (|BoolExpr|_|) = …` — attributes may sit
         // between `and` and the name (FCS IlxGen peephole actives).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
-            prec(2, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
+            prec(2, seq(optional($._and_docs), "and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
                 seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
             )),
-            prec(1, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
+            prec(1, seq(optional($._and_docs), "and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
         )),
 
         // A let binding inside let_expression. Two body forms, chosen by the scanner
@@ -1882,6 +1925,7 @@ export default grammar({
         ),
 
         _and_decl_indented: ($) => seq(
+            optional($._and_docs),
             "and",
             optional(token.immediate("!")),
             repeat($.attribute),
@@ -2459,6 +2503,8 @@ export default grammar({
         // keywords are in the `query_ce` reserved set, which is activated by the
         // `reserved('query_ce', …)` wrap in `computation_expression`.
         _ce_statement: $ => choice(
+            // SAFETY NET (see _token): docs before un-slotted CE statements.
+            prec.dynamic(-1, $.xml_doc_comment),
             $.use_binding,
             $.ce_match_bang_expr,
             $.let_binding,
@@ -3275,6 +3321,12 @@ export default grammar({
             // FSI / script trailing `;` after a top-level / module-body
             // declaration (`open System;`). (`;;` is handled as an extra.)
             ";",
+
+            // SAFETY NET: a `///` doc in a position with no attachment slot
+            // (end of scope, before `open`, before a bare statement…) is its
+            // own statement instead of stranding in an ERROR. prec.dynamic(-1):
+            // when an attachment reading also survives, attachment wins.
+            prec.dynamic(-1, $.xml_doc_comment),
         ),
 
         // Plain identifiers and `` `any text` ``-quoted form, unified in one terminal.

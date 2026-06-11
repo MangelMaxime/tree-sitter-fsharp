@@ -838,6 +838,81 @@ module L23_ExceptionsAndBinders =
     // Double-backtick name containing INNER single-backticks (BDD test names).
     let ``returns an error if `--remote-XXX` is missing`` () = 1
 
+// ── Doc-comment attachment (`///` docs are CHILDREN of their declaration) ───
+// Expand-selection should walk doc → declaration → scope. Every documentable
+// position gets a snippet; positions with no slot degrade to a standalone
+// statement (never an ERROR).
+module L24_DocComments =
+    /// Attaches to the let binding.
+    let documented a b = a + b
+
+    /// Multi-line docs:
+    /// every line of the block
+    /// belongs to the same declaration.
+    let multiDoc = 1
+
+    /// Doc THEN attribute — both decorate the binding.
+    [<Obsolete>]
+    let docAndAttr () = 1
+
+    /// Attaches to the type declaration.
+    type Shape =
+        /// Attaches to the Circle case.
+        | Circle of float
+        /// Attaches to the Point case.
+        | Point
+
+    /// A documented record.
+    type Point2 =
+        {
+            /// The X coordinate.
+            X: int
+            /// The Y coordinate.
+            Y: int
+        }
+
+    /// A documented enum.
+    type Flags =
+        /// First flag.
+        | A = 1
+        /// Second flag.
+        | B = 2
+
+    /// Attaches to the module declaration.
+    module Inner =
+        let v = 1
+
+    type Documented() =
+        /// Attaches to the member.
+        member _.Bump () = 1
+        /// Attaches to the auto-property.
+        member val Name = "" with get, set
+        /// Attaches to the interface implementation.
+        interface System.IDisposable with
+            member _.Dispose() = ()
+
+    type IFace =
+        /// Attaches to the abstract member.
+        abstract Do: unit -> int
+
+    /// Docs attach across `and` type-recursion clauses…
+    type Tree =
+        | Leaf
+        | Branch of Forest
+    /// …this one belongs to Forest.
+    and Forest = Tree list
+
+    /// …and across `let rec … and` too.
+    let rec fEven x = fOdd x
+    /// Belongs to fOdd.
+    and fOdd x = fEven x
+
+    // Degradation cases (standalone statements — NEVER errors):
+    let beforeStray = 1
+    /// A stray doc before an `open` (documents nothing).
+    open System
+    /// A dangling doc at the end of the module — also fine.
+
 // ── Accumulated-state regressions (must stay 0 errors) ──────────────────────
 module L17_AccumulatedState =
     // The `dd` repro: class-lets + member + two if-then blocks with do!/use.
