@@ -1,0 +1,27 @@
+# Benchmark corpus: name <space> clone-url <space> pinned-commit [<space> subdir]
+# Pinned SHAs keep the baseline reproducible — bump them deliberately and
+# regenerate the baseline in the same commit.
+EasyBuild.FileSystemProvider https://github.com/easybuild-org/EasyBuild.FileSystemProvider.git 39f20393294b476e1e890c64dc219a0214df8d4f
+EasyBuild.PackageReleaseNotes.Tasks https://github.com/easybuild-org/EasyBuild.PackageReleaseNotes.Tasks.git b0d305bb30c72f2e33f453f30a3da5ea85f6a881
+EasyBuild.ShipIt https://github.com/easybuild-org/EasyBuild.ShipIt.git 2decf0bfa89aed5810f3221ab104975a5c413d8f
+elmish https://github.com/elmish/elmish.git 88c1a9b6a41ec8bab582cdab60dfe2d97464ef25
+expecto https://github.com/haf/expecto.git 1c18b4952e7d6d6b9c512bf184acead63672bda3
+Fable https://github.com/fable-compiler/Fable.git 30310e4f915443524cf5f2c1b326840ee556c7ae
+FAKE https://github.com/fsprojects/FAKE.git e37773efcad3bcc334a6eacc70baa720b467dd2e
+fantomas https://github.com/fsprojects/fantomas.git 6364f42749c9b09ee69d902dd8865f258adc4f16
+farmer https://github.com/CompositionalIT/farmer.git 39303b5c129bb61c3ee9078ae1324e5a26c1d451
+Feliz-fable-hub https://github.com/fable-hub/Feliz.git 3fa0b41a8fe7fef6beaad50e0534b832ebaaaa21
+Feliz-Zaid https://github.com/Zaid-Ajaj/Feliz.git 3fa0b41a8fe7fef6beaad50e0534b832ebaaaa21
+fparsec https://github.com/stephan-tolksdorf/fparsec.git 156cbd751fac67ca7cc04cf661710f1f90a216a5
+FsCheck https://github.com/fscheck/FsCheck.git b04f3b0f662bdd58da8ea606e18c08970c9fdcfc
+fsharp https://github.com/dotnet/fsharp.git b8b40f5f24915a2eb02ed78b1190d8fce9c9d84d src
+FSharp.Data https://github.com/fsprojects/FSharp.Data.git 252d87c1838df47214a8287f6e52c1737c594ce6
+FSharpPlus https://github.com/fsprojects/FSharpPlus.git 44ebc378fa403400a343784e4285b3fd2672b363
+FsToolkit.ErrorHandling https://github.com/demystifyfp/FsToolkit.ErrorHandling.git 37c8b1ccfacc75a50d73277cdb21aea9762ae561
+Fulma https://github.com/Fulma/Fulma.git ecbbcf870cec00af7b99cb60755f15b2e87cd199
+Giraffe https://github.com/giraffe-fsharp/Giraffe.git d0d9013f97c9de85a140432dfe68a694339be0d5
+Hopac https://github.com/Hopac/Hopac.git b672500304a74335fcf0953b9b10ad2a09a5878c
+Paket https://github.com/fsprojects/Paket.git 3b63da856fa6d6f441d43b9dc2aa64e6ad10fe62
+Saturn https://github.com/SaturnFramework/Saturn.git 4ae4d6126a6c7c0e91bded2ddbe1103030010c78
+Scriptorium https://github.com/fable-hub/Scriptorium.git 8802af5a56459733f1d5e61df501b3ebb07c3dc5
+Thoth.Json https://github.com/thoth-org/Thoth.Json.git a6358dd4a399f09abf22fb2b34cb38aaa0dfe35a
