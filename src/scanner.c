@@ -1204,7 +1204,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 int32_t c1 = lexer->lookahead;
                 if (is_close_bracket(c1)) closer = true;
-                else if (c1 != '>' && c1 != '|' && top && layoutish(top->sort) && valid[LAYOUT_END] && has_match_ctx(s)) {
+                else if (c1 != '>' && c1 != '|' && c1 != '?' && c1 != '@' && c1 != '!' &&
+                         c1 != '%' && c1 != '&' && c1 != '*' && c1 != '+' && c1 != '-' &&
+                         c1 != '.' && c1 != '/' && c1 != '<' && c1 != '=' && c1 != '^' &&
+                         c1 != '~' && c1 != '$' &&   // `|?>`/`||>`-style custom ops are INFIX, not an arm `|` (fix-3's boundary rule, mid-line flavor)
+                         top && layoutish(top->sort) && valid[LAYOUT_END] && has_match_ctx(s)) {
                     // A bare same-line `|` is the next match arm; close the inline
                     // arm body first (`function | 0 -> "a" | _ -> "b"`). Gated on an
                     // S_MATCH being on the stack so a UNION case separator

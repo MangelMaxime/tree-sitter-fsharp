@@ -1233,3 +1233,10 @@ type L35_DoAssign() =
 
     let structBag (x: struct {| A: int; B: string |}) = struct {| C = x.A + 1 |}
     let structPair = makeReturn struct (left, right)
+
+    let chooseFields t1 =
+        match rest with
+        | id2 :: rest2 ->
+            let t2 = t1 |?> List.choose (function a, b, rest -> Some rest | _ -> None)
+            t2
+        | _ -> NoResults

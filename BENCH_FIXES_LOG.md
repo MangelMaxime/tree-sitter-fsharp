@@ -452,3 +452,15 @@ ALL of them from every state where ANY of them is reachable.
 
 23-repo: 179→176 files / 975→951 nodes (3 AnonRecordTests copies), 0
 regressions. Corpus 461.
+
+## Fix 27 — mid-line `|?>`-style operators inside match arms (NameResolution 17→0 ×2)
+
+The "undentation" item dissolved on inspection: the minimal undentation idiom
+already parses (earlier arm fixes covered it). NameResolution's real residue
+was the MID-LINE twin of fix 3: the bare-`|`-is-an-arm close in the midline
+closer path only excluded `|>`/`||`, so `t1 |?> List.choose (function …)`
+inside a match arm closed the arm body at the `|?>`. Now `|` + ANY operator
+char is infix there too. Both NameResolution copies 17→0.
+
+23-repo: 176→175 / 951→934; fsharp-src: 31→30 / 159→142; 0 regressions.
+Corpus 462.

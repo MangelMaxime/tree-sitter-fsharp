@@ -166,3 +166,110 @@ let f res =
             (identifier))
           (long_identifier
             (identifier)))))))
+
+================================================================================
+Mid-line |-led custom operator inside a match arm
+================================================================================
+
+let tyconSearch () =
+    match rest with
+    | id2 :: rest2 ->
+        let tcrefs = lookup ()
+        if isNil tcrefs then NoResultsOrUsefulErrors else
+        let t2 = t1 |?> List.choose (function a, Item.RecdField(RecdFieldInfo(_, r)), rest -> Some rest | _ -> None)
+        t2
+    | _ ->
+        NoResultsOrUsefulErrors
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (cons_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))))
+        (let_expression
+          (let_decl_indented
+            (identifier)
+            (application_expression
+              (long_identifier
+                (identifier))
+              (unit)))
+          (if_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (long_identifier
+              (identifier))
+            (let_expression
+              (let_decl_indented
+                (identifier)
+                (binary_expression
+                  (long_identifier
+                    (identifier))
+                  (symbolic_op)
+                  (application_expression
+                    (long_identifier
+                      (identifier)
+                      (identifier))
+                    (parenthesized_expression
+                      (function_expression
+                        (match_arm
+                          (pattern
+                            (identifier_pattern
+                              (long_identifier
+                                (identifier))))
+                          (pattern
+                            (identifier_pattern
+                              (long_identifier
+                                (identifier)
+                                (identifier))
+                              (tuple_pattern
+                                (pattern
+                                  (identifier_pattern
+                                    (long_identifier
+                                      (identifier))
+                                    (tuple_pattern
+                                      (pattern
+                                        (wildcard_pattern))
+                                      (pattern
+                                        (identifier_pattern
+                                          (long_identifier
+                                            (identifier))))))))))
+                          (pattern
+                            (identifier_pattern
+                              (long_identifier
+                                (identifier))))
+                          (application_expression
+                            (long_identifier
+                              (identifier))
+                            (long_identifier
+                              (identifier))))
+                        (match_arm
+                          (pattern
+                            (wildcard_pattern))
+                          (long_identifier
+                            (identifier))))))))
+              (long_identifier
+                (identifier))))))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (long_identifier
+          (identifier))))))
