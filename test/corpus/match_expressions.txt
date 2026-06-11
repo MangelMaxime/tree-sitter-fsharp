@@ -125,3 +125,44 @@ let fieldSearch lid =
           (wildcard_pattern))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Block comment leading an inline arm body
+================================================================================
+
+let f res =
+    match res with
+    | A -> (* tailcall *) g res
+    | B -> h res
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (block_comment)
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

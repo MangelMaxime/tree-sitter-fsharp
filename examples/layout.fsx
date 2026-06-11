@@ -1128,3 +1128,8 @@ module L28_DanglingElse =
             match x1 with
             | Node n -> compareNodes n x2
             | _ -> compareKeys x1 x2
+
+    let bindFast f res =
+        match res with
+        | Ok value -> (* tailcall *) f value
+        | Error e -> Error e

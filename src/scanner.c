@@ -232,7 +232,26 @@ static uint32_t peek_body_col(TSLexer *lexer) {
     }
     if (lexer->lookahead == '(') {
         lexer->advance(lexer, true);
-        if (lexer->lookahead == '*') { uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0; }
+        if (lexer->lookahead == '*') {
+            // Block comment. CONTENT may follow it on the SAME line
+            // (`| A -> (* tailcall *) f res`, FCS DiagnosticsLogger style):
+            // skip the comment (depth-aware) and check — inline content keeps
+            // the comment's start column as the body column (mirrors
+            // next_line_indent's comment-led-element rule); otherwise the body
+            // is on a later line.
+            lexer->advance(lexer, true);
+            int cdepth = 1;
+            while (cdepth > 0) {
+                if (lexer->lookahead == 0) return 0;
+                if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
+                else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
+                else lexer->advance(lexer, true);
+            }
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+                return col;                       // inline body after the comment
+            uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0;
+        }
         return col;  // `(` inline (parenthesised pattern / expression)
     }
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {

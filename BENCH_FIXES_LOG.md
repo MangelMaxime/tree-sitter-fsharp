@@ -112,3 +112,17 @@ construction belongs to an inner if. `in`/`end` keep the unconditional close.
 
 Bench: 249→238 files, 2537→2310 nodes, 0 regressions. TaggedCollections.fs
 158→0, TypeRelations.fs 16→0, 8 Paket files cleared. Corpus 434, layout L28.
+
+## Fix 5 — block comment leading an inline body (`| A -> (* tailcall *) f res`)
+
+peek_body_col treated a leading `(*…*)` after an opener (`->`, `=`, `then`) as
+"body starts on a later line" and returned the NEXT line's indent as the body
+column — for `| A -> (* tailcall *) f res` that's the next ARM's column, so the
+arm body opened at the arm column and everything after collapsed. Now the
+comment is skipped (depth-aware) and same-line content keeps the comment's
+start column as the inline body column (mirroring next_line_indent's
+comment-led-element rule); only a true end-of-line defers to next_line_indent.
+
+Bench: 238→235 files, 2310→1883 nodes (−427), 0 regressions. DiagnosticsLogger
+174→0, TypedTreeOps 180→0, ilwrite 73→0 (one tiny shared idiom carried three of
+the biggest FCS files). Corpus 435, layout example added to L28's module file.
