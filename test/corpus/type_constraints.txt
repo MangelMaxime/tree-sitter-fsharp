@@ -478,3 +478,93 @@ type T() =
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+default SRTP constraint, nullable subtype constraint, member-val ascription
+================================================================================
+
+let inline averageBy< ^Value
+                      when ^Value : (static member Zero : ^Value)
+                      and default ^Value : float >
+    (source: Source<'T>) : ^Value =
+    run source
+
+type B() =
+    member inline _.Using<'Resource when 'Resource :> IDisposable | null>
+        (resource: 'Resource)
+        =
+        run resource
+
+    [<Output>]
+    member val GeneratedItems = [||]: ITaskItem[] with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_constraint
+        (type_parameter)
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (type_constraint
+        (type_parameter)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (parameter
+      (identifier)
+      (type_expression
+        (generic_type
+          (long_identifier
+            (identifier))
+          (type_expression
+            (type_parameter)))))
+    (type_expression
+      (type_parameter))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (type_parameter_list
+        (type_parameter)
+        (type_constraint
+          (type_parameter)
+          (nullable_type
+            (long_identifier
+              (identifier)))))
+      (parameter
+        (identifier)
+        (type_expression
+          (type_parameter)))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))
+    (member_defn
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (identifier)
+      (type_ascription_expression
+        (array_expression)
+        (type_expression
+          (array_type
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      (auto_property_accessors))))

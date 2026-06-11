@@ -752,7 +752,7 @@ export default grammar({
                 // (`_try_open`): like a generic layout body it dedent-closes at
                 // the next member, but it ALSO closes before an inline `with`, so
                 // the `with get, set` accessor form still attaches.
-                seq($._try_open, field('body', $._expression), $._layout_end),
+                seq($._try_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
                 // prec.right (whole branch): in the INLINE single-member type
                 // body (`type X = member val N = e with get, set`), the `with`
                 // shifts into the accessors rather than starting an augmentation.
@@ -3112,7 +3112,11 @@ export default grammar({
             // the type parameter must implement the (usually generic) interface,
             // with no `'T :` prefix.
             $.generic_type,
-            seq($.type_parameter, ":>", $.type_expression),
+            // The RHS may be nullable: `'Resource :> IDisposable | null` (F# 9).
+            seq($.type_parameter, ":>", choice($.type_expression, $.nullable_type)),
+            // `and default ^Value : float` — SRTP default-resolution constraint
+            // (FSharp.Core Query/averageBy style).
+            seq("default", $.type_parameter, ":", $.type_expression),
             seq($.type_parameter, ":", "null"),
             seq($.type_parameter, ":", "not", "null"),   // F# 9 non-null constraint
             seq($.type_parameter, ":", "struct"),

@@ -379,3 +379,10 @@ PARKED: `DefaultParameterValue(null: string | null)` — attribute args use a
 separate restricted expression path (3 nodes, DependencyProvider).
 
 23-repo: 185/1006; fsharp-src: 36/178; 0 regressions. Corpus 458.
+
+## Fix 24 — default SRTP constraint, nullable `:>` RHS, member-val ascription
+
+`and default ^Value : float` (FSharp.Core Query), `'Resource :> IDisposable |
+null` (tasks.fs), `member val Items = [||]: ITaskItem[] with get, set`
+(FSharp.Build). fsharp-src: 36→32 files / 178→164 nodes; 23-repo unchanged;
+0 regressions. Corpus 459, layout L37.

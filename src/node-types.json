@@ -5378,6 +5378,10 @@
           "named": true
         },
         {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
           "type": "type_expression",
           "named": true
         },

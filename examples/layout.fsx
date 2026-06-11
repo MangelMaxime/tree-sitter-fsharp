@@ -1221,3 +1221,6 @@ type L35_DoAssign() =
 
     let combineAll (sources: seq<'U :> seq<'T>>) = mkSeq sources
     let tryDescribe (name: string | null) : string | null * int = find name
+
+    type L37Build() =
+        member val Items = [||]: string[] with get, set
