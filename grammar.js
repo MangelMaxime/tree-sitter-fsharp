@@ -1651,7 +1651,11 @@ export default grammar({
                 repeat(seq(choice("elif", seq("else", "if")), $._expression, "then", $._indented_or_inline_body)),
                 // Final else: a non-`if` body (uses `_else_open`, which the scanner
                 // declines before `if`).
-                optional(seq("else", $._else_open, field('else', $._expression), $._layout_end)),
+                // The else body, like _indented_or_inline_body, accepts a
+                // trailing ascription: `… else None : 'a option` (the `:` binds
+                // the WHOLE if in F#, but the body-level ascription renders the
+                // same span — FSharpPlus Indexable style).
+                optional(seq("else", $._else_open, field('else', choice($._expression, $.type_ascription_expression)), $._layout_end)),
             )),
             prec(1, seq(
                 "if",

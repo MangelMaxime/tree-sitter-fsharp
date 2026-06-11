@@ -1160,3 +1160,5 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
     let initialized =
         {new Handler() with
             member _.Run x = upcast handle x}.InternalInit(job)
+
+    let tryAt n (xs: int []) = if n >= 0 && n < xs.Length then Some xs.[n] else None : int option

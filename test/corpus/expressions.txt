@@ -2752,3 +2752,97 @@ let j = {new Foo() with member _.Bar = 1}.Run()
             (int_literal)))
         (identifier))
       (unit))))
+
+================================================================================
+Trailing ascription on an inline else body
+================================================================================
+
+let f n = if n >= 0 then Some n else None : int option
+
+type T =
+    static member M1 (x: 'a [], n) = if n >= 0 then Some x.[n] else None : 'a option
+    static member M2 (x: string, n) = String.tryItem n x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (type_ascription_expression
+        (long_identifier
+          (identifier))
+        (type_expression
+          (postfix_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (long_identifier
+              (identifier)))))))
+  (type_decl
+    (identifier)
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (array_type
+                (type_expression
+                  (type_parameter)))))
+          (tuple_param
+            (identifier))))
+      (if_expression
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (int_literal))
+        (index_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))
+        (type_ascription_expression
+          (long_identifier
+            (identifier))
+          (type_expression
+            (postfix_type
+              (type_expression
+                (type_parameter))
+              (long_identifier
+                (identifier)))))))
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier))))
+          (tuple_param
+            (identifier))))
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier))))))

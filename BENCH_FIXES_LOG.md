@@ -203,3 +203,10 @@ Corpus 441, layout L31.
 `{new Foo() with member _.Bar = 1}.Run()` (Hopac continuation style):
 object_expression added to _dot_object. Hopac.fs 43→5 (rest is separate).
 Bench: 226 files, 1512→1474 nodes, 0 regressions. Corpus 442.
+
+## Fix 12 — trailing ascription on an inline else body
+
+`… then Some x.[n] else None : 'a option` (FSharpPlus Indexable): the final-else
+clause took $._expression only; it now also accepts $.type_ascription_expression
+(like _indented_or_inline_body). Indexable.fs 25→0. Bench: 226→225 files,
+1474→1437 nodes, 0 regressions. Corpus 443.
