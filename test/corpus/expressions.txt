@@ -2846,3 +2846,23 @@ type T =
             (identifier)))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Empty bracket across blank lines
+================================================================================
+
+let view =
+    Html.div [
+
+    ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (list_expression))))

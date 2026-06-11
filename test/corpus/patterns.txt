@@ -1197,3 +1197,81 @@ let p as q = f x
         (identifier))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Parenthesized tuple with ascription as a tuple-param element
+================================================================================
+
+let (>->) (a, (g2, s2): Lens<int,int>) = g2
+
+type T() =
+    static member Compose (a, (g2, s2): Lens<int,int>) = g2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (operator_name
+      (symbolic_op))
+    (parameter
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (tuple_typed_pattern
+          (tuple_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
+          (type_expression
+            (generic_type
+              (long_identifier
+                (identifier))
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    (long_identifier
+      (identifier)))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            (tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))
+            (type_expression
+              (generic_type
+                (long_identifier
+                  (identifier))
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (type_expression
+                  (long_identifier
+                    (identifier))))))))
+      (long_identifier
+        (identifier)))))

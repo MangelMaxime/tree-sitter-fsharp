@@ -2662,7 +2662,9 @@ export default grammar({
         // (static member (>>=) : …), f: 'T->'U), _mthd)` — the FSharpPlus
         // Control/Functor overload idiom (tuple_param has the same clause).
         tuple_typed_pattern: $ => seq(
-            field('pattern', choice($.long_identifier, $.wildcard_pattern)),
+            // `(g2, s2): Lens<'a,'b>` — a parenthesized tuple may itself carry
+            // the ascription as ONE element (Aether lens compose style).
+            field('pattern', choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern)),
             ":",
             field('type', $.type_expression),
             optional($._when_constraints),

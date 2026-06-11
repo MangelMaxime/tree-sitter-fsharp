@@ -222,3 +222,13 @@ Also PARKED this stretch (in memory project_fix_backlog): `let Ctor(a, b), rest
 = …` destructuring (two attempts silently broke `let f(a, b) =` fn defs);
 ReflectionTests.fs / General.fs / MSBuildHelper.fs / Chocolatey.fs are
 compound (pieces pass in isolation, full files fail — context-dependent).
+
+## Fix 14 — empty block bracket + ascribed paren-tuple param element
+
+1. `Html.div [`⏎ blank ⏎`]` (Feliz tests): the BRACKET_OPEN block path now
+   declines when the next real char closes the bracket — no element, no context.
+2. `(a, (g2, s2): Lens<'a,'b>)` (Aether lens compose, 4 vendored copies):
+   tuple_typed_pattern's pattern slot accepts $.tuple_pattern.
+
+Bench: 220→209 files, 1398→1268 nodes, 0 regressions. 11 files cleared
+(4× Aether, 6× Feliz ReactBindings tests, 1 more). Corpus 446.

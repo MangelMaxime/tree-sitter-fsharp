@@ -981,9 +981,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[BRACKET_OPEN]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
-            // Block form: body on the next line(s).
-            uint32_t col;
-            if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
+            // Block form: body on the next line(s). Decline when the next real
+            // char CLOSES the bracket (`Html.div [`⏎`⏎`]` — empty across blank
+            // lines): there is no element to anchor a context.
+            uint32_t col; int32_t bfirst = 0;
+            if (next_line_indent(lexer, &col, &bfirst)) {
+                if (bfirst == ']' || bfirst == '}' || bfirst == '|') return false;
+                push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true;
+            }
             return false;
         }
         // Capture the inline first element's column / lead char BEFORE the

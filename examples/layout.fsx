@@ -1170,3 +1170,9 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
                 sku = {| name = string sku |}
                 properties = {| |}
         |}
+
+    let composeLens (a, (g2, s2): Lens<int, int>) = g2
+    let emptyDiv =
+        Html.div [
+
+        ]

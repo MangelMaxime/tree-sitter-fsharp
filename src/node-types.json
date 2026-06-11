@@ -4924,6 +4924,10 @@
             "named": true
           },
           {
+            "type": "tuple_pattern",
+            "named": true
+          },
+          {
             "type": "wildcard_pattern",
             "named": true
           }
