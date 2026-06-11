@@ -1184,3 +1184,5 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
                 %%uri
         @>
         |> wrapReader
+
+type L32_InlineMemberBody = static member inline Invoke (x: int) = lift x

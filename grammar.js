@@ -511,6 +511,10 @@ export default grammar({
                 ),
                 $._layout_end,
             ),
+            // INLINE single-member body: `type Lift = static member inline
+            // Invoke (x) = …` (FSharpPlus MonadTrans) — no layout open fires
+            // when the member sits on the `=` line itself.
+            $._class_body_member,
         ),
 
         // Choice alternatives shared by `_token` (source-level / module body)
@@ -725,7 +729,7 @@ export default grammar({
             )),
             // Auto-property — instance/static differ only by the `static` prefix;
             // `override val` / `default val` implement an abstract auto-property.
-            prec.dynamic(1, seq(
+            prec.dynamic(1, prec.right(seq(
                 decoration($),
                 choice(
                     seq(optional("static"), "member"),
@@ -744,8 +748,11 @@ export default grammar({
                 // the next member, but it ALSO closes before an inline `with`, so
                 // the `with get, set` accessor form still attaches.
                 seq($._try_open, field('body', $._expression), $._layout_end),
+                // prec.right (whole branch): in the INLINE single-member type
+                // body (`type X = member val N = e with get, set`), the `with`
+                // shifts into the accessors rather than starting an augmentation.
                 optional($.auto_property_accessors),
-            )),
+            ))),
         ),
 
         // get() = expr  or  set(v) = expr  (inside a property definition).
@@ -778,7 +785,7 @@ export default grammar({
         // abstract member F<'T>: 'T -> 'T                     — generic method
         // Reuses `auto_property_accessors` for the `with get [, set]` clause —
         // the syntax is identical to the one on member-val auto-properties.
-        abstract_member_defn: $ => prec.dynamic(1, seq(
+        abstract_member_defn: $ => prec.dynamic(1, prec.right(seq(
             decoration($),
             optional("static"),
             "abstract",
@@ -788,7 +795,7 @@ export default grammar({
             ":",
             $.type_expression,
             optional($.auto_property_accessors),
-        )),
+        ))),
 
         // inherit BaseClass(arg1, arg2) [as super]
         // Optional `as super` names the base instance — `super` is the

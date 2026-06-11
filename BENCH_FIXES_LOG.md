@@ -245,3 +245,19 @@ there are invalid.)
 
 Bench: 209→207 files, 1268→1225 nodes, 0 regressions. WorldBankProvider 13→0,
 HtmlGenerator 4→0, Helpers.fs 23→2. Corpus 447.
+
+## Fix 16 — inline single-member type body
+
+`type Lift = static member inline Invoke (x) = …` / `type A() = member _.Value
+= 5`: _type_decl_body_or_class gained a bare $._class_body_member alternative
+(no layout open fires for a same-line body). Two shift/reduce conflicts with
+the augmentation `with` resolved via prec.right on abstract_member_defn and on
+member_defn's auto-property branch (accessors win the inline `with`).
+
+This was the REAL issue behind the "compound" ReflectionTests files — the
+lesson: a whole-file failure anchored far from its cause can be a tiny inline
+form; test the SMALL declarations near the first error too, not just the big
+constructs.
+
+Bench: 207→197 files, 1225→1130 nodes, 0 regressions. 10 files cleared
+(3× ReflectionTests, MonadTrans 17→0, Tuple, Functor, Enumerator…). Corpus 448.

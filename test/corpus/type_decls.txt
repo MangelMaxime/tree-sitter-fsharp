@@ -1145,3 +1145,38 @@ let arm =
           (anonymous_record_expression)))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Inline single-member type body
+================================================================================
+
+type Lift = static member inline Invoke (x: int) = lift x
+
+type C() =
+    member val Name = "" with get, set
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (member_defn
+      (identifier)
+      (parameter
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (string_literal)
+      (auto_property_accessors))))
