@@ -1151,3 +1151,8 @@ module [<AutoOpen>] L29_KeywordAttrs =
 # 100 "layout.fsx"
 module L30_LineDirectives =
     let generated = 1
+
+type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
+    private (name: string, weight: float) =
+
+    member _.label = name

@@ -855,6 +855,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
         if (!skip_bracket_attrs(lexer)) return false;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        // Optional access modifier between the attrs and the `(`:
+        // `type T [<ParamObject; Emit("$0")>]⏎ private (…)`.
+        if (lexer->lookahead == 'p' || lexer->lookahead == 'i') {
+            char aw[10]; size_t an = 0;
+            while (an < 9 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
+                aw[an++] = (char)lexer->lookahead; lexer->advance(lexer, true);
+            }
+            aw[an] = '\0';
+            if (strcmp(aw, "private") && strcmp(aw, "internal") && strcmp(aw, "public")) return false;
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        }
         if (lexer->lookahead == '(') { lexer->result_symbol = CTOR_ATTR; return true; }
         return false;
     }

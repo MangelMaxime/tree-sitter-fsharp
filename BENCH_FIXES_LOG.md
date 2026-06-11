@@ -187,3 +187,13 @@ quoted file), and next_line_indent skips those lines (plus `#line`) like the
 Bench: 228→227 files, 1641→1551 nodes, 0 regressions. LexYacc lex.fs 42→0,
 pars.fs 49→1; the fcs codegen pars.fs (31) has separate issues. Corpus 440,
 layout L30, highlight @keyword.directive.
+
+## Fix 10 — access modifier between ctor attributes and the param list
+
+`type T [<ParamObject; Emit("$0")>]⏎    private (…) =` (Fable interop tests):
+primary_constructor's attr branch gained `optional($.access_modifier)`, and the
+CTOR_ATTR scanner gate now accepts ws/newlines + private/internal/public
+between the attrs and the `(`.
+
+Bench: 227→226 files, 1551→1512 nodes, 0 regressions. ImportTests.fs 39→0.
+Corpus 441, layout L31.

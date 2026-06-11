@@ -575,7 +575,9 @@ export default grammar({
         primary_constructor: $ => prec(20, choice(
             $.unit,
             seq(
-                optional(seq($._ctor_attr, repeat1($.attribute))),
+                // `type T [<ParamObject; Emit("$0")>]⏎ private (…)` — an access
+                // modifier may follow the ctor attributes (Fable interop).
+                optional(seq($._ctor_attr, repeat1($.attribute), optional($.access_modifier))),
                 "(",
                 $.tuple_param,
                 repeat(seq(",", $.tuple_param)),

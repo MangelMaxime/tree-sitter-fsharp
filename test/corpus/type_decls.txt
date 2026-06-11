@@ -743,7 +743,6 @@ type Set<[<EqualityConditionalOn>]'T> = int
       (long_identifier
         (identifier)))))
 
-
 ================================================================================
 Record type with consecutive mutable fields
 ================================================================================
@@ -998,3 +997,84 @@ type Token = First // comment after the bare first case
       (line_comment)
       (union_case
         name: (identifier)))))
+
+================================================================================
+Private primary ctor after attributes on the next line
+================================================================================
+
+type MyJsClassWithOptionsOverload [<ParamObject; Emit("$0")>]
+    private (name: U2<string, ResizeArray<string>>, weight: float) =
+
+    [<ParamObject; Emit("$0")>]
+    new (name: string, weight: float) =
+        MyJsClassWithOptionsOverload(U2.Case1 name, weight)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier)))
+        (attribute_target
+          (long_identifier
+            (identifier))
+          (string_literal)))
+      (access_modifier)
+      (tuple_param
+        (identifier)
+        (type_expression
+          (generic_type
+            (long_identifier
+              (identifier))
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (generic_type
+                (long_identifier
+                  (identifier))
+                (type_expression
+                  (long_identifier
+                    (identifier))))))))
+      (tuple_param
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (secondary_constructor
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier)))
+        (attribute_target
+          (long_identifier
+            (identifier))
+          (string_literal)))
+      (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (tuple_expression
+            (application_expression
+              (long_identifier
+                (identifier)
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (long_identifier
+              (identifier))))))))
