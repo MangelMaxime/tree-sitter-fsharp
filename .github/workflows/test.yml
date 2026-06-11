@@ -41,11 +41,11 @@ jobs:
         run: npx tree-sitter test
 
       # The living showcase must parse without a single error node.
-      - name: layout.fsx parses clean
+      - name: references.fsx parses clean
         run: |
           errors=$(npx tree-sitter parse examples/layout.fsx | grep -cE 'ERROR|MISSING' || true)
           if [ "$errors" -ne 0 ]; then
-            echo "::error::examples/layout.fsx has $errors ERROR/MISSING nodes"
+            echo "::error::examples/references.fsx has $errors ERROR/MISSING nodes"
             npx tree-sitter parse examples/layout.fsx | grep -E 'ERROR|MISSING'
             exit 1
           fi
