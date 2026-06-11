@@ -174,10 +174,17 @@ def summarize(results, files):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--update-baseline", action="store_true")
-    ap.add_argument("--summary", action="store_true")
-    ap.add_argument("--jobs", type=int, default=max(4, (os.cpu_count() or 8) - 2))
+    ap = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=__doc__,
+    )
+    ap.add_argument("--update-baseline", action="store_true",
+                    help="accept the current sweep as the new baseline "
+                         "(writes test/bench/baseline.txt)")
+    ap.add_argument("--summary", action="store_true",
+                    help="print the per-project table (files / failing / clean %% / error nodes)")
+    ap.add_argument("--jobs", type=int, default=max(4, (os.cpu_count() or 8) - 2),
+                    metavar="N", help="parallel parse workers (default: CPU count - 2)")
     args = ap.parse_args()
 
     repos = read_manifest()

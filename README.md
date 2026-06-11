@@ -228,6 +228,25 @@ python3 scripts/test-expansion.py             # run all
 python3 scripts/test-expansion.py -i multiDoc # filter by substring
 ```
 
+### Benchmark (real-world coverage)
+
+The numbers in *Why this grammar* come from `scripts/bench.py`: it sweeps
+every `.fs`/`.fsx` file of 24 pinned repositories (23 popular projects +
+`dotnet/fsharp`'s `src/`, ~3 900 files) and diffs the per-file error counts
+against the committed baseline in `test/bench/baseline.txt`. Any file that
+parses worse than the baseline fails the run — no grammar change lands
+without passing it.
+
+```bash
+./scripts/bench.py                    # sweep + regression check (~4 min)
+./scripts/bench.py --summary          # add the per-project table
+./scripts/bench.py --update-baseline  # accept improvements into the baseline
+```
+
+First run clones the corpus (~1.5 GB) into `~/.cache/fsharp-grammar-bench`
+(override with `$FSHARP_BENCH_DIR`). Too heavy for CI by design — run it
+locally before merging grammar or scanner changes.
+
 ## Licence
 
 Apache 2.0
