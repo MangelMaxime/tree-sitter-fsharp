@@ -1453,9 +1453,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (first == '-' && c1 != '>') return false;
             if (first == '@') {
                 if (c1 != '"' && c1 != '>' && c1 != '@') return false;
+                // `@>` / `@@>` at the BODY column closes a multi-line quotation
+                // (`<@`⏎`    body`⏎`@>`): no separator, no close — the token
+                // belongs to the still-open quotation expression. A DEDENTED
+                // closer falls through so the layout close fires first.
+                if (c1 == '>' && col == top->col) return false;
                 if (c1 == '@') {
                     lexer->advance(lexer, true);
                     if (lexer->lookahead != '>') return false;   // `@@…` operator, not `@@>`
+                    if (col == top->col) return false;           // `@@>` at body col — see above
                 }
             }
         }

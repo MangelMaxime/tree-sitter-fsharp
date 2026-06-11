@@ -232,3 +232,16 @@ compound (pieces pass in isolation, full files fail — context-dependent).
 
 Bench: 220→209 files, 1398→1268 nodes, 0 regressions. 11 files cleared
 (4× Aether, 6× Feliz ReactBindings tests, 1 more). Corpus 446.
+
+## Fix 15 — multi-line quotations with the closer at the body column
+
+`<@`⏎`    body`⏎`@>` (FSharp.Data type providers): the leading `@>`/`@@>` line
+got a LAYOUT_SEMI at the body column, orphaning the closer. The leading-`@`
+continuation check now returns false (no token) for `@>`/`@@>` at exactly the
+body column — the closer belongs to the still-open quotation; a DEDENTED closer
+still lets the layout close fire first. (First attempt patched semi_blocked —
+wrong: the infix peek has already consumed the `@`, so position assumptions
+there are invalid.)
+
+Bench: 209→207 files, 1268→1225 nodes, 0 regressions. WorldBankProvider 13→0,
+HtmlGenerator 4→0, Helpers.fs 23→2. Corpus 447.

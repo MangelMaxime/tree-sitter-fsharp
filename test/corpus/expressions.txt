@@ -2866,3 +2866,45 @@ let view =
         (identifier)
         (identifier))
       (list_expression))))
+
+================================================================================
+Multi-line quotation with the closer at the body column
+================================================================================
+
+let q uri =
+    <@
+        read uri
+    @>
+    |> wrap
+
+let r uri =
+    <@@
+        read uri
+    @@>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (binary_expression
+      (typed_quotation
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (untyped_quotation
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

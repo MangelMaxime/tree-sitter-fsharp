@@ -1176,3 +1176,11 @@ type L31_CtorAttrsModifier [<ParamObject; Emit("$0")>]
         Html.div [
 
         ]
+
+    let loadQuotation uri =
+        <@
+            readDocument
+                formatName
+                %%uri
+        @>
+        |> wrapReader
