@@ -543,3 +543,29 @@ Corpus 464.
 
 23-repo: 174→172 / 910→905; fsharp-src: 30→28 / 143→138; 0 regressions.
 DependencyProvider 3→0 and CheckExpressions 2→0 in BOTH suites. Corpus 466.
+
+## .fsi (signature files) assessment — measured, not implemented
+
+Swept all 213 .fsi files in dotnet/fsharp src/ with the current grammar:
+**212/213 fail, 14 097 error nodes over 72k lines (~1 per 5 lines)** — i.e.
+signature files are effectively unsupported today, as expected (they were
+deliberately excluded from every suite).
+
+What's missing (probed): module-level `val [inline] name: type` declarations;
+bodiless member signatures (`member X: int`, `new: x: int * y: int -> Point`,
+`static member Origin: Point`); and the hard one — NAMED parameter segments in
+curried function types (`val map: f: ('a -> 'b) -> list: 'a list -> 'b list`),
+which need labelled-arrow type forms that may interact with ascription/record
+field parsing.
+
+What already exists and can be reused: abstract_member_defn (same shape as
+member sigs), val_field, the whole type_expression machinery.
+
+Effort estimate: ONE dedicated session in the style of this branch —
+(a) val_signature + member-signature rules + labelled function types,
+(b) gate on the ready-made 213-file fsi suite plus the two existing suites
+(zero-regression on .fs is the hard requirement),
+(c) realistic landing point 90 %+ fsi files.
+Alternative if grammar conflicts prove nasty: a separate `fsharp_signature`
+grammar in this repo (ionide's approach — two grammars sharing the scanner),
+at the cost of duplicate maintenance. Recommendation: try in-grammar first.
