@@ -127,3 +127,38 @@ extern int GetSystemMetrics(int nIndex)
       (long_identifier
         (identifier)))
     (identifier)))
+
+================================================================================
+Trailing semicolon inside an attribute list
+================================================================================
+
+type B() =
+  [<Benchmark(Baseline = true); BenchmarkCategory("GET");>]
+  member __.GiraffeGet() = ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (bool_literal)))
+        (attribute_target
+          (long_identifier
+            (identifier))
+          (string_literal)))
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (unit))
+      (unit))))

@@ -184,3 +184,52 @@ let y = 1 (* a (* b *) c *)
     (identifier)
     (int_literal)
     (block_comment)))
+
+================================================================================
+Operator-looking line comment before a closing paren
+================================================================================
+
+let make d =
+    wrap (fun ad ->
+              checkAccess ad
+              //&&
+              )
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (lambda_expression
+          (parameter
+            (identifier))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (line_comment)))))
+
+================================================================================
+(*) is the multiply operator value, not a comment
+================================================================================
+
+let f2 = (*)
+let prod = List.fold (*) 1 xs
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (block_comment)
+    (application_expression
+      (int_literal)
+      (long_identifier
+        (identifier)))))

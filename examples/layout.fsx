@@ -1190,3 +1190,12 @@ type L32_InlineMemberBody = static member inline Invoke (x: int) = lift x
 module L33_Extern =
     [<DllImport("Kernel32")>]
     extern bool private GetConsoleMode(void* _hConsoleHandle, int* _lpMode)
+
+    let guarded d =
+        wrap (fun ad ->
+                  checkAccess ad
+                  //&&
+                  //matchAccessibility d
+                  )
+
+    let timesAll = List.fold (*) 1 [ 2; 3; 4 ]

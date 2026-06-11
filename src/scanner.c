@@ -122,6 +122,7 @@ static void push(Scanner *s, uint8_t sort, uint32_t col) {
 // neither symbol is valid — the reset internal lexer takes over.
 static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
     if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
+    if (lexer->lookahead == ')') return false;   // `(*)` = the multiply operator value, not a comment
     bool doc = false;
     if (lexer->lookahead == '*') {                 // `(**` — doc form…
         lexer->advance(lexer, false);
@@ -181,6 +182,9 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 // any OTHER outcome those advances are harmless (zero-width
                 // layout tokens never re-mark past the baseline).
                 lexer->advance(lexer, false);          // the `*`
+                if (lexer->lookahead == ')') {         // `(*)` multiply-op value line
+                    if (first) *first = '('; *col = indent; return true;
+                }
                 g_comment_doc = (lexer->lookahead == '*');
                 int sdepth = 1;
                 while (sdepth > 0) {
@@ -214,6 +218,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 return true;
             }
             lexer->advance(lexer, true);
+            if (lexer->lookahead == ')') { if (first) *first = '('; *col = indent; return true; }  // `(*)`
             int depth = 1;
             while (depth > 0) {
                 if (lexer->lookahead == 0) return false;
@@ -1436,7 +1441,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                                          c1 == '~' || c1 == '$');
             else if (c0 == '&') infix = (c1 == '&');                        // &&
             else if (c0 == ':') infix = (c1 == ':' || c1 == '>' || c1 == '?'); // :: :> :?
-            else                infix = true;                              // = < > * / % ^
+            else if (c0 == '/') infix = (c1 != '/');                       // `//` = COMMENT, not an operator
+            else                infix = true;                              // = < > * % ^
             if (infix) return false;
         }
 

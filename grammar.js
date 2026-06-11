@@ -318,6 +318,7 @@ export default grammar({
             "[<",
             $.attribute_target,
             repeat(seq(";", $.attribute_target)),
+            optional(";"),       // `[<Benchmark(…); BenchmarkCategory("GET");>]` — trailing `;`
             ">]",
         ),
 
@@ -3386,9 +3387,12 @@ export default grammar({
 
         null_literal: _ => token("null"),
 
-        line_comment: _ => token(seq("//", choice(/[^/].*/, ""))),
+        // token prec 1: `//&&` must lex as a COMMENT, not as symbolic_op
+        // (same length tie — F# forbids `//`-leading custom operators anyway).
+        line_comment: _ => token(prec(1, seq("//", choice(/[^/].*/, "")))),
 
-        xml_doc_comment: _ => token(seq("///", /.*/)),
+        // prec 2 > line_comment's 1 (lexical prec OVERRIDES match length!).
+        xml_doc_comment: _ => token(prec(2, seq("///", /.*/))),
 
         // Non-nesting block comment. Nested comments `(* (* … *) *)` aren't supported —
         // the outer closes at the first `*)`. Keeping this as a single token() avoids a

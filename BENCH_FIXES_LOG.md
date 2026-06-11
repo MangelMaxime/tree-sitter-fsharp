@@ -275,3 +275,22 @@ Bench: 197→195 files, 1130→1127 nodes, 0 regressions; ProvidedTypes +14 /
 IlxGen +7 are recovery reshuffle (both contain `extern` ONLY in comments; both
 already fail massively — their states shifted, not their real parses).
 Logging.fs 18→0. Corpus 449.
+
+## Fix 18 — `//`-operator comments, trailing attr `;`, `(*)` multiply value
+
+1. **`//&&` comment lines** (FCS Symbols, FAKE MSBuildHelper — the "compound"
+   mystery!): the leading-`/` continuation check treated `//` as an operator
+   continuation, and the internal lexer then lexed `//&&` as symbolic_op (tie).
+   Scanner: c0=='/' && c1=='/' is never an infix continuation. Grammar:
+   line_comment got token prec 1, xml_doc_comment prec 2 — LEXICAL PREC
+   OVERRIDES MATCH LENGTH in tree-sitter, so boosting `//` above symbolic_op
+   silently broke `///` until the doc token was boosted above both.
+2. **`[<A; B;>]`** trailing semicolon in attribute lists (Saturn benchmarks).
+3. **`(*)`** is F#'s multiply-operator-as-value, not an empty comment: declined
+   in finish_block_comment + both next_line_indent comment paths; the internal
+   block_comment regex can't match `(*)` so `( `*` )` lex as separate tokens
+   and operator_name's "*" branch parses it.
+
+Bench: 195→191 files, 1127→1088 nodes, 0 regressions (ProvidedTypes +6 /
+TypeTests +1 recovery reshuffle). MSBuildHelper 24→0, Symbols.fs 18→0.
+Corpus 452.
