@@ -484,3 +484,29 @@ is the F#-correct attachment (the old trees nested the pipe inside the arm).
 
 23-repo: 175→174 files / 934→910 nodes (Chocolatey 24→0), fsharp-src
 unchanged, 0 regressions. Corpus 463.
+
+---
+
+## Session summary #3 (2026-06-11, dedicated parked-items session)
+
+All three targets landed:
+1. **`struct {| … |}` anonymous records** (fix 26) — root cause of both earlier
+   failures: struct_tuple_expression was missing from _simple_expression, so
+   making `struct` shiftable there via the anon wrapper starved the tuple.
+   CO-LOCATION was the fix; no conflicts declaration needed.
+2. **The "undentation" item DISSOLVED** (fix 27) — the idiom already parses;
+   NameResolution's real residue was the mid-line twin of the `|?>` bug.
+   17→0 in BOTH suites.
+3. **Chocolatey pipe-match compound** (fix 28) — FSC-style offside grace for
+   leading operators below S_LAYOUT bodies + arm-column ops end the arm list +
+   unified `|`-operator classification. 24→0.
+
+**Standings: 23-repo 174 failing / 910 nodes (95.2% clean; session start
+3695 nodes); fsharp-src 30 / 142 (88.5% clean; baseline 1220 nodes).**
+
+Investigated and left: IlxGen (52/54 both suites — resists synthetic and
+slice reproduction; window/prefix cuts kept producing truncation artifacts:
+REMINDER that a slice ending in a trailing inner `let` with no continuation
+is INVALID F# and errors correctly); General.fs (29, compound, prefix-bisect
+non-monotonic); ProvidedTypes (230, own session); TypeNat/Collection (parked
+SRTP/aligned-spaces).
