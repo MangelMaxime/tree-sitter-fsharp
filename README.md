@@ -12,45 +12,20 @@ for use inside the [Helix editor](https://helix-editor.com/).
 
 ## Why this grammar
 
-**Coverage is measured, not hoped for.** Every change is gated on a benchmark
-of real-world F#: 23 popular open-source projects (Fable, Paket, FAKE,
-FSharpPlus, FSharp.Data, Hopac, Giraffe, Saturn, Feliz, …) plus the
-`dotnet/fsharp` compiler sources — about **3 900 files / 840 000 lines**.
-Current standing:
+- **Built on real code** — validated against 23 popular F# projects *and the
+  compiler itself* (~840 000 lines): over 95 % of files parse without a
+  single error.
+- **Failures stay local** — if a construct trips the parser, that line loses
+  its colors. Not the rest of the file.
+- **Modern F#** — anonymous records, `_.Name` lambdas, `let!`/`and!`/`while!`,
+  interpolated strings, F# 9 nullness, static abstract members, units of
+  measure…
+- **Docs belong to their code** — `///` comments attach to the declaration
+  below, so expand-selection grows value → binding → docs + binding → module.
+- **Made for Helix (first)** — distinct colors for parameters, operators and
+  constructors; `maf`/`mif` textobjects; rainbow brackets; sensible indents.
 
-| Suite | Files parsing without a single error |
-|---|---|
-| 23-project benchmark (3 654 files) | **95.3 %** |
-| `dotnet/fsharp` compiler + FSharp.Core (260 files) | **89.2 %** |
-
-and the files that do fail mostly carry 1–3 tiny error nodes rather than
-broken highlighting — across both suites the error density is roughly **one
-error node per 800 lines**. No fix lands if it makes any benchmarked file
-worse.
-
-**Modern F# is covered.** A systematic battery against the F# language
-reference parses everything from units of measure and active patterns to the
-newest additions: F# 9 nullness annotations (`string | null`), IWSAMs /
-static abstract members, `_.Name` shorthand lambdas, `while!`, anonymous
-records (incl. `struct {| … |}`), string-interpolation variants,
-fsyacc/fslex line directives, and FSharp.Core's own inline-IL and
-static-optimization syntax.
-
-**The offside rule is implemented in a real scanner.** F#'s indentation
-semantics (arm alignment, undentation grace for infix operators, `#if/#else`
-inactive branches as trivia, nested block comments) live in a hand-written
-external scanner modeled on the F# compiler's own LexFilter behaviour. When
-something does fail to parse, the damage stays local to the construct
-instead of cascading through the rest of the file.
-
-**Tuned for Helix.** The queries (`highlights.scm`, `locals.scm`,
-`rainbows.scm`, …) are written and tested against Helix's capture
-conventions — parameters, operators, doc comments and preprocessor regions
-all color the way you'd expect, and `examples/layout.fsx` is a living
-showcase you can open to eyeball every supported construct at once.
-
-**Regression-proofed.** 466 corpus tests, one per construct, each storing
-the exact expected parse tree.
+See everything at once in [`examples/layout.fsx`](examples/layout.fsx).
 
 ## Installation
 
