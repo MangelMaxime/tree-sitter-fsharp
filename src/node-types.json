@@ -164,6 +164,10 @@
         "named": true
       },
       {
+        "type": "struct_anonymous_record_expression",
+        "named": true
+      },
+      {
         "type": "struct_tuple_expression",
         "named": true
       },
@@ -389,6 +393,14 @@
       },
       {
         "type": "string_literal",
+        "named": true
+      },
+      {
+        "type": "struct_anonymous_record_expression",
+        "named": true
+      },
+      {
+        "type": "struct_tuple_expression",
         "named": true
       },
       {
@@ -1379,6 +1391,10 @@
             "named": true
           },
           {
+            "type": "struct_anonymous_record_expression",
+            "named": true
+          },
+          {
             "type": "struct_tuple_expression",
             "named": true
           },
@@ -2239,6 +2255,10 @@
           },
           {
             "type": "postfix_type",
+            "named": true
+          },
+          {
+            "type": "struct_anonymous_record_type",
             "named": true
           },
           {
@@ -4793,6 +4813,36 @@
     "fields": {}
   },
   {
+    "type": "struct_anonymous_record_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "anonymous_record_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "struct_anonymous_record_type",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "anonymous_record_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "struct_tuple_expression",
     "named": true,
     "fields": {},
@@ -5591,6 +5641,10 @@
           "named": true
         },
         {
+          "type": "struct_anonymous_record_type",
+          "named": true
+        },
+        {
           "type": "struct_tuple_type",
           "named": true
         },
@@ -5925,6 +5979,10 @@
             "named": true
           },
           {
+            "type": "struct_anonymous_record_type",
+            "named": true
+          },
+          {
             "type": "type_parameter",
             "named": true
           }
@@ -5966,6 +6024,10 @@
           },
           {
             "type": "postfix_type",
+            "named": true
+          },
+          {
+            "type": "struct_anonymous_record_type",
             "named": true
           },
           {

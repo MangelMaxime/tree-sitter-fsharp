@@ -1282,3 +1282,80 @@ let tryGetSdkDir =
                   (identifier))
                 (int_literal))
               (list_expression))))))))
+
+================================================================================
+Struct anonymous records beside struct tuples
+================================================================================
+
+let structAnonRecAcceptingFn (x: struct {|A: int; B: string|}) =
+    struct {|C = x.A + 1; D = "Z"|}
+
+let r = this.Return struct (result1, result2)
+let h (struct (a, b)) = struct (a + 1, b)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (struct_anonymous_record_type
+          (anonymous_record_type
+            (record_type_field
+              (identifier)
+              (type_expression
+                (long_identifier
+                  (identifier))))
+            (record_type_field
+              (identifier)
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    (struct_anonymous_record_expression
+      (anonymous_record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (binary_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (int_literal)))
+        (record_field
+          (long_identifier
+            (identifier))
+          (string_literal)))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (struct_tuple_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (parameter
+      (tuple_pattern
+        (pattern
+          (struct_tuple_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))))))
+    (struct_tuple_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (long_identifier
+        (identifier)))))

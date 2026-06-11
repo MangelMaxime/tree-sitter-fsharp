@@ -2853,6 +2853,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "struct_anonymous_record_type"
+        },
+        {
+          "type": "SYMBOL",
           "name": "type_parameter"
         },
         {
@@ -2937,6 +2941,10 @@
               {
                 "type": "SYMBOL",
                 "name": "anonymous_record_type"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "struct_anonymous_record_type"
               },
               {
                 "type": "SYMBOL",
@@ -3552,6 +3560,10 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_anonymous_record_expression"
         },
         {
           "type": "SYMBOL",
@@ -4328,6 +4340,14 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_tuple_expression"
         },
         {
           "type": "SYMBOL",
@@ -5351,6 +5371,36 @@
         {
           "type": "STRING",
           "value": "|]"
+        }
+      ]
+    },
+    "struct_anonymous_record_expression": {
+      "type": "PREC",
+      "value": 21,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "struct"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "anonymous_record_expression"
+          }
+        ]
+      }
+    },
+    "struct_anonymous_record_type": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "struct"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "anonymous_record_type"
         }
       ]
     },
@@ -7067,6 +7117,10 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_anonymous_record_expression"
         },
         {
           "type": "SYMBOL",
@@ -11161,6 +11215,10 @@
         {
           "type": "SYMBOL",
           "name": "anonymous_record_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "struct_anonymous_record_type"
         },
         {
           "type": "SYMBOL",

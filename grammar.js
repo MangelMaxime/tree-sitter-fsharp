@@ -979,6 +979,7 @@ export default grammar({
             $.array_type,
             $.parenthesized_type,
             $.anonymous_record_type,
+            $.struct_anonymous_record_type,
             $.type_parameter,
             $.long_identifier,
         ),
@@ -1004,6 +1005,7 @@ export default grammar({
                 $.array_type,
                 $.parenthesized_type,
                 $.anonymous_record_type,
+                $.struct_anonymous_record_type,
                 $.type_parameter,
                 $.long_identifier,
                 $.flexible_type,        // `source: #TypedArray`
@@ -1136,6 +1138,7 @@ export default grammar({
             $.array_expression,
             $.record_expression,
             $.anonymous_record_expression,
+            $.struct_anonymous_record_expression,
             $.tuple_expression,
             $._literal,
             $.long_identifier,
@@ -1358,6 +1361,11 @@ export default grammar({
             $.array_expression,
             $.record_expression,
             $.anonymous_record_expression,
+            $.struct_anonymous_record_expression,
+            // `f struct (a, b)` — struct tuple as an application ARGUMENT
+            // (must sit beside the struct-anon wrapper: once `struct` is
+            // shiftable here via one rule, the other must be too).
+            $.struct_tuple_expression,
             $.measure_literal,
             $.int_literal,
             $.float_literal,
@@ -1555,6 +1563,12 @@ export default grammar({
         // field separation) and inline (explicit `;` only). The indented form
         // prevents a field's value expression from greedily absorbing the next
         // field's name across a newline.
+        // `struct {|C = 1|}` / `struct {|A: int|}` — struct anonymous records.
+        // Same prec as struct_tuple_expression so the shared `struct` keyword
+        // resolves by the NEXT token (`{|` vs `(`).
+        struct_anonymous_record_expression: $ => prec(PREC.PAREN_EXPR, seq("struct", $.anonymous_record_expression)),
+        struct_anonymous_record_type: $ => seq("struct", $.anonymous_record_type),
+
         anonymous_record_expression: $ => seq(
             "{|",
             choice(
@@ -1948,6 +1962,7 @@ export default grammar({
             $.array_expression,
             $.record_expression,
             $.anonymous_record_expression,
+            $.struct_anonymous_record_expression,
             // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
             // nested-type) access on a generic type name. Without this, the
             // type_application_expression isn't a valid member-access object, so
@@ -2920,6 +2935,7 @@ export default grammar({
             $.array_type,
             $.parenthesized_type,
             $.anonymous_record_type,
+            $.struct_anonymous_record_type,
             $.measure_power_type,
             $.type_parameter,
             $.long_identifier,

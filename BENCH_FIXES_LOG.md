@@ -436,3 +436,19 @@ MEASUREMENT WARNING #2: ionide's grammar is ALSO named "fsharp" — the
 tree-sitter cache keys by grammar NAME, so parsing from OUR cwd after building
 theirs served THEIR parser (root node `(file` instead of `(source_file` was
 the tell). `rm -rf ~/.cache/tree-sitter` + re-warm before every parser switch.
+
+## Fix 26 — struct anonymous records (the parked one, solved)
+
+`struct {|A: int|}` / `struct {|C = 1|}` via separate wrapper rules wired at
+all SIX anon-record positions (_expression, _simple_expression, _dot_object +
+3 type lists). ROOT CAUSE of both earlier failures finally identified:
+struct_tuple_expression was never in _simple_expression — once `struct` became
+shiftable in argument position via the anon wrapper, the parser committed there
+and the tuple's old (indirect) route was preempted. The fix is CO-LOCATION:
+struct_tuple_expression added beside the wrapper in _simple_expression. A
+conflicts declaration was NOT needed (the generator even flags it unnecessary)
+— the lesson is that a keyword shared between rules must be shiftable toward
+ALL of them from every state where ANY of them is reachable.
+
+23-repo: 179→176 files / 975→951 nodes (3 AnonRecordTests copies), 0
+regressions. Corpus 461.

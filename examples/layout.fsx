@@ -1230,3 +1230,6 @@ type L35_DoAssign() =
             assert not isInteractive
 
             resolve override
+
+    let structBag (x: struct {| A: int; B: string |}) = struct {| C = x.A + 1 |}
+    let structPair = makeReturn struct (left, right)
