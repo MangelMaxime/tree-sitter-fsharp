@@ -386,3 +386,25 @@ separate restricted expression path (3 nodes, DependencyProvider).
 null` (tasks.fs), `member val Items = [||]: ITaskItem[] with get, set`
 (FSharp.Build). fsharp-src: 36→32 files / 178→164 nodes; 23-repo unchanged;
 0 regressions. Corpus 459, layout L37.
+
+---
+
+## Session summary #2 (2026-06-11 daytime, autonomous continuation)
+
+Fixes 20–24, triggered by onboarding **dotnet/fsharp** as a new suite:
+- `src/` (260 files) joined the regression gate: baseline **48 failing / 1220
+  nodes → 32 / 164 (87.7% clean, −87% nodes)**.
+- `tests/` (5452 files) is ADVISORY ONLY — it contains intentionally-invalid
+  compiler-test fixtures and must never gate.
+- 23-repo suite over the same fixes: 187→185 files / 1035→1006 nodes.
+
+Notable: the `//`-swallows-next-line lexer bug (negated regex classes match
+newline!), FSharp.Core's static-optimization equations + inline-IL type args,
+the `_then_open` external (mid-line else closes ONLY then/elif bodies — the
+broken `do x <- if…else…` parse had ZERO error nodes; clean counts are not
+proof of correct trees), computed enum flags, and first-class F# 9 nullness
+(`string | null`) in params/returns/constraints.
+
+Remaining fsharp-src top: IlxGen 54 (multi-line tuple arm patterns), prim-types
+17 (GADT-style case signatures + `( :: )` member access), NameResolution 17
+(undentation idiom) — all triaged, all known-hard.
