@@ -5388,6 +5388,10 @@
                       {
                         "type": "SYMBOL",
                         "name": "index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "dot_expression"
                       }
                     ]
                   }
@@ -5430,6 +5434,10 @@
                       {
                         "type": "SYMBOL",
                         "name": "index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "dot_expression"
                       }
                     ]
                   }
@@ -5497,6 +5505,10 @@
                       {
                         "type": "SYMBOL",
                         "name": "index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "dot_expression"
                       }
                     ]
                   }
@@ -5539,6 +5551,10 @@
                       {
                         "type": "SYMBOL",
                         "name": "index_expression"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "dot_expression"
                       }
                     ]
                   }
@@ -8225,24 +8241,59 @@
       "type": "PREC",
       "value": 15,
       "content": {
-        "type": "SEQ",
+        "type": "CHOICE",
         "members": [
           {
-            "type": "CHOICE",
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "lazy"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "assert"
+                  }
+                ]
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            ]
+          },
+          {
+            "type": "SEQ",
             "members": [
               {
                 "type": "STRING",
                 "value": "lazy"
               },
               {
-                "type": "STRING",
-                "value": "assert"
+                "type": "SYMBOL",
+                "name": "_lazy_open"
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_expression"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "type_ascription_expression"
+                  }
+                ]
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_layout_end"
               }
             ]
-          },
-          {
-            "type": "SYMBOL",
-            "name": "_expression"
           }
         ]
       }
@@ -13993,6 +14044,10 @@
     {
       "type": "SYMBOL",
       "name": "_then_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_lazy_open"
     }
   ],
   "inline": [],

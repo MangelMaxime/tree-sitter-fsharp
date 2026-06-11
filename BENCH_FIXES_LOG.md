@@ -408,3 +408,31 @@ proof of correct trees), computed enum flags, and first-class F# 9 nullness
 Remaining fsharp-src top: IlxGen 54 (multi-line tuple arm patterns), prim-types
 17 (GADT-style case signatures + `( :: )` member access), NameResolution 17
 (undentation idiom) — all triaged, all known-hard.
+
+## Fix 25 — gaps found by comparing against ionide/tree-sitter-fsharp
+
+Cross-parser comparison surfaced files ionide parses and we didn't:
+1. **Copy-update with a dot-expression base**: `{ X.Default("A").Settings with
+   CopyLocal = Some true }` — dot_expression added to all four record/anon
+   copy-update base slots (Paket BasicScenarioSpecs 12→0).
+2. **Ctor attrs with trailing comments**: `[<ParamObject>] // …⏎ [<Emit>] // …⏎
+   (params) =` — CTOR_ATTR probe skips `//` comments and repeated attr rows
+   (Feliz POJO docs, both clones).
+3. **`lazy` block bodies**: `lazy⏎    assert …⏎⏎    match …` — new layout
+   branch via a DEDICATED `_lazy_open` external that DECLINES inline bodies.
+   Three failed designs: _expr_open stole `lazy b` match scrutinees
+   (`match a, lazy b with` — Map.fs); _block_open's S_DECL blew up FxResolver
+   41 nodes; ascription had to be allowed inside (`= lazy x.Value : Lazy<'T>`,
+   Monad.fs).
+4. **REVERTED**: struct anonymous records `struct {| … |}` — both encodings
+   (optional("struct") inline; separate wrapper rules) broke `struct (a, b)`
+   TUPLES via silent GLR mis-resolution (tasks.fs 19, ArrayTests×5,
+   DecoderCE 8). Needs a dedicated session with explicit conflicts; PARKED.
+
+23-repo: 185→179 files / 1006→975 nodes; fsharp-src: 32→31 / 164→159;
+0 regressions. Corpus 460.
+
+MEASUREMENT WARNING #2: ionide's grammar is ALSO named "fsharp" — the
+tree-sitter cache keys by grammar NAME, so parsing from OUR cwd after building
+theirs served THEIR parser (root node `(file` instead of `(source_file` was
+the tell). `rm -rf ~/.cache/tree-sitter` + re-warm before every parser switch.

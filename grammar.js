@@ -184,6 +184,7 @@ export default grammar({
         $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
         $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
         $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
+        $._lazy_open,         // lazy block-body open — like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1560,7 +1561,7 @@ export default grammar({
                 seq(
                     // Base may be an application (`{| routes.Create(n) with … |}`,
                     // farmer style) — same shapes record_expression accepts.
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                 ),
@@ -1568,7 +1569,7 @@ export default grammar({
                 // mirror of record_expression's own-line-base branch.
                 seq(
                     $._layout_open,
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                     $._layout_end,
@@ -1590,7 +1591,7 @@ export default grammar({
                     // or a generic call (`{ Default<_>() with … }`), not only a
                     // simple value — disambiguated by `with` (the full
                     // expression is parsed before `with`).
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                 ),
@@ -1601,7 +1602,7 @@ export default grammar({
                 // field list consumes that indent, and `base with` errors.
                 seq(
                     $._layout_open,
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression)),
+                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                     $._layout_end,
@@ -2217,10 +2218,19 @@ export default grammar({
             ),
         )),
 
-        // lazy expr / assert expr — prefix keyword wrapping an expression
-        prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR,
+        // lazy expr / assert expr — prefix keyword wrapping an expression.
+        // The layout-bounded alternative covers a MULTI-STATEMENT block body:
+        //   lazy⏎    assert not isInteractive⏎⏎    match … (FCS FxResolver) —
+        // without a body context the statements have no separator.
+        prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR, choice(
             seq(choice("lazy", "assert"), $._expression),
-        ),
+            // _block_open (NOT _expr_open): it only fires when the body sits on
+            // the NEXT line, so inline `lazy x` (e.g. as a match scrutinee:
+            // `match a, lazy b with`) always takes the plain branch above.
+            // _lazy_open declines INLINE bodies, so `lazy x` (e.g. a match
+            // scrutinee `match a, lazy b with`) always takes the plain branch.
+            seq("lazy", $._lazy_open, choice($._expression, $.type_ascription_expression), $._layout_end),
+        )),
 
         // `do expr` — a unit-returning statement written explicitly inside a
         // sequence (`do v := 0`, `do obj.Mutate ()`). prec.right at 2 (just above

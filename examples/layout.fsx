@@ -1224,3 +1224,9 @@ type L35_DoAssign() =
 
     type L37Build() =
         member val Items = [||]: string[] with get, set
+
+    let lazySdk =
+        lazy
+            assert not isInteractive
+
+            resolve override

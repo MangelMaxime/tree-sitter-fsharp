@@ -1218,3 +1218,67 @@ type ``[,]``<'T> =
       (type_parameter))
     (inline_il_expression
       (string_literal))))
+
+================================================================================
+Dot-expression copy-update base and lazy block body
+================================================================================
+
+let y = { Settings.Default("A").Settings with CopyLocal = Some true }
+
+let tryGetSdkDir =
+    lazy
+        assert not isInteractive
+
+        match assumeDotNetFramework with
+        | true -> None, []
+        | _ -> Some 1, []
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (record_expression
+      (dot_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (string_literal)))
+        (identifier))
+      (record_field
+        (long_identifier
+          (identifier))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (bool_literal)))))
+  (let_binding
+    (identifier)
+    (prefix_keyword_expression
+      (sequence_expression
+        (prefix_keyword_expression
+          (unary_expression
+            (long_identifier
+              (identifier))))
+        (match_expression
+          (long_identifier
+            (identifier))
+          (match_arm
+            (pattern
+              (literal_pattern
+                (bool_literal)))
+            (tuple_expression
+              (long_identifier
+                (identifier))
+              (list_expression)))
+          (match_arm
+            (pattern
+              (wildcard_pattern))
+            (tuple_expression
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (int_literal))
+              (list_expression))))))))

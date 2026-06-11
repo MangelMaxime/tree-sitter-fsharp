@@ -52,6 +52,7 @@ typedef enum {
     BLOCK_COMMENT,        // `(* … *)` NESTED (regex can't nest)
     BLOCK_DOC_COMMENT,    // `(** … *)` doc form
     THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)
+    LAZY_OPEN,            // lazy block-body open — S_EXPR, declines INLINE bodies
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -862,8 +863,24 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
         if (!skip_bracket_attrs(lexer)) return false;
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        // Skip ws/newlines and `//` trailing comments between the attrs and the
+        // `(` (`[<ParamObject>] // …⏎ [<Emit("$0")>] // …⏎ (params) =`, Feliz docs).
+        for (;;) {
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            if (lexer->lookahead == '/') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead != '/') return false;
+                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+                    lexer->advance(lexer, true);
+                continue;
+            }
+            if (lexer->lookahead == '[') {        // another attribute row
+                if (!skip_bracket_attrs(lexer)) return false;
+                continue;
+            }
+            break;
+        }
         // Optional access modifier between the attrs and the `(`:
         // `type T [<ParamObject; Emit("$0")>]⏎ private (…)`.
         if (lexer->lookahead == 'p' || lexer->lookahead == 'i') {
@@ -926,6 +943,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         push(s, S_EXPR, peek_body_col(lexer));
         if (s->n) { s->stk[s->n - 1].thn = 1; if (inl) s->stk[s->n - 1].inl = 1; }
         lexer->result_symbol = THEN_OPEN;   return true;
+    }
+    if (valid[LAZY_OPEN])   {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+            lexer->lookahead != '/'  && lexer->lookahead != 0) return false;   // inline body → plain branch
+        push(s, S_EXPR, peek_body_col(lexer));
+        lexer->result_symbol = LAZY_OPEN;   return true;
     }
     if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
     if (valid[ELSE_OPEN]) {

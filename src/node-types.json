@@ -534,6 +534,10 @@
             "named": true
           },
           {
+            "type": "dot_expression",
+            "named": true
+          },
+          {
             "type": "index_expression",
             "named": true
           }
@@ -3872,6 +3876,10 @@
         {
           "type": "_expression",
           "named": true
+        },
+        {
+          "type": "type_ascription_expression",
+          "named": true
         }
       ]
     }
@@ -4316,6 +4324,10 @@
           },
           {
             "type": "bracket_index_expression",
+            "named": true
+          },
+          {
+            "type": "dot_expression",
             "named": true
           },
           {
