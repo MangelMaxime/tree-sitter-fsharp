@@ -1,7 +1,6 @@
 # Tree Sitter for F#
 
-An F# grammar for [tree-sitter](https://tree-sitter.github.io/), tuned
-for use inside the [Helix editor](https://helix-editor.com/).
+An F# grammar for [tree-sitter](https://tree-sitter.github.io/).
 
 > [!NOTE]
 > This grammar is tuned for Helix.
