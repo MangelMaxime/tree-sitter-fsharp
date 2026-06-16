@@ -4,9 +4,13 @@ An F# grammar for [tree-sitter](https://tree-sitter.github.io/), tuned
 for use inside the [Helix editor](https://helix-editor.com/).
 
 > [!NOTE]
-> For neovim support you can use [Ionide Tree Sitter](https://github.com/ionide/tree-sitter-fsharp)
+> This grammar is tuned for Helix.
 >
-> If you prefer to use the grammar from this repo for neovim, PRs are welcome
+> **Neovim support is experimental** — see [Neovim (experimental)](#neovim-experimental) below. PRs welcome, especially
+> for Neovim-specific queries.
+>
+> Historically, [Ionide tree-sitter](https://github.com/ionide/tree-sitter-fsharp) grammar is
+> designed for Neovim. However, they don't support as many coloration features as this grammar.
 
 ![Showcase of the grammar in action](./assets/showcase.png)
 
@@ -83,25 +87,6 @@ Then drop the `[[grammar]]` and `[[language]]` `fsharp` entries you added to `~/
 
 After that, Helix falls back to its built-in F# grammar (if any) on the next launch.
 
-## Development workflow
-
-1. Edit `grammar.js` and/or `src/scanner.c`.
-2. `npx tree-sitter generate` (or just `./dev.sh`).
-3. `npx tree-sitter test` to confirm the corpus (460+ tests) still passes.
-4. `npx tree-sitter parse examples/layout.fsx | grep -c ERROR` - should be zero.
-5. `./dev.sh` to deploy to Helix.
-6. Restart Helix and check the highlights.
-
-For UI-visible changes, render with `tree-sitter highlight`:
-
-```bash
-npx tree-sitter highlight path/to/your/file.fsx
-```
-
-That shows you the ANSI-tinted output exactly as the queries would apply
-in Helix's default theme. It's the fastest way to sanity-check that a
-queries change does what you expect before reloading Helix.
-
 ## Editor configuration
 
 Here is my recommended `languages.toml` config for F# support in Helix.
@@ -159,6 +144,115 @@ rainbow-brackets = true
 
 > [!NOTE]
 > At the time of writing, you need to build Helix from source to get rainbow brackets support
+
+## Neovim (experimental)
+
+This grammar was developed as Helix-first, but it works in Neovim too.
+
+**Treat this as experimental.**
+
+The biggest caveat is the queries: tree-sitter queries are
+editor-specific, and the `.scm` files in this repo target Helix's capture names
+and conventions.
+
+Neovim uses its own highlight groups (`@variable.parameter`, `@function`, `@constructor`, …), so Helix's queries map onto them only roughly - highlighting is "ok" today, but far from perfect.
+
+**This is where help is most valuable.** PRs that add Neovim-specific queries (better capture mappings, `injections`, `locals`, `folds`, indentation)
+are very welcome - the grammar itself is shared, only the queries need editor-specific love.
+
+### Install
+
+> [!NOTE]
+> [`nvim-treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) was **archived on 2026-04-03**
+>
+> For this reason, the instructions below are using Neovim built-in tree-sitter support, which is stable since 0.9 and mature in 0.11+.
+>
+> If you prefer using a similar plugin, you can use [`neovim-treesitter/nvim-treesitter`](https://github.com/neovim-treesitter/nvim-treesitter), a community-maintained fork of the original plugin.
+
+The installer script builds the parser and copies it plus the queries into your
+Neovim config (`${XDG_CONFIG_HOME:-~/.config}/nvim`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-nvim.sh | bash
+```
+
+Pin to a branch or commit by appending it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-nvim.sh | bash -s -- some-branch
+```
+
+It needs `git`, a C compiler, and the `tree-sitter` CLI (or `npx`). Install
+somewhere else with `NVIM_CONFIG_DIR=… `, or build from a fork with
+`TS_FSHARP_REPO=Owner/repo`.
+
+<details>
+<summary>Or do it manually</summary>
+
+```bash
+# 1. Build the parser
+git clone https://github.com/MangelMaxime/tree-sitter-fsharp
+cd tree-sitter-fsharp
+npx tree-sitter generate
+npx tree-sitter build --output fsharp.so
+
+# 2. Install the parser + queries into ~/.config/nvim
+mkdir -p ~/.config/nvim/parser ~/.config/nvim/queries/fsharp
+cp fsharp.so ~/.config/nvim/parser/fsharp.so
+cp queries/*.scm ~/.config/nvim/queries/fsharp/
+```
+
+</details>
+
+Then tell Neovim to use tree-sitter for F# files (in your `init.lua`):
+
+```lua
+-- .fs / .fsx / .fsi -> fsharp, with tree-sitter highlighting
+vim.filetype.add({ extension = { fs = "fsharp", fsx = "fsharp", fsi = "fsharp" } })
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "fsharp",
+    callback = function()
+        vim.treesitter.start() -- highlighting
+    end,
+})
+```
+
+Open an `.fsx` file and the grammar lights up. `:InspectTree` shows the live
+parse tree and `:Inspect` shows the capture under the cursor — handy when
+tweaking queries.
+
+#### Try it without installing
+
+The repo ships a throwaway, self-contained Neovim config so you can eyeball the
+grammar without touching your own setup. It builds the parser and opens a file
+in an isolated `nvim -u nvim/init.lua` (no plugins, no user config):
+
+```bash
+./dev-nvim.sh                      # opens examples/references.fsx
+./dev-nvim.sh path/to/file.fsx     # opens a specific file
+```
+
+This is also the fastest loop when working on the Neovim queries: edit a
+`queries/*.scm`, rerun `./dev-nvim.sh`, look.
+
+## Development workflow
+
+1. Edit `grammar.js` and/or `src/scanner.c`.
+2. `npx tree-sitter generate` (or just `./dev.sh`).
+3. `npx tree-sitter test` to confirm the corpus (460+ tests) still passes.
+4. `npx tree-sitter parse examples/layout.fsx | grep -c ERROR` - should be zero.
+5. `./dev.sh` to deploy to Helix.
+6. Restart Helix and check the highlights.
+
+For UI-visible changes, render with `tree-sitter highlight`:
+
+```bash
+npx tree-sitter highlight path/to/your/file.fsx
+```
+
+That shows you the ANSI-tinted output exactly as the queries would apply
+in Helix's default theme. It's the fastest way to sanity-check that a
+queries change does what you expect before reloading Helix.
 
 ## Testing
 
