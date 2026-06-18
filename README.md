@@ -20,9 +20,6 @@ An F# grammar for [tree-sitter](https://tree-sitter.github.io/).
   single error.
 - **Failures stay local** — if a construct trips the parser, that line loses
   its colors. Not the rest of the file.
-- **Modern F#** — anonymous records, `_.Name` lambdas, `let!`/`and!`/`while!`,
-  interpolated strings, F# 9 nullness, static abstract members, units of
-  measure…
 - **Docs belong to their code** — `///` comments attach to the declaration
   below, so expand-selection grows value → binding → docs + binding → module.
 - **Made for Helix (first)** — distinct colors for parameters, operators and
