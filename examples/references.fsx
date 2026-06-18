@@ -1174,6 +1174,19 @@ module L26_OperatorValues =
 
     let first, second as pair, rest = splitThree input
 
+    // Overloaded `(*)` operator MEMBERS — `(*` must NOT open a block comment.
+    // Two or more consecutive members used to make the first `(*` swallow the
+    // line up to the next `(*)`'s `*)`, colouring code as a comment.
+    type Vector =
+        static member (*) (a, i: int) = scale (a, i)
+        static member (*) (a, i: int64) = scale (a, i)
+        static member (*) (a, f: float) = scale (a, f)
+
+    // The same operator as a binding body and as a first-class application arg
+    // (single occurrence — the no-closing-`*)` case that always worked).
+    let mul = (*)
+    let product = List.fold (*) 1 [ 1; 2; 3 ]
+
 // === L27: over-indented continuation arm (FSC permits arms right of their match) ===
 module L27_OverIndentedArm =
     let categorize expr =

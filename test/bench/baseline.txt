@@ -1,6 +1,6 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 192 with errors; 1133 error nodes
-232	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+# 3914 files swept; 175 with errors; 1063 error nodes
+287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Target/Target.fs
@@ -19,12 +19,7 @@
 3	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlProvider.fs
 2	FSharp.Data/src/FSharp.Data.Runtime.Utilities/StructuralTypes.fs
 2	FSharp.Data/tests/FSharp.Data.Tests/CsvProvider.fs
-3	FSharpPlus/docsrc/content/abstraction-functor.fsx
 18	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
-2	FSharpPlus/docsrc/content/generic-doc.fsx
-2	FSharpPlus/docsrc/content/tutorial.fsx
-11	FSharpPlus/src/FSharpPlus.Docs/Samples/Learn You a Haskell.fsx
-12	FSharpPlus/src/FSharpPlus.TypeLevel/Data/Matrix.fs
 42	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
 4	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
 29	FSharpPlus/src/FSharpPlus/Control/Collection.fs
@@ -36,11 +31,7 @@
 3	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
 2	FSharpPlus/src/FSharpPlus/Extensions/Obj.fs
 3	FSharpPlus/src/FSharpPlus/Internals.fs
-2	FSharpPlus/src/FSharpPlus/Math/Applicative.fs
-2	FSharpPlus/src/FSharpPlus/Math/Generic.fs
 2	FSharpPlus/src/FSharpPlus/Operators.fs
-2	FSharpPlus/tests/FSharpPlus.Tests/BifoldableTests.fs
-29	FSharpPlus/tests/FSharpPlus.Tests/General.fs
 2	Fable/src/Fable.Compiler/ProjectCracker.fs
 4	Fable/src/Fable.Core/Fable.Core.Extensions.fs
 3	Fable/src/Fable.Core/Fable.Core.Types.fs
@@ -49,12 +40,8 @@
 2	Fable/src/Fable.Transforms/Rust/AST/Rust.AST.Parser.fs
 3	Fable/src/fable-compiler-js/src/ProjectParser.fs
 2	Fable/src/fable-library-ts/BigInt/n.fs
-3	Fable/src/fable-library-ts/BigInt/q.fs
-4	Fable/src/fable-library-ts/BigInt/z.fs
 2	Fable/src/fable-standalone/src/Worker/Shared.fs
 3	Fable/src/fable-standalone/test/bench-compiler/ProjectParser.fs
-5	Fable/src/fable-standalone/test/bench/test_script_10k.fsx
-21	Fable/src/fable-standalone/test/bench/test_script_50k.fsx
 6	Fable/src/fcs-fable/codegen/lex.fs
 29	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
@@ -86,29 +73,25 @@
 3	Fable/src/fcs-fable/test/ProjectParser.fs
 1	Fable/tests/Beam/ApplicativeTests.fs
 3	Fable/tests/Beam/RegexTests.fs
-7	Fable/tests/Beam/SeqTests.fs
 2	Fable/tests/Dart/src/NullnessTests.fs
 2	Fable/tests/Dart/src/ResultTests.fs
-4	Fable/tests/Dart/src/SeqTests.fs
 3	Fable/tests/Js/Main/ApplicativeTests.fs
 2	Fable/tests/Js/Main/AsyncTests.fs
 2	Fable/tests/Js/Main/ComparisonTests.fs
 5	Fable/tests/Js/Main/MiscTests.fs
 2	Fable/tests/Js/Main/NullnessTests.fs
-5	Fable/tests/Js/Main/SeqTests.fs
-4	Fable/tests/Js/Main/TypeTests.fs
+2	Fable/tests/Js/Main/TypeTests.fs
 3	Fable/tests/Python/TestApplicative.fs
 2	Fable/tests/Python/TestComparison.fs
 2	Fable/tests/Python/TestMisc.fs
 2	Fable/tests/Python/TestNullness.fs
-7	Fable/tests/Python/TestSeq.fs
-3	Fable/tests/Python/TestType.fs
+2	Fable/tests/Python/TestType.fs
 2	Fable/tests/React/SpreadSheet.fs
 3	Fable/tests/Rust/tests/src/ApplicativeTests.fs
 4	Fable/tests/Rust/tests/src/ComparisonTests.fs
 2	Fable/tests/Rust/tests/src/ListTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
-3	Fable/tests/Rust/tests/src/TypeTests.fs
+2	Fable/tests/Rust/tests/src/TypeTests.fs
 1	Feliz-Zaid/src/Feliz.Delay/Delay.fs
 1	Feliz-fable-hub/src/Feliz.Delay/Delay.fs
 7	FsCheck/src/FsCheck/Runner.fs

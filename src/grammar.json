@@ -14428,12 +14428,30 @@
             "value": "(*"
           },
           {
-            "type": "PATTERN",
-            "value": "([^*]|\\*+[^)*])*\\*+"
-          },
-          {
-            "type": "STRING",
-            "value": ")"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "\\*+\\)"
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "PATTERN",
+                    "value": "[^)*]|\\*+[^)*]"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "([^*]|\\*+[^)*])*\\*+"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": ")"
+                  }
+                ]
+              }
+            ]
           }
         ]
       }

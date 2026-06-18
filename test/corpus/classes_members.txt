@@ -685,3 +685,87 @@ type Apply =
           (type_expression
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Overloaded (*) operator members are not block comments
+================================================================================
+
+type Foo =
+    static member (*) (a, i: int) = scale (a, i)
+    static member (*) (a, i: int64) = scale (a, i)
+    static member (*) (a, f: float) = scale (a, f)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (member_defn
+      name: (operator_name)
+      parameters: (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (tuple_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      name: (operator_name)
+      parameters: (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (tuple_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      name: (operator_name)
+      parameters: (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            pattern: (long_identifier
+              (identifier))
+            type: (type_expression
+              (long_identifier
+                (identifier))))))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (tuple_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))

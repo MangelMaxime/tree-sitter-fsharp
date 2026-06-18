@@ -3660,7 +3660,15 @@ export default grammar({
         // scanner handles NESTED comments (a token regex cannot nest) at the
         // positions it controls; when it declines, these internal regexes lex
         // the simple (non-nested) cases as a fallback.
-        block_comment: _ => token(seq("(*", /([^*]|\*+[^)*])*\*+/, ")")),
+        //
+        // The char immediately after `(*` must NOT be `)`: `(*)` is the
+        // multiply OPERATOR value, never a comment. Without this guard the
+        // regex spans two operator members (`(*) … (*)`) — the first `(*`
+        // closes at the SECOND member's `*)` — swallowing a whole line as a
+        // comment. The scanner already guards its own paths the same way; this
+        // mirrors it for the fallback. (`(**)` — empty comment — starts with
+        // `*`, so it is still accepted.)
+        block_comment: _ => token(seq("(*", choice(/\*+\)/, seq(/[^)*]|\*+[^)*]/, /([^*]|\*+[^)*])*\*+/, ")")))),
         block_doc_comment: _ => token(prec(1, seq("(**", /([^*]|\*+[^)*])*\*+/, ")"))),
 
 

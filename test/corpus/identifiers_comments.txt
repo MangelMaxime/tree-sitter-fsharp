@@ -227,10 +227,18 @@ let prod = List.fold (*) 1 xs
 
 (source_file
   (let_binding
-    (identifier)
-    (block_comment)
-    (application_expression
-      (int_literal)
+    name: (identifier)
+    body: (operator_name))
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (operator_name))
+        (int_literal))
       (long_identifier
         (identifier)))))
 

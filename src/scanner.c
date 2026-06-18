@@ -354,6 +354,7 @@ static uint32_t peek_body_col(TSLexer *lexer) {
             // next_line_indent's comment-led-element rule); otherwise the body
             // is on a later line.
             lexer->advance(lexer, true);
+            if (lexer->lookahead == ')') return col;  // `(*)` = the multiply operator value, not a comment — inline body at the `(`
             int cdepth = 1;
             while (cdepth > 0) {
                 if (lexer->lookahead == 0) return 0;
