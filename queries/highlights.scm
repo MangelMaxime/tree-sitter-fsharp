@@ -774,6 +774,18 @@
 ((long_identifier) @function.builtin
  (#match? @function.builtin "^(raise|reraise|failwith|failwithf|invalidArg|invalidOp|nullArg)$"))
 
+; Primitive conversion operators (`string c`, `int x`, `float32 y`, …) applied
+; as a function. Unlike raise/failwith above this CANNOT be an unscoped
+; text-match — these names double as type names (`x: string`), so matching
+; the bare identifier would wrongly tint type annotations too. Anchoring on
+; "single-segment head of an application_expression" (same shape as the DU
+; constructor rule) restricts the match to actual call sites; type positions
+; live under a different parent (type_expression/generic_type/…) and never
+; match this pattern, so there's no false positive there.
+((application_expression
+   . (long_identifier . (identifier) @function.builtin .))
+ (#match? @function.builtin "^(byte|sbyte|int8|uint8|int16|uint16|int32|uint32|int64|uint64|int|uint|nativeint|unativeint|float|float32|double|single|decimal|char|string|bigint|enum)$"))
+
 ; base and fixed are reserved keywords but appear as plain identifiers in the tree
 ((identifier) @keyword (#match? @keyword "^(base|fixed)$"))
 

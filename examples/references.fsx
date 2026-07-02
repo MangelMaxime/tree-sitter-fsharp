@@ -1345,3 +1345,47 @@ type L35_DoAssign() =
 
     let CheckedInfo(flag, attribs, rhs), tpenv = checkBinding x
     let resolveRid ([<Optional; DefaultParameterValue(null: string | null)>] rid: string | null) = rid
+
+// === L38: expression-position highlighting — DU constructors & builtin casts ===
+// Exercises the two application-head rules added to queries/highlights.scm: a DU
+// case applied as a function colours @constructor, and a primitive conversion
+// operator applied as a function colours @function.builtin — both matching their
+// existing pattern-side colouring. Type positions (annotations, record fields)
+// must stay @type; that's the exact false positive the application-head anchor
+// (rather than a bare text match) exists to avoid.
+module L38_ExpressionColouring =
+    type Op<'a> =
+        | Keep of 'a
+        | OnlyLeft of 'a
+        | OnlyRight of 'a
+
+    // DU constructor as the application head — parenthesised (no space) and
+    // spaced forms both colour the head @constructor, same as the pattern side.
+    let toStr =
+        function
+        | Keep c -> Keep(string c)
+        | OnlyLeft c -> OnlyLeft(string c)
+        | OnlyRight c -> OnlyRight(string c)
+
+    // Built-in constructors — no-arg, spaced, and parenthesised.
+    let noneVal = None
+    let someSpaced = Some 1
+    let someParen = Some(1)
+    let okVal = Ok "done"
+    let errVal = Error "bad"
+
+    // Primitive conversion operators applied as a function — @function.builtin.
+    let castChar (c: char) = string c
+    let castInt (s: string) = int s
+    let castFloat (s: string) = float32 s
+    let castBig (n: int) = bigint n
+
+    // Point-free usage — the conversion function is a bare VALUE here (not
+    // applied), so it does NOT get @function.builtin. Known, accepted gap.
+    let allStrings (xs: int list) = List.map string xs
+
+    // Type positions must stay @type, never @function.builtin / @constructor —
+    // "string"/"int" are ALSO type names, which is the exact ambiguity the
+    // application-head anchor is scoped to avoid.
+    let describe (value: string) (count: int) : string = value + string count
+    type Summary = { Text: string; Count: int }
