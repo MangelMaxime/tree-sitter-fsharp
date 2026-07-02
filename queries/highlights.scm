@@ -676,6 +676,17 @@
    (long_identifier) (long_identifier (identifier) @variable.parameter))
  (#match? @variable.parameter "^[a-z_]"))
 
+; DU constructor applied as a function in EXPRESSION position — `Keep(string c)`,
+; `Keep c`, `Some x`, `Ok value`. Mirrors the pattern-side convention above
+; (Capitalised head = constructor); without this, only the pattern side of a
+; match arm got @constructor colour and the constructed value did not.
+; The head is the FIRST child of `application_expression`; both `.` anchors on
+; the long_identifier restrict this to single-segment heads so dotted calls
+; (`Array.map`, `Console.WriteLine`) keep their existing colouring.
+((application_expression
+   . (long_identifier . (identifier) @constructor .))
+ (#match? @constructor "^[A-Z]"))
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))
