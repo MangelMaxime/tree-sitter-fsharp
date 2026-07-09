@@ -687,6 +687,19 @@
    . (long_identifier . (identifier) @constructor .))
  (#match? @constructor "^[A-Z]"))
 
+; Lowercase single-segment head of an application — an ordinary function call
+; (`isEmpty x`, `equal ()`, `f value`). Mirrors the DU-constructor rule above
+; (Capitalised head = @constructor); the `^[a-z_]` guard keeps the two
+; disjoint, and both `.` anchors exclude dotted heads (`List.map`,
+; `s.ToUpper`) so module/member colouring is unchanged. Bare references
+; (`x |> isEmpty`) stay uncoloured — without type info a non-applied
+; identifier can't be told apart from a plain value. Placed BEFORE the
+; raise/failwith and conversion-operator rules below so their more-specific
+; @function.builtin wins on last-capture resolution.
+((application_expression
+   . (long_identifier . (identifier) @function .))
+ (#match? @function "^[a-z_]"))
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))
@@ -758,8 +771,13 @@
 ; `raise` long_identifier ends up with @function.builtin colour — Helix
 ; uses the last matching capture, and capturing `raise` here as
 ; @function.builtin (no theme colour) would otherwise wipe out the builtin tint.
+; Both raise rules capture the INNER identifier (not the wrapping
+; long_identifier): the general lowercase-application rule above captures the
+; identifier, and an inner capture beats a parent one regardless of source
+; order — so the builtin tint must contend on the same node to win (these
+; names are single-segment, so the inner identifier spans the same text).
 ((application_expression
-   (long_identifier) @function.builtin
+   (long_identifier . (identifier) @function.builtin .)
    [
      (long_identifier) @type
      (parenthesized_expression (long_identifier) @type)
@@ -771,7 +789,7 @@
  (#match? @type "^[A-Z]"))
 
 ; Exception-raising functions — highlighted like throw/raise in other languages
-((long_identifier) @function.builtin
+((long_identifier . (identifier) @function.builtin .)
  (#match? @function.builtin "^(raise|reraise|failwith|failwithf|invalidArg|invalidOp|nullArg)$"))
 
 ; Primitive conversion operators (`string c`, `int x`, `float32 y`, …) applied
