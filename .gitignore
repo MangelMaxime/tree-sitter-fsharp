@@ -62,3 +62,4 @@ tmp/
 /zed/languages/fsharp/injections.scm
 /zed/languages/fsharp/locals.scm
 /zed/languages/fsharp/textobjects.scm
+/zed/languages/fsharp/indents.scm

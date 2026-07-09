@@ -27,13 +27,13 @@ fi
 # --- Sync queries into the extension ---
 # Zed-specific queries live in queries/zed/ (adapted capture names) and take
 # precedence; the Helix ones are the fallback where the two dialects agree.
-# indents.scm is skipped: Helix indent captures (@indent/@outdent/@extend)
-# don't mean the same thing in Zed. rainbows/tags are Helix/ctags-only.
+# indents.scm never falls back: Helix indent captures (@indent/@outdent/
+# @extend) don't mean the same thing in Zed. rainbows/tags are Helix-only.
 echo "Syncing queries..."
-for q in highlights injections locals textobjects; do
+for q in highlights injections locals textobjects indents; do
     if [ -f "$REPO_DIR/queries/zed/$q.scm" ]; then
         cp "$REPO_DIR/queries/zed/$q.scm" "$EXT_DIR/languages/fsharp/$q.scm"
-    elif [ -f "$REPO_DIR/queries/$q.scm" ]; then
+    elif [ "$q" != indents ] && [ -f "$REPO_DIR/queries/$q.scm" ]; then
         cp "$REPO_DIR/queries/$q.scm" "$EXT_DIR/languages/fsharp/$q.scm"
     fi
 done

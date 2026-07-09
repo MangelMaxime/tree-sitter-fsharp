@@ -8,5 +8,25 @@ brackets = [
     { start = "{", end = "}", close = true, newline = true },
     { start = "[", end = "]", close = true, newline = true },
     { start = "(", end = ")", close = true, newline = true },
+    # close = false: autoclosing would fight the "[" pair above ("[]" already
+    # inserted when the "|" arrives); newline = true still indents the interior.
+    { start = "[|", end = "|]", close = false, newline = true },
+    { start = "{|", end = "|}", close = false, newline = true },
     { start = "\"", end = "\"", close = true, newline = false, not_in = ["string"] },
+]
+
+# Offside auto-indent, Python-style: regexes here + bracket rules in indents.scm.
+# Undocumented keys — field docs in Zed's language_core/src/language_config.rs.
+auto_indent_using_last_non_empty_line = false
+# Indent after a body-opening line ending (optional // comment allowed).
+# No `with`: match arms conventionally sit at the `match` column.
+increase_indent_pattern = '(=|->|\bthen|\belse|\bdo!?|\bbegin|\btry|\bfinally|\(|\[<?|\[\||\{\|?)\s*(//.*)?$'
+# Re-align continuation keywords with their block starter (the @start.<token>
+# captures in indents.scm). elif lines aren't starters; they share the if column.
+decrease_indent_patterns = [
+    { pattern = '^\s*then\b', valid_after = ["if"] },
+    { pattern = '^\s*elif\b', valid_after = ["if"] },
+    { pattern = '^\s*else\b', valid_after = ["if"] },
+    { pattern = '^\s*with\b', valid_after = ["try"] },
+    { pattern = '^\s*finally\b', valid_after = ["try"] },
 ]
