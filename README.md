@@ -37,25 +37,26 @@ Zed requires us to install a dev extension.
 
 **Requirements**
 
-Rust with the `wasm32-wasip2` target (Zed uses it to compile the extension's
-LSP glue):
+- [Task](https://taskfile.dev) and the [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/tree/master/crates/cli)
+- Rust with the `wasm32-wasip2` target (Zed uses it to compile the extension's
+  LSP glue):
 
-```bash
-rustup target add wasm32-wasip2
-# or, on Arch Linux with the packaged Rust toolchain:
-sudo pacman -S rust-wasm
-```
+  ```bash
+  rustup target add wasm32-wasip2
+  # or, on Arch Linux with the packaged Rust toolchain:
+  sudo pacman -S rust-wasm
+  ```
 
 ```bash
 git clone https://github.com/MangelMaxime/tree-sitter-fsharp
 cd tree-sitter-fsharp
-./dev-zed.sh
+task dev:zed
 ```
 
 Then in Zed:
 
 1. Command palette → `zed: install dev extension` → select the `zed/` directory.
-2. After changing the grammar or queries: rerun `./dev-zed.sh`.
+2. After changing the grammar or queries: rerun `task dev:zed`.
 3. Hit **Rebuild** on the extension in Zed's Extensions panel.
 
 ### Good to know
@@ -276,20 +277,23 @@ grammar without touching your own setup. It builds the parser and opens a file
 in an isolated `nvim -u nvim/init.lua` (no plugins, no user config):
 
 ```bash
-./dev-nvim.sh                      # opens examples/references.fsx
-./dev-nvim.sh path/to/file.fsx     # opens a specific file
+task dev:nvim                         # opens examples/references.fsx
+task dev:nvim -- path/to/file.fsx     # opens a specific file
 ```
 
 This is also the fastest loop when working on the Neovim queries: edit a
-`queries/*.scm`, rerun `./dev-nvim.sh`, look.
+`queries/*.scm`, rerun `task dev:nvim`, look.
 
 ## Development workflow
 
+All dev commands live in [`Taskfile.yml`](Taskfile.yml) (cross-platform, Windows
+included) - run `task --list` to see them.
+
 1. Edit `grammar.js` and/or `src/scanner.c`.
-2. `npx tree-sitter generate` (or just `./dev.sh`).
-3. `npx tree-sitter test` to confirm the corpus (460+ tests) still passes.
+2. `task generate`.
+3. `task test` to confirm the corpus (460+ tests) still passes.
 4. `npx tree-sitter parse examples/layout.fsx | grep -c ERROR` - should be zero.
-5. `./dev.sh` to deploy to Helix (`./dev-zed.sh` for Zed).
+5. `task dev:helix` to deploy to Helix (`task dev:zed` for Zed).
 6. Restart Helix and check the highlights.
 
 For UI-visible changes, render with `tree-sitter highlight`:

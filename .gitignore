@@ -68,3 +68,6 @@ tmp/
 /zed/languages/fsharp/outline.scm
 /zed/Cargo.lock
 /zed/extension.wasm
+
+# Task fingerprint cache
+/.task/

@@ -1,5 +1,5 @@
 -- Minimal, self-contained Neovim config for eyeballing this grammar.
--- Launched via `./dev-nvim.sh` (which builds parser.so first) as:
+-- Launched via `task dev:nvim` (which builds parser.so first) as:
 --   nvim -u nvim/init.lua <file>
 -- It deliberately loads no plugins: parser + queries come straight from the
 -- repo, so what you see is exactly this grammar's output.
