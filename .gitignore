@@ -63,5 +63,6 @@ tmp/
 /zed/languages/fsharp/locals.scm
 /zed/languages/fsharp/textobjects.scm
 /zed/languages/fsharp/indents.scm
+/zed/languages/fsharp/overrides.scm
 /zed/Cargo.lock
 /zed/extension.wasm
