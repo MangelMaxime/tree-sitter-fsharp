@@ -78,8 +78,19 @@ languages = ["languages/fsharp"]
 [grammars.fsharp]
 repository = "file://$MIRROR"
 rev = "$SHA"
+
+[language_servers.fsautocomplete]
+name = "FsAutoComplete"
+languages = ["FSharp"]
 EOF
 echo "extension.toml -> rev $SHA"
+
+# --- Rust wasm target (Zed compiles zed/src/lib.rs — the LSP glue — itself) ---
+if command -v rustc >/dev/null 2>&1 && \
+   ! ls "$(rustc --print sysroot)/lib/rustlib" 2>/dev/null | grep -q '^wasm32-wasip2$'; then
+    echo "WARNING: Rust target wasm32-wasip2 not installed — Zed can't build the"
+    echo "         LSP glue (pacman -S rust-wasm, or rustup target add wasm32-wasip2)."
+fi
 
 # --- Drop the stale compiled grammar so Zed can't reuse it ---
 rm -f "$EXT_DIR/grammars/fsharp.wasm"
