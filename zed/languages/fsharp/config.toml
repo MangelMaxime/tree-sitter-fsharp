@@ -16,7 +16,7 @@ brackets = [
 ]
 
 # Offside auto-indent, Python-style: regexes here + bracket rules in indents.scm.
-# Undocumented keys — field docs in Zed's language_core/src/language_config.rs.
+# Undocumented keys - field docs in Zed's language_core/src/language_config.rs.
 auto_indent_using_last_non_empty_line = false
 # Indent after a body-opening line ending (optional // comment allowed).
 # No `with`: match arms conventionally sit at the `match` column.

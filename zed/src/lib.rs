@@ -1,6 +1,6 @@
 //! Minimal LSP glue: registers fsautocomplete so Zed settings
 //! (`lsp.fsautocomplete.binary` / `initialization_options`) can drive it.
-//! No auto-download (unlike the marketplace extension) — the binary must be
+//! No auto-download (unlike the marketplace extension) - the binary must be
 //! on PATH or pointed to in settings.
 
 use zed_extension_api::{self as zed, settings::LspSettings, Result};
@@ -26,7 +26,7 @@ impl zed::Extension for FsharpDevExtension {
             .and_then(|b| b.path.clone())
             .or_else(|| worktree.which("fsautocomplete"))
             .ok_or_else(|| {
-                "fsautocomplete not found on PATH — `dotnet tool install -g fsautocomplete`, \
+                "fsautocomplete not found on PATH - `dotnet tool install -g fsautocomplete`, \
                  or set lsp.fsautocomplete.binary.path in settings"
                     .to_string()
             })?;
@@ -60,7 +60,7 @@ impl zed::Extension for FsharpDevExtension {
         worktree: &zed::Worktree,
     ) -> Result<Option<zed::serde_json::Value>> {
         // Extension defaults, deep-merged with the user's
-        // lsp.fsautocomplete.initialization_options — user keys win per key,
+        // lsp.fsautocomplete.initialization_options - user keys win per key,
         // so setting one option doesn't wipe the defaults.
         let mut options = zed::serde_json::json!({ "AutomaticWorkspaceInit": true });
         if let Some(user) = LspSettings::for_worktree(language_server_id.as_ref(), worktree)
