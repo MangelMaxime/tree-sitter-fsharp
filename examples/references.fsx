@@ -1389,3 +1389,41 @@ module L38_ExpressionColouring =
     // application-head anchor is scoped to avoid.
     let describe (value: string) (count: int) : string = value + string count
     type Summary = { Text: string; Count: int }
+
+// === L39: doc-comment injections — XML (`///`) and Markdown (`(** … *)`) ===
+// Exercises queries/injections.scm: `///` lines inject XML and are COMBINED
+// into one document (opening/closing tags may sit on different lines), and
+// `(** … *)` block doc comments inject markdown. With the XML / Markdown
+// grammars installed, the markup below colors as those languages.
+module L39_DocCommentInjections =
+    /// <summary>
+    /// Adds the <paramref name="left"/> and <paramref name="right"/> operands.
+    /// </summary>
+    /// <param name="left">The first operand.</param>
+    /// <param name="right">The second operand.</param>
+    /// <returns>The sum, as a positive <see cref="T:System.Int32"/>.</returns>
+    /// <exception cref="T:System.OverflowException">On arithmetic overflow.</exception>
+    let addDocumented left right = left + right
+
+    /// <summary>Single-line summary with inline <c>code</c> markup.</summary>
+    /// <remarks>
+    /// A remarks block holding a list:
+    /// <list type="bullet">
+    ///   <item><description>first point</description></item>
+    ///   <item><description>second point</description></item>
+    /// </list>
+    /// </remarks>
+    let remarked = 42
+
+    (** # Markdown block doc
+        Renders as markdown: **bold**, *italics*, `inline code`,
+        a [link](https://fsharp.org), and a fenced code block:
+
+        ```fsharp
+        let example = 1 + 1
+        ```
+
+        - bullet one
+        - bullet two
+    *)
+    let markdownDocumented () = 1
