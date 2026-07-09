@@ -58,8 +58,9 @@ tasks:
       # Zed-specific queries (queries/zed/) take precedence; the Helix ones are
       # the fallback where the two dialects agree. indents never falls back
       # (Helix's @indent/@outdent/@extend mean different things in Zed).
+      # locals is absent: Zed doesn't load locals.scm at all.
       - |
-        for q in highlights injections locals textobjects indents overrides brackets outline; do
+        for q in highlights injections textobjects indents overrides brackets outline; do
           if [ -f "queries/zed/$q.scm" ]; then
             cp "queries/zed/$q.scm" "zed/languages/fsharp/$q.scm"
           elif [ "$q" != indents ] && [ -f "queries/$q.scm" ]; then
