@@ -30,7 +30,7 @@ fi
 # indents.scm never falls back: Helix indent captures (@indent/@outdent/
 # @extend) don't mean the same thing in Zed. rainbows/tags are Helix-only.
 echo "Syncing queries..."
-for q in highlights injections locals textobjects indents overrides brackets; do
+for q in highlights injections locals textobjects indents overrides brackets outline; do
     if [ -f "$REPO_DIR/queries/zed/$q.scm" ]; then
         cp "$REPO_DIR/queries/zed/$q.scm" "$EXT_DIR/languages/fsharp/$q.scm"
     elif [ "$q" != indents ] && [ -f "$REPO_DIR/queries/$q.scm" ]; then
