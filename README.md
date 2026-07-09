@@ -71,6 +71,9 @@ Then in Zed:
 - `///` doc-comment (XML) coloring needs [Zed's XML](https://zed.dev/extensions/xml) extension;
   `(** … *)` markdown docs work out of the box.
 - Highlighting `TODO:`/`FIXME:` markers inside comments needs [Zed's comment](https://zed.dev/extensions/comment) extension.
+- Rainbow brackets: set `"colorize_brackets": true` in your Zed settings
+  (globally or under `"languages": { "FSharp": … }`) - it colors all the pairs
+  the grammar declares, including `[| |]`, `{| |}` and `[< >]`.
 - `debug: open syntax tree view` shows the live parse tree useful for debugging.
 
 ### Uninstall
