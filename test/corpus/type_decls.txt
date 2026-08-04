@@ -1361,3 +1361,23 @@ let h (struct (a, b)) = struct (a + 1, b)
         (int_literal))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Type extension with an accessibility modifier
+================================================================================
+
+type internal Foo with
+    member this.Bar = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_extension
+    (access_modifier)
+    name: (type_extension_name
+      (identifier))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      body: (int_literal))))

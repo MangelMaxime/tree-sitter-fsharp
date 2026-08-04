@@ -543,6 +543,9 @@ export default grammar({
         _type_extension_core: $ => seq(
             "type",
             repeat($.attribute),
+            // `type internal Foo with …` — an accessibility modifier is legal on
+            // an extension just as on `type`/`and` declarations (FAKE house style).
+            optional($.access_modifier),
             field('name', $.type_extension_name),
             optional($.type_parameter_list),
             "with",

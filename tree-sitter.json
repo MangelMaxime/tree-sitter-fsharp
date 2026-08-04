@@ -22,16 +22,16 @@
     "metadata": {
         "version": "0.0.0",
         "license": "MIT",
-        "description": "F# tree sitter definition focused on Helix",
+        "description": "F# tree sitter definition",
         "authors": [
             {
                 "name": "Mangel Maxime",
-                "url": ""
+                "url": "https://github.com/MangelMaxime/"
             }
         ],
         "links": {
-            "repository": "https://github.com/tree-sitter/tree-sitter-fsharp",
-            "funding": ""
+            "repository": "https://github.com/MangelMaxime/tree-sitter-fsharp/",
+            "funding": "https://mangelmaxime.github.io/sponsors/"
         }
     },
     "bindings": {

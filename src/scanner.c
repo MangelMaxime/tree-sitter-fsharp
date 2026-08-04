@@ -521,6 +521,13 @@ static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
 // `_token` from absorbing the declaration into a `sequence_expression` (which then
 // fails when, e.g., the `let` has no continuation). `first` is the leading char.
 static bool decl_starter(TSLexer *lexer, int32_t first) {
+    // `[<Attr>]` on its own line — an attribute row always decorates the NEXT
+    // declaration, never continues the previous statement. (A bare `[` is a list
+    // literal, which IS a statement.)
+    if (first == '[') { lexer->advance(lexer, true); return lexer->lookahead == '<'; }
+    // `#load` / `#r` / `#nowarn` / … — a directive is its own `_token`.
+    // (`#if`/`#elif`/`#else`/`#endif` lines are skipped by next_line_indent.)
+    if (first == '#') return true;
     if (first < 'a' || first > 'z') return false;
     char w[12]; size_t n = 0; int32_t look = lexer->lookahead;
     while (n < 11 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
@@ -943,7 +950,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
 
 
 
-    Ctx *top = s->n > 0 ? &s->stk[s->n - 1] : NULL;
+    // The source file itself is a declaration body at column 0. Without this
+    // implicit context, top-level statements had NO layout context, so no
+    // `_layout_semi` ever separated them and consecutive bare expressions
+    // (`register ("A", a)`⏎`register ("B", b)`) glued into one curried
+    // application_expression. S_DECL is the right sort: a `let`/`type`/… line
+    // still starts a fresh `_token` instead of extending the previous statement.
+    // Never popped in practice — a dedent below column 0 is impossible and
+    // `_layout_end` is not valid at source-file scope.
+    if (s->n == 0) push(s, S_DECL, 0);
+    Ctx *top = &s->stk[s->n - 1];
 
     // CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
     // a type name. Look ahead past one or more `[<…>]` attributes; emit ONLY when a
@@ -1589,21 +1605,6 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                              : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
         return true;
     }
-    if (!top) {
-        // Top-level (no layout context on the stack): a new statement on this line that
-        // is an element-DSL builder (`pipeline "x" {` / `div() {` as a NON-first
-        // top-level item) still needs its `_element_dsl_open` marker. There's no context
-        // to emit a separator, so probe here at the line's first token; otherwise
-        // `pipeline "x"` reduces to a plain application and the `{ … }` body errors.
-        // `///`-docs probe FIRST: try_element_dsl consumes lookahead reading
-        // words on a miss, which would corrupt the and/case word check.
-        if (try_and_docs(s, lexer, valid, first, col, NULL)) return true;
-        if (try_element_dsl(lexer, valid)) return true;
-        // Top-level builder with its `{` on the next line (`seq`⏎`{ … }`).
-        if (try_ce_brace(lexer, valid, first)) return true;
-        return false;
-    }
-
     // A leading `|` is a match arm UNLESS it is `|]` (array close) or `|}` (anon
     // record close). We can't cheaply peek the 2nd char here (next_line_indent
     // already advanced), so treat `|` as an arm marker; the bracket cases are
@@ -1802,12 +1803,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     s->n--; lexer->result_symbol = LAYOUT_END; return true;
                 }
             }
-            // S_DECL: never separate before a declaration keyword — the line is a
-            // new `_token`, not a `sequence_expression` continuation of the prior
-            // bare-expression statement.
-            if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
-            if (valid[LAYOUT_SEMI] && col == top->col && !semi_blocked(lexer, first) &&
-                !(g_skipped_doc_lines && word_is_decl_kw(g_post_doc_word))) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+            // Separator decision. Both word peeks below (decl_starter,
+            // semi_blocked) CONSUME lookahead, so they run only when a separator
+            // is actually on the table — otherwise the probes further down would
+            // see a lexer parked past the line's first word and always miss.
+            if (valid[LAYOUT_SEMI] && col == top->col &&
+                !(g_skipped_doc_lines && word_is_decl_kw(g_post_doc_word))) {
+                // S_DECL: never separate before a declaration keyword — the line is a
+                // new `_token`, not a `sequence_expression` continuation of the prior
+                // bare-expression statement.
+                if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
+                if (!semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+                return false;   // peeks consumed the lookahead — no further probing
+            }
             // Element DSL as the first statement of an indented let/expr body
             // (`let page =⏎ div() {…}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;

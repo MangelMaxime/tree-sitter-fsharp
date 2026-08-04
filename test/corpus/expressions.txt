@@ -3210,3 +3210,85 @@ let n3 = nameof<MyGeneric>
       (type_expression
         (long_identifier
           (identifier))))))
+
+================================================================================
+Consecutive bare application statements at source-file scope
+================================================================================
+
+register ("HelloWorld", helloWorld)
+register ("Counter", counter)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sequence_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (tuple_expression
+          (string_literal)
+          (long_identifier
+            (identifier)))))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (tuple_expression
+          (string_literal)
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Bare top-level statement followed by an attributed declaration
+================================================================================
+
+importScripts "bundle.min.js"
+
+[<Global>]
+let init: IInit = jsNative
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier))
+    (string_literal))
+  (let_binding
+    (attribute
+      (attribute_target
+        name: (long_identifier
+          (identifier))))
+    name: (identifier)
+    return_type: (type_expression
+      (long_identifier
+        (identifier)))
+    body: (long_identifier
+      (identifier))))
+
+================================================================================
+Bare top-level statement followed by a #load directive
+================================================================================
+
+Target "Release" DoNothing
+
+#load "Octokit.fsx"
+open Octokit
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))
+    (long_identifier
+      (identifier)))
+  (preproc_directive
+    name: (preproc_keyword)
+    argument: (string_literal))
+  (import_decl
+    (long_identifier
+      (identifier))))
