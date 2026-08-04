@@ -105,6 +105,8 @@ tasks:
         [language_servers.fsautocomplete]
         name = "FsAutoComplete"
         languages = ["FSharp"]
+
+        [debug_adapters.netcoredbg]
         EOF
         echo "extension.toml -> rev $SHA"
       # Drop the stale compiled grammar so Zed can't reuse it.

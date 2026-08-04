@@ -77,6 +77,58 @@ Then in Zed:
   the grammar declares, including `[| |]`, `{| |}` and `[< >]`.
 - `debug: open syntax tree view` shows the live parse tree useful for debugging.
 
+### Debugging
+
+The extension registers [netcoredbg](https://github.com/Samsung/netcoredbg) as
+a debug adapter, so you can debug F# programs from Zed.
+
+**Requirements**
+
+- `netcoredbg` on PATH - grab a [release](https://github.com/Samsung/netcoredbg/releases)
+  or install it from your package manager (AUR on Arch Linux). Use a recent
+  release: old ones predate current .NET runtimes.
+- Alternatively, point Zed at the binary in your settings:
+
+  ```json
+  "dap": { "netcoredbg": { "binary": "/path/to/netcoredbg" } }
+  ```
+
+**Usage**
+
+Declare your debug scenarios in `.zed/debug.json` at the project root:
+
+```json
+[
+  {
+    "label": "Debug MyApp",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/bin/Debug/net10.0/MyApp.dll",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": { "command": "dotnet", "args": ["build"] }
+  },
+  {
+    "label": "Attach to .NET process",
+    "adapter": "netcoredbg",
+    "request": "attach",
+    "processId": "$ZED_PICK_PID"
+  }
+]
+```
+
+Start a session from the debug panel or `debugger: start` in the command
+palette.
+
+Good to know:
+
+- netcoredbg launches the **built assembly** (the `.dll`), not the project -
+  the `build` step above runs `dotnet build` before each session so you always
+  debug fresh code.
+- `"processId": "$ZED_PICK_PID"` opens Zed's process picker when the session
+  starts - handy for attaching to an already-running program.
+- Launched processes start suspended, so breakpoints are hit from the very
+  first line; no wait-for-debugger tricks needed unless you attach.
+
 ### Uninstall
 
 1. Command palette → `zed: extensions`

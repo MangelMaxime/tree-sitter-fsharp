@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Configuration for the netcoredbg debug adapter (.NET / F#).",
+  "required": ["request"],
+  "properties": {
+    "request": {
+      "type": "string",
+      "enum": ["launch", "attach"],
+      "description": "Launch a new .NET process or attach to a running one."
+    },
+    "program": {
+      "type": "string",
+      "description": "Path to the managed assembly (.dll) to debug, e.g. bin/Debug/net8.0/App.dll."
+    },
+    "args": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Command-line arguments passed to the program."
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Working directory for the program."
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Environment variables for the program."
+    },
+    "stopAtEntry": {
+      "type": "boolean",
+      "default": false,
+      "description": "Break at the program entry point."
+    },
+    "processId": {
+      "type": ["integer", "string"],
+      "description": "Process id to attach to (attach request only). Use \"$ZED_PICK_PID\" to choose from a process picker at session start."
+    },
+    "justMyCode": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only step through user code, skipping framework internals."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "request": { "const": "launch" } } },
+      "then": { "required": ["program"] }
+    },
+    {
+      "if": { "properties": { "request": { "const": "attach" } } },
+      "then": { "required": ["processId"] }
+    }
+  ]
+}

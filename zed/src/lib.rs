@@ -1,9 +1,11 @@
-//! Minimal LSP glue: registers fsautocomplete so Zed settings
-//! (`lsp.fsautocomplete.binary` / `initialization_options`) can drive it.
-//! No auto-download (unlike the marketplace extension) - the binary must be
-//! on PATH or pointed to in settings.
+//! Minimal LSP + DAP glue: registers fsautocomplete so Zed settings
+//! (`lsp.fsautocomplete.binary` / `initialization_options`) can drive it, and
+//! netcoredbg as the debug adapter. No auto-download (unlike the marketplace
+//! extension) - both binaries must be on PATH or pointed to in settings.
 
 use zed_extension_api::{self as zed, settings::LspSettings, Result};
+
+const NETCOREDBG: &str = "netcoredbg";
 
 struct FsharpDevExtension;
 
@@ -70,6 +72,112 @@ impl zed::Extension for FsharpDevExtension {
             merge(&mut options, user);
         }
         Ok(Some(options))
+    }
+
+    // --- Debugger (netcoredbg) ---
+
+    fn get_dap_binary(
+        &mut self,
+        adapter_name: String,
+        config: zed::DebugTaskDefinition,
+        user_provided_debug_adapter_path: Option<String>,
+        worktree: &zed::Worktree,
+    ) -> Result<zed::DebugAdapterBinary> {
+        if adapter_name != NETCOREDBG {
+            return Err(format!("unsupported debug adapter '{adapter_name}'"));
+        }
+
+        let command = user_provided_debug_adapter_path
+            .or_else(|| worktree.which(NETCOREDBG))
+            .ok_or_else(|| {
+                "netcoredbg not found on PATH - install it \
+                 (https://github.com/Samsung/netcoredbg) or set \
+                 dap.netcoredbg.binary.path in settings"
+                    .to_string()
+            })?;
+
+        let request = self.dap_request_kind(
+            adapter_name,
+            zed::serde_json::from_str(&config.config)
+                .map_err(|error| format!("invalid debug config: {error}"))?,
+        )?;
+
+        Ok(zed::DebugAdapterBinary {
+            command: Some(command),
+            arguments: vec!["--interpreter=vscode".to_string()],
+            envs: worktree.shell_env(),
+            cwd: Some(worktree.root_path()),
+            connection: config
+                .tcp_connection
+                .map(zed::resolve_tcp_template)
+                .transpose()?,
+            request_args: zed::StartDebuggingRequestArguments {
+                configuration: config.config,
+                request,
+            },
+        })
+    }
+
+    fn dap_request_kind(
+        &mut self,
+        _adapter_name: String,
+        config: zed::serde_json::Value,
+    ) -> Result<zed::StartDebuggingRequestArgumentsRequest> {
+        let request = config
+            .get("request")
+            .and_then(|request| request.as_str())
+            .ok_or("debug config needs a 'request' field ('launch' or 'attach')")?;
+        match request {
+            "launch" => Ok(zed::StartDebuggingRequestArgumentsRequest::Launch),
+            "attach" => Ok(zed::StartDebuggingRequestArgumentsRequest::Attach),
+            other => Err(format!(
+                "unsupported request '{other}' (expected 'launch' or 'attach')"
+            )),
+        }
+    }
+
+    fn dap_config_to_scenario(&mut self, config: zed::DebugConfig) -> Result<zed::DebugScenario> {
+        use zed::serde_json::{json, Map, Value};
+
+        let adapter_config = match config.request {
+            zed::DebugRequest::Launch(launch) => {
+                let mut map = Map::new();
+                map.insert("request".into(), json!("launch"));
+                map.insert("program".into(), json!(launch.program));
+                if !launch.args.is_empty() {
+                    map.insert("args".into(), json!(launch.args));
+                }
+                if let Some(cwd) = launch.cwd {
+                    map.insert("cwd".into(), json!(cwd));
+                }
+                if !launch.envs.is_empty() {
+                    let envs: Map<String, Value> = launch
+                        .envs
+                        .into_iter()
+                        .map(|(key, value)| (key, json!(value)))
+                        .collect();
+                    map.insert("env".into(), Value::Object(envs));
+                }
+                if let Some(stop) = config.stop_on_entry {
+                    map.insert("stopAtEntry".into(), json!(stop));
+                }
+                Value::Object(map)
+            }
+            zed::DebugRequest::Attach(attach) => {
+                let process_id = attach
+                    .process_id
+                    .ok_or("attaching requires a process id")?;
+                json!({ "request": "attach", "processId": process_id })
+            }
+        };
+
+        Ok(zed::DebugScenario {
+            label: config.label,
+            adapter: config.adapter,
+            build: None,
+            config: adapter_config.to_string(),
+            tcp_connection: None,
+        })
     }
 }
 
