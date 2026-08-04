@@ -48,3 +48,10 @@ module Helpers =
     //         ^ keyword.control.access
     //                          ^ variable.parameter
     //                              ^ type
+
+register ("HelloWorld", helloWorld)
+// <- function
+register ("Counter", counter)
+// <- function
+register ("Checkbox", checkbox)
+// <- function
