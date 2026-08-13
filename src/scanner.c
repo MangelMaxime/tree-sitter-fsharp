@@ -171,6 +171,11 @@ static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**`
 // Set when next_line_indent skips one or more `///` doc-comment lines on its
 // way to the next real line — transient (read within the same scan only).
 static bool g_skipped_doc_lines = false;
+// Set when next_line_indent skips one or more `//`-led comment lines (plain or
+// doc) on its way to the next real line. Those lines are advanced with skip=true
+// (padding), so any REAL-WIDTH token this scan emits would swallow their text
+// instead of letting the internal lexer make comment nodes out of them.
+static bool g_skipped_line_comments = false;
 // The word read by the docs probe (try_and_docs) right after skipped doc
 // lines — used by the LAYOUT_SEMI check to suppress a sequence separator
 // before `/// docs⏎ <decl keyword>` (the docs belong to a DECLARATION; a
@@ -186,6 +191,7 @@ static bool word_is_decl_kw(const char *w) {
 
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     g_skipped_doc_lines = false;
+    g_skipped_line_comments = false;
     bool marked_line_start = false;
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
@@ -211,6 +217,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                     if (!g_skipped_doc_lines) g_doc_indent = indent;        // first doc line
                     g_skipped_doc_lines = true;                             // a `///` doc line
                 }
+                g_skipped_line_comments = true;
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                     lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
@@ -1601,6 +1608,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // Line-start comment-ONLY line — next_line_indent consumed the whole
         // comment with advance(false) and mark_end'ed at its `*)`.
         if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
+        // `// …` lines on the way here were skipped as PADDING; emitting the
+        // block comment now would absorb their text (no comment node -> no
+        // highlight). Decline: the internal lexer lexes them as line_comment
+        // extras, and a later scan starts right at the `(*`.
+        if (g_skipped_line_comments) return false;
         lexer->result_symbol = (g_comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
                              : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
         return true;

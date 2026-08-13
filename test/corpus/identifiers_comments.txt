@@ -364,3 +364,36 @@ let after = 1
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Line comments right before a block comment are kept
+================================================================================
+
+// one
+// two
+(*
+    a block comment
+*)
+module L25
+
+let f () =
+    // inner
+    (* trailing (* nested *) *)
+    1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (line_comment)
+  (line_comment)
+  (block_comment)
+  (module_decl
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (line_comment)
+    (block_comment)
+    (int_literal)))
