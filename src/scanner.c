@@ -812,6 +812,35 @@ static inline bool try_element_dsl(TSLexer *lexer, const bool *valid) {
 //   object    → false: `new …`
 //   copy-update → false: `base with …`
 static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
+    // Look past leading trivia first: with `{ // note`⏎`A = 1 }` the callers stop
+    // at the `/`, which is not a name start and would classify as a CE body.
+    // A `/`- or `(`-led NON-comment stays CE (same verdict as the checks below).
+    for (;;) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        if (lexer->lookahead == '/') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '/') return true;      // `/` operator expression
+            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+                lexer->advance(lexer, true);
+            continue;
+        }
+        if (lexer->lookahead == '(') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '*') return true;      // parenthesised expression
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == ')') return true;      // `(*)` multiply operator
+            int cdepth = 1;
+            while (cdepth > 0) {
+                if (lexer->lookahead == 0) return true;
+                if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
+                else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
+                else lexer->advance(lexer, true);
+            }
+            continue;
+        }
+        break;
+    }
     int32_t c = lexer->lookahead;
     if (c == '}') return true;                 // empty CE body `{ }`
     if (!is_name_start(c)) return true;        // literal / paren / bracket / operator → CE expr
@@ -1153,6 +1182,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // element-DSL probe, which advances the lexer destructively on a miss.
         uint32_t inline_col = lexer->get_column(lexer);
         int32_t inline_first = lexer->lookahead;
+        // A trailing LINE COMMENT is not an element: the rest of the line is
+        // comment text, so the real content (if any) starts on a later line.
+        // Defer to the block form — next_line_indent skips comment-only lines,
+        // so `[| //a`⏎`//b`⏎`|]` reads as an EMPTY array (anchoring a context on
+        // the comment left a stray zero-width ERROR), and elements below get a
+        // context at THEIR column, not the comment's.
+        if (inline_first == '/') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '/') {
+                uint32_t col; int32_t bfirst = 0;
+                if (!next_line_indent(lexer, &col, &bfirst)) return false;
+                if (bfirst == ']' || bfirst == '}' || bfirst == '|') return false;
+                push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true;
+            }
+        }
         // Same-line content after a CE/bracket `{`: an element-DSL builder here
         // (`div() { span() {…} }`) needs its marker — the mid-line block below is
         // unreachable once we return. (Spaces/tabs already skipped above.)

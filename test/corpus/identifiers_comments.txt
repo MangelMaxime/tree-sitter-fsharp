@@ -397,3 +397,68 @@ let f () =
     (line_comment)
     (block_comment)
     (int_literal)))
+
+================================================================================
+Bracket holding only comments stays an empty collection
+================================================================================
+
+let nativeArrayFunctions =
+    dict
+        [| //"Exists", "some"
+        //"Filter", "filter"
+        |]
+
+let elements =
+    [| // leading note
+    1
+    2 |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (array_expression
+        (line_comment)
+        (line_comment))))
+  (let_binding
+    (identifier)
+    (array_expression
+      (line_comment)
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Comment after a record brace does not make it a computation expression
+================================================================================
+
+let r =
+    { // a note
+        A = 1 }
+
+let r2 =
+    { (* a note *)
+        B = 2 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (record_expression
+      (line_comment)
+      (record_field
+        (long_identifier
+          (identifier))
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (record_expression
+      (block_comment)
+      (record_field
+        (long_identifier
+          (identifier))
+        (int_literal)))))

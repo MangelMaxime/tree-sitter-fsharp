@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 174 with errors; 1061 error nodes
+# 3914 files swept; 172 with errors; 948 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -35,7 +35,7 @@
 4	Fable/src/Fable.Core/Fable.Core.Extensions.fs
 3	Fable/src/Fable.Core/Fable.Core.Types.fs
 2	Fable/src/Fable.Transforms/Beam/Fable2Beam.fs
-4	Fable/src/Fable.Transforms/Python/Replacements.fs
+2	Fable/src/Fable.Transforms/Python/Replacements.fs
 2	Fable/src/Fable.Transforms/Rust/AST/Rust.AST.Parser.fs
 3	Fable/src/fable-compiler-js/src/ProjectParser.fs
 2	Fable/src/fable-library-ts/BigInt/n.fs
@@ -52,7 +52,7 @@
 2	Fable/src/fcs-fable/src/Compiler/Checking/Expressions/CheckExpressions.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/QuotationTranslator.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/infos.fs
-58	Fable/src/fcs-fable/src/Compiler/CodeGen/IlxGen.fs
+7	Fable/src/fcs-fable/src/Compiler/CodeGen/IlxGen.fs
 2	Fable/src/fcs-fable/src/Compiler/Driver/CompilerOptions.fs
 12	Fable/src/fcs-fable/src/Compiler/Facilities/prim-parsing.fs
 2	Fable/src/fcs-fable/src/Compiler/Optimize/LowerComputedCollections.fs
@@ -154,7 +154,6 @@
 2	fsharp/src/Compiler/Checking/CheckRecordSyntaxHelpers.fs
 2	fsharp/src/Compiler/Checking/QuotationTranslator.fs
 2	fsharp/src/Compiler/Checking/infos.fs
-54	fsharp/src/Compiler/CodeGen/IlxGen.fs
 2	fsharp/src/Compiler/Driver/CompilerOptions.fs
 6	fsharp/src/Compiler/Driver/GraphChecking/FileContentMapping.fs
 2	fsharp/src/Compiler/Optimize/LowerComputedCollections.fs
@@ -173,4 +172,3 @@
 18	fsharp/src/FSharp.Core/prim-types.fs
 18	fsharp/src/FSharp.Core/quotations.fs
 3	fsharp/src/FSharp.Core/seqcore.fs
-6	fsharp/src/LegacyMSBuildResolver/LegacyMSBuildReferenceResolver.fs
