@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 172 with errors; 948 error nodes
+# 3914 files swept; 165 with errors; 916 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -28,7 +28,6 @@
 3	FSharpPlus/src/FSharpPlus/Data/Cont.fs
 4	FSharpPlus/src/FSharpPlus/Data/Validation.fs
 3	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
-2	FSharpPlus/src/FSharpPlus/Extensions/Obj.fs
 3	FSharpPlus/src/FSharpPlus/Internals.fs
 2	FSharpPlus/src/FSharpPlus/Operators.fs
 2	Fable/src/Fable.Compiler/ProjectCracker.fs
@@ -41,7 +40,7 @@
 2	Fable/src/fable-library-ts/BigInt/n.fs
 2	Fable/src/fable-standalone/src/Worker/Shared.fs
 3	Fable/src/fable-standalone/test/bench-compiler/ProjectParser.fs
-6	Fable/src/fcs-fable/codegen/lex.fs
+5	Fable/src/fcs-fable/codegen/lex.fs
 29	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
 3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilnativeres.fs
@@ -52,18 +51,16 @@
 2	Fable/src/fcs-fable/src/Compiler/Checking/Expressions/CheckExpressions.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/QuotationTranslator.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/infos.fs
-7	Fable/src/fcs-fable/src/Compiler/CodeGen/IlxGen.fs
 2	Fable/src/fcs-fable/src/Compiler/Driver/CompilerOptions.fs
 12	Fable/src/fcs-fable/src/Compiler/Facilities/prim-parsing.fs
 2	Fable/src/fcs-fable/src/Compiler/Optimize/LowerComputedCollections.fs
 3	Fable/src/fcs-fable/src/Compiler/Optimize/Optimizer.fs
 2	Fable/src/fcs-fable/src/Compiler/Service/IncrementalBuild.fs
-9	Fable/src/fcs-fable/src/Compiler/Service/QuickParse.fs
 2	Fable/src/fcs-fable/src/Compiler/Service/ServiceParsedInputOps.fs
 3	Fable/src/fcs-fable/src/Compiler/Service/SynExpr.fs
 2	Fable/src/fcs-fable/src/Compiler/Service/TransparentCompiler.fs
 3	Fable/src/fcs-fable/src/Compiler/Symbols/FSharpDiagnostic.fs
-4	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
+2	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/HashMultiMap.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
@@ -91,8 +88,6 @@
 2	Fable/tests/Rust/tests/src/ListTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
 2	Fable/tests/Rust/tests/src/TypeTests.fs
-1	Feliz-Zaid/src/Feliz.Delay/Delay.fs
-1	Feliz-fable-hub/src/Feliz.Delay/Delay.fs
 7	FsCheck/src/FsCheck/Runner.fs
 2	FsCheck/src/FsCheck/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/Gen.fs
@@ -136,8 +131,6 @@
 2	Saturn/docs/loaders/contentloader.fsx
 2	Saturn/docs/loaders/literalloader.fsx
 2	Saturn/sample/ChannelsSample/ChannelsSample.fs
-6	Thoth.Json/packages/Thoth.Json.Core.Auto/Decode.fs
-3	Thoth.Json/packages/Thoth.Json.Core.Auto/Encode.fs
 4	Thoth.Json/tests/Thoth.Json.Tests.Legacy/Decoders.fs
 4	Thoth.Json/tests/Thoth.Json.Tests.Legacy/Encoders.fs
 4	Thoth.Json/tests/Thoth.Json.Tests/Decoders.fs

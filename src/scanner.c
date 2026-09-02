@@ -55,6 +55,7 @@ typedef enum {
     THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)
     LAZY_OPEN,            // lazy block-body open — S_EXPR, declines INLINE bodies
     CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` — only when `ident ( … ) ,` follows
+    PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature — ends the member before the next branch's declaration line
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -176,6 +177,14 @@ static bool g_skipped_doc_lines = false;
 // (padding), so any REAL-WIDTH token this scan emits would swallow their text
 // instead of letting the internal lexer make comment nodes out of them.
 static bool g_skipped_line_comments = false;
+// Set when next_line_indent skips one or more `#if`/`#elif`/`#else`/`#endif`
+// lines on its way to the next real line. Both branches of a conditional parse
+// as real code, so a directive line may sit between two ALTERNATIVE spellings of
+// the same declaration (`#if X`⏎`static member inline f<'T>`⏎`#else`⏎`static
+// member f<'T>`⏎`#endif`⏎`() = …`) — PREPROC_BREAK ends the first one there.
+static bool g_skipped_directive = false;
+// As above, but only for `#else`/`#elif` — the start of an ALTERNATIVE branch.
+static bool g_skipped_alt_directive = false;
 // The word read by the docs probe (try_and_docs) right after skipped doc
 // lines — used by the LAYOUT_SEMI check to suppress a sequence separator
 // before `/// docs⏎ <decl keyword>` (the docs belong to a DECLARATION; a
@@ -192,6 +201,8 @@ static bool word_is_decl_kw(const char *w) {
 static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
     g_skipped_doc_lines = false;
     g_skipped_line_comments = false;
+    g_skipped_directive = false;
+    g_skipped_alt_directive = false;
     bool marked_line_start = false;
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
@@ -315,6 +326,8 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
                 strcmp(w, "line") == 0) {
+                if (w[0] == 'i' || w[0] == 'e') g_skipped_directive = true;
+                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) g_skipped_alt_directive = true;
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
                 continue;
@@ -548,6 +561,17 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
            !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "val") ||
            !strcmp(w, "abstract") || !strcmp(w, "inherit") || !strcmp(w, "override") ||
            !strcmp(w, "default") || !strcmp(w, "interface");
+}
+
+// Body column for a layout open, plus the split-branch verdict: the body we are
+// about to open sits behind a `#else`/`#elif` and starts a DECLARATION, so this
+// `=` closed the `#if` branch of a declaration written twice (`#if X`⏎`let f x =`
+// ⏎`#else`⏎`let f x =`⏎`#endif`⏎`    body`) and the body belongs to the LAST
+// branch. The caller declines the open, leaving the body `optional(…)` empty.
+static bool split_branch_body(TSLexer *lexer, uint32_t *body_col) {
+    g_skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
+    *body_col = peek_body_col(lexer);
+    return g_skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
 }
 
 // Consume one or more consecutive `[<…>]` attributes, leaving the lexer at the
@@ -1054,7 +1078,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // block below owns that decision (field → record; own-line base → layout;
     // same-line `new`/`x with` → fall through to object-expr/copy-update). So the
     // generic LAYOUT_OPEN must NOT pre-empt it.
-    if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) { push(s, S_LAYOUT, peek_body_col(lexer)); lexer->result_symbol = LAYOUT_OPEN; return true; }
+    if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
+        uint32_t bc;
+        // A split declaration's `#if` branch ends at its own `=`: emit the break
+        // (the grammar then takes the body-less path) instead of opening a body
+        // that would swallow the `#else` branch's declaration.
+        if (split_branch_body(lexer, &bc)) {
+            if (!valid[PREPROC_BREAK]) return false;
+            lexer->result_symbol = PREPROC_BREAK; return true;
+        }
+        push(s, S_LAYOUT, bc); lexer->result_symbol = LAYOUT_OPEN; return true;
+    }
     // FOR_OPEN: the body of a `for … do`. Like LAYOUT_OPEN but SUPPRESSED when the
     // body would not indent past the enclosing context — that's a query-CE
     // `for x in xs do`⏎`where …`/`select …`, where the operators sit at the CE
@@ -1807,6 +1841,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (valid[LAYOUT_END] && col < top->col &&
                 g_skipped_doc_lines && g_doc_indent >= top->col) return false;
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            // A `#if`-family directive line sits between this declaration and a
+            // line that starts a NEW one: the two are alternative spellings of the
+            // same declaration, sharing the parameters/body that follow `#endif`.
+            // End the first one here (zero-width) so the second parses as a
+            // declaration instead of being absorbed as parameters. Checked before
+            // the peeks below, which consume the line's first word.
+            if (valid[PREPROC_BREAK] && g_skipped_directive && decl_starter(lexer, first)) {
+                lexer->result_symbol = PREPROC_BREAK; return true;
+            }
             // A leading `|` arm marker AT the body column: FSC permits
             // continuation arms MORE indented than their match (`| _ -> ()` at
             // col 8, match arms at col 4 — FCS PostInferenceChecks style). The

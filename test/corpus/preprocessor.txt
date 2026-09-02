@@ -503,3 +503,131 @@ let x = 1
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Conditional member signature sharing the parameters after #endif
+================================================================================
+
+type Auto =
+
+#if FABLE_COMPILER
+    static member inline generateEncoder<'T>
+#else
+    static member generateEncoder<'T>
+#endif
+        ()
+        : string
+        =
+        ""
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (preproc_if
+      (preproc_if_kw)
+      (preproc_expression))
+    (member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter)))
+    (preproc_else_kw)
+    (member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (preproc_endif_kw)
+      (parameter
+        (unit))
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (string_literal))))
+
+================================================================================
+Conditional member branches ending at their own = share the body after #endif
+================================================================================
+
+type Auto =
+#if FABLE_COMPILER
+    static member inline generateDecoder (?extra: ExtraCoders) =
+#else
+    static member generateDecoder (?extra: ExtraCoders) =
+#endif
+        autoWithOptions extra
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (preproc_if
+      (preproc_if_kw)
+      (preproc_expression))
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier)))))))
+    (preproc_else_kw)
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      (preproc_endif_kw)
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Conditional let branches ending at their own = share the body after #endif
+================================================================================
+
+module M
+
+#if FABLE_COMPILER
+let inline f (x: int) =
+#else
+let f (x: string) =
+#endif
+    x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier)))
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))))
+  (preproc_else_kw)
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (preproc_endif_kw)
+    (long_identifier
+      (identifier))))

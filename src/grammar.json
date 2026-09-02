@@ -1967,35 +1967,58 @@
             ]
           },
           {
-            "type": "STRING",
-            "value": "="
-          },
-          {
             "type": "CHOICE",
             "members": [
               {
                 "type": "SEQ",
                 "members": [
                   {
-                    "type": "SYMBOL",
-                    "name": "_layout_open"
+                    "type": "STRING",
+                    "value": "="
                   },
                   {
-                    "type": "FIELD",
-                    "name": "body",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "_ascribable_body"
-                    }
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "_layout_end"
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "CHOICE",
+                        "members": [
+                          {
+                            "type": "SEQ",
+                            "members": [
+                              {
+                                "type": "SYMBOL",
+                                "name": "_layout_open"
+                              },
+                              {
+                                "type": "FIELD",
+                                "name": "body",
+                                "content": {
+                                  "type": "SYMBOL",
+                                  "name": "_ascribable_body"
+                                }
+                              },
+                              {
+                                "type": "SYMBOL",
+                                "name": "_layout_end"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "_preproc_break"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "BLANK"
+                      }
+                    ]
                   }
                 ]
               },
               {
-                "type": "BLANK"
+                "type": "SYMBOL",
+                "name": "_preproc_break"
               }
             ]
           }
@@ -7025,23 +7048,32 @@
                     "value": "="
                   },
                   {
-                    "type": "SEQ",
+                    "type": "CHOICE",
                     "members": [
                       {
-                        "type": "SYMBOL",
-                        "name": "_layout_open"
+                        "type": "SEQ",
+                        "members": [
+                          {
+                            "type": "SYMBOL",
+                            "name": "_layout_open"
+                          },
+                          {
+                            "type": "FIELD",
+                            "name": "body",
+                            "content": {
+                              "type": "SYMBOL",
+                              "name": "_ascribable_body"
+                            }
+                          },
+                          {
+                            "type": "SYMBOL",
+                            "name": "_layout_end"
+                          }
+                        ]
                       },
                       {
-                        "type": "FIELD",
-                        "name": "body",
-                        "content": {
-                          "type": "SYMBOL",
-                          "name": "_ascribable_body"
-                        }
-                      },
-                      {
                         "type": "SYMBOL",
-                        "name": "_layout_end"
+                        "name": "_preproc_break"
                       }
                     ]
                   },
@@ -15039,6 +15071,10 @@
     {
       "type": "SYMBOL",
       "name": "_ctor_tuple_gate"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_preproc_break"
     }
   ],
   "inline": [],

@@ -191,6 +191,7 @@ export default grammar({
         $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
         $._lazy_open,         // lazy block-body open — like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
         $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = …` — only when `ident ( … ) ,` follows (fn defs never have `,` after params)
+        $._preproc_break,     // zero-width: a `#if`-family directive line separates this declaration from a line that starts a new one
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -768,10 +769,25 @@ export default grammar({
         _method_body: $ => prec.right(seq(
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
-            "=",
-            // Uniform layout body (closes at the next member). `optional` keeps
-            // `member X =` (mid-edit, no body yet) parseable.
-            optional(seq($._layout_open, field('body', $._ascribable_body), $._layout_end)),
+            choice(
+                seq(
+                    "=",
+                    // Uniform layout body (closes at the next member). `optional` keeps
+                    // `member X =` (mid-edit, no body yet) parseable.
+                    optional(choice(
+                        seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                        // Branch written out to its own `=` (`#if X`⏎`static member
+                        // inline f (…) =`⏎`#else`⏎`static member f (…) =`⏎`#endif`⏎
+                        // `    body`): the body belongs to the LAST branch.
+                        $._preproc_break,
+                    )),
+                ),
+                // `#if A`⏎`static member inline f<'T>`⏎`#else`⏎`static member f<'T>`⏎
+                // `#endif`⏎`() = …` — both branches are the SAME member, so the first
+                // one has no `=` of its own. The scanner only emits the break when a
+                // directive line is followed by a declaration keyword.
+                $._preproc_break,
+            ),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
@@ -1940,7 +1956,13 @@ export default grammar({
                 // column, closes on dedent / mid-line `in` / closer). Covers
                 // inline `let x = e`, own-line bodies, and `let x = e in …` (the
                 // scanner's `in` ender closes the body before `in`).
-                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                choice(
+                    seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                    // Branch written out to its own `=` (`#if X`⏎`let f (x: int) =`⏎
+                    // `#else`⏎`let f (x: string) =`⏎`#endif`⏎`    body`): the body
+                    // belongs to the LAST branch.
+                    $._preproc_break,
+                ),
                 repeat($.let_and_binding),
             ))),
             prec(1, prec.dynamic(1, seq(
