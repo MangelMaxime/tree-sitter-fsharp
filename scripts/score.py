@@ -82,8 +82,11 @@ def read_list(name):
         return None
     rows = [l for l in path.read_text().splitlines() if l and not l.startswith("#")]
     if name == "corpus-valid.txt":
-        drop = set(read_list("corpus-exclude.txt") or [])
-        rows = [r for r in rows if r not in drop]
+        excl = read_list("corpus-exclude.txt") or []
+        dirs = tuple(e for e in excl if e.endswith("/"))
+        files = {e for e in excl if not e.endswith("/")}
+        rows = [r for r in rows
+                if r not in files and not r.startswith(dirs)]
     return rows
 
 

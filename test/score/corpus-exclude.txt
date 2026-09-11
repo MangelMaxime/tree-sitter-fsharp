@@ -3,6 +3,19 @@
 # //<Expects> annotation, so the automatic classifier cannot see it. Counting
 # them as valid code punishes the grammar for correctly rejecting them.
 # Each entry states why the file is not valid F#.
+#
+# A line ending in `/` excludes a whole directory.
+
+# The compiler service's parser ERROR-RECOVERY fixture tree. 42% of its 985 files
+# are malformed on purpose - filenames like "Missing type", "Missing name" say so,
+# and the bodies are things like `let (i:)`, `inherit` with no type, `a +` with no
+# operand, and an empty `` `` `` identifier. None carry an <Expects> annotation, so
+# the classifier files them as valid and the corpus then punishes a parser for
+# correctly rejecting them. Excluding the tree costs 564 genuinely valid samples
+# but removes 421 false failures; both parsers are affected identically, so the
+# comparison is unchanged while the absolute number becomes meaningful
+# (ours 84.14% -> 91.64%, ionide 82.84% -> 91.06%).
+fsharp/tests/service/data/SyntaxTree/
 
 # `exception` with no name
 fsharp/tests/service/data/SyntaxTree/Exception/Missing name 01.fs
