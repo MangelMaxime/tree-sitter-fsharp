@@ -1,0 +1,117 @@
+# Limitations
+
+Known trade-offs, with the evidence behind each. Referenced from `grammar.js`.
+
+This grammar is built for syntax highlighting in Helix and Zed. Where correctness for a
+type checker and usefulness for an editor pull apart, the editor wins. That is a choice,
+not an oversight, and the entries below say which is which.
+
+## Measuring quality
+
+`./scripts/score.py` reports four axes; a single clean-parse percentage is not a quality
+measure for a grammar this permissive. Run `task score`.
+
+| axis | what it means |
+|---|---|
+| coverage | valid F# parses without error sites |
+| rejection | invalid F# is flagged - scored as recall on *syntax* diagnostics and false positives on *type*-only ones, separately |
+| degeneracy | reserved keywords lexed as `identifier` in files with zero error sites - wrong trees no error count can see |
+| highlight | fraction of `queries/highlights.scm` captures that a `test/highlight` assertion pins |
+
+## Accepted: arbitrary text can parse without error nodes
+
+Verified against the current parser, all with zero ERROR/MISSING nodes:
+
+```
+The quick brown fox jumps over the lazy dog
+this is complete garbage text
+public class Foo { public int Bar { get; set; } }
+```
+
+`word: $ => $.identifier` means a keyword whose token is not valid in the current LR state
+lexes as an `identifier`, and `application_expression` accepts any expression followed by
+any simple expression. Juxtaposed identifiers are therefore always a valid parse.
+
+Nothing turns unparsed text into a *comment* - every comment producer is delimiter-anchored
+and yields a real ERROR when unterminated.
+
+`reserved.global` is being populated to narrow this, but only where it costs no valid code
+(see below).
+
+## Accepted: reserved-word coverage stops short of the full keyword list
+
+`reserved.global` holds the keywords that are never a bare identifier *and* cost nothing.
+The remainder were each measured and rejected:
+
+| keyword | why not |
+|---|---|
+| `lazy` | `e: lazy<int>` is a type name |
+| `extern` | heads `extern_decl`'s C-style form |
+| `begin` | verbose syntax `do a then begin b end` |
+| `fun` `open` `override` `while` | each cost a valid bench file, inside a `#if` branch where the keyword degrades to an identifier today |
+| `class` `end` `type` | each break `type Marker = class end` after a `;`-terminated expression; all parse in isolation, so the cause is accumulated context |
+| `of` `private` | zero measured gain, and cost 7 valid files |
+| `member` | correct in principle, but a type whose body is on the `=` line (`type DU = | A`) has no slot for members below it, so 13 files would turn from wrongly-parsed into error regions |
+| `base` `global` `fixed` `void` `not` | legal identifiers in real F# |
+| query operators (`where`, `select`, …) | legal identifiers; handled contextually by the `query_ce` reserved set |
+
+The safe keywords are safe precisely because nobody misuses them, so reserving them changes
+little. The rejection gains live in the risky tail.
+
+## Accepted: an unterminated `"` consumes following lines
+
+`_string_content` matches newlines because F# ordinary string literals legally contain
+them:
+
+```fsharp
+let s = "line one
+line two"
+```
+
+Forbidding `\n` would break valid code. The runaway-string behaviour is inherent to the
+language, not a grammar defect.
+
+## Accepted: `;;` is skippable anywhere
+
+`fsi_terminator` sits in `extras`, so `[1;;2]` parses as one element rather than being
+rejected (it is invalid F#, FS0010). 217 corpus files rely on `;;` as a statement
+terminator against 3 occurrences of the bad shape, two of which are test fixtures.
+Removing it from `extras` is a bad trade.
+
+## Accepted: `#if` conditions absorb the rest of the line
+
+`preproc_expression` is `token(/[^\n\r]+/)` and `preproc_if` is an `extra`, so any
+`#if <anything>` line is skippable in any state. Tightening it must still accept the ~49 of
+430 distinct corpus conditions that carry a trailing `//` or `(* *)` comment.
+
+## Known gap: a non-CE `for` with a multi-statement body
+
+Parses as a single chained application instead of a `sequence_expression`. A separate
+`_ce_for_clause` rule aliased to `for_expression` did not work - tree-sitter prefers the
+longest match, so the body-present form wins even with high precedence on the body-less one.
+
+## Known gap: dotted chains of 3+ segments
+
+1-2 segments stay one `long_identifier`; 3+ nest as `dot_expression(long_identifier(a,b),c)`.
+Irregular, and not fixable with tree-sitter's LR generator. Every highlight rule and
+textobject handles both shapes.
+
+## Known gap: members below a same-line type body
+
+```fsharp
+type DU = | A
+          member this.F = 1
+```
+
+The members parse as an application chain headed by `member` - error-free and wrong. Adding
+`_type_open` to `_type_decl_body_or_class` is **not** the fix: it corrupts the layout stack
+(644 failing files, 555 regressions). This blocks reserving `member`.
+
+## Known gap: keywords mis-coloured through accumulated offside state
+
+`then`/`elif` (62 sites) and `yield` (21) are lexed as identifiers in some files. They are
+not slice-isolable - minimal reproductions parse correctly, and they only misfire with
+enough preceding file context. Same root cause as the scanner's exact-column work.
+`done` (4 sites) resisted a grammar-only fix: the scanner emits a statement separator when
+a loop body dedents, so `done` commits to being the next sibling statement before
+`optional("done")` can apply.
