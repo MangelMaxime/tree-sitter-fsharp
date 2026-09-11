@@ -70,3 +70,5 @@ tmp/
 
 # Task fingerprint cache
 /.task/
+__pycache__/
+*.pyc

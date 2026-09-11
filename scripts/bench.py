@@ -24,6 +24,9 @@ Hard-won measurement rules encoded here (do not "simplify" them away):
   * A sanity probe runs first: a valid snippet must yield a `source_file`
     root (another grammar named `fsharp` may have poisoned the cache) and a
     garbage snippet must yield ERRORs (a stale/broken parser yields none).
+  * The error counter is pinned by ERROR_COUNT_FIXTURE. MISSING nodes print as
+    `(MISSING identifier [..])` — the node type sits between the word and the
+    position, so a pattern anchored on a following ` [` misses every one of them.
 """
 
 import argparse
@@ -93,7 +96,43 @@ def parse_errors(path):
         ).stdout
     except subprocess.TimeoutExpired:
         return 9999
-    return len(re.findall(r"\b(?:ERROR|MISSING)\b \[", out))
+    return count_error_nodes(out)
+
+
+# The CLI prints `(ERROR [0, 4] - …)` but `(MISSING identifier [60, 10] - …)` and
+# `(MISSING ";" [...])` — the node TYPE sits between the word and the position, so a
+# pattern anchored on a following ` [` silently never matches MISSING. Anchor on the
+# opening paren instead. ERROR_COUNT_FIXTURE pins this; see check_error_counter().
+_ERROR_NODE_RE = re.compile(r"\((?:ERROR|MISSING)\b")
+
+
+def count_error_nodes(sexp):
+    return len(_ERROR_NODE_RE.findall(sexp))
+
+
+ERROR_COUNT_FIXTURE = (
+    '(source_file [0, 0] - [1, 0]\n'
+    '  (ERROR [0, 4] - [0, 5])\n'
+    '  (MISSING identifier [0, 9] - [0, 9])\n'
+    '  (MISSING ";" [0, 9] - [0, 9])\n'
+    '  (long_identifier [0, 0] - [0, 3]))\n'
+)
+
+
+def check_error_counter():
+    got = count_error_nodes(ERROR_COUNT_FIXTURE)
+    if got != 3:
+        sys.exit(f"error counter is broken: expected 3 on the fixture, got {got}")
+
+
+def staleness_probe():
+    """Measuring a parser built from an older grammar.js is the most expensive
+    mistake available here: the numbers look plausible and are simply wrong."""
+    gen = REPO / "src" / "parser.c"
+    src = REPO / "grammar.js"
+    if gen.exists() and src.stat().st_mtime > gen.stat().st_mtime:
+        sys.exit("grammar.js is newer than src/parser.c — run `task generate` first "
+                 "(otherwise this sweep measures the PREVIOUS grammar).")
 
 
 def sanity_probe():
@@ -189,6 +228,8 @@ def main():
 
     repos = read_manifest()
     ensure_clones(repos)
+    check_error_counter()
+    staleness_probe()
     sanity_probe()
     files = list_files(repos)
     print(f"sweeping {len(files)} files with {args.jobs} workers …", flush=True)
