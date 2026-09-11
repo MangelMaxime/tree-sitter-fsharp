@@ -171,8 +171,16 @@ def axis_degeneracy(lang):
 
 
 def axis_highlight():
-    q = (REPO / "queries" / "highlights.scm").read_text()
-    captures = set(re.findall(r"@([\w.]+)", q))
+    # Strip `;` comment lines first: the query file's own prose ends sentences
+    # with things like "shares the @keyword.control slot", which would otherwise
+    # be counted as captures and inflate the denominator.
+    lines = [l.split(";", 1)[0] for l in
+             (REPO / "queries" / "highlights.scm").read_text().splitlines()]
+    q = "\n".join(lines)
+    captures = {c.rstrip(".") for c in re.findall(r"@([\w.]+)", q)
+                # `@_root` and friends are internal captures referenced only by
+                # #match?/#eq? predicates - they never colour anything.
+                if not c.startswith("_")}
     asserted = set()
     for f in (REPO / "test" / "highlight").glob("*"):
         for m in re.finditer(r"(?:\^|<-)\s*([\w.]+)", f.read_text()):

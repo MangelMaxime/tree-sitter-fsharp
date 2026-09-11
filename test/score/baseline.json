@@ -24,30 +24,9 @@
     "files": 87
   },
   "highlight": {
-    "captures": 40,
-    "asserted": 14,
-    "coverage_pct": 35.0,
-    "uncovered": [
-      "_root",
-      "comment.block",
-      "comment.block.documentation",
-      "comment.line",
-      "constant",
-      "constant.builtin",
-      "constant.builtin.",
-      "constant.character",
-      "constant.numeric.float",
-      "function.",
-      "function.builtin",
-      "keyword.control",
-      "keyword.operator",
-      "operator.",
-      "punctuation",
-      "punctuation.bracket",
-      "punctuation.delimiter",
-      "punctuation.special",
-      "string.special",
-      "type.parameter"
-    ]
+    "captures": 34,
+    "asserted": 34,
+    "coverage_pct": 100.0,
+    "uncovered": []
   }
 }
