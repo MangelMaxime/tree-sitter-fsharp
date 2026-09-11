@@ -40,15 +40,26 @@ jobs:
       - name: Corpus and highlight tests
         run: npx tree-sitter test
 
-      # The living showcase must parse without a single error node.
-      - name: references.fsx parses clean
+      # The living showcase must parse without a single error node. An empty
+      # glob is itself a failure: this step silently checked nothing for months
+      # after examples/layout.fsx was deleted.
+      - name: examples parse clean
         run: |
-          errors=$(npx tree-sitter parse examples/layout.fsx | grep -cE 'ERROR|MISSING' || true)
-          if [ "$errors" -ne 0 ]; then
-            echo "::error::examples/references.fsx has $errors ERROR/MISSING nodes"
-            npx tree-sitter parse examples/layout.fsx | grep -E 'ERROR|MISSING'
+          shopt -s nullglob
+          files=(examples/*.fsx)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::no examples/*.fsx found - this check would pass vacuously"
             exit 1
           fi
+          status=0
+          for f in "${files[@]}"; do
+            if ! npx tree-sitter parse "$f" > /dev/null; then
+              echo "::error::$f has ERROR/MISSING nodes"
+              npx tree-sitter parse "$f" | grep -E 'ERROR|MISSING' || true
+              status=1
+            fi
+          done
+          exit $status
 
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
