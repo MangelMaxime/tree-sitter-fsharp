@@ -1,0 +1,62 @@
+# F# reserved keywords that can never be a legal bare identifier.
+# An `identifier` node holding one of these in an otherwise error-free file is a
+# WRONG TREE - the keyword will render in identifier colour. Drives the
+# degeneracy axis of scripts/score.py.
+#
+# Deliberately EXCLUDED because they are legal identifiers in real F#:
+#   not (FSharp.Core function)   base global fixed void (contextual)
+#   get set on into where select take skip head last count (contextual/query)
+abstract
+and
+as
+assert
+begin
+class
+delegate
+do
+done
+downcast
+downto
+elif
+else
+end
+exception
+extern
+finally
+for
+fun
+function
+if
+in
+inherit
+inline
+interface
+internal
+lazy
+let
+match
+member
+module
+mutable
+namespace
+new
+of
+open
+override
+private
+public
+rec
+return
+static
+struct
+then
+to
+try
+type
+upcast
+use
+val
+when
+while
+with
+yield

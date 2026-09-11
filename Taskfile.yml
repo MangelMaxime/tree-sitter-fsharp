@@ -132,7 +132,40 @@ tasks:
     cmds:
       - tree-sitter test {{.CLI_ARGS}}
 
+  test:all:
+    desc: Every local gate - corpus, highlight, node extents, query validity
+    deps: [build]
+    cmds:
+      - tree-sitter test
+      - ./scripts/test-expansion.py
+      - task: check:queries
+
+  check:queries:
+    desc: Compile every .scm against the current grammar
+    deps: [build]
+    cmds:
+      # Only highlights.scm and locals.scm are exercised by `tree-sitter test`;
+      # the other 12 can reference a node that no longer exists and stay silent
+      # until an editor loads them.
+      - |
+        status=0
+        for q in queries/*.scm queries/zed/*.scm; do
+          [ -f "$q" ] || continue
+          if ! tree-sitter query "$q" examples/references.fsx > /dev/null 2>&1; then
+            echo "INVALID: $q"
+            tree-sitter query "$q" examples/references.fsx 2>&1 | head -5
+            status=1
+          fi
+        done
+        [ $status -eq 0 ] && echo "all queries compile against the grammar"
+        exit $status
+
   bench:
     desc: Real-world regression sweep (24 pinned repos, ~4 min)
     cmds:
       - ./scripts/bench.py {{.CLI_ARGS}}
+
+  score:
+    desc: Four-axis scoreboard (coverage, rejection, degeneracy, highlight)
+    cmds:
+      - uv run scripts/score.py {{.CLI_ARGS}}

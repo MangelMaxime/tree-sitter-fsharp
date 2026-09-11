@@ -1,0 +1,53 @@
+{
+  "coverage_bench": {
+    "files": 3913,
+    "failing": 166,
+    "clean_pct": 95.76
+  },
+  "coverage_dotnet_valid": {
+    "files": 4457,
+    "failing": 706,
+    "clean_pct": 84.16
+  },
+  "rejection_recall": {
+    "files": 55,
+    "flagged": 24,
+    "recall_pct": 43.64
+  },
+  "rejection_false_positive": {
+    "files": 365,
+    "flagged": 40,
+    "fp_pct": 10.96
+  },
+  "degeneracy": {
+    "sites": 305,
+    "files": 87
+  },
+  "highlight": {
+    "captures": 40,
+    "asserted": 14,
+    "coverage_pct": 35.0,
+    "uncovered": [
+      "_root",
+      "comment.block",
+      "comment.block.documentation",
+      "comment.line",
+      "constant",
+      "constant.builtin",
+      "constant.builtin.",
+      "constant.character",
+      "constant.numeric.float",
+      "function.",
+      "function.builtin",
+      "keyword.control",
+      "keyword.operator",
+      "operator.",
+      "punctuation",
+      "punctuation.bracket",
+      "punctuation.delimiter",
+      "punctuation.special",
+      "string.special",
+      "type.parameter"
+    ]
+  }
+}
