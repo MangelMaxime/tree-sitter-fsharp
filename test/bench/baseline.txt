@@ -1,12 +1,12 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 166 with errors; 987 error nodes
-349	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+# 3914 files swept; 167 with errors; 1051 error nodes
+398	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 3	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Target/Target.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
 5	FAKE/src/app/Fake.Runtime/CoreCache.fs
-28	FAKE/src/app/Fake.Runtime/YaafFSharpScripting.fs
+31	FAKE/src/app/Fake.Runtime/YaafFSharpScripting.fs
 4	FAKE/src/legacy/FakeLib/ChocoHelper.fs
 1	FAKE/src/legacy/FakeLib/StringHelper.fs
 4	FAKE/src/legacy/FakeLib/TaskRunnerHelper.fs
@@ -21,11 +21,11 @@
 1	FSharpPlus/docsrc/content/abstraction-applicative.fsx
 18	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
 63	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
-9	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
+10	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
 6	FSharpPlus/src/FSharpPlus/Control/Collection.fs
 3	FSharpPlus/src/FSharpPlus/Control/Converter.fs
 5	FSharpPlus/src/FSharpPlus/Control/Numeric.fs
-9	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
+10	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
 3	FSharpPlus/src/FSharpPlus/Data/Cont.fs
 1	FSharpPlus/src/FSharpPlus/Data/NonEmptyList.fs
 5	FSharpPlus/src/FSharpPlus/Data/Validation.fs
@@ -62,7 +62,7 @@
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
 10	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
-19	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
+24	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
 2	Fable/tests/Beam/ApplicativeTests.fs
 1	Fable/tests/Beam/ArithmeticTests.fs
 1	Fable/tests/Beam/AsyncTests.fs
@@ -96,6 +96,7 @@
 2	Fable/tests/Rust/tests/src/ListTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
 2	Fable/tests/Rust/tests/src/TypeTests.fs
+2	FsCheck/examples/FsCheck.Examples/Examples.fs
 7	FsCheck/src/FsCheck/Runner.fs
 2	FsCheck/src/FsCheck/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/Gen.fs
@@ -113,13 +114,13 @@
 9	Hopac/Libs/Hopac/Hopac.fs
 1	Hopac/Libs/Hopac/Stream.fs
 1	Hopac/Tests/AdHocTests/StreamTests.fs
-2	Paket/docs/content/resolver.fsx
+3	Paket/docs/content/resolver.fsx
 1	Paket/paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/AssemblyReader.fs
 2	Paket/src/Paket.Core/Common/Encryption.fs
-2	Paket/src/Paket.Core/Dependencies/DependenciesFileParser.fs
+3	Paket/src/Paket.Core/Dependencies/DependenciesFileParser.fs
 3	Paket/src/Paket.Core/Dependencies/NuGet.fs
 4	Paket/src/Paket.Core/PackageAnalysis/Queries.fs
-2	Paket/src/Paket.Core/PackageAnalysis/Why.fs
+3	Paket/src/Paket.Core/PackageAnalysis/Why.fs
 3	Paket/src/Paket.Core/Packaging/PackageMetaData.fs
 4	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
 3	Paket/src/Paket.Core/PaketConfigFiles/SolutionFile.fs

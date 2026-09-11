@@ -15358,6 +15358,10 @@
       },
       {
         "type": "STRING",
+        "value": "type"
+      },
+      {
+        "type": "STRING",
         "value": "assert"
       },
       {
@@ -15461,6 +15465,10 @@
       {
         "type": "STRING",
         "value": "upcast"
+      },
+      {
+        "type": "STRING",
+        "value": "type"
       },
       {
         "type": "STRING",

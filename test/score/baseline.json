@@ -1,8 +1,8 @@
 {
   "coverage_bench": {
     "files": 3913,
-    "failing": 166,
-    "clean_pct": 95.76
+    "failing": 167,
+    "clean_pct": 95.73
   },
   "coverage_dotnet_valid": {
     "files": 4452,
@@ -11,17 +11,17 @@
   },
   "rejection_recall": {
     "files": 47,
-    "flagged": 23,
-    "recall_pct": 48.94
+    "flagged": 25,
+    "recall_pct": 53.19
   },
   "rejection_false_positive": {
     "files": 373,
-    "flagged": 43,
-    "fp_pct": 11.53
+    "flagged": 42,
+    "fp_pct": 11.26
   },
   "degeneracy": {
-    "sites": 303,
-    "files": 87
+    "sites": 300,
+    "files": 86
   },
   "highlight": {
     "captures": 34,

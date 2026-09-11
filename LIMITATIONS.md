@@ -49,11 +49,16 @@ The remainder were each measured and rejected:
 | `extern` | heads `extern_decl`'s C-style form |
 | `begin` | verbose syntax `do a then begin b end` |
 | `fun` `open` `override` `while` | each cost a valid bench file, inside a `#if` branch where the keyword degrades to an identifier today |
-| `class` `end` `type` | each break `type Marker = class end` after a `;`-terminated expression; all parse in isolation, so the cause is accumulated context |
+| `class` `end` | each break `type Marker = class end` after a `;`-terminated expression; both parse in isolation, so the cause is accumulated context |
 | `of` `private` | zero measured gain, and cost 7 valid files |
 | `member` | correct in principle, but a type whose body is on the `=` line (`type DU = | A`) has no slot for members below it, so 13 files would turn from wrongly-parsed into error regions |
 | `base` `global` `fixed` `void` `not` | legal identifiers in real F# |
 | query operators (`where`, `select`, …) | legal identifiers; handled contextually by the `query_ce` reserved set |
+
+`type` IS reserved despite costing one valid file (FsCheck `Examples.fs`): it buys +4.25pp
+syntax-error recall - the axis we are weakest on - and improves the false-positive rate at
+the same time. The lost file needs a statement, then a `;`-terminated statement, then a
+declaration; recovering it is scanner work in the offside area.
 
 The safe keywords are safe precisely because nobody misuses them, so reserving them changes
 little. The rejection gains live in the risky tail.

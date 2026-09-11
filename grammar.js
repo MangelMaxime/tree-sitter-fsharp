@@ -118,6 +118,11 @@ const GLOBAL_RESERVED = [
     'abstract', 'delegate', 'downcast', 'downto',
     'finally', 'inherit', 'try', 'upcast',
     // batch B - appear as an identifier only in files that already fail
+    // `type` costs ONE valid bench file (FsCheck Examples.fs) and is kept anyway:
+    // it buys +4.25pp syntax-error recall - our weakest axis - and IMPROVES the
+    // false-positive rate. The lost file needs a statement, then a `;`-terminated
+    // statement, then a declaration; that is scanner work in the offside area.
+    'type',
     'assert', 'default', 'exception', 'function', 'inline', 'interface',
     'internal', 'module', 'mutable', 'namespace', 'new', 'or',
     'public', 'rec', 'static', 'to', 'val', 'when',
