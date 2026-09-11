@@ -56,6 +56,7 @@ typedef enum {
     LAZY_OPEN,            // lazy block-body open — S_EXPR, declines INLINE bodies
     CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` — only when `ident ( … ) ,` follows
     PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature — ends the member before the next branch's declaration line
+    DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line — consumed as trivia (extras) so the sequence can end
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -1580,6 +1581,29 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                 }
                 return false;                           // not trailing: literal `;`
+            }
+            // A `;` that TERMINATES a statement rather than separating two of
+            // them: the next line starts a DECLARATION, which can never be the
+            // `sequence_expression` operand the grammar demands after `;`.
+            // Emitted as an EXTRA so it needs no grammar slot - the decision
+            // requires peeking past the `;` to the next line, which LR(1) cannot
+            // do (it shifts on the `;` alone and only fails a token later).
+            // The newline-separated form of this is handled by blocking
+            // LAYOUT_SEMI before decl_starter(); a literal `;` never reaches it.
+            if (c == ';' && valid[DECL_SEMI] && top && top->sort == S_DECL) {
+                lexer->advance(lexer, false);           // consume `;`
+                if (lexer->lookahead != ';') {          // leave `;;` to fsi_terminator
+                    lexer->mark_end(lexer);             // token = just the `;`
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+                        uint32_t ncol; int32_t nfirst = 0;
+                        if (next_line_indent(lexer, &ncol, &nfirst) &&
+                            decl_starter(lexer, nfirst)) {
+                            lexer->result_symbol = DECL_SEMI; return true;
+                        }
+                    }
+                }
+                return false;                           // not a terminator: literal `;`
             }
             // Same disease, BRACKET flavor: a trailing `;` right before the
             // closing delimiter of a CE / list / array body (`seq { yield x; }`,

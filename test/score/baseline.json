@@ -1,8 +1,8 @@
 {
   "coverage_bench": {
     "files": 3913,
-    "failing": 167,
-    "clean_pct": 95.73
+    "failing": 166,
+    "clean_pct": 95.76
   },
   "coverage_dotnet_valid": {
     "files": 4452,

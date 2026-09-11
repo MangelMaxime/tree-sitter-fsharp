@@ -216,3 +216,22 @@ exception internal E of int
     (type_expression
       (long_identifier
         (identifier)))))
+
+================================================================================
+Semicolon-terminated statement followed by a declaration
+================================================================================
+
+Console.WriteLine "x";
+type Marker = class end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier)
+      (identifier))
+    (string_literal))
+  (type_decl
+    name: (identifier)
+    (class_type_defn)))

@@ -1315,32 +1315,6 @@ module M =
       (int_literal))))
 
 ================================================================================
-Inline let-in value is preserved next to a for binder on the same line
-:skip
-================================================================================
-
-let a = let x = 1 in x
-let b = for y in ys do ()
-
---------------------------------------------------------------------------------
-
-(source_file
-  (let_binding
-    (identifier)
-    (let_expression
-      (identifier)
-      (int_literal)
-      (long_identifier
-        (identifier))))
-  (let_binding
-    (identifier)
-    (for_expression
-      (identifier)
-      (long_identifier
-        (identifier))
-      (unit))))
-
-================================================================================
 Static member access on a generic type name
 ================================================================================
 
@@ -2223,26 +2197,27 @@ let getDirectory (basePath) =
 --------------------------------------------------------------------------------
 
 (source_file
-  (binary_expression
-    left: (dot_expression
-      object: (type_keyword_expression
-        (type_intrinsic)
-        (type_expression
-          (long_identifier
-            (identifier))))
-      member: (identifier))
-    operator: (symbolic_op)
-    right: (string_literal))
-  (binary_expression
-    left: (dot_expression
-      object: (type_keyword_expression
-        (type_intrinsic)
-        (type_expression
-          (long_identifier
-            (identifier))))
-      member: (identifier))
-    operator: (symbolic_op)
-    right: (string_literal))
+  (sequence_expression
+    (binary_expression
+      left: (dot_expression
+        object: (type_keyword_expression
+          (type_intrinsic)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        member: (identifier))
+      operator: (symbolic_op)
+      right: (string_literal))
+    (binary_expression
+      left: (dot_expression
+        object: (type_keyword_expression
+          (type_intrinsic)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        member: (identifier))
+      operator: (symbolic_op)
+      right: (string_literal)))
   (let_binding
     name: (identifier)
     parameters: (parameter

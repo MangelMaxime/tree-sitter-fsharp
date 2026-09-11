@@ -55,10 +55,11 @@ The remainder were each measured and rejected:
 | `base` `global` `fixed` `void` `not` | legal identifiers in real F# |
 | query operators (`where`, `select`, …) | legal identifiers; handled contextually by the `query_ce` reserved set |
 
-`type` IS reserved despite costing one valid file (FsCheck `Examples.fs`): it buys +4.25pp
-syntax-error recall - the axis we are weakest on - and improves the false-positive rate at
-the same time. The lost file needs a statement, then a `;`-terminated statement, then a
-declaration; recovering it is scanner work in the offside area.
+`type` is reserved and now costs nothing. It initially broke one file - a statement, then a
+`;`-terminated statement, then a declaration - which the `_decl_semi` external token fixed:
+the scanner peeks past the `;` and, when a declaration keyword follows, emits it as an
+extra so the `;` never reaches `sequence_expression`. LR(1) cannot make that call, because
+it shifts on the `;` alone and only fails a token later.
 
 The safe keywords are safe precisely because nobody misuses them, so reserving them changes
 little. The rejection gains live in the risky tail.

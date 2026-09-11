@@ -15043,6 +15043,10 @@
     },
     {
       "type": "SYMBOL",
+      "name": "_decl_semi"
+    },
+    {
+      "type": "SYMBOL",
       "name": "preproc_if"
     },
     {
@@ -15314,6 +15318,10 @@
     {
       "type": "SYMBOL",
       "name": "_preproc_break"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_decl_semi"
     }
   ],
   "inline": [],

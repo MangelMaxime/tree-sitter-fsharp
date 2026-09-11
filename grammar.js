@@ -118,10 +118,6 @@ const GLOBAL_RESERVED = [
     'abstract', 'delegate', 'downcast', 'downto',
     'finally', 'inherit', 'try', 'upcast',
     // batch B - appear as an identifier only in files that already fail
-    // `type` costs ONE valid bench file (FsCheck Examples.fs) and is kept anyway:
-    // it buys +4.25pp syntax-error recall - our weakest axis - and IMPROVES the
-    // false-positive rate. The lost file needs a statement, then a `;`-terminated
-    // statement, then a declaration; that is scanner work in the offside area.
     'type',
     'assert', 'default', 'exception', 'function', 'inline', 'interface',
     'internal', 'module', 'mutable', 'namespace', 'new', 'or',
@@ -239,6 +235,7 @@ export default grammar({
         $._lazy_open,         // lazy block-body open — like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
         $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = …` — only when `ident ( … ) ,` follows (fn defs never have `,` after params)
         $._preproc_break,     // zero-width: a `#if`-family directive line separates this declaration from a line that starts a new one
+        $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION — consumed as trivia so the sequence can end (see scanner)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -247,6 +244,14 @@ export default grammar({
         // semantic content, so it's skippable anywhere (like a comment). Longer-match
         // beats the single `;` separator, and a bare `; ;` never occurs in valid F#.
         $.fsi_terminator,
+        // A `;` that TERMINATES a statement instead of separating two of them:
+        //   Console.WriteLine "x";
+        //   type Marker = class end
+        // The scanner emits this only when a declaration keyword follows, so the
+        // `;` never reaches `sequence_expression` (which would shift it and then
+        // demand an expression). An extra needs no grammar slot, which is the
+        // point — LR(1) cannot see past the `;` to decide.
+        $._decl_semi,
         // Conditional-compilation directives are skippable anywhere (see
         // preproc_if). BOTH branches of `#if/#else` parse as REAL code (the
         // editor can't know the build defines, and Fable-style dual-path
