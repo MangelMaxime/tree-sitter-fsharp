@@ -531,3 +531,45 @@ type HashMultiMap<'Key, 'Value>() =
           (type_expression
             (type_parameter)))
         (unit)))))
+
+================================================================================
+Object construction expression with inherit and a field
+================================================================================
+
+type T =
+    new(msg: string, inner: exn) =
+        { inherit Exception(msg, inner)
+          info = None }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (secondary_constructor
+      parameters: (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_param
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      body: (object_construction_expression
+        (inherit_decl
+          base: (type_expression
+            (long_identifier
+              (identifier)))
+          (tuple_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (record_field
+          name: (long_identifier
+            (identifier))
+          value: (long_identifier
+            (identifier)))))))

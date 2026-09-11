@@ -1308,6 +1308,7 @@ export default grammar({
             $.nameof_expression,
             $.new_expression,
             $.object_expression,
+            $.object_construction_expression,
             // CE result forms — also valid in if/match branches inside CEs
             $.ce_result_expr,
             $.struct_tuple_expression,
@@ -1530,6 +1531,7 @@ export default grammar({
             // `not` as a first-class function value (`not >> g`, `f not`).
             $.not_function,
             $.object_expression,
+            $.object_construction_expression,
             // Accept `async { … }` / `task { … }` etc. as application arguments.
             // Without this, a body that sequences a CE after another statement
             // (`printfn "a"; async { … } |> ignore`) hits a parse error because
@@ -2121,6 +2123,7 @@ export default grammar({
             // `{new Foo() with member _.Bar = 1}.Run()` — and on an object
             // expression (Hopac continuation style).
             $.object_expression,
+            $.object_construction_expression,
             $.list_expression,
             $.array_expression,
             $.record_expression,
@@ -2328,6 +2331,16 @@ export default grammar({
         // all invalid here), but accepting them at parse time and letting the
         // F# compiler reject the invalid combinations is fine for a syntax
         // grammar — and keeping a single member-list rule avoids drift.
+        object_construction_expression: $ => seq(
+            "{",
+            $._record_open,
+            $.inherit_decl,
+            repeat(seq(choice(";", $._bracket_semi), $.record_field)),
+            optional(choice(";", $._bracket_semi)),
+            $._bracket_close,
+            "}",
+        ),
+
         object_expression: $ => seq(
             "{",
             "new",

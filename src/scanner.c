@@ -871,6 +871,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     char w0[12] = {0};
     peek_name_capture(lexer, w0, sizeof(w0));
     if (!strcmp(w0, "new")) return false;      // object expression `{ new T … }`
+    if (!strcmp(w0, "inherit")) return false;  // object construction `{ inherit T(…) … }`
     // CE statement keywords (reserved → can never be a record field name). `let!`,
     // `use!`, `do!`, `match!`, `yield!`, `return!` share the base word read here.
     static const char *kw[] = {"let","use","do","return","yield","if","for","while",
@@ -1341,6 +1342,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         if (is_name_start(c)) {
             peek_name_capture(lexer, w0, sizeof(w0));
+            // `{ inherit Base(…) [; field = …] }` — object construction. The base
+            // call is not an `=`/`:` field, so the check below would miss it.
+            if (!strcmp(w0, "inherit")) { push(s, S_BRACKET, col); lexer->result_symbol = RECORD_OPEN; return true; }
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             // A leading field modifier (`mutable foo: …`): a second identifier
             // word sits before the `:`. Skip it so the `=`/`:` check sees the

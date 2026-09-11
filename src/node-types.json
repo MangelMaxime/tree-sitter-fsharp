@@ -120,6 +120,10 @@
         "named": true
       },
       {
+        "type": "object_construction_expression",
+        "named": true
+      },
+      {
         "type": "object_expression",
         "named": true
       },
@@ -361,6 +365,10 @@
       },
       {
         "type": "null_literal",
+        "named": true
+      },
+      {
+        "type": "object_construction_expression",
         "named": true
       },
       {
@@ -1446,6 +1454,10 @@
           },
           {
             "type": "list_expression",
+            "named": true
+          },
+          {
+            "type": "object_construction_expression",
             "named": true
           },
           {
@@ -3739,6 +3751,25 @@
         },
         {
           "type": "type_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "object_construction_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "inherit_decl",
+          "named": true
+        },
+        {
+          "type": "record_field",
           "named": true
         }
       ]
