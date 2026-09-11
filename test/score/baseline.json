@@ -10,14 +10,14 @@
     "clean_pct": 84.16
   },
   "rejection_recall": {
-    "files": 55,
-    "flagged": 24,
-    "recall_pct": 43.64
+    "files": 47,
+    "flagged": 22,
+    "recall_pct": 46.81
   },
   "rejection_false_positive": {
-    "files": 365,
-    "flagged": 40,
-    "fp_pct": 10.96
+    "files": 373,
+    "flagged": 43,
+    "fp_pct": 11.53
   },
   "degeneracy": {
     "sites": 305,

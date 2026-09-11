@@ -15291,8 +15291,73 @@
     "_literal"
   ],
   "reserved": {
-    "global": [],
+    "global": [
+      {
+        "type": "STRING",
+        "value": "abstract"
+      },
+      {
+        "type": "STRING",
+        "value": "delegate"
+      },
+      {
+        "type": "STRING",
+        "value": "downcast"
+      },
+      {
+        "type": "STRING",
+        "value": "downto"
+      },
+      {
+        "type": "STRING",
+        "value": "finally"
+      },
+      {
+        "type": "STRING",
+        "value": "inherit"
+      },
+      {
+        "type": "STRING",
+        "value": "try"
+      },
+      {
+        "type": "STRING",
+        "value": "upcast"
+      }
+    ],
     "query_ce": [
+      {
+        "type": "STRING",
+        "value": "abstract"
+      },
+      {
+        "type": "STRING",
+        "value": "delegate"
+      },
+      {
+        "type": "STRING",
+        "value": "downcast"
+      },
+      {
+        "type": "STRING",
+        "value": "downto"
+      },
+      {
+        "type": "STRING",
+        "value": "finally"
+      },
+      {
+        "type": "STRING",
+        "value": "inherit"
+      },
+      {
+        "type": "STRING",
+        "value": "try"
+      },
+      {
+        "type": "STRING",
+        "value": "upcast"
+      },
       {
         "type": "STRING",
         "value": "select"

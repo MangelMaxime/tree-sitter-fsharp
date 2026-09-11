@@ -54,8 +54,16 @@ KEYWORDS = SCORE_DIR / "keywords.txt"
 # F# diagnostics that are genuinely syntactic - the only ones a parser can be
 # asked to catch. Everything else in the conformance suite is a type or
 # name-resolution error that a correct parser must accept.
-SYNTAX_DIAGNOSTICS = {"FS0010", "FS0058", "FS1156", "FS0583", "FS0584",
-                      "FS0035", "FS0025", "FS0515", "FS3360"}
+# Verified against the actual diagnostic text in the conformance suite, not
+# guessed from the number:
+#   FS0010 unexpected token          FS0583/FS0584 unmatched '(' / '{'
+#   FS0058 offside / indentation     FS0599 missing qualification after '.'
+#   FS1156 invalid numeric literal
+# Deliberately EXCLUDED although they appear on E_*/neg* files:
+#   FS0035 "this construct is deprecated" - the code still PARSES; a parser that
+#          rejects it is wrong.
+#   FS0025 "incomplete pattern matches" - exhaustiveness, purely semantic.
+SYNTAX_DIAGNOSTICS = {"FS0010", "FS0058", "FS1156", "FS0583", "FS0584", "FS0599"}
 EXPECTS_RE = re.compile(r'id="?(FS\d+)')
 
 

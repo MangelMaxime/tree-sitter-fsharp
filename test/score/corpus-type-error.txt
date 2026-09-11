@@ -163,6 +163,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefini
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_CtorAndCCtor01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_CtorAndCCtor02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_GeneratedPropertyNameClash01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_ImplementMemberNoExist.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_PropertyInvalidGetter01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_PropertyInvalidGetter02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/ClassTypes/MemberDeclarations/E_PropertyInvalidGetterSetter01.fs
@@ -189,10 +190,12 @@ fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefini
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/EnumTypes/E_NoValueFieldOnEnum.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/EnumTypes/E_NonInt32Enums01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_AnonymousTypeInInterface01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_ImplementGenIFaceTwice01_5.0.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_InheritInterface.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_InterfaceNotFullyImpl01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_InterfaceNotFullyImpl02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_InterfaceNotFullyImpl03.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_MultipleInst07.5.0.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/InterfaceTypes/E_MultipleInterfaceInheritance.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_AbstractClassStruct.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_CyclicInheritance01.fs
@@ -201,6 +204,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefini
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_InvalidRecursiveGeneric01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_InvalidRecursiveGeneric02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_NoAbstractMembers.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_NoDefaultCtor.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_NoLetBindings.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_Nullness01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/ObjectOrientedTypeDefinitions/StructTypes/E_Nullness02.fs
@@ -240,6 +244,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Named/E_
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Named/E_Error_Param03.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Named/E_Error_Param04.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Named/E_MulticasePartialNotAllowed01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Named/E_PatternMatchRegressions02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/PatternMatching/Simple/E_namedLiberal01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/TypeConstraints/CheckingSyntacticTypes/E_CannotInlineVirtualMethod2.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/TypeConstraints/CheckingSyntacticTypes/E_CannotInlineVirtualMethods1.fs
@@ -251,6 +256,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/UnionTypes/E_Union
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/UnionTypes/E_UnionMemberNamedTagNoDefault.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/UnionTypes/E_UnionMemberNamedTags.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Types/UnionTypes/E_UnionMemberNamedTagsNoDefault.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/InteractiveSession/ErrorTestCases/E_ErrorRanges01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/CompilerOptions/fsc/flaterrors/E_MultiLine01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/CompilerOptions/fsc/flaterrors/E_MultiLine02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/CompilerOptions/fsc/flaterrors/E_MultiLine03.fs
@@ -279,7 +285,6 @@ fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalA
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/ConditionalCompilation/E_MustBeIdent02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/ConditionalCompilation/E_UnmatchedIf01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/ConditionalCompilation/E_UnmatchedIf02.fs
-fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/IdentifiersAndKeywords/E_MissingQualification.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/IdentifiersAndKeywords/E_NameCollision01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/IdentifiersAndKeywords/E_QuotedTypeModuleNames01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/IdentifiersAndKeywords/E_ReservedIdentKeywords.fs
@@ -299,6 +304,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalA
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/StringsAndCharacters/E_ByteCharUnicodeChar01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/StringsAndCharacters/E_ByteChars02.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/StringsAndCharacters/E_ByteStrUnicodeChar01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/SymbolicOperators/E_CantUseDollarSign.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/SymbolicOperators/E_GreaterThanDotParen01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/SymbolicOperators/E_LessThanDotOpenParen001.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/SymbolicOperators/E_QMarkGeneric.fs
@@ -347,6 +353,7 @@ fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_IncompleteConstruct01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_IncompleteConstruct01b.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_IndexedPropertySetter01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_InvalidObjectExpression01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_LiteralEnumerationMustHaveType01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_MemberConstraintsWithSpecialStatus01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_MemberObjectctorTakeGiven.fs
@@ -357,11 +364,12 @@ fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_PropertyIsNotReadable01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_Quotation_UnresolvedGenericConstruct01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_SpanExtendsToNextToken01.fs
-fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_TryFinallyIncompleteStructuredConstruct.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_matrix_LetBinding01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_matrix_class01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_matrix_interface01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/General/E_matrix_struct01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/InteractiveSession/Misc/E_ErrorRanges01.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Misc/E_CompiledName.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Misc/E_productioncoverage02.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Misc/E_productioncoverage03.fs
 fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Misc/E_productioncoverage04.fs

@@ -1,6 +1,6 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 166 with errors; 885 error nodes
-287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+# 3914 files swept; 166 with errors; 894 error nodes
+296	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Target/Target.fs

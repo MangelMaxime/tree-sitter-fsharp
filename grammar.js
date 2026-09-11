@@ -108,6 +108,21 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
     );
 }
 
+// Keywords that can never be a bare identifier in F#. Populated incrementally,
+// each batch gated on `task test` + `./scripts/bench.py` + `scripts/score.py`.
+// Ordering is by measured risk: how many corpus files currently hold the word in
+// an `identifier` node. Contextual words that ARE legal identifiers (`not`,
+// `base`, `global`, `fixed`, `void`, and the query operators) stay out.
+const GLOBAL_RESERVED = [
+    // batch A - never appear as an identifier anywhere in the bench corpus
+    'abstract', 'delegate', 'downcast', 'downto',
+    'finally', 'inherit', 'try', 'upcast',
+    // Deliberately NOT reserved, each cost a valid dotnet/fsharp file:
+    //   lazy   - `e: lazy<int>` is a TYPE name (tuplewithlazy01.fs)
+    //   extern - heads extern_decl's C-style form (InExternDecl.fs)
+    //   begin  - verbose syntax `do a then begin b end` (Sequential 03.fs)
+];
+
 export default grammar({
     name: "fsharp",
 
@@ -137,8 +152,11 @@ export default grammar({
     // become their own tokens there while staying plain identifiers everywhere
     // else (e.g. `List.where`, `let take n = …`).
     reserved: {
-        global: _ => [],
-        query_ce: _ => [
+        global: _ => GLOBAL_RESERVED,
+        // `reserved(name, rule)` REPLACES the active set for that subtree rather
+        // than extending it, so the query-CE set must re-list the global words or
+        // every keyword stops being reserved inside a CE body.
+        query_ce: _ => [...GLOBAL_RESERVED,
             'select', 'where', 'sortBy', 'sortByDescending',
             'thenBy', 'thenByDescending', 'take', 'skip',
             'takeWhile', 'skipWhile', 'distinct', 'count',
