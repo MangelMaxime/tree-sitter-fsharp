@@ -688,7 +688,7 @@ export default grammar({
             // ^t: struct, _mthd: Default1)` — the FSharpPlus Control/* idiom:
             // a `when` after a param's type can only be a constraint here.
             optional(seq(":", choice($.type_expression, $.nullable_type),
-                optional(choice($._when_constraints, seq(":>", $.type_expression))))),
+                optional(choice($._when_constraints, seq(":>", choice($.type_expression, $.nullable_type)))))),
         ),
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
@@ -3054,7 +3054,7 @@ export default grammar({
             // param's type variable: `(value: 'T when 'T: null)`.
             // The trailing constraint covers `(value: 'T when 'T: null)` and the
             // subtype form `(resource: 'T :> IDisposable)`.
-            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional(choice($._when_constraints, seq(":>", $.type_expression))), ")")),
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional(choice($._when_constraints, seq(":>", choice($.type_expression, $.nullable_type)))), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
