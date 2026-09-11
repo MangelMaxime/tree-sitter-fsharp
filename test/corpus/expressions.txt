@@ -3292,3 +3292,24 @@ open Octokit
   (import_decl
     (long_identifier
       (identifier))))
+
+================================================================================
+Copy-update whose base application takes a string argument
+================================================================================
+
+let r = { Include "" with Includes = [] }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      base: (application_expression
+        (long_identifier
+          (identifier))
+        (string_literal))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (list_expression)))))

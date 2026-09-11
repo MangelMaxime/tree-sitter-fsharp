@@ -905,6 +905,15 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             }
             continue;
         }
+        // A STRING application argument before a possible `with`
+        // (`{ Include "" with Includes = [] }`): skip it and keep scanning.
+        if (d == '"') { edsl_skip_dquote(lexer); continue; }
+        if (d == '@') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead != '"') return true;
+            edsl_skip_verbatim(lexer);
+            continue;
+        }
         if (is_name_start(d)) {
             char w[8] = {0};
             peek_name_capture(lexer, w, sizeof(w));
