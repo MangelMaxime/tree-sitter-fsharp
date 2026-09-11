@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 165 with errors; 916 error nodes
+# 3914 files swept; 153 with errors; 887 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -93,22 +93,10 @@
 2	FsCheck/tests/FsCheck.Test/Gen.fs
 4	FsCheck/tests/FsCheck.Test/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/TypeClass.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling.JobResult/JobOptionCE.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling.JobResult/JobResultCE.fs
-3	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncOptionCE.fs
 1	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncOptionOp.fs
-3	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncResultCE.fs
 1	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncResultOp.fs
-3	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncResultOptionCE.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncValidationCE.fs
 7	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/Nullness.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/OptionCE.fs
-3	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ParallelAsyncResultCE.fs
-3	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ParallelAsyncValidationCE.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultCE.fs
 1	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultOp.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultOptionCE.fs
-2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ValidationCE.fs
 3	FsToolkit.ErrorHandling/tests/FsToolkit.ErrorHandling.Tests/TestHelpers.fs
 3	Hopac/Examples/Misc/FrequencyServer.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs

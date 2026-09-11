@@ -213,6 +213,46 @@ let f (r: 'T :> System.IDisposable) = r
       (identifier))))
 
 ================================================================================
+Subtype constraint in a tupled parameter list
+================================================================================
+
+type B =
+    member _.Using(resource: 'T :> IDisposable, binder: 'T -> 'U) = binder resource
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      parameters: (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (type_parameter))
+            (type_expression
+              (long_identifier
+                (identifier))))
+          (tuple_param
+            (identifier)
+            (type_expression
+              (function_type
+                (type_expression
+                  (type_parameter))
+                (type_expression
+                  (type_parameter)))))))
+      body: (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+
+================================================================================
 IWSAM bare-interface constraint
 ================================================================================
 

@@ -688,7 +688,7 @@ export default grammar({
             // ^t: struct, _mthd: Default1)` — the FSharpPlus Control/* idiom:
             // a `when` after a param's type can only be a constraint here.
             optional(seq(":", choice($.type_expression, $.nullable_type),
-                optional($._when_constraints))),
+                optional(choice($._when_constraints, seq(":>", $.type_expression))))),
         ),
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
