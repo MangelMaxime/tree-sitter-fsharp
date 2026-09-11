@@ -374,6 +374,8 @@ export default grammar({
             field('name', $.long_identifier),
             optional(seq("=", optional(choice(
                 field('abbrev', $.long_identifier),
+                // Verbose syntax: `module M = begin … end`.
+                seq("begin", repeat($._token), "end"),
                 seq(
                     $._block_open,
                     repeat($._token),
