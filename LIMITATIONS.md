@@ -49,7 +49,7 @@ The remainder were each measured and rejected:
 | `extern` | heads `extern_decl`'s C-style form |
 | `begin` | verbose syntax `do a then begin b end` |
 | `fun` `open` `override` `while` | each cost a valid bench file, inside a `#if` branch where the keyword degrades to an identifier today |
-| `class` `end` | each break `type Marker = class end` after a `;`-terminated expression; both parse in isolation, so the cause is accumulated context |
+| `class` `end` | retried after `_decl_semi` removed their original blocker; still cost 13 valid dotnet/fsharp files for zero recall or degeneracy gain |
 | `of` `private` | zero measured gain, and cost 7 valid files |
 | `member` | correct in principle, but a type whose body is on the `=` line (`type DU = | A`) has no slot for members below it, so 13 files would turn from wrongly-parsed into error regions |
 | `base` `global` `fixed` `void` `not` | legal identifiers in real F# |
