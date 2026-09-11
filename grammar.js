@@ -121,6 +121,17 @@ const GLOBAL_RESERVED = [
     'assert', 'default', 'exception', 'function', 'inline', 'interface',
     'internal', 'module', 'mutable', 'namespace', 'new', 'or',
     'public', 'rec', 'static', 'to', 'val', 'when',
+    // Batch C was ATTEMPTED IN FULL and reverted 2026-09-11 - the lever is
+    // exhausted here. Every remaining keyword is either inert or costly:
+    //   fun open override while - each cost a valid bench file, all inside a
+    //     `#if` branch where the keyword degrades to an identifier today
+    //   class end type - each break `type Marker = class end` after a
+    //     `;`-terminated expression (FsCheck Examples.fs); all three parse in
+    //     isolation, so the cause is accumulated context, not the construct
+    //   of private - measured ZERO gain (recall and degeneracy both unmoved)
+    //     while costing 7 valid dotnet/fsharp files
+    // The safe keywords are safe precisely because they are never misused, so
+    // reserving them changes nothing; the recall gains live in the risky tail.
     // NOT reserved: `member`. It is correct in principle - `member` can never
     // be an identifier - but reserving it turns 13 dotnet/fsharp files from
     // "error-free but wrongly parsed" into error regions, because a type whose
