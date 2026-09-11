@@ -851,7 +851,28 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
         }
         if (lexer->lookahead == '(') {
             lexer->advance(lexer, true);
-            if (lexer->lookahead != '*') return true;      // parenthesised expression
+            if (lexer->lookahead != '*') {
+                // `{ (expr) with F = … }` — copy-update over a parenthesised base.
+                // Skip the balanced group; a following `with` decides copy-update,
+                // anything else falls through to the CE reading below.
+                int pdepth = 1, pguard = 0;
+                while (pdepth > 0) {
+                    if (++pguard > 4096) return true;
+                    int32_t e = lexer->lookahead;
+                    if (e == 0) return true;
+                    if (e == '"') { edsl_skip_dquote(lexer); continue; }
+                    if (e == '(') pdepth++;
+                    else if (e == ')') pdepth--;
+                    lexer->advance(lexer, true);
+                }
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                if (is_name_start(lexer->lookahead)) {
+                    char wp[8] = {0};
+                    peek_name_capture(lexer, wp, sizeof(wp));
+                    if (!strcmp(wp, "with")) return false;
+                }
+                return true;
+            }
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') return true;      // `(*)` multiply operator
             int cdepth = 1;

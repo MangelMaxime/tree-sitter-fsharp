@@ -3313,3 +3313,23 @@ let r = { Include "" with Includes = [] }
         name: (long_identifier
           (identifier))
         value: (list_expression)))))
+
+================================================================================
+Copy-update over a parenthesised base
+================================================================================
+
+let x = { (a) with F = 1 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (record_expression
+      base: (parenthesized_expression
+        (long_identifier
+          (identifier)))
+      (record_field
+        name: (long_identifier
+          (identifier))
+        value: (int_literal)))))
