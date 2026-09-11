@@ -1,0 +1,15 @@
+# Files under a "valid" path that are actually MALFORMED on purpose - they are
+# fixtures for the compiler service's parser error-recovery tests and carry no
+# //<Expects> annotation, so the automatic classifier cannot see it. Counting
+# them as valid code punishes the grammar for correctly rejecting them.
+# Each entry states why the file is not valid F#.
+
+# `exception` with no name
+fsharp/tests/service/data/SyntaxTree/Exception/Missing name 01.fs
+fsharp/tests/service/data/SyntaxTree/Exception/Missing name 03.fs
+# union case named with the reserved word `internal`: `| internal of int`
+fsharp/tests/service/data/SyntaxTree/UnionCase/Missing name 05.fs
+# `member val P1 =` with no value
+fsharp/tests/service/data/SyntaxTree/Member/Auto property 03.fs
+# `exception MyException` declared inside a type body
+fsharp/tests/service/data/SyntaxTree/Type/Exception Inside Type 01.fs

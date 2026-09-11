@@ -1,12 +1,12 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 166 with errors; 894 error nodes
-296	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
-2	FAKE/src/app/Fake.Core.Process/Process.fs
+# 3914 files swept; 166 with errors; 987 error nodes
+349	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+3	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Target/Target.fs
-2	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
+3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
 5	FAKE/src/app/Fake.Runtime/CoreCache.fs
-26	FAKE/src/app/Fake.Runtime/YaafFSharpScripting.fs
+28	FAKE/src/app/Fake.Runtime/YaafFSharpScripting.fs
 4	FAKE/src/legacy/FakeLib/ChocoHelper.fs
 1	FAKE/src/legacy/FakeLib/StringHelper.fs
 4	FAKE/src/legacy/FakeLib/TaskRunnerHelper.fs
@@ -20,16 +20,16 @@
 2	FSharp.Data/tests/FSharp.Data.Tests/CsvProvider.fs
 1	FSharpPlus/docsrc/content/abstraction-applicative.fsx
 18	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
-42	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
-5	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
-29	FSharpPlus/src/FSharpPlus/Control/Collection.fs
+63	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
+9	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
+6	FSharpPlus/src/FSharpPlus/Control/Collection.fs
 3	FSharpPlus/src/FSharpPlus/Control/Converter.fs
 5	FSharpPlus/src/FSharpPlus/Control/Numeric.fs
-5	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
+9	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
 3	FSharpPlus/src/FSharpPlus/Data/Cont.fs
 1	FSharpPlus/src/FSharpPlus/Data/NonEmptyList.fs
-4	FSharpPlus/src/FSharpPlus/Data/Validation.fs
-3	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
+5	FSharpPlus/src/FSharpPlus/Data/Validation.fs
+8	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
 3	FSharpPlus/src/FSharpPlus/Internals.fs
 2	FSharpPlus/src/FSharpPlus/Operators.fs
 2	Fable/src/Fable.Compiler/ProjectCracker.fs
@@ -38,10 +38,10 @@
 2	Fable/src/Fable.Transforms/Beam/Fable2Beam.fs
 2	Fable/src/Fable.Transforms/Python/Replacements.fs
 2	Fable/src/Fable.Transforms/Rust/AST/Rust.AST.Parser.fs
-2	Fable/src/fable-library-ts/BigInt/n.fs
+3	Fable/src/fable-library-ts/BigInt/n.fs
 2	Fable/src/fable-standalone/src/Worker/Shared.fs
 5	Fable/src/fcs-fable/codegen/lex.fs
-29	Fable/src/fcs-fable/codegen/pars.fs
+31	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
 3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilread.fs
 2	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilreflect.fs
@@ -61,8 +61,8 @@
 2	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
-3	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
-11	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
+10	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
+19	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
 2	Fable/tests/Beam/ApplicativeTests.fs
 1	Fable/tests/Beam/ArithmeticTests.fs
 1	Fable/tests/Beam/AsyncTests.fs
@@ -76,7 +76,7 @@
 1	Fable/tests/Js/Main/ArithmeticTests.fs
 2	Fable/tests/Js/Main/AsyncTests.fs
 2	Fable/tests/Js/Main/ComparisonTests.fs
-5	Fable/tests/Js/Main/MiscTests.fs
+7	Fable/tests/Js/Main/MiscTests.fs
 2	Fable/tests/Js/Main/NullnessTests.fs
 2	Fable/tests/Js/Main/TypeTests.fs
 1	Fable/tests/Js/Main/Util/Aether.fs
@@ -110,7 +110,7 @@
 3	FsToolkit.ErrorHandling/tests/FsToolkit.ErrorHandling.Tests/TestHelpers.fs
 3	Hopac/Examples/Misc/FrequencyServer.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
-5	Hopac/Libs/Hopac/Hopac.fs
+9	Hopac/Libs/Hopac/Hopac.fs
 1	Hopac/Libs/Hopac/Stream.fs
 1	Hopac/Tests/AdHocTests/StreamTests.fs
 2	Paket/docs/content/resolver.fsx
@@ -124,7 +124,7 @@
 4	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
 3	Paket/src/Paket.Core/PaketConfigFiles/SolutionFile.fs
 4	Paket/src/Paket.Core/Versioning/FrameworkHandling.fs
-4	Paket/src/Paket/Program.fs
+5	Paket/src/Paket/Program.fs
 2	Paket/tests/Paket.Tests/Resolver/PropertyTestGenerators.fs
 3	Saturn/docs/generators/apiref.fsx
 10	Saturn/docs/generators/partials/menu.fsx
@@ -134,8 +134,8 @@
 4	Thoth.Json/tests/Thoth.Json.Tests.Legacy/Decoders.fs
 4	Thoth.Json/tests/Thoth.Json.Tests.Legacy/Encoders.fs
 4	Thoth.Json/tests/Thoth.Json.Tests/Decoders.fs
-3	elmish/docs/docs/subscription.fsx
-5	expecto/Expecto.Tests/Tests.fs
+1	elmish/docs/docs/subscription.fsx
+6	expecto/Expecto.Tests/Tests.fs
 1	fantomas/src/Fantomas/Program.fs
 2	farmer/src/Farmer/Builders/Builders.TrafficManager.fs
 2	farmer/src/Tests/ServiceBus.fs

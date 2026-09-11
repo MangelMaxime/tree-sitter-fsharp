@@ -117,6 +117,19 @@ const GLOBAL_RESERVED = [
     // batch A - never appear as an identifier anywhere in the bench corpus
     'abstract', 'delegate', 'downcast', 'downto',
     'finally', 'inherit', 'try', 'upcast',
+    // batch B - appear as an identifier only in files that already fail
+    'assert', 'default', 'exception', 'function', 'inline', 'interface',
+    'internal', 'module', 'mutable', 'namespace', 'new', 'or',
+    'public', 'rec', 'static', 'to', 'val', 'when',
+    // NOT reserved: `member`. It is correct in principle - `member` can never
+    // be an identifier - but reserving it turns 13 dotnet/fsharp files from
+    // "error-free but wrongly parsed" into error regions, because a type whose
+    // body is on the `=` line (`type DU = | A` / `type R = { X: int }`) has no
+    // slot for the members indented below it; they currently parse as an
+    // application chain headed by `member`. For a highlighting grammar an ERROR
+    // region is worse than one mis-coloured token, so this waits on the
+    // same-line-body fix. Adding `_type_open` to `_type_decl_body_or_class` is
+    // NOT that fix - it corrupts the layout stack (644 failing, 555 regressions).
     // Deliberately NOT reserved, each cost a valid dotnet/fsharp file:
     //   lazy   - `e: lazy<int>` is a TYPE name (tuplewithlazy01.fs)
     //   extern - heads extern_decl's C-style form (InExternDecl.fs)
@@ -2403,6 +2416,7 @@ export default grammar({
         _exception_decl_core: $ => prec.dynamic(1, seq(
             repeat($.attribute),
             "exception",
+            optional($.access_modifier),
             field('name', $.identifier),
             optional(seq("of", $.type_expression)),
             // `exception WrappedError of exn * range with`⏎`  override this.Message = …`

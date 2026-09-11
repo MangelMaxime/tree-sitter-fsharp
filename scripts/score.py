@@ -80,7 +80,11 @@ def read_list(name):
     path = SCORE_DIR / name
     if not path.exists():
         return None
-    return [l for l in path.read_text().splitlines() if l and not l.startswith("#")]
+    rows = [l for l in path.read_text().splitlines() if l and not l.startswith("#")]
+    if name == "corpus-valid.txt":
+        drop = set(read_list("corpus-exclude.txt") or [])
+        rows = [r for r in rows if r not in drop]
+    return rows
 
 
 def regen_corpora():

@@ -1637,6 +1637,10 @@
           "named": true
         },
         {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
           "type": "attribute",
           "named": true
         },

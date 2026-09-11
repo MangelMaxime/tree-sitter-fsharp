@@ -200,3 +200,19 @@ type T() =
             (identifier))))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Exception declaration with an access modifier
+================================================================================
+
+exception internal E of int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (exception_decl
+    (access_modifier)
+    name: (identifier)
+    (type_expression
+      (long_identifier
+        (identifier)))))

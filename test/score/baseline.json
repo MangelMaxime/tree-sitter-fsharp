@@ -5,14 +5,14 @@
     "clean_pct": 95.76
   },
   "coverage_dotnet_valid": {
-    "files": 4457,
+    "files": 4452,
     "failing": 706,
-    "clean_pct": 84.16
+    "clean_pct": 84.14
   },
   "rejection_recall": {
     "files": 47,
-    "flagged": 22,
-    "recall_pct": 46.81
+    "flagged": 23,
+    "recall_pct": 48.94
   },
   "rejection_false_positive": {
     "files": 373,
@@ -20,7 +20,7 @@
     "fp_pct": 11.53
   },
   "degeneracy": {
-    "sites": 305,
+    "sites": 303,
     "files": 87
   },
   "highlight": {
