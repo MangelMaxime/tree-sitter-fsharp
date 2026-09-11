@@ -2722,7 +2722,7 @@ export default grammar({
         // `try x with _ -> 0` and `match x with 0 -> "z" | _ -> ...`.
         match_arm: ($) => seq(
             optional("|"),
-            $.pattern,
+            choice($.pattern, $.cons_typed_head_pattern),
             repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),
             "->",
@@ -2849,6 +2849,14 @@ export default grammar({
 
         // x :: rest  — right-assoc; prec 2 > or_pattern (1) > as_pattern (0).
         cons_pattern: $ => prec.right(2, seq($.pattern, "::", $.pattern)),
+
+        cons_typed_head_pattern: $ => prec.right(2, seq(
+            field('pattern', choice($.identifier, $.wildcard_pattern)),
+            ":",
+            field('type', $.type_expression),
+            "::",
+            $.pattern,
+        )),
 
         wildcard_pattern: _ => "_",
 

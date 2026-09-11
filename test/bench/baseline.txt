@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 153 with errors; 886 error nodes
+# 3914 files swept; 148 with errors; 875 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -47,11 +47,9 @@
 3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilread.fs
 2	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilreflect.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/CheckDeclarations.fs
-2	Fable/src/fcs-fable/src/Compiler/Checking/CheckRecordSyntaxHelpers.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/Expressions/CheckExpressions.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/QuotationTranslator.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/infos.fs
-2	Fable/src/fcs-fable/src/Compiler/Driver/CompilerOptions.fs
 12	Fable/src/fcs-fable/src/Compiler/Facilities/prim-parsing.fs
 2	Fable/src/fcs-fable/src/Compiler/Optimize/LowerComputedCollections.fs
 3	Fable/src/fcs-fable/src/Compiler/Optimize/Optimizer.fs
@@ -124,7 +122,6 @@
 4	Thoth.Json/tests/Thoth.Json.Tests/Decoders.fs
 3	elmish/docs/docs/subscription.fsx
 5	expecto/Expecto.Tests/Tests.fs
-3	fantomas/src/Fantomas.Core/Queue.fs
 2	farmer/src/Farmer/Builders/Builders.TrafficManager.fs
 2	farmer/src/Tests/ServiceBus.fs
 4	fparsec/FParsec/Primitives.fs
@@ -132,10 +129,8 @@
 3	fsharp/src/Compiler/AbstractIL/ilread.fs
 2	fsharp/src/Compiler/AbstractIL/ilreflect.fs
 2	fsharp/src/Compiler/Checking/CheckDeclarations.fs
-2	fsharp/src/Compiler/Checking/CheckRecordSyntaxHelpers.fs
 2	fsharp/src/Compiler/Checking/QuotationTranslator.fs
 2	fsharp/src/Compiler/Checking/infos.fs
-2	fsharp/src/Compiler/Driver/CompilerOptions.fs
 6	fsharp/src/Compiler/Driver/GraphChecking/FileContentMapping.fs
 2	fsharp/src/Compiler/Optimize/LowerComputedCollections.fs
 2	fsharp/src/Compiler/Service/IncrementalBuild.fs
