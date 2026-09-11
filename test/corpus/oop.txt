@@ -493,3 +493,41 @@ let walk (x: int, (pc: int -> int), y) = x
           (identifier))))
     body: (long_identifier
       (identifier))))
+
+================================================================================
+Secondary constructor naming the instance with as
+================================================================================
+
+type HashMultiMap<'Key, 'Value>() =
+    new(comparer: IEqualityComparer<'Key>) as this = HashMultiMap<'Key, 'Value>()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (type_parameter_list
+      (type_parameter)
+      (type_parameter))
+    (primary_constructor
+      (unit))
+    (secondary_constructor
+      parameters: (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (generic_type
+              (long_identifier
+                (identifier))
+              (type_expression
+                (type_parameter))))))
+      self: (identifier)
+      body: (application_expression
+        (type_application_expression
+          (long_identifier
+            (identifier))
+          (type_expression
+            (type_parameter))
+          (type_expression
+            (type_parameter)))
+        (unit)))))

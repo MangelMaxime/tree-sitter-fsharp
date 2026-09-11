@@ -703,6 +703,7 @@ export default grammar({
             optional($.access_modifier),
             "new",
             field('parameters', $.tuple_params),
+            optional(seq("as", field('self', $.identifier))),
             "=",
             // Layout body so it closes at the next ctor/member instead of
             // absorbing it (two `new …` in a row).

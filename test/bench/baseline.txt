@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 143 with errors; 861 error nodes
+# 3914 files swept; 138 with errors; 849 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -10,7 +10,6 @@
 4	FAKE/src/legacy/FakeLib/ChocoHelper.fs
 4	FAKE/src/legacy/FakeLib/TaskRunnerHelper.fs
 2	FAKE/src/legacy/FakeLib/TemplateHelper.fs
-2	FSharp.Data/src/FSharp.Data.Csv.Core/CsvRuntime.fs
 2	FSharp.Data/src/FSharp.Data.DesignTime/CommonProviderImplementation/Helpers.fs
 1	FSharp.Data/src/FSharp.Data.DesignTime/Csv/CsvProvider.fs
 3	FSharp.Data/src/FSharp.Data.DesignTime/Json/JsonGenerator.fs
@@ -41,7 +40,6 @@
 5	Fable/src/fcs-fable/codegen/lex.fs
 29	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
-3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilnativeres.fs
 3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilread.fs
 2	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilreflect.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/CheckDeclarations.fs
@@ -57,7 +55,6 @@
 2	Fable/src/fcs-fable/src/Compiler/Service/TransparentCompiler.fs
 3	Fable/src/fcs-fable/src/Compiler/Symbols/FSharpDiagnostic.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
-2	Fable/src/fcs-fable/src/Compiler/Utilities/HashMultiMap.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
 3	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
@@ -120,7 +117,6 @@
 2	farmer/src/Farmer/Builders/Builders.TrafficManager.fs
 2	farmer/src/Tests/ServiceBus.fs
 4	fparsec/FParsec/Primitives.fs
-3	fsharp/src/Compiler/AbstractIL/ilnativeres.fs
 3	fsharp/src/Compiler/AbstractIL/ilread.fs
 2	fsharp/src/Compiler/AbstractIL/ilreflect.fs
 2	fsharp/src/Compiler/Checking/CheckDeclarations.fs
@@ -135,7 +131,6 @@
 2	fsharp/src/Compiler/TypedTree/TypedTreeOps.Attributes.fs
 7	fsharp/src/Compiler/TypedTree/TypedTreeOps.ExprOps.fs
 2	fsharp/src/Compiler/TypedTree/TypedTreeOps.Remapping.fs
-2	fsharp/src/Compiler/Utilities/HashMultiMap.fs
 2	fsharp/src/Compiler/Utilities/ImmutableArray.fs
 2	fsharp/src/FSharp.Core/SI.fs
 2	fsharp/src/FSharp.Core/async.fs
