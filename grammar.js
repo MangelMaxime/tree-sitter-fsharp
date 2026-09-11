@@ -2866,6 +2866,8 @@ export default grammar({
             $.negative_literal,
             $.char_literal,
             $.string_literal,
+            $.verbatim_string,
+            $.triple_quoted_string,
             $.bool_literal,
             $.unit,
             $.null_literal,

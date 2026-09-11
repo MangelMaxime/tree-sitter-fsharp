@@ -3103,7 +3103,15 @@
           "named": true
         },
         {
+          "type": "triple_quoted_string",
+          "named": true
+        },
+        {
           "type": "unit",
+          "named": true
+        },
+        {
+          "type": "verbatim_string",
           "named": true
         }
       ]

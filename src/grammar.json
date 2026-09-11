@@ -11027,6 +11027,14 @@
         },
         {
           "type": "SYMBOL",
+          "name": "verbatim_string"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "triple_quoted_string"
+        },
+        {
+          "type": "SYMBOL",
           "name": "bool_literal"
         },
         {

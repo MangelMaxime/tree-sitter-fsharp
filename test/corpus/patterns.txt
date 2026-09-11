@@ -1402,3 +1402,38 @@ match xs with
       (pattern
         (wildcard_pattern))
       body: (array_expression))))
+
+================================================================================
+Verbatim string as an active-pattern argument
+================================================================================
+
+match x with
+| Regex @"ab" [ _; p ] -> p
+| _ -> ""
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (long_identifier
+      (identifier))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (literal_pattern
+            (verbatim_string))
+          (list_pattern
+            (pattern
+              (wildcard_pattern))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      body: (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      body: (string_literal))))

@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 148 with errors; 875 error nodes
+# 3914 files swept; 143 with errors; 861 error nodes
 287	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 2	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -36,10 +36,8 @@
 2	Fable/src/Fable.Transforms/Beam/Fable2Beam.fs
 2	Fable/src/Fable.Transforms/Python/Replacements.fs
 2	Fable/src/Fable.Transforms/Rust/AST/Rust.AST.Parser.fs
-3	Fable/src/fable-compiler-js/src/ProjectParser.fs
 2	Fable/src/fable-library-ts/BigInt/n.fs
 2	Fable/src/fable-standalone/src/Worker/Shared.fs
-3	Fable/src/fable-standalone/test/bench-compiler/ProjectParser.fs
 5	Fable/src/fcs-fable/codegen/lex.fs
 29	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
@@ -64,9 +62,7 @@
 2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
 3	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
 11	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
-3	Fable/src/fcs-fable/test/ProjectParser.fs
 1	Fable/tests/Beam/ApplicativeTests.fs
-3	Fable/tests/Beam/RegexTests.fs
 2	Fable/tests/Dart/src/NullnessTests.fs
 2	Fable/tests/Dart/src/ResultTests.fs
 3	Fable/tests/Js/Main/ApplicativeTests.fs
@@ -102,7 +98,6 @@
 2	Paket/docs/content/resolver.fsx
 2	Paket/src/Paket.Core/Common/Encryption.fs
 2	Paket/src/Paket.Core/Dependencies/DependenciesFileParser.fs
-2	Paket/src/Paket.Core/Dependencies/GitHandling.fs
 3	Paket/src/Paket.Core/Dependencies/NuGet.fs
 4	Paket/src/Paket.Core/PackageAnalysis/Queries.fs
 2	Paket/src/Paket.Core/PackageAnalysis/Why.fs
