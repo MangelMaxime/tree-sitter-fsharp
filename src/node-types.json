@@ -780,6 +780,10 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -805,6 +809,10 @@
         },
         {
           "type": "tuple_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
           "named": true
         },
         {

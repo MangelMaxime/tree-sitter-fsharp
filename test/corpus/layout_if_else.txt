@@ -879,3 +879,246 @@ let settings =
           (long_identifier
             (identifier))
           (string_literal))))))
+
+================================================================================
+in after nested match arms ends every arm-list and the value
+================================================================================
+
+let f doc =
+    let (usages', sections', last') =
+        match line with
+        | Newline -> (usages', sections', Last.Nothing)
+        | Other (line) ->
+            match last' with
+            | Last.Options ->
+                match sections' with
+                | options' :: sections' -> (usages', options' :: sections', Last.Options)
+                | [] -> (usages', [], Last.Options)
+            | _ -> (usages', sections', Last.Nothing) in
+
+    doc'.Split()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (let_expression
+      (let_decl_indented
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier)))))
+        (match_expression
+          (long_identifier
+            (identifier))
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (parenthesized_expression
+              (tuple_expression
+                (tuple_expression
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier)
+                  (identifier)))))
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))
+                (tuple_pattern
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier)))))))
+            (match_expression
+              (long_identifier
+                (identifier))
+              (match_arm
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier)
+                      (identifier))))
+                (match_expression
+                  (long_identifier
+                    (identifier))
+                  (match_arm
+                    (pattern
+                      (cons_pattern
+                        (pattern
+                          (identifier_pattern
+                            (long_identifier
+                              (identifier))))
+                        (pattern
+                          (identifier_pattern
+                            (long_identifier
+                              (identifier))))))
+                    (parenthesized_expression
+                      (tuple_expression
+                        (tuple_expression
+                          (long_identifier
+                            (identifier))
+                          (binary_expression
+                            (long_identifier
+                              (identifier))
+                            (long_identifier
+                              (identifier))))
+                        (long_identifier
+                          (identifier)
+                          (identifier)))))
+                  (match_arm
+                    (pattern
+                      (list_pattern))
+                    (parenthesized_expression
+                      (tuple_expression
+                        (tuple_expression
+                          (long_identifier
+                            (identifier))
+                          (list_expression))
+                        (long_identifier
+                          (identifier)
+                          (identifier)))))))
+              (match_arm
+                (pattern
+                  (wildcard_pattern))
+                (parenthesized_expression
+                  (tuple_expression
+                    (tuple_expression
+                      (long_identifier
+                        (identifier))
+                      (long_identifier
+                        (identifier)))
+                    (long_identifier
+                      (identifier)
+                      (identifier)))))))))
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (unit)))))
+
+================================================================================
+Constructor pattern with an as alias as a let name
+================================================================================
+
+let f () =
+    let PrelimValReprInfo(argsData, _) as prelimValReprInfo = TranslateSynValInfo cenv valSynInfo
+    let CheckedBindingInfo(a, b), tpenv = x
+    let g(a, b) = a + b
+    1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (let_expression
+      (let_decl_indented
+        (as_pattern)
+        (as_pattern
+          (identifier))
+        (as_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (wildcard_pattern)))
+        (as_pattern)
+        (as_pattern)
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier))))
+      (let_expression
+        (let_decl_indented
+          (unparenthesized_tuple_pattern
+            (long_identifier
+              (identifier))
+            (tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))
+        (let_expression
+          (let_decl_indented
+            (identifier)
+            (parameter
+              (tuple_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))))
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))))))
+            (binary_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))
+          (int_literal))))))
+
+================================================================================
+Copy-update of a dereferenced ref cell with a comment line
+================================================================================
+
+let f () =
+    retRes := { !retRes with
+                    //Marshal = None
+                    CustomAttrs = cas }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (symbolic_op)
+      (record_expression
+        (deref_expression
+          (long_identifier
+            (identifier)))
+        (line_comment)
+        (record_field
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

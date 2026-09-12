@@ -1033,6 +1033,10 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     }
     int32_t c = lexer->lookahead;
     if (c == '}') return true;                 // empty CE body `{ }`
+    if (c == '!') {                            // `{ !cell with … }`: deref'd copy-update base
+        lexer->advance(lexer, true);
+        c = lexer->lookahead;
+    }
     if (!is_name_start(c)) return true;        // literal / paren / bracket / operator → CE expr
     char w0[12] = {0};
     peek_name_capture(lexer, w0, sizeof(w0));
@@ -1827,6 +1831,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // The arm list itself closes at a mid-line `in`/`end` once its
                 // last arm body has closed (`… | B -> 2 in f 1`).
                 if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
+                    if (!strcmp(w, "in")) g_in_claim_col = (int32_t)mid_col;
                     s->n--; lexer->result_symbol = MATCH_END; return true;
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
@@ -2047,6 +2052,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (ok) {
                         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                         if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
+                        // `let Ctor(a, _) as name = …`
+                        if (lexer->lookahead == 'a') {
+                            lexer->advance(lexer, true);
+                            if (lexer->lookahead == 's') {
+                                lexer->advance(lexer, true);
+                                if (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
+                            }
+                        }
                     }
                 }
                 return false;   // consumption-safe: this is a return-false tail

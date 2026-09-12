@@ -2080,6 +2080,8 @@ export default grammar({
             // `let f (x: int)` died.
             seq($._ctor_tuple_gate, $.named_field_pattern),
             alias(seq($._ctor_tuple_gate, $.named_field_pattern, "as", $.identifier), $.as_pattern),
+            // `let PrelimValReprInfo(argsData, _) as info = …` (gate: `Ctor( … ) as`).
+            alias(seq($._ctor_tuple_gate, $.long_identifier, $.tuple_pattern, "as", $.identifier), $.as_pattern),
             // `let a as b = …` — bare as-pattern name (as_tuple_elem_pattern
             // wins the lex-prec race over the pattern-route as_pattern, so it
             // must be a valid standalone name too).

@@ -55,6 +55,10 @@ The remainder were each measured and rejected:
 | `base` `global` `fixed` `void` `not` | legal identifiers in real F# |
 | query operators (`where`, `select`, …) | legal identifiers; handled contextually by the `query_ce` reserved set |
 
+`if`, `then`, `elif` and `else` are reserved since 2026-09-12. Reserving them turned the
+remaining wrong trees around `if` into visible errors, which is how the dangling-`else`,
+`else`-at-end-of-line and constructor-`then` layouts were found and fixed.
+
 `type` is reserved and now costs nothing. It initially broke one file - a statement, then a
 `;`-terminated statement, then a declaration - which the `_decl_semi` external token fixed:
 the scanner peeks past the `;` and, when a declaration keyword follows, emits it as an
@@ -114,20 +118,22 @@ body indents past the enclosing context and starts with a member keyword or `[<`
 ungated `_type_open` in that slot corrupted the layout stack (644 failing files); the
 keyword gate is what makes it safe.
 
-## Known gap: keywords mis-coloured through accumulated offside state
+## Known gap: keywords lexed as identifiers
 
-`then`/`elif` (62 sites) and `yield` (21) are lexed as identifiers in some files. They are
-not slice-isolable - minimal reproductions parse correctly, and they only misfire with
-enough preceding file context. Same root cause as the scanner's exact-column work.
-`done` (4 sites) resisted a grammar-only fix: the scanner emits a statement separator when
-a loop body dedents, so `done` commits to being the next sibling statement before
-`optional("done")` can apply.
+`task score` reports 20 such sites across the bench corpus (255 on 2026-09-12 before the
+layout work). What is left:
+
+| shape | sites | status |
+|---|---|---|
+| `#if` / `#else` branches that share one declaration head or an unbalanced `(` | 8 | accepted: both branches parse as code |
+| `as` alias on an element of a tuple parameter (`(a: T, b, x as data)`) | 3 | costs 243 parser states |
+| `use x = e in body` on one line | 1 | costs 227 parser states |
 
 ## Accepted: constructs dropped for parser size
 
 `tree-sitter generate` time and the compiled parser size scale with the dense parse
-table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,207 states, 562
-symbols and a 8.9 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
+table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,515 states, 566
+symbols and a 9.1 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
 sharing described under *Keeping the parser small*). These forms parsed at one point
 but cost more states than their bench impact justified, and were removed on
 2026-09-12:
@@ -144,6 +150,7 @@ but cost more states than their bench impact justified, and were removed on
 | `T \| null` as a type abbreviation, inside parens, on `#T`, in `(# … #)` | 255 | 15 |
 | `Generic<'T>.Nested`, `'T & #I`, `< >` | 152 | 9 |
 | `use! (_) = …`, `use! (a, b) = …` name patterns (`use (x: T)` and `use x : T` parse) | 145 | 12 |
+| `as` alias on a tuple-parameter element, `use x = e in body` on one line | 243, 227 | 3, 1 |
 
 Signature files (`.fsi`) are therefore only partially supported and need their own
 grammar (a signature grammar inheriting this one, as Ionide does) rather than more
@@ -162,6 +169,10 @@ fragment reaches. Two edits keep the table small:
 - Gate a rule that shares a prefix with a bigger cluster behind a zero-width scanner token
   (`_label_gate` for `name: T` inside type expressions). The parser then never forks on
   the shared prefix, so the cluster is not cloned per fork.
+- Open layout blocks from the scanner instead of adding grammar alternatives: `(`, a
+  record field `=`, and a line-ending `&&`/`||` each push a body context
+  (`_paren_block_open`, `_field_block_open`, `_infix_block_open`) that the existing
+  `_layout_semi` / `_layout_end` tokens close. One token each, no new expression forks.
 
 A family of keywords used in one position may be one `token(prec(1, choice(...)))` aliased
 to a named node (`query_op`); drop them from the `reserved` list, since reserved words must

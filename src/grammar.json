@@ -7834,6 +7834,36 @@
         {
           "type": "ALIAS",
           "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_ctor_tuple_gate"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "long_identifier"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "tuple_pattern"
+              },
+              {
+                "type": "STRING",
+                "value": "as"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              }
+            ]
+          },
+          "named": true,
+          "value": "as_pattern"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
             "type": "SYMBOL",
             "name": "as_tuple_elem_pattern"
           },
