@@ -1431,12 +1431,17 @@ export default grammar({
         // tests): a grammar-level optional can never catch it (the lone `;`
         // shifts into the nested sequence repeat first), but the LONGER
         // compound token out-lexes the single `;` whenever the close follows.
+        // The closers carry explicit LEXICAL precedence: `.` is an operator char,
+        // so `@>.` / `@@>.` in `<@ e @>.Type` would otherwise out-lex the closer
+        // as one longer `symbolic_op` and swallow the member access.
         typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression,
-            choice("@>", alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
+            choice(alias(token(prec(1, "@>")), "@>"),
+                   alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
         // <@@ expr @@>  — untyped quotation (Expr)
         untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
-            choice("@@>", alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
+            choice(alias(token(prec(1, "@@>")), "@@>"),
+                   alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
         // ?identifier — optional named argument reference  f(?name = Some value)
         optional_named_arg: $ => seq("?", $.identifier),
@@ -2189,6 +2194,10 @@ export default grammar({
             $.record_expression,
             $.anonymous_record_expression,
             $.struct_anonymous_record_expression,
+            // `<@@ 1 @@>.GetFreeVars()` / `<@ e @>.Type` - member access on a
+            // quotation literal.
+            $.typed_quotation,
+            $.untyped_quotation,
             // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
             // nested-type) access on a generic type name. Without this, the
             // type_application_expression isn't a valid member-access object, so

@@ -3347,3 +3347,21 @@ failwith "foo" : int
     (type_expression
       (long_identifier
         (identifier)))))
+
+================================================================================
+Member access on a quotation literal
+================================================================================
+
+let v = <@@ 1 @@>.GetFreeVars()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (application_expression
+      (dot_expression
+        object: (untyped_quotation
+          (int_literal))
+        member: (identifier))
+      (unit))))

@@ -4479,7 +4479,19 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "STRING",
+                "type": "ALIAS",
+                "content": {
+                  "type": "TOKEN",
+                  "content": {
+                    "type": "PREC",
+                    "value": 1,
+                    "content": {
+                      "type": "STRING",
+                      "value": "@>"
+                    }
+                  }
+                },
+                "named": false,
                 "value": "@>"
               },
               {
@@ -4530,7 +4542,19 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "STRING",
+                "type": "ALIAS",
+                "content": {
+                  "type": "TOKEN",
+                  "content": {
+                    "type": "PREC",
+                    "value": 1,
+                    "content": {
+                      "type": "STRING",
+                      "value": "@@>"
+                    }
+                  }
+                },
+                "named": false,
                 "value": "@@>"
               },
               {
@@ -7937,6 +7961,14 @@
         {
           "type": "SYMBOL",
           "name": "struct_anonymous_record_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typed_quotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "untyped_quotation"
         },
         {
           "type": "SYMBOL",

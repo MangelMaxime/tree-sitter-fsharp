@@ -1499,6 +1499,14 @@
           {
             "type": "typed_expression",
             "named": true
+          },
+          {
+            "type": "typed_quotation",
+            "named": true
+          },
+          {
+            "type": "untyped_quotation",
+            "named": true
           }
         ]
       }

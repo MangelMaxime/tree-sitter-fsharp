@@ -1505,3 +1505,9 @@ module L40_RecentFixes =
     type Builder() =
         member _.Using(resource: 'T :> System.IDisposable, binder: 'T -> int) =
             binder resource
+
+    // Member access on a quotation literal. `.` is an operator char, so `@@>.`
+    // used to out-lex the closer as one symbolic_op and swallow the member.
+    let freeVars = <@@ 1 @@>.GetFreeVars()
+    let quotType = <@ 1 + 2 @>.Type
+
