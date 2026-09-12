@@ -1,6 +1,6 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 141 with errors; 971 error nodes
-394	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+# 3914 files swept; 139 with errors; 670 error nodes
+103	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 3	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Target/Target.fs
@@ -21,7 +21,6 @@
 18	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
 69	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
 10	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
-5	FSharpPlus/src/FSharpPlus/Control/Collection.fs
 5	FSharpPlus/src/FSharpPlus/Control/Numeric.fs
 10	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
 3	FSharpPlus/src/FSharpPlus/Data/Cont.fs
@@ -102,7 +101,6 @@
 5	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
 3	Paket/src/Paket.Core/PaketConfigFiles/SolutionFile.fs
 4	Paket/src/Paket.Core/Versioning/FrameworkHandling.fs
-5	Paket/src/Paket/Program.fs
 2	Paket/tests/Paket.Tests/Resolver/PropertyTestGenerators.fs
 3	Saturn/docs/generators/apiref.fsx
 2	Saturn/docs/loaders/contentloader.fsx

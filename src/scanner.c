@@ -1535,6 +1535,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                                                 : (!strcmp(w, "in") || !strcmp(w, "end")))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
+                    // `in` after an inline match-arm body (`let f t = match t with
+                    // | A -> 1 | B -> 2 in f 1`): the arm body is S_LAYOUT; it can
+                    // only end here (a `for x in` is incomplete, so LAYOUT_END is
+                    // not valid there).
+                    // Only an ARM body (S_MATCH directly below): a `let! a = e in
+                    // …` value inside a CE is also an inline S_LAYOUT, and its
+                    // `in` belongs to the grammar.
+                    if (!strcmp(w, "in") && top->sort == S_LAYOUT && top->inl &&
+                        s->n >= 2 && s->stk[s->n - 2].sort == S_MATCH) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
@@ -1570,13 +1581,22 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // until the S_TRY branch above fires:
                     //   `seq { try for e in c () do yield e finally comp () }`
                     // closes the for-body here, then the try-body above.
-                    if (!strcmp(w, "finally") && layoutish(top->sort)) {
+                    // `with` likewise when the inline body BELOW is a try (`try if
+                    // c then 1 else 2 with _ -> 3`): a `match x with` / `{ r with`
+                    // / `{ new I with` inside the body cannot reach here, because
+                    // at their `with` the body is incomplete and LAYOUT_END invalid.
+                    if ((!strcmp(w, "finally") || !strcmp(w, "with")) && layoutish(top->sort)) {
                         for (size_t i = 0; i + 1 < s->n; i++) {
                             if (s->stk[i].sort == S_TRY) {
                                 s->n--; lexer->result_symbol = LAYOUT_END; return true;
                             }
                         }
                     }
+                }
+                // The arm list itself closes at a mid-line `in`/`end` once its
+                // last arm body has closed (`… | B -> 2 in f 1`).
+                if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
+                    s->n--; lexer->result_symbol = MATCH_END; return true;
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
                     lexer->result_symbol = ELEMENT_DSL_OPEN; return true;
@@ -2044,6 +2064,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // helper consumes it, so chaining them made the second see "").
                 if (first >= 'a' && first <= 'z') {
                     char w[12]; read_word(lexer, w, sizeof w);
+                    // `with`/`finally` AT the try body's column ends the body
+                    // (`try Map.find x g`⏎`    with _ -> …`, body col = `Map`).
+                    if (top->sort == S_TRY && valid[LAYOUT_END] &&
+                        (!strcmp(w, "with") || !strcmp(w, "finally"))) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
                     if (top->sort == S_DECL && decl_starter_word(w)) return false;
                     if (!semi_blocked_word(w)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
                     return false;
@@ -2051,6 +2077,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
                 if (!semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
                 return false;   // peeks consumed the lookahead — no further probing
+            }
+            // …and RIGHT of it (a continuation-indented `with`). Nothing after
+            // this point applies to a `with`/`finally`-led line, so consuming
+            // the word on a miss is harmless.
+            if (top->sort == S_TRY && valid[LAYOUT_END] && (first == 'w' || first == 'f')) {
+                char w[12]; read_word(lexer, w, sizeof w);
+                if (!strcmp(w, "with") || !strcmp(w, "finally")) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                return false;
             }
             // Attributed labelled param on its own line (`delegate of`⏎
             // `[<Out>] data: byte[] * …`): the mid-line probe never sees a line

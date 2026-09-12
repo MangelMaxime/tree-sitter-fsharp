@@ -3440,3 +3440,133 @@ let d = [| 1; if c then x else y; |]
           (identifier))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Inline try bodies close before with and finally
+================================================================================
+
+let a = try if true then 1 else 2 with _ -> 3
+let b () = try if c then d () else e () finally f ()
+let g x =
+    try Map.find x m
+        with _ -> raise e
+let h x =
+    try Map.find x m
+             with _ -> raise e
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (try_expression
+      (if_expression
+        (bool_literal)
+        (int_literal)
+        (int_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (try_expression
+      (if_expression
+        (long_identifier
+          (identifier))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit)))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (try_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (try_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Inline match arms end at in
+================================================================================
+
+let g () = let f t = match t with | A -> 1 | B -> 2 in f 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (let_expression
+      (let_decl_indented
+        (identifier)
+        (parameter
+          (identifier))
+        (match_expression
+          (long_identifier
+            (identifier))
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (int_literal))
+          (match_arm
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (int_literal))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (int_literal)))))
