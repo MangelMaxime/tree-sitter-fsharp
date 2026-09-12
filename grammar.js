@@ -343,7 +343,6 @@ export default grammar({
         // (`type X = A of int -> 'a | B`) the `|` could instead start the next union
         // case. GLR explores both — `null` after `|` → nullable, otherwise the type
         // ends and `|` is the case separator.
-        [$.type_expression, $.nullable_type],
     ],
 
 
@@ -431,7 +430,7 @@ export default grammar({
             $._expression,
             alias($.attr_ascribed_arg, $.type_ascription_expression),
         ),
-        attr_ascribed_arg: $ => seq($._expression, ":", choice($.type_expression, $.nullable_type)),
+        attr_ascribed_arg: $ => seq($._expression, ":", $.type_expression),
 
         // Atomic argument for the bare (no-parens) attribute form. Deliberately
         // narrower than `_expression`: only forms that neither start with `(`
@@ -477,11 +476,6 @@ export default grammar({
             // bare union `type U = A | B` (LR(1) cannot see past the `|`).
         ),
 
-        _nullable_alias_body: $ => seq(
-            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
-                $.parenthesized_type, $.type_parameter, $.flexible_type),
-            alias(token(seq("|", /[ \t]*/, "null")), "null"),
-        ),
 
         // `=` is optional: `[<Measure>] type kg` and empty class/interface bodies have none.
         // After `=`, the body takes one of two shapes:
@@ -755,8 +749,8 @@ export default grammar({
             // The optional constraint clause covers `(x: ^t when ^t: null and
             // ^t: struct, _mthd: Default1)` — the FSharpPlus Control/* idiom:
             // a `when` after a param's type can only be a constraint here.
-            optional(seq(":", choice($.type_expression, $.nullable_type),
-                optional(choice($._when_constraints, seq(":>", choice($.type_expression, $.nullable_type)))))),
+            optional(seq(":", $.type_expression,
+                optional(choice($._when_constraints, seq(":>", $.type_expression))))),
         ),
 
         // Secondary class constructor: `new(args) = expr [then expr]`.
@@ -798,7 +792,7 @@ export default grammar({
         _return_type_annot: $ => seq(
             ":",
             repeat($.attribute),    // `let f(x) : [<A>] int = …`
-            field('return_type', choice($.type_expression, $.nullable_type, $.nullable_tuple_type)),
+            field('return_type', $.type_expression),
             optional(seq(
                 "when",
                 $.type_constraint,
@@ -945,7 +939,7 @@ export default grammar({
             field('name', choice($.identifier, $.operator_name)),
             optional($.type_parameter_list),
             ":",
-            choice($.type_expression, $.nullable_type),
+            $.type_expression,
             optional($.auto_property_accessors),
         ))),
 
@@ -1059,7 +1053,6 @@ export default grammar({
 
         // Layout-bounded initialiser (same opener as `member val`, closes at the
         // next member and before an inline `with`).
-        _val_init: $ => $._try_body_ascribable,
 
         // `optional(access_modifier)`: `type X = private | A | B` — a private (or
         // internal) union representation, the F# smart-constructor pattern.
@@ -1317,7 +1310,7 @@ export default grammar({
             optional("mutable"),
             field('name', $.identifier),
             ":",
-            field('type', choice($.type_expression, $.nullable_type)),
+            field('type', $.type_expression),
         )),
 
         _literal: $ => choice(
@@ -1521,8 +1514,8 @@ export default grammar({
         type_application_expression: $ => seq(
             $.long_identifier,
             "<",
-            choice($.type_expression, $.nullable_type),
-            repeat(seq(",", choice($.type_expression, $.nullable_type))),
+            $.type_expression,
+            repeat(seq(",", $.type_expression)),
             ">",
         ),
 
@@ -1537,13 +1530,13 @@ export default grammar({
             // `type ('T)` IL type arguments (`(# "unbox.any !0" type ('T) x : 'T #)`,
             // FSharp.Core prim-types style).
             repeat(choice($._simple_expression, seq("type", "(", $.type_expression, ")"))),
-            optional(seq(":", choice($.type_expression, $.nullable_type))),
+            optional(seq(":", $.type_expression)),
             token(prec(2, "#)")),
         ),
 
         // (expr : type)  — inline type annotation, always parenthesised.
         // Disambiguated from parenthesized_expression by the ":" after the expression.
-        typed_expression: $ => seq("(", $._expression, ":", choice($.type_expression, $.nullable_type), ")"),
+        typed_expression: $ => seq("(", $._expression, ":", $.type_expression, ")"),
 
         // Argument restricted to _simple_expression (no let/if/match/lambda/binary)
         // so that adjacent let bindings or trailing expressions aren't pulled into
@@ -2018,13 +2011,13 @@ export default grammar({
         _let_rhs: $ => prec.right(seq("=", choice($._layout_body, $._preproc_break), repeat($.let_and_binding))),
         _let_rhs_bodiless: $ => prec.right(seq("=", repeat($.let_and_binding))),
 
-        _use_rhs: $ => prec.right(seq(optional(seq(":", $.type_expression)), "=", $._use_body)),
+        _use_rhs: $ => prec.right(seq(optional(seq(":", $.type_expression)), "=", $._layout_body)),
 
         _ctor_rhs: $ => prec.right(seq("=", $._layout_body, optional(seq("then", $._layout_body)))),
 
         _member_val_rhs: $ => prec.right(seq(optional($._return_type_annot), "=", $._try_body_ascribable, optional($.auto_property_accessors))),
 
-        _val_tail: $ => seq(":", choice($.type_expression, $.nullable_type), optional(seq("=", $._literal))),
+        _val_tail: $ => seq(":", $.type_expression, optional(seq("=", $._literal))),
 
         _abstract_tail: $ => prec.right(seq(optional($.type_parameter_list), ":", $.type_expression, optional($.auto_property_accessors))),
 
@@ -2350,7 +2343,7 @@ export default grammar({
         // (`o :?> byte[]` no-space works via array_type's prec'd immediate-`[`
         // — the token-level tie-break; see array_type.)
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
-            seq($._expression, choice(":>", ":?>", ":?"), choice($.type_expression, $.nullable_type)),
+            seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
 
         // `body : Type` — bare type ascription on a BINDING/MEMBER BODY tail. Pervasive
@@ -2888,7 +2881,6 @@ export default grammar({
 
         // Layout body like a let's, so `use x =`⏎`    multi-line value` closes at
         // the dedent instead of gluing the following statements into the value.
-        _use_body: $ => $._layout_body,
 
         // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
         // `use (p: nativeptr<byte>) = fixed arr`. (Wider pattern sets here cost ~150 states.)
@@ -2938,7 +2930,7 @@ export default grammar({
             repeat(prec(2, seq(choice(",", "|"), $.pattern))),
             optional(seq("when", $._expression)),
             "->",
-            field('body', $._match_arm_body),
+            field('body', $._layout_body),
         ),
 
         // Body of a match/try/function arm. Three shapes:
@@ -2951,7 +2943,6 @@ export default grammar({
         //      trailing dedented statement (e.g. a final `0` at the `match`
         //      column) out of the last arm's body.
         //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
-        _match_arm_body: $ => $._layout_body,
 
         pattern: $ => choice(
             $.wildcard_pattern,
@@ -3154,7 +3145,7 @@ export default grammar({
             field('pattern', choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern)),
             ":",
             // nullable_type: `outputDir: string | null` (F# nullness syntax).
-            field('type', choice($.type_expression, $.nullable_type)),
+            field('type', $.type_expression),
             optional($._when_constraints),
         ),
 
@@ -3288,12 +3279,12 @@ export default grammar({
             // param's type variable: `(value: 'T when 'T: null)`.
             // The trailing constraint covers `(value: 'T when 'T: null)` and the
             // subtype form `(resource: 'T :> IDisposable)`.
-            prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional(choice($._when_constraints, seq(":>", choice($.type_expression, $.nullable_type)))), ")")),
+            prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, optional(choice($._when_constraints, seq(":>", $.type_expression))), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `let f ((|App|_|) : _ -> _) e` / `let f q (|Pat|_|)` - an active
             // pattern as a parameter; `let f (<) = …` - an operator as a parameter.
             $.active_pattern_name,
-            prec(20, seq("(", $.active_pattern_name, ":", choice($.type_expression, $.nullable_type), ")")),
+            prec(20, seq("(", $.active_pattern_name, ":", $.type_expression, ")")),
             $.operator_name,
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
@@ -3358,6 +3349,7 @@ export default grammar({
         ),
 
         type_expression: $ => choice(
+            $.nullable_type,
             $.function_type,
             $.tuple_type,
             $.struct_tuple_type,
@@ -3403,7 +3395,7 @@ export default grammar({
         // nullable on the LEFT needs parens — `(string | null) -> int` — so `|` there
         // isn't ambiguous; only the return position accepts a bare nullable.)
         function_type: $ => prec.right(TYPE_PREC.FUNCTION, seq(
-            $.type_expression, "->", choice($.type_expression, $.nullable_type),
+            $.type_expression, "->", $.type_expression,
         )),
 
         // int * string  (flat: int * string * bool stays flat via repeat)
@@ -3419,12 +3411,6 @@ export default grammar({
         // type_expression — a bare `|` after a labelled union-field type means
         // the NEXT DU case, so this shape is only reachable from annotation
         // slots that already accept nullable_type (returns, typed patterns).
-        nullable_tuple_type: $ => prec.right(TYPE_PREC.TUPLE, choice(
-            // ≥1 element must be nullable (plain tuples stay tuple_type):
-            seq($.nullable_type, repeat1(seq("*", choice($.type_expression, $.nullable_type)))),
-            seq($.type_expression, "*", repeat(seq($.type_expression, "*")),
-                $.nullable_type, repeat(seq("*", choice($.type_expression, $.nullable_type)))),
-        )),
 
         // int list, int option  (left-assoc: int list option = (int list) option)
         postfix_type: $ => prec.left(TYPE_PREC.POSTFIX, seq(
@@ -3447,7 +3433,6 @@ export default grammar({
 
         _generic_type_arg: $ => choice(
             prec.dynamic(1, $.type_expression),
-            $.nullable_type,
             $.measure_expression,
             $.static_type_argument,
             // `seq<'U :> seq<'T>>` — inline subtype constraint on a typar
@@ -3505,7 +3490,7 @@ export default grammar({
 
         // (int -> string)  /  (string | null)
         // Also `(string | null * bool)` and `('R :> IDisposable)` inside the parens.
-        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type), ")"),
+        parenthesized_type: $ => seq("(", $.type_expression, ")"),
 
         // `string | null` — F# 9 nullable reference type. Deliberately NOT a
         // member of the general `type_expression` choice: its `|` would clash with
@@ -3513,11 +3498,15 @@ export default grammar({
         // annotation positions (parenthesised types, parameter / return / field
         // type annotations), where no union `|` can follow. Operand is an atomic
         // type head (incl. a parenthesised type, so `(string list) | null` works).
+        // `T | null` (F# 9). `| null` is ONE token, so a bare union `A | B` never
+        // sees it and nullable_type can live inside type_expression directly.
+        // Binds tighter than `*` and `->`, looser than postfix/application:
+        // `int * string | null` = `int * (string | null)`, `int list | null` =
+        // `(int list) | null`.
         nullable_type: $ => seq(
             choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
-                $.parenthesized_type, $.type_parameter),
-            "|",
-            "null",
+                $.parenthesized_type, $.type_parameter, $.flexible_type),
+            alias(token(seq("|", /[ \t]*/, "null")), "null"),
         ),
 
         // 'a  ^T  '``Generic type with spaces``
@@ -3574,7 +3563,7 @@ export default grammar({
             // with no `'T :` prefix.
             $.generic_type,
             // The RHS may be nullable: `'Resource :> IDisposable | null` (F# 9).
-            seq($.type_parameter, ":>", choice($.type_expression, $.nullable_type)),
+            seq($.type_parameter, ":>", $.type_expression),
             // `and default ^Value : float` — SRTP default-resolution constraint
             // (FSharp.Core Query/averageBy style).
             seq("default", $.type_parameter, ":", $.type_expression),

@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 92 with errors; 532 error nodes
+# 3914 files swept; 84 with errors; 514 error nodes
 92	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
@@ -12,7 +12,7 @@
 2	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlGenerator.fs
 3	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlProvider.fs
 2	FSharp.Data/tests/FSharp.Data.Tests/CsvProvider.fs
-3	FSharpPlus/docsrc/content/abstraction-applicative.fsx
+1	FSharpPlus/docsrc/content/abstraction-applicative.fsx
 20	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
 70	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
 3	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
@@ -40,7 +40,6 @@
 3	Fable/src/fcs-fable/src/Compiler/Symbols/FSharpDiagnostic.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
-2	Fable/src/fcs-fable/src/Compiler/Utilities/NullnessShims.fs
 8	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
 24	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
 2	Fable/tests/Beam/ApplicativeTests.fs
@@ -48,27 +47,21 @@
 1	Fable/tests/Beam/MailboxProcessorTests.fs
 1	Fable/tests/Beam/Misc/Aether.fs
 1	Fable/tests/Beam/TaskTests.fs
-2	Fable/tests/Dart/src/NullnessTests.fs
 2	Fable/tests/Js/Main/ApplicativeTests.fs
 2	Fable/tests/Js/Main/AsyncTests.fs
-2	Fable/tests/Js/Main/NullnessTests.fs
 1	Fable/tests/Js/Main/Util/Aether.fs
 1	Fable/tests/Python/Misc/Aether.fs
 2	Fable/tests/Python/TestApplicative.fs
 1	Fable/tests/Python/TestMailboxProcessor.fs
-2	Fable/tests/Python/TestNullness.fs
 1	Fable/tests/Rust/tests/common/Aether.fs
 2	Fable/tests/Rust/tests/src/ApplicativeTests.fs
-2	Fable/tests/Rust/tests/src/NullnessTests.fs
 7	FsCheck/src/FsCheck/Runner.fs
 2	FsCheck/tests/FsCheck.Test/Gen.fs
 2	FsCheck/tests/FsCheck.Test/TypeClass.fs
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncOptionOp.fs
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncResultOp.fs
-7	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/Nullness.fs
-1	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/OptionCE.fs
+4	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/Nullness.fs
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultOp.fs
-3	FsToolkit.ErrorHandling/tests/FsToolkit.ErrorHandling.Tests/TestHelpers.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
 1	Hopac/Libs/Hopac/Stream.fs
 1	Paket/paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/AssemblyReader.fs
@@ -88,7 +81,6 @@
 2	fsharp/src/Compiler/Service/SynExpr.fs
 2	fsharp/src/Compiler/TypedTree/TypedTreeOps.Attributes.fs
 2	fsharp/src/Compiler/Utilities/ImmutableArray.fs
-1	fsharp/src/Compiler/Utilities/lib.fs
 1	fsharp/src/FSharp.Core/async.fs
-10	fsharp/src/FSharp.Core/prim-types.fs
+12	fsharp/src/FSharp.Core/prim-types.fs
 16	fsharp/src/FSharp.Core/quotations.fs

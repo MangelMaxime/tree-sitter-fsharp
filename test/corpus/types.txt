@@ -302,9 +302,10 @@ let f (s: string | null) = s
     name: (identifier)
     parameters: (parameter
       (identifier)
-      (nullable_type
-        (long_identifier
-          (identifier))))
+      (type_expression
+        (nullable_type
+          (long_identifier
+            (identifier)))))
     body: (long_identifier
       (identifier))))
 
@@ -358,9 +359,10 @@ type T = { x: string | null }
     (record_type_defn
       (record_type_field
         name: (identifier)
-        type: (nullable_type
-          (long_identifier
-            (identifier)))))))
+        type: (type_expression
+          (nullable_type
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Nullable type as a generic type argument
@@ -379,9 +381,10 @@ let f (d: Dictionary<string | null>) = d
         (generic_type
           (long_identifier
             (identifier))
-          (nullable_type
-            (long_identifier
-              (identifier))))))
+          (type_expression
+            (nullable_type
+              (long_identifier
+                (identifier)))))))
     body: (long_identifier
       (identifier))))
 
@@ -400,9 +403,10 @@ let d = Dictionary<string | null>()
       (type_application_expression
         (long_identifier
           (identifier))
-        (nullable_type
-          (long_identifier
-            (identifier))))
+        (type_expression
+          (nullable_type
+            (long_identifier
+              (identifier)))))
       (unit))))
 
 ================================================================================
@@ -425,9 +429,10 @@ type U =
         name: (identifier)
         fields: (type_expression
           (parenthesized_type
-            (nullable_type
-              (long_identifier
-                (identifier)))))))))
+            (type_expression
+              (nullable_type
+                (long_identifier
+                  (identifier))))))))))
 
 ================================================================================
 Function type returning a nullable (A -> T | null)
@@ -447,9 +452,10 @@ let f (g: int -> string | null) = g
           (type_expression
             (long_identifier
               (identifier)))
-          (nullable_type
-            (long_identifier
-              (identifier))))))
+          (type_expression
+            (nullable_type
+              (long_identifier
+                (identifier)))))))
     body: (long_identifier
       (identifier))))
 
@@ -626,9 +632,10 @@ type U = A | B
     (typecast_expression
       (long_identifier
         (identifier))
-      (nullable_type
-        (long_identifier
-          (identifier)))))
+      (type_expression
+        (nullable_type
+          (long_identifier
+            (identifier))))))
   (type_decl
     (identifier)
     (union_type_defn

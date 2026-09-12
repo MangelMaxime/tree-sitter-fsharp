@@ -191,13 +191,15 @@ type T() =
               (identifier))
             (type_ascription_expression
               (null_literal)
-              (nullable_type
-                (long_identifier
-                  (identifier))))))
+              (type_expression
+                (nullable_type
+                  (long_identifier
+                    (identifier)))))))
         (identifier)
-        (nullable_type
-          (long_identifier
-            (identifier))))
+        (type_expression
+          (nullable_type
+            (long_identifier
+              (identifier)))))
       (long_identifier
         (identifier)))))
 

@@ -542,9 +542,10 @@ type T =
                 (identifier))))
           (tuple_param
             (identifier)
-            (nullable_type
-              (long_identifier
-                (identifier))))))
+            (type_expression
+              (nullable_type
+                (long_identifier
+                  (identifier)))))))
       body: (long_identifier
         (identifier)))))
 

@@ -2102,10 +2102,6 @@
       "required": true,
       "types": [
         {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
           "type": "type_expression",
           "named": true
         }
@@ -2126,10 +2122,6 @@
         },
         {
           "type": "measure_expression",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {
@@ -2354,10 +2346,6 @@
       "types": [
         {
           "type": "_simple_expression",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {
@@ -2845,14 +2833,6 @@
         "required": false,
         "types": [
           {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
-          {
             "type": "type_expression",
             "named": true
           }
@@ -3019,14 +2999,6 @@
         "required": false,
         "types": [
           {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
-          {
             "type": "type_expression",
             "named": true
           }
@@ -3178,14 +3150,6 @@
         "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
           {
             "type": "type_expression",
             "named": true
@@ -3340,14 +3304,6 @@
         "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
           {
             "type": "type_expression",
             "named": true
@@ -3716,14 +3672,6 @@
         "required": false,
         "types": [
           {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
-          {
             "type": "type_expression",
             "named": true
           }
@@ -4080,25 +4028,6 @@
     "fields": {}
   },
   {
-    "type": "nullable_tuple_type",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
-          "type": "type_expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "nullable_type",
     "named": true,
     "fields": {},
@@ -4108,6 +4037,10 @@
       "types": [
         {
           "type": "array_type",
+          "named": true
+        },
+        {
+          "type": "flexible_type",
           "named": true
         },
         {
@@ -4383,10 +4316,6 @@
           "named": true
         },
         {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
           "type": "operator_name",
           "named": true
         },
@@ -4444,10 +4373,6 @@
       "multiple": false,
       "required": true,
       "types": [
-        {
-          "type": "nullable_type",
-          "named": true
-        },
         {
           "type": "type_expression",
           "named": true
@@ -4772,14 +4697,6 @@
         "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "nullable_tuple_type",
-            "named": true
-          },
-          {
-            "type": "nullable_type",
-            "named": true
-          },
           {
             "type": "type_expression",
             "named": true
@@ -5235,10 +5152,6 @@
         "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "nullable_type",
-            "named": true
-          },
           {
             "type": "type_expression",
             "named": true
@@ -5828,10 +5741,6 @@
           "named": true
         },
         {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
           "type": "record_pattern",
           "named": true
         },
@@ -5968,10 +5877,6 @@
         "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "nullable_type",
-            "named": true
-          },
           {
             "type": "type_expression",
             "named": true
@@ -6151,10 +6056,6 @@
           "named": true
         },
         {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
           "type": "type_expression",
           "named": true
         }
@@ -6171,10 +6072,6 @@
       "types": [
         {
           "type": "_expression",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {
@@ -6274,10 +6171,6 @@
         },
         {
           "type": "long_identifier",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {
@@ -6484,6 +6377,10 @@
           "named": true
         },
         {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
           "type": "parenthesized_type",
           "named": true
         },
@@ -6679,10 +6576,6 @@
           "named": true
         },
         {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
           "type": "type_expression",
           "named": true
         }
@@ -6699,10 +6592,6 @@
       "types": [
         {
           "type": "_expression",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {
@@ -7139,10 +7028,6 @@
         },
         {
           "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
           "named": true
         },
         {

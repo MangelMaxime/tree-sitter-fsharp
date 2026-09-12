@@ -266,9 +266,10 @@ let CreateUsingAsync (resource: 'T :> IDisposable | null) = resource
       (identifier)
       (type_expression
         (type_parameter))
-      (nullable_type
-        (long_identifier
-          (identifier))))
+      (type_expression
+        (nullable_type
+          (long_identifier
+            (identifier)))))
     body: (long_identifier
       (identifier))))
 
@@ -505,9 +506,10 @@ type T() =
           (tuple_typed_pattern
             (long_identifier
               (identifier))
-            (nullable_type
-              (long_identifier
-                (identifier))))
+            (type_expression
+              (nullable_type
+                (long_identifier
+                  (identifier)))))
           (pattern
             (identifier_pattern
               (long_identifier
@@ -526,13 +528,16 @@ type T() =
         (type_expression
           (long_identifier
             (identifier))))
-      (nullable_tuple_type
-        (nullable_type
-          (long_identifier
-            (identifier)))
-        (nullable_type
-          (long_identifier
-            (identifier))))
+      (type_expression
+        (tuple_type
+          (type_expression
+            (nullable_type
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (nullable_type
+              (long_identifier
+                (identifier))))))
       (application_expression
         (long_identifier
           (identifier))
@@ -602,9 +607,10 @@ type B() =
         (type_parameter)
         (type_constraint
           (type_parameter)
-          (nullable_type
-            (long_identifier
-              (identifier)))))
+          (type_expression
+            (nullable_type
+              (long_identifier
+                (identifier))))))
       (parameter
         (identifier)
         (type_expression
@@ -637,6 +643,8 @@ Reserved keywords cannot be used as binding names
 let abstract = 1
 
 --------------------------------------------------------------------------------
+
+
 
 ================================================================================
 SRTP call with a parenthesised type parameter and operator on a type parameter
