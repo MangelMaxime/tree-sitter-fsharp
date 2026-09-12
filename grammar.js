@@ -299,7 +299,7 @@ export default grammar({
         // inside generic args or aliases.
         [$.measure_expression, $.type_expression],
         // After `type Foo`, the following `=` chooses type_decl, `with` chooses type_extension.
-        [$._type_decl_core, $.type_extension_name],
+        [$._type_head, $.type_extension_name],
         // After `module M =`, the identifier is either a module abbreviation target
         // or the first declaration of a nested module body.
         [$._module_decl_core],
@@ -509,7 +509,9 @@ export default grammar({
             $._type_decl_core,
         ),
 
-        _type_decl_core: $ => prec.right(seq(
+        _type_decl_core: $ => prec.right(seq($._type_head, optional($._type_rhs), repeat($.type_and_decl))),
+
+        _type_head: $ => prec.right(seq(
             "type",
             repeat($.attribute),
             // `type private Foo = …` — visibility of the TYPE itself, before
@@ -544,15 +546,15 @@ export default grammar({
             // back to it. Identifier is conventionally `this` but any name is
             // legal (`as self`, etc.).
             optional(seq("as", field('self', $.identifier))),
-            // Augmentation `with member …` can ONLY follow when `=` is present.
-            // Without `=`, the `with` belongs to `type_extension` instead
-            // (`type Foo with …` — extending an already-declared type).
-            optional(seq(
-                "=",
-                optional($._type_decl_body_or_class),
-                optional($._type_augmentation),
-            )),
-            repeat($.type_and_decl),
+        )),
+
+        // Augmentation `with member …` can ONLY follow when `=` is present.
+        // Without `=`, the `with` belongs to `type_extension` instead
+        // (`type Foo with …` — extending an already-declared type).
+        _type_rhs: $ => prec.right(seq(
+            "=",
+            optional($._type_decl_body_or_class),
+            optional($._type_augmentation),
         )),
 
         // and Even = ...  (mutual type recursion continuation)
@@ -568,7 +570,9 @@ export default grammar({
             $._type_and_core,
         )),
 
-        _type_and_core: $ => prec.right(seq(
+        _type_and_core: $ => prec.right(seq($._type_and_head, optional($._type_rhs))),
+
+        _type_and_head: $ => prec.right(seq(
             "and",
             repeat($.attribute),
             optional($.access_modifier),
@@ -579,11 +583,6 @@ export default grammar({
             optional($.access_modifier),
             optional($.primary_constructor),
             optional(seq("as", field('self', $.identifier))),
-            optional(seq(
-                "=",
-                optional($._type_decl_body_or_class),
-                optional($._type_augmentation),
-            )),
         )),
 
         // Trailing `with member …` after a type definition body — F#'s
@@ -598,7 +597,7 @@ export default grammar({
         _type_augmentation: $ => prec.right(seq(
             "with",
             optional(choice(
-                seq($._layout_open, repeat($._class_body_member), $._layout_end),
+                $._class_body_block,
                 $._class_body_member,
             )),
         )),
@@ -791,8 +790,8 @@ export default grammar({
                 "=",
                 // Layout body so it closes at the next ctor/member instead of
                 // absorbing it (two `new …` in a row).
-                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
-                optional(seq("then", seq($._layout_open, $._expression, $._layout_end))),
+                $._layout_body,
+                optional(seq("then", $._layout_body)),
             ),
             // Signature form: `new: unit -> T` (signature files).
             seq(
@@ -864,13 +863,16 @@ export default grammar({
         _method_body: $ => prec.right(seq(
             field('parameters', repeat($.parameter)),
             optional($._return_type_annot),
-            choice(
+            $._method_rhs,
+        )),
+
+        _method_rhs: $ => prec.right(choice(
                 seq(
                     "=",
                     // Uniform layout body (closes at the next member). `optional` keeps
                     // `member X =` (mid-edit, no body yet) parseable.
                     optional(choice(
-                        seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                        $._layout_body,
                         // Branch written out to its own `=` (`#if X`⏎`static member
                         // inline f (…) =`⏎`#else`⏎`static member f (…) =`⏎`#endif`⏎
                         // `    body`): the body belongs to the LAST branch.
@@ -882,7 +884,6 @@ export default grammar({
                 // one has no `=` of its own. The scanner only emits the break when a
                 // directive line is followed by a declaration keyword.
                 $._preproc_break,
-            ),
         )),
 
         // `with get/set accessor [and get/set accessor]` — shared by property forms.
@@ -945,7 +946,7 @@ export default grammar({
                 // (`_try_open`): like a generic layout body it dedent-closes at
                 // the next member, but it ALSO closes before an inline `with`, so
                 // the `with get, set` accessor form still attaches.
-                seq($._try_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
+                $._try_body_ascribable,
                 // prec.right (whole branch): in the INLINE single-member type
                 // body (`type X = member val N = e with get, set`), the `with`
                 // shifts into the accessors rather than starting an augmentation.
@@ -990,7 +991,7 @@ export default grammar({
             "=",
             // Layout body (like every other `=` body) so it closes at the next
             // member/decl instead of absorbing it.
-            seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+            $._layout_body,
         ),
 
         // with get [, set]  (auto-property accessor list)
@@ -1033,11 +1034,7 @@ export default grammar({
         inherit_decl: $ => prec.right(seq(
             "inherit",
             field('base', $.type_expression),
-            optional(seq(
-                "(",
-                optional(seq($._expression, repeat(seq(",", $._expression)))),
-                ")",
-            )),
+            optional($._paren_args),
             optional(seq("as", field('alias', $.identifier))),
             // `inherit Base(x) with`⏎`    member …` — indented members only; the
             // inline form (`inherit B() with member …`) costs ~600 parser states.
@@ -1062,10 +1059,7 @@ export default grammar({
             // line (`interface IIndex with member this.X = …`).
             optional(seq(
                 "with",
-                optional(choice(
-                    seq($._layout_open, repeat($._class_body_member), $._layout_end),
-                    $._class_body_member,
-                )),
+                optional($._with_members),
             )),
         )),
 
@@ -1073,7 +1067,7 @@ export default grammar({
         // static do runs once at type initialization time
         // Layout body so `[static] do expr` closes at the next member/statement
         // instead of absorbing it (e.g. `static do printfn …` before members).
-        do_stmt: $ => seq(optional("static"), "do", $._expr_open, $._expression, $._layout_end),
+        do_stmt: $ => seq(optional("static"), "do", $._indented_or_inline_body),
 
         // Explicit field in a class:
         //   val mutable field: int
@@ -1103,7 +1097,7 @@ export default grammar({
 
         // Layout-bounded initialiser (same opener as `member val`, closes at the
         // next member and before an inline `with`).
-        _val_init: $ => seq($._try_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
+        _val_init: $ => $._try_body_ascribable,
 
         // `optional(access_modifier)`: `type X = private | A | B` — a private (or
         // internal) union representation, the F# smart-constructor pattern.
@@ -1820,21 +1814,13 @@ export default grammar({
                 // elements (a dedicated token a nested sequence can't absorb, so
                 // elements never chain into one application), `_bracket_close`
                 // pops at `]`.
-                seq(
-                    $._bracket_open,
-                    $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))),
-                    optional(choice(";", $._bracket_semi)),
-                    $._bracket_close,
-                ),
+                $._block_elements,
                 // Inline form `[ a; b; c ]`. The `;` separator is given a static
                 // precedence above SEQ_EXPR so it binds as an ELEMENT separator
                 // here rather than extending the element into a
                 // `sequence_expression` (`[ a; b ]` = two elements).
                 seq(
-                    $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
-                    optional(prec(PREC.PAREN_EXPR, ";")),   // `[ 1; 2; ]` trailing
+                    $._inline_elements,   // `[ 1; 2; ]` trailing
                 ),
             )),
             "]",
@@ -1844,18 +1830,10 @@ export default grammar({
             "[|",
             optional(choice(
                 // Block form `[|`⏎ elements ⏎`|]` (see list_expression).
-                seq(
-                    $._bracket_open,
-                    $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))),
-                    optional(choice(";", $._bracket_semi)),
-                    $._bracket_close,
-                ),
+                $._block_elements,
                 // Inline form `[| a; b; c |]` (see list_expression).
                 seq(
-                    $._expression,
-                    repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))),
-                    optional(prec(PREC.PAREN_EXPR, ";")),   // `[| 1; 2; |]` trailing
+                    $._inline_elements,   // `[| 1; 2; |]` trailing
                 ),
             )),
             "|]",
@@ -1886,13 +1864,7 @@ export default grammar({
                 ),
                 // Block form: `= {|`⏎`  base with`⏎`    field = …`⏎`|}` —
                 // mirror of record_expression's own-line-base branch.
-                seq(
-                    $._layout_open,
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
-                    "with",
-                    $._record_fields,
-                    $._layout_end,
-                ),
+                $._record_copy_block,
                 $._record_fields,
                 // `{| |}` — the EMPTY anonymous record (farmer `properties = {| |}`).
                 blank(),
@@ -1919,13 +1891,7 @@ export default grammar({
                 // The scanner emits `_body_indent` at the base's column (`{` had
                 // no same-line content); without this branch only the no-base
                 // field list consumes that indent, and `base with` errors.
-                seq(
-                    $._layout_open,
-                    field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
-                    "with",
-                    $._record_fields,
-                    $._layout_end,
-                ),
+                $._record_copy_block,
                 $._record_fields,
             ),
             "}",
@@ -2061,6 +2027,28 @@ export default grammar({
         qualified_operator_expression: $ => seq(choice($.long_identifier, $.type_parameter), $.operator_member),
         operator_member: _ => token(seq(".", "(", /[ \t]*/, /[!%&*+\-./<=>?@^|~$?:]+/, /[ \t]*/, ")")),
 
+        _layout_body: $ => seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+
+        _try_body_ascribable: $ => seq($._try_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
+
+        _try_body: $ => seq($._try_open, $._expression, $._layout_end),
+
+        _for_body: $ => seq($._for_open, field('body', $._expression), $._layout_end),
+
+        _paren_args: $ => seq("(", optional(seq($._expression, repeat(seq(",", $._expression)))), ")"),
+
+        _block_elements: $ => seq($._bracket_open, $._expression, repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))), optional(choice(";", $._bracket_semi)), $._bracket_close),
+
+        _inline_elements: $ => seq($._expression, repeat(prec(PREC.PAREN_EXPR, seq(";", $._expression))), optional(prec(PREC.PAREN_EXPR, ";"))),
+
+        _with_members: $ => choice($._class_body_block, $._class_body_member),
+
+        _block_pattern_items: $ => seq($._bracket_open, $._list_pattern_item, repeat(seq(choice(";", $._bracket_semi), $._list_pattern_item)), optional(choice(";", $._bracket_semi)), $._bracket_close),
+
+        _class_body_block: $ => seq($._layout_open, repeat($._class_body_member), $._layout_end),
+
+        _record_copy_block: $ => seq($._layout_open, field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)), "with", $._record_fields, $._layout_end),
+
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
@@ -2144,7 +2132,7 @@ export default grammar({
                 // inline `let x = e`, own-line bodies, and `let x = e in …` (the
                 // scanner's `in` ender closes the body before `in`).
                 choice(
-                    seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                    $._layout_body,
                     // Branch written out to its own `=` (`#if X`⏎`let f (x: int) =`⏎
                     // `#else`⏎`let f (x: string) =`⏎`#endif`⏎`    body`): the body
                     // belongs to the LAST branch.
@@ -2181,7 +2169,7 @@ export default grammar({
 
         _let_and_core: ($) => prec.right(PREC.LET_DECL, choice(
             prec(2, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=",
-                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                $._layout_body,
             )),
             prec(1, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
         )),
@@ -2203,7 +2191,7 @@ export default grammar({
             // `e` at the inline `in`. The ascription alternative covers the
             // FSharpPlus `let s = sequence lst : '``Functor<…>``` suffix —
             // without it the `:` breaks the let and poisons the next statement.
-            seq($._expr_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
+            field('body', $._indented_or_inline_body),
             // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
             // (expression-position) let, same as the top-level `let_binding`.
             // Uses `_and_decl_indented` (NOT the top-level `let_and_binding`) so
@@ -2227,8 +2215,8 @@ export default grammar({
             $._let_signature,
             "=",
             choice(
-                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
-                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                $._layout_body,
+                $._layout_body,
             ),
         ),
 
@@ -2560,11 +2548,7 @@ export default grammar({
             "{",
             "new",
             field('type', choice($.generic_type, $.long_identifier)),
-            optional(seq(
-                "(",
-                optional(seq($._expression, repeat(seq(",", $._expression)))),
-                ")",
-            )),
+            optional($._paren_args),
             optional(seq(
                 "with",
                 repeat($._class_body_member),
@@ -2633,10 +2617,10 @@ export default grammar({
         // NOT fire for a `match … with` sitting inside an enclosing expr body.
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
             "try",
-            seq($._try_open, $._expression, $._layout_end),
+            $._try_body,
             choice(
                 seq("with", $._match_arms),
-                seq("finally", seq($._try_open, $._expression, $._layout_end)),
+                seq("finally", $._try_body),
             ),
         )),
 
@@ -2668,7 +2652,7 @@ export default grammar({
         // dedented `end` closes it (the scanner also closes an inline S_EXPR
         // body at a mid-line `end`, which is a reserved word).
         begin_end_expression: $ => prec(PREC.PAREN_EXPR,
-            seq("begin", $._expr_open, $._expression, $._layout_end, "end")),
+            seq("begin", $._indented_or_inline_body, "end")),
 
         // function | pat -> expr …  — shorthand for fun x -> match x with
         function_expression: $ => prec.right(PREC.MATCH_EXPR,
@@ -2750,7 +2734,7 @@ export default grammar({
                             // CE siblings. A real indented/inline loop body opens
                             // normally. (No bare `optional($._expression)` fallback:
                             // it would greedily eat the next query operator.)
-                            optional(seq($._for_open, field('body', $._expression), $._layout_end)),
+                            optional($._for_body),
                         ),
                         // `[ for x in xs -> expr ]` — list/seq/array comprehension
                         // yield shorthand (sugar for `do yield expr`). The `->`
@@ -2765,7 +2749,7 @@ export default grammar({
                     // `_` is a valid range-loop binder (`for _ = 0 to n do …`).
                     choice($.identifier, $.wildcard_pattern),
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
-                    optional(seq($._for_open, field('body', $._expression), $._layout_end)),
+                    optional($._for_body),
                 ),
             ),
         )),
@@ -2826,6 +2810,11 @@ export default grammar({
                 // this marker), `head` reduces to `_expression`, and `head { … }` parses
                 // as application(head, record/object_expression) with the literal `{`.
                 $._ce_brace_open,
+                $._ce_body,
+            ),
+        ),
+
+        _ce_body: $ => prec(PREC.CE_EXPR, seq(
                 "{",
                 optional(choice(
                     // Multi-line `builder {`⏎ statements ⏎`}`. `reserved('query_ce')`
@@ -2848,8 +2837,7 @@ export default grammar({
                     ),
                 )),
                 "}",
-            ),
-        ),
+        )),
 
         // Statements inside a CE body. `_expression` at the end covers
         // return/yield/return!/yield!/do!/for/while/if/match/etc.
@@ -2926,7 +2914,7 @@ export default grammar({
 
         // Layout body like a let's, so `use x =`⏎`    multi-line value` closes at
         // the dedent instead of gluing the following statements into the value.
-        _use_body: $ => seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+        _use_body: $ => $._layout_body,
 
         // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
         // `use (p: nativeptr<byte>) = fixed arr`. (Wider pattern sets here cost ~150 states.)
@@ -2989,7 +2977,7 @@ export default grammar({
         //      trailing dedented statement (e.g. a final `0` at the `match`
         //      column) out of the last arm's body.
         //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
-        _match_arm_body: $ => seq($._layout_open, $._ascribable_body, $._layout_end),
+        _match_arm_body: $ => $._layout_body,
 
         pattern: $ => choice(
             $.wildcard_pattern,
@@ -3288,13 +3276,7 @@ export default grammar({
         list_pattern: $ => seq(
             "[",
             optional(choice(
-                seq(
-                    $._bracket_open,
-                    $._list_pattern_item,
-                    repeat(seq(choice(";", $._bracket_semi), $._list_pattern_item)),
-                    optional(choice(";", $._bracket_semi)),
-                    $._bracket_close,
-                ),
+                $._block_pattern_items,
                 seq(
                     $._list_pattern_item,
                     repeat(seq(";", $._list_pattern_item)),
@@ -3307,13 +3289,7 @@ export default grammar({
         array_pattern: $ => seq(
             "[|",
             optional(choice(
-                seq(
-                    $._bracket_open,
-                    $._list_pattern_item,
-                    repeat(seq(choice(";", $._bracket_semi), $._list_pattern_item)),
-                    optional(choice(";", $._bracket_semi)),
-                    $._bracket_close,
-                ),
+                $._block_pattern_items,
                 seq(
                     $._list_pattern_item,
                     repeat(seq(";", $._list_pattern_item)),
