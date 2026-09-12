@@ -648,3 +648,21 @@ let x = 1
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Line directive with a line number and a verbatim file name
+================================================================================
+
+#line 2 @"F:/foo/x.fs"
+let h = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_directive
+    (preproc_keyword)
+    (int_literal)
+    (verbatim_string))
+  (let_binding
+    (identifier)
+    (int_literal)))

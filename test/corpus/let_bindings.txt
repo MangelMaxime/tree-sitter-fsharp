@@ -695,3 +695,87 @@ let (|``Alpha Beta`` |_|) x = Some x
         (identifier))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Attributes on a return type
+================================================================================
+
+let f(x) : [<A>] int = x
+let g(x) : [<A("1")>] [<B>] int = x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Use bindings with a typed pattern, a type annotation and fixed
+================================================================================
+
+let g () =
+    use (p: nativeptr<byte>) = fixed arr
+    use k : IDisposable = null
+    ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (sequence_expression
+      (use_binding
+        (typed_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (generic_type
+              (long_identifier
+                (identifier))
+              (type_expression
+                (long_identifier
+                  (identifier))))))
+        (prefix_keyword_expression
+          (long_identifier
+            (identifier))))
+      (sequence_expression
+        (use_binding
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (null_literal))
+        (unit)))))

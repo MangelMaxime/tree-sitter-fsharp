@@ -815,6 +815,7 @@ export default grammar({
         //       = …
         _return_type_annot: $ => seq(
             ":",
+            repeat($.attribute),    // `let f(x) : [<A>] int = …`
             field('return_type', choice($.type_expression, $.nullable_type, $.nullable_tuple_type)),
             optional(seq(
                 "when",
@@ -834,7 +835,7 @@ export default grammar({
             optional($.access_modifier),
             field('self', $.member_self_ident),
             ".",
-            field('name', choice($.identifier, $.operator_name)),
+            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `member _.(|A|B|) x = …`
             optional($.type_parameter_list),
         ),
 
@@ -850,7 +851,7 @@ export default grammar({
             "member",
             optional("inline"),
             optional($.access_modifier),
-            field('name', choice($.identifier, $.operator_name)),
+            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `static member (|A|B|) x = …`
             optional($.type_parameter_list),
         ),
 
@@ -1710,10 +1711,6 @@ export default grammar({
             // ambiguous with an optional named arg `f ?x`; the no-space dynamic
             // form `o?member` is `dynamic_expression`.)
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', alias("$", $.symbolic_op)), field('right', $._expression))),
-            // Spaced dynamic lookup `a ? b` / `"s" ? Contains (10)`. prec.dynamic(-1):
-            // when the application + optional-named-arg reading `f ?x` also
-            // survives, that one wins.
-            prec.dynamic(-1, prec.left(PREC.DOT, seq(field('left', $._expression), field('operator', alias("?", $.symbolic_op)), field('right', $._expression)))),
             // Single-char `^` infix (Hopac's high-precedence apply, `f ^ x`).
             // RIGHT-assoc per F#'s `^`-op rule. Spaced use only — `^ident` is a
             // typar token (longer match) and `^^^`/`^=` etc. are symbolic_op.
@@ -2049,8 +2046,8 @@ export default grammar({
         active_pattern_member: _ => token(seq(
             ".",
             "(|",
-            /[a-zA-Z_][a-zA-Z0-9_']*/,
-            repeat(seq("|", /[a-zA-Z_][a-zA-Z0-9_']*/)),
+            /([\p{L}_][\p{L}\p{Nd}_']*|``[^`\n\r]+``)/,
+            repeat(seq("|", /([\p{L}_][\p{L}\p{Nd}_']*|``[^`\n\r]+``)/)),
             optional(seq("|", "_")),
             "|)",
         )),
@@ -2076,6 +2073,7 @@ export default grammar({
             alias(prec.right(2, seq($._tuple_elem_pattern, "::", $.pattern)), $.cons_pattern),
             alias(prec.left(1, seq($._tuple_elem_pattern, "|", $.pattern)), $.or_pattern),
             alias(prec.left(1, seq($._tuple_elem_pattern, "&", $.pattern)), $.and_pattern),
+            $.type_check_pattern,   // `let :? T = …` (FS0025 is only a warning)
             // `let () = init ()` / `let! () = start ()` — unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
             // (A general literal pattern here would let `let 0leaderingzero = …`
@@ -2287,7 +2285,12 @@ export default grammar({
         // `optional_named_arg` argument (`f ?name = x`, which has a space).
         dynamic_expression: $ => prec(PREC.DOT, seq(
             field('object', $._expression),
-            token.immediate("?"),
+            choice(
+                token.immediate("?"),
+                // `x ? Member` — F# lexes `?` followed by whitespace as the binary
+                // `(?)` operator; only `?ident` (no space after) is an optional arg.
+                alias(token(seq("?", /[ \t]+/)), "?"),
+            ),
             field('member', choice($.identifier, $.parenthesized_expression)),
         )),
 
@@ -2642,7 +2645,7 @@ export default grammar({
         //   lazy⏎    assert not isInteractive⏎⏎    match … (FCS FxResolver) —
         // without a body context the statements have no separator.
         prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR, choice(
-            seq(choice("lazy", "assert"), $._expression),
+            seq(choice("lazy", "assert", "fixed"), $._expression),   // `use p = fixed arr`
             // _block_open (NOT _expr_open): it only fires when the body sits on
             // the NEXT line, so inline `lazy x` (e.g. as a match scrutinee:
             // `match a, lazy b with`) always takes the plain branch above.
@@ -2926,7 +2929,8 @@ export default grammar({
         _use_body: $ => seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
 
         // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
-        _use_name: $ => $.identifier,
+        // `use (p: nativeptr<byte>) = fixed arr`. (Wider pattern sets here cost ~150 states.)
+        _use_name: $ => choice($.identifier, $.typed_pattern),
 
         // match! expr with | pat -> expr …
         ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
@@ -3670,8 +3674,8 @@ export default grammar({
         // never splits `(|` as `(` + `|`, which would break `let (|>) a b = …`.
         active_pattern_name: _ => token(seq(
             "(|",
-            choice(/[a-zA-Z_][a-zA-Z0-9_']*/, /``[^`\n\r\t]+``/),
-            repeat(seq("|", choice(/[a-zA-Z_][a-zA-Z0-9_']*/, /``[^`\n\r\t]+``/))),
+            choice(/[\p{L}_][\p{L}\p{Nd}_']*/, /``[^`\n\r\t]+``/),
+            repeat(seq("|", choice(/[\p{L}_][\p{L}\p{Nd}_']*/, /``[^`\n\r\t]+``/))),
             optional(seq(/[ \t]*/, "|", /[ \t]*/, "_", /[ \t]*/)),   // `(|``Alpha Beta`` |_|)`
             "|)",
         )),
@@ -3751,7 +3755,7 @@ export default grammar({
         // backticks are allowed inside (``returns an error if `--flag` is
         // missing`` — BDD-style test names).
         identifier: _ => token(choice(
-            /[\p{L}_][\p{L}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}_']*/,
+            /[\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}_']*/,
             /``([^`\n\r\t]|`[^`\n\r\t])+``/,
         )),
 
@@ -3780,7 +3784,7 @@ export default grammar({
         // `lf` (`0x…lf`, hex-bits-to-float32) and `LF` (`0x…LF`,
         // hex-bits-to-float64) are listed FIRST so tree-sitter's longest-match
         // wins over the single-char `l` / `L` alternatives.
-        _int_suffix: _ => token.immediate(choice("lf", "LF", "uy", "us", "uL", "UL", "Ul", "ul", "un", "u", "y", "s", "l", "L", "n", "I", "m", "M", "f", "F")),
+        _int_suffix: _ => token.immediate(choice("lf", "LF", "uy", "us", "uL", "UL", "Ul", "ul", "un", "u", "y", "s", "l", "L", "n", "I", "m", "M", "f", "F", "Q", "R", "Z", "N", "G")),   // user-defined literal suffixes
         _float_suffix: _ => token.immediate(choice("f", "F", "m", "M")),
 
         int_literal: $ => seq(
@@ -4016,7 +4020,11 @@ export default grammar({
             // and because whitespace/newlines are `extras`, it would greedily grab the
             // next line's first identifier as the argument (`#time⏎ seq { … }` →
             // `#time(arg = seq)`, breaking the following statement).
-            optional(field('argument', choice($.string_literal, $.int_literal))),
+            // `#line 2 @"f.fs"` — an optional line number, then an optional file name.
+            // Not a repeat: a literal that starts the NEXT line (`#nowarn "9"` ⏎ `"s" |> f`)
+            // must stay a statement of its own.
+            optional(field('argument', $.int_literal)),
+            optional(field('argument', choice($.string_literal, $.verbatim_string))),
         )),
 
         // Unix-style shebang at the top of an `.fsx` script — `#!/usr/bin/env -S dotnet fsi`.

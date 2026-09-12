@@ -1797,3 +1797,53 @@ match a, b with
       (pattern
         (wildcard_pattern))
       (int_literal))))
+
+================================================================================
+Cons and type-test patterns on a let
+================================================================================
+let 1 :: _ = [ 4; 5; 6 ]
+let a :: b :: c = [1; 2; 3]
+let :? System.Exception = box 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (cons_pattern
+      (literal_pattern
+        (int_literal)))
+    (cons_pattern)
+    (cons_pattern
+      (wildcard_pattern))
+    (list_expression
+      (int_literal)
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    (cons_pattern
+      (long_identifier
+        (identifier)))
+    (cons_pattern)
+    (cons_pattern
+      (cons_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (list_expression
+      (int_literal)
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    (type_check_pattern
+      (long_identifier
+        (identifier)
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (int_literal))))

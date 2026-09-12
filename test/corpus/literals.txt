@@ -661,3 +661,24 @@ let y = ((* c *))
   (let_binding
     (identifier)
     (unit)))
+
+================================================================================
+User-defined numeric literal suffixes
+================================================================================
+
+let a = 99999N
+let b = 0N
+let c = 3Q
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (int_literal))
+  (let_binding
+    (identifier)
+    (int_literal))
+  (let_binding
+    (identifier)
+    (int_literal)))
