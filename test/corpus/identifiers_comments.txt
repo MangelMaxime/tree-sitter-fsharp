@@ -479,3 +479,52 @@ let க் = 2
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Block comments may contain string literals and be empty
+================================================================================
+
+(* Remove the "*)" which is mandatory. *)
+let x (**) = (**) 1
+(* nested (* """H *) w""" *) done *)
+let y = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (block_comment)
+  (let_binding
+    (identifier)
+    (block_comment)
+    (block_comment)
+    (int_literal)
+    (block_comment))
+  (let_binding
+    (identifier)
+    (int_literal)))
+
+================================================================================
+Block comment between a record field name and its type
+================================================================================
+
+type F =
+    { a (* c *) : int
+      b: int }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (record_type_defn
+      (record_type_field
+        (identifier)
+        (block_comment)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))))

@@ -304,3 +304,35 @@ match d: int option with
             (identifier))))
       body: (long_identifier
         (identifier)))))
+
+================================================================================
+Match as an array element closed by the array bracket
+================================================================================
+
+let a = [|
+    match v with
+    | A -> 1
+    | B -> 2
+    |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (array_expression
+      (match_expression
+        (long_identifier
+          (identifier))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (int_literal))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (int_literal))))))

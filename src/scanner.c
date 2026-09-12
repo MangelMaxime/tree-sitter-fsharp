@@ -147,25 +147,57 @@ static void push(Scanner *s, uint8_t sort, uint32_t col) {
 // (nesting-aware) and emit BLOCK_COMMENT / BLOCK_DOC_COMMENT. External because
 // a token regex cannot nest. Returns false on EOF (unterminated) or when
 // neither symbol is valid — the reset internal lexer takes over.
+// Skip the body of a block comment whose `(*` is already consumed, through
+// its matching `*)`. Nested comments and string literals inside the comment
+// are honoured as FSC does (`(* the "*)" token *)` does not end at the quoted
+// `*)`; `@"…"` has no escapes; `'"'` is a char). false on EOF.
+static bool skip_comment_body(TSLexer *lexer, bool skip) {
+    int depth = 1; int32_t prev = 0;
+    while (depth > 0) {
+        int32_t c = lexer->lookahead;
+        if (c == 0) return false;
+        if (c == '(') {
+            lexer->advance(lexer, skip);
+            if (lexer->lookahead == '*') { depth++; lexer->advance(lexer, skip); }
+        } else if (c == '*') {
+            lexer->advance(lexer, skip);
+            if (lexer->lookahead == ')') { depth--; lexer->advance(lexer, skip); }
+        } else if (c == '"') {
+            bool verbatim = (prev == '@');
+            lexer->advance(lexer, skip);
+            while (lexer->lookahead != '"' && lexer->lookahead != 0) {
+                if (!verbatim && lexer->lookahead == '\\') lexer->advance(lexer, skip);
+                lexer->advance(lexer, skip);
+            }
+            if (lexer->lookahead == 0) return false;
+            lexer->advance(lexer, skip);
+        } else if (c == '\'') {
+            lexer->advance(lexer, skip);
+            if (lexer->lookahead == '"') {
+                lexer->advance(lexer, skip);
+                if (lexer->lookahead == '\'') lexer->advance(lexer, skip);
+            }
+        } else lexer->advance(lexer, skip);
+        prev = c;
+    }
+    return true;
+}
+
 static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
     if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
     if (lexer->lookahead == ')') return false;   // `(*)` = the multiply operator value, not a comment
     bool doc = false;
     if (lexer->lookahead == '*') {                 // `(**` — doc form…
         lexer->advance(lexer, false);
-        doc = (lexer->lookahead != ')');           // …unless `(**)`: EMPTY normal comment
-    }
-    int cdepth = 1;
-    while (cdepth > 0) {
-        if (lexer->lookahead == 0) return false;   // unterminated
-        if (lexer->lookahead == '(') {
+        if (lexer->lookahead == ')') {             // …unless `(**)`: EMPTY normal comment
             lexer->advance(lexer, false);
-            if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, false); }
-        } else if (lexer->lookahead == '*') {
-            lexer->advance(lexer, false);
-            if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, false); }
-        } else lexer->advance(lexer, false);
+            lexer->mark_end(lexer);
+            lexer->result_symbol = valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT;
+            return true;
+        }
+        doc = true;
     }
+    if (!skip_comment_body(lexer, false)) return false;   // unterminated
     lexer->mark_end(lexer);
     lexer->result_symbol = (doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
                          : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
@@ -271,17 +303,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                     if (first) *first = '('; *col = indent; return true;
                 }
                 g_comment_doc = (lexer->lookahead == '*');
-                int sdepth = 1;
-                while (sdepth > 0) {
-                    if (lexer->lookahead == 0) return false;
-                    if (lexer->lookahead == '(') {
-                        lexer->advance(lexer, false);
-                        if (lexer->lookahead == '*') { sdepth++; lexer->advance(lexer, false); }
-                    } else if (lexer->lookahead == '*') {
-                        lexer->advance(lexer, false);
-                        if (lexer->lookahead == ')') { sdepth--; lexer->advance(lexer, false); }
-                    } else lexer->advance(lexer, false);
-                }
+                if (!skip_comment_body(lexer, false)) return false;
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                 if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
                     lexer->mark_end(lexer);            // full comment span (+trailing ws)
@@ -304,13 +326,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             }
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') { if (first) *first = '('; *col = indent; return true; }  // `(*)`
-            int depth = 1;
-            while (depth > 0) {
-                if (lexer->lookahead == 0) return false;
-                if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { depth++; lexer->advance(lexer, true); } }
-                else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { depth--; lexer->advance(lexer, true); } }
-                else lexer->advance(lexer, true);
-            }
+            if (!skip_comment_body(lexer, true)) return false;
             // CONTENT may follow the comment on the same line — a comment-LED
             // element (`(* 4 *) 7`, PriorityQueue-style aligned arrays). The
             // line then counts: its column is the COMMENT's start indent (where
@@ -398,13 +414,7 @@ static uint32_t peek_body_col(TSLexer *lexer) {
             // is on a later line.
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') return col;  // `(*)` = the multiply operator value, not a comment — inline body at the `(`
-            int cdepth = 1;
-            while (cdepth > 0) {
-                if (lexer->lookahead == 0) return 0;
-                if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
-                else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
-                else lexer->advance(lexer, true);
-            }
+            if (!skip_comment_body(lexer, true)) return 0;
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                 return col;                       // inline body after the comment
@@ -912,13 +922,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             }
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') return true;      // `(*)` multiply operator
-            int cdepth = 1;
-            while (cdepth > 0) {
-                if (lexer->lookahead == 0) return true;
-                if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
-                else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
-                else lexer->advance(lexer, true);
-            }
+            if (!skip_comment_body(lexer, true)) return true;
             continue;
         }
         break;
@@ -1323,13 +1327,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             lexer->advance(lexer, true);
             if (lexer->lookahead == '*') {
                 lexer->advance(lexer, true);
-                int cdepth = 1;
-                while (cdepth > 0) {
-                    if (lexer->lookahead == 0) return false;
-                    if (lexer->lookahead == '(') { lexer->advance(lexer, true); if (lexer->lookahead == '*') { cdepth++; lexer->advance(lexer, true); } }
-                    else if (lexer->lookahead == '*') { lexer->advance(lexer, true); if (lexer->lookahead == ')') { cdepth--; lexer->advance(lexer, true); } }
-                    else lexer->advance(lexer, true);
-                }
+                if (!skip_comment_body(lexer, true)) return false;
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                 if (lexer->lookahead == ']' || lexer->lookahead == '}' || lexer->lookahead == '|' || lexer->lookahead == 0) return false;
                 if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1435,6 +1433,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 if (!is_name_start(lexer->lookahead)) break;
                 peek_name_segment(lexer);
+                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            }
+            // `ti (* comment *) : int` — a block comment before the separator.
+            while (lexer->lookahead == '(') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead != '*') break;      // `(`: an application base, not a field
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == ')') break;      // `(*)` operator value
+                if (!skip_comment_body(lexer, true)) return false;
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             }
             int32_t sep = lexer->lookahead;
@@ -1982,6 +1989,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
             return false;
         case S_MATCH:
+            // `|]` / `|}` on its own line: the array / anon-record closer, never
+            // an arm (`[|`⏎`    match v with`⏎`    | A -> 1`⏎`    |]`).
+            if (valid[MATCH_END] && first == '|' && (bar_c1 == ']' || bar_c1 == '}')) { s->n--; lexer->result_symbol = MATCH_END; return true; }
             // Close the arm-list when a line dedents below the arm column, or sits
             // at the arm column but does NOT start a new `|` arm. EXCEPTION: a
             // `|` exactly TWO columns left of the arm column is a continuation
