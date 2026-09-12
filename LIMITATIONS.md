@@ -125,9 +125,12 @@ a loop body dedents, so `done` commits to being the next sibling statement befor
 
 ## Accepted: constructs dropped for parser size
 
-`tree-sitter generate` time scales with the parser's state count (about 9 ms per state
-here; 20,513 states = 18 s). These forms parsed at one point but cost more states than
-their bench impact justified, and were removed on 2026-09-12:
+`tree-sitter generate` time and the compiled parser size scale with the dense parse
+table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,761 states, 561
+symbols and a 9.4 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
+sharing described under *Keeping the parser small*). These forms parsed at one point
+but cost more states than their bench impact justified, and were removed on
+2026-09-12:
 
 | construct | states | bench sites |
 |---|---|---|
@@ -145,3 +148,19 @@ their bench impact justified, and were removed on 2026-09-12:
 Signature files (`.fsi`) are therefore only partially supported and need their own
 grammar (a signature grammar inheriting this one, as Ionide does) rather than more
 alternatives in the shared rules.
+
+## Keeping the parser small
+
+Parser states are LR item sets. A fragment inlined at several sites, or a rule whose
+optional head elements precede a large tail, generates a separate copy of every state the
+fragment reaches. Two edits keep the table small:
+
+- Give an identical fragment one hidden rule (`_layout_body`, `_paren_args`,
+  `_srtp_member_sig`, ...) instead of repeating it.
+- Split a declaration rule at its `=` into the head and a hidden `_x_rhs` rule, and put the
+  parent's `prec.right` / `prec.dynamic` on the new rule.
+
+A family of keywords used in one position may be one `token(prec(1, choice(...)))` aliased
+to a named node (`query_op`); drop them from the `reserved` list, since reserved words must
+be tokens. Measure every grammar change with the `STATE_COUNT` and `SYMBOL_COUNT` defines
+before and after.
