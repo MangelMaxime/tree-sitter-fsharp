@@ -491,19 +491,28 @@ static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
 //   * continuation keywords of an enclosing if/try/let (`else`/`elif`/`then`/
 //     `with`/`finally`/`in`/`and`).
 // `first` is the leading char (from next_line_indent, where lookahead==first).
+// Read the identifier-shaped word at the lexer position into w (cap bytes,
+// NUL-terminated), consuming it.
+static void read_word(TSLexer *lexer, char *w, size_t cap) {
+    size_t n = 0; int32_t look = lexer->lookahead;
+    while (n + 1 < cap && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
+                           (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+        w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
+    }
+    w[n] = '\0';
+}
+
+static bool semi_blocked_word(const char *w) {
+    return !strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "then") ||
+           !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and") ||
+           !strcmp(w, "when");   // static-optimization equations / arm-guard continuations
+}
+
 static bool semi_blocked(TSLexer *lexer, int32_t first) {
     if (first == ')' || first == ']' || first == '}' || first == '|' || first == ',') return true;
     if (first >= 'a' && first <= 'z') {
-        char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
-        while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
-                         (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
-            w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
-        }
-        w[n] = '\0';
-        if (!strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "then") ||
-            !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and") ||
-            !strcmp(w, "when"))   // static-optimization equations / arm-guard continuations
-            return true;
+        char w[12]; read_word(lexer, w, sizeof w);
+        return semi_blocked_word(w);
     }
     return false;
 }
@@ -563,6 +572,15 @@ static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
 // bare-expression statement. Blocking LAYOUT_SEMI before them stops the previous
 // `_token` from absorbing the declaration into a `sequence_expression` (which then
 // fails when, e.g., the `let` has no continuation). `first` is the leading char.
+static bool decl_starter_word(const char *w) {
+    return !strcmp(w, "let") || !strcmp(w, "use") || !strcmp(w, "do") ||
+           !strcmp(w, "type") || !strcmp(w, "module") || !strcmp(w, "open") ||
+           !strcmp(w, "exception") || !strcmp(w, "namespace") || !strcmp(w, "inline") ||
+           !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "val") ||
+           !strcmp(w, "abstract") || !strcmp(w, "inherit") || !strcmp(w, "override") ||
+           !strcmp(w, "default") || !strcmp(w, "interface");
+}
+
 static bool decl_starter(TSLexer *lexer, int32_t first) {
     // `[<Attr>]` on its own line — an attribute row always decorates the NEXT
     // declaration, never continues the previous statement. (A bare `[` is a list
@@ -572,18 +590,8 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
     // (`#if`/`#elif`/`#else`/`#endif` lines are skipped by next_line_indent.)
     if (first == '#') return true;
     if (first < 'a' || first > 'z') return false;
-    char w[12]; size_t n = 0; int32_t look = lexer->lookahead;
-    while (n < 11 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
-                      (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
-        w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
-    }
-    w[n] = '\0';
-    return !strcmp(w, "let") || !strcmp(w, "use") || !strcmp(w, "do") ||
-           !strcmp(w, "type") || !strcmp(w, "module") || !strcmp(w, "open") ||
-           !strcmp(w, "exception") || !strcmp(w, "namespace") || !strcmp(w, "inline") ||
-           !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "val") ||
-           !strcmp(w, "abstract") || !strcmp(w, "inherit") || !strcmp(w, "override") ||
-           !strcmp(w, "default") || !strcmp(w, "interface");
+    char w[12]; read_word(lexer, w, sizeof w);
+    return decl_starter_word(w);
 }
 
 // Body column for a layout open, plus the split-branch verdict: the body we are
@@ -2003,6 +2011,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // S_DECL: never separate before a declaration keyword — the line is a
                 // new `_token`, not a `sequence_expression` continuation of the prior
                 // bare-expression statement.
+                // Both tests need the line's first word; read it ONCE (each
+                // helper consumes it, so chaining them made the second see "").
+                if (first >= 'a' && first <= 'z') {
+                    char w[12]; read_word(lexer, w, sizeof w);
+                    if (top->sort == S_DECL && decl_starter_word(w)) return false;
+                    if (!semi_blocked_word(w)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+                    return false;
+                }
                 if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
                 if (!semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
                 return false;   // peeks consumed the lookahead — no further probing

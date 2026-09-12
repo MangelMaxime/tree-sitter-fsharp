@@ -6,8 +6,8 @@
   },
   "coverage_dotnet_valid": {
     "files": 3430,
-    "failing": 185,
-    "clean_pct": 94.61
+    "failing": 183,
+    "clean_pct": 94.66
   },
   "rejection_recall": {
     "files": 47,

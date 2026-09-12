@@ -3365,3 +3365,31 @@ let v = <@@ 1 @@>.GetFreeVars()
           (int_literal))
         member: (identifier))
       (unit))))
+
+================================================================================
+then on its own line after a multi-line condition
+================================================================================
+
+let f a b =
+    if a <> b
+    then exit 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (int_literal)))))
