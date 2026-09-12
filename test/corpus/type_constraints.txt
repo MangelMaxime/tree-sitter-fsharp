@@ -136,7 +136,7 @@ let inline f<'T when 'T: (new: unit -> 'T)> () = new 'T()
       (type_parameter)
       (type_constraint
         (type_parameter)
-        (type_expression
+        member_type: (type_expression
           (function_type
             (type_expression
               (long_identifier

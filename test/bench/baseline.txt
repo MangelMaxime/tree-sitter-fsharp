@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 84 with errors; 514 error nodes
+# 3914 files swept; 84 with errors; 516 error nodes
 92	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
@@ -12,7 +12,7 @@
 2	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlGenerator.fs
 3	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlProvider.fs
 2	FSharp.Data/tests/FSharp.Data.Tests/CsvProvider.fs
-1	FSharpPlus/docsrc/content/abstraction-applicative.fsx
+3	FSharpPlus/docsrc/content/abstraction-applicative.fsx
 20	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
 70	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
 3	FSharpPlus/src/FSharpPlus/Control/Applicative.fs

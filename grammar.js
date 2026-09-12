@@ -2029,6 +2029,47 @@ export default grammar({
 
         _accessor_rhs: $ => seq(optional($._return_type_annot), "=", $._layout_body),
 
+        // `(static member Name: T)` / `(new: T)` — the member signature of an SRTP
+        // constraint or call-site, shared by all four sites.
+        _srtp_member_sig: $ => seq(
+            "(",
+            choice(
+                seq(optional("static"), "member", field('member_name', choice($.identifier, $.operator_name))),
+                field('member_name', "new"),
+            ),
+            ":",
+            field('member_type', $.type_expression),
+            ")",
+        ),
+        _srtp_term: $ => choice($.type_parameter, $.long_identifier, $.generic_type),
+
+        _for_binder: $ => choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
+                        // `for struct(k, v) in elements do …` — struct-tuple binder.
+                        $.struct_tuple_pattern,
+                        // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
+                        $.as_pattern,
+                        // `for 1 in …`, `for [|a; b|] in …`, `for (k: string, r: string) in …`.
+                        // (An or-pattern binder is not accepted: via `pattern` it
+                        // overlaps the constructor-application binder below.)
+                        $.literal_pattern, $.array_pattern, $.list_pattern,
+                        $.tuple_typed_first_pattern,
+                        // Parenthesised / bare-single typed binder:
+                        //   `for (line: string) in …`  ·  `for s: string in …`.
+                        $.typed_pattern,
+                        $.tuple_typed_pattern,
+                        // Unparenthesised tuple binder — elements optionally TYPED:
+                        //   `for k, v in …`  ·  `for k: T, r in …`  ·  `for _, name: T, v in …`.
+                        // A trailing whole-tuple `as` alias (`for k, v as x in …`) is the
+                        // `as_pattern` branch above (its pattern is this tuple).
+                        seq($._tuple_pattern_item, repeat1(seq(",", $._tuple_pattern_item))),
+                        // `for SynTypeDefnSig(typeRepr= trepr) in specs do …` —
+                        // named-DU-field deconstruction binder (fantomas style).
+                        $.named_field_pattern,
+                        // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
+                        // application binder (the bare `long_identifier` form is omitted:
+                        // a no-arg binder is already covered by `$.identifier`).
+                        prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern)))),
+
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
@@ -2405,17 +2446,7 @@ export default grammar({
                 "(",
                 $.type_parameter,
                 ":",
-                "(",
-                choice(
-                    seq(optional("static"), "member",
-                        field('member_name', choice($.identifier, $.operator_name))),
-                    // `(^R : (new : seq<'t> -> ^R) x)` — constructor-constraint
-                    // call: `new` REPLACES `member name` (FSharpPlus Collection).
-                    field('member_name', "new"),
-                ),
-                ":",
-                field('member_type', $.type_expression),
-                ")",
+                $._srtp_member_sig,
                 field('argument', $._expression),
                 ")",
             ),
@@ -2428,22 +2459,12 @@ export default grammar({
                 // `((^A) : …)` may have no `or`; a parenthesised IDENTIFIER
                 // must (`((float) x)` is an ordinary application).
                 choice(
-                    seq($.type_parameter, repeat(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type)))),
-                    seq($.long_identifier, repeat1(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type)))),
+                    seq($.type_parameter, repeat(seq("or", $._srtp_term))),
+                    seq($.long_identifier, repeat1(seq("or", $._srtp_term))),
                 ),
                 ")",
                 ":",
-                "(",
-                choice(
-                    seq(optional("static"), "member",
-                        field('member_name', choice($.identifier, $.operator_name))),
-                    // `(^R : (new : seq<'t> -> ^R) x)` — constructor-constraint
-                    // call: `new` REPLACES `member name` (FSharpPlus Collection).
-                    field('member_name', "new"),
-                ),
-                ":",
-                field('member_type', $.type_expression),
-                ")",
+                $._srtp_member_sig,
                 field('argument', $._expression),
                 ")",
             ),
@@ -2665,32 +2686,7 @@ export default grammar({
             "for",
             choice(
                 seq(
-                    choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
-                        // `for struct(k, v) in elements do …` — struct-tuple binder.
-                        $.struct_tuple_pattern,
-                        // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
-                        $.as_pattern,
-                        // `for 1 in …`, `for [|a; b|] in …`, `for (k: string, r: string) in …`.
-                        // (An or-pattern binder is not accepted: via `pattern` it
-                        // overlaps the constructor-application binder below.)
-                        $.literal_pattern, $.array_pattern, $.list_pattern,
-                        $.tuple_typed_first_pattern,
-                        // Parenthesised / bare-single typed binder:
-                        //   `for (line: string) in …`  ·  `for s: string in …`.
-                        $.typed_pattern,
-                        $.tuple_typed_pattern,
-                        // Unparenthesised tuple binder — elements optionally TYPED:
-                        //   `for k, v in …`  ·  `for k: T, r in …`  ·  `for _, name: T, v in …`.
-                        // A trailing whole-tuple `as` alias (`for k, v as x in …`) is the
-                        // `as_pattern` branch above (its pattern is this tuple).
-                        seq($._tuple_pattern_item, repeat1(seq(",", $._tuple_pattern_item))),
-                        // `for SynTypeDefnSig(typeRepr= trepr) in specs do …` —
-                        // named-DU-field deconstruction binder (fantomas style).
-                        $.named_field_pattern,
-                        // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
-                        // application binder (the bare `long_identifier` form is omitted:
-                        // a no-arg binder is already covered by `$.identifier`).
-                        prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern)))),
+                    $._for_binder,
                     "in", $._expression,
                     choice(
                         seq("do",
@@ -3578,16 +3574,9 @@ export default grammar({
             seq($.type_parameter, ":", "delegate", "<", $.type_expression, ",", $.type_expression, ">"),
             // Constructor constraint: `^T : (new: unit -> 'T)`. The `unit -> 'T`
             // is a function type_expression so `unit` is a real (colourable) type.
-            seq($.type_parameter, ":", "(", "new", ":", $.type_expression, ")"),
             // SRTP member constraint: ^T : (member Foo: int -> int)
             //                         ^T : (static member (+): ^T * ^T -> ^T)
-            seq($.type_parameter, ":", "(",
-                optional("static"),
-                "member",
-                field('member_name', choice($.identifier, $.operator_name, "new")),
-                ":",
-                field('member_type', $.type_expression),
-                ")"),
+            seq($.type_parameter, ":", $._srtp_member_sig),
             // Heterogeneous SRTP member constraint:
             //   (^a or ^b) : (static member fmap: (^c -> ^d) * ^b -> ^e)
             //   (CFunctor or ^b) : (static member replace: ^a * ^b -> ^c)
@@ -3595,17 +3584,11 @@ export default grammar({
             // type identifier (`CFunctor`), joined by `or`.
             seq(
                 "(",
-                choice($.type_parameter, $.long_identifier, $.generic_type),
-                repeat1(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type))),
+                $._srtp_term,
+                repeat1(seq("or", $._srtp_term)),
                 ")",
                 ":",
-                "(",
-                optional("static"),
-                "member",
-                field('member_name', choice($.identifier, $.operator_name, "new")),
-                ":",
-                field('member_type', $.type_expression),
-                ")",
+                $._srtp_member_sig,
             ),
         ),
 
