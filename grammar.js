@@ -787,11 +787,7 @@ export default grammar({
                 // `new x = …` — an unparenthesised single param.
                 field('parameters', choice($.tuple_params, $.identifier)),
                 optional(seq("as", field('self', $.identifier))),
-                "=",
-                // Layout body so it closes at the next ctor/member instead of
-                // absorbing it (two `new …` in a row).
-                $._layout_body,
-                optional(seq("then", $._layout_body)),
+                $._ctor_rhs,
             ),
             // Signature form: `new: unit -> T` (signature files).
             seq(
@@ -2049,6 +2045,17 @@ export default grammar({
 
         _record_copy_block: $ => seq($._layout_open, field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)), "with", $._record_fields, $._layout_end),
 
+        // Right-hand side of a let binding, a separate rule so the head's optional
+        // modifiers do not multiply its parser states. The body is a layout (opens
+        // at the body's first-token column, closes on dedent / mid-line `in` /
+        // closer); `_preproc_break` covers a branch written out to its own `=`.
+        _let_rhs: $ => prec.right(seq("=", choice($._layout_body, $._preproc_break), repeat($.let_and_binding))),
+        _let_rhs_bodiless: $ => prec.right(seq("=", repeat($.let_and_binding))),
+
+        _use_rhs: $ => prec.right(seq(optional(seq(":", $.type_expression)), "=", $._use_body)),
+
+        _ctor_rhs: $ => prec.right(seq("=", $._layout_body, optional(seq("then", $._layout_body)))),
+
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
@@ -2126,19 +2133,7 @@ export default grammar({
                 optional("rec"),
                 decoration($),
                 $._let_signature,
-                "=",
-                // Uniform: the body is a layout (opens at the body's first-token
-                // column, closes on dedent / mid-line `in` / closer). Covers
-                // inline `let x = e`, own-line bodies, and `let x = e in …` (the
-                // scanner's `in` ender closes the body before `in`).
-                choice(
-                    $._layout_body,
-                    // Branch written out to its own `=` (`#if X`⏎`let f (x: int) =`⏎
-                    // `#else`⏎`let f (x: string) =`⏎`#endif`⏎`    body`): the body
-                    // belongs to the LAST branch.
-                    $._preproc_break,
-                ),
-                repeat($.let_and_binding),
+                $._let_rhs,
             ))),
             prec(1, prec.dynamic(1, seq(
                 repeat($.attribute),
@@ -2148,8 +2143,7 @@ export default grammar({
                 optional("rec"),
                 decoration($),
                 $._let_signature,
-                "=",
-                repeat($.let_and_binding),
+                $._let_rhs_bodiless,
             ))),
         )),
 
@@ -2251,7 +2245,7 @@ export default grammar({
 
         // `use r = resource` — auto-disposes r at end of enclosing scope.
         use_expression: $ => prec.right(PREC.LET_EXPR,
-            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), optional(seq(":", $.type_expression)), "=", $._use_body),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), $._use_rhs),
         ),
 
         // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
@@ -2909,7 +2903,7 @@ export default grammar({
         // (no operator names, active patterns, lists, or arrays).
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
-            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), optional(seq(":", $.type_expression)), "=", $._use_body),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), $._use_rhs),
         ),
 
         // Layout body like a let's, so `use x =`⏎`    multi-line value` closes at
