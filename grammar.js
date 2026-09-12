@@ -707,7 +707,13 @@ export default grammar({
         // (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]` is
         // followed by `type`, not `(`).
         primary_constructor: $ => prec(20, choice(
-            $.unit,
+            // `type T [<Obsolete>] () =` - an attributed ctor whose parameter
+            // list is EMPTY. The lexer atomises `()` into the unit token, so it
+            // cannot reach the parameter branch below.
+            seq(
+                optional(seq($._ctor_attr, repeat($.xml_doc_comment), repeat($.attribute), optional($.access_modifier))),
+                $.unit,
+            ),
             seq(
                 // `type T [<ParamObject; Emit("$0")>]⏎ private (…)` — an access
                 // modifier may follow the ctor attributes (Fable interop).

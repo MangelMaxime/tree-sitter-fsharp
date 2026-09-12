@@ -450,3 +450,27 @@ do ()
       (string_literal)))
   (do_stmt
     (unit)))
+
+================================================================================
+Attribute on a primary constructor with no parameters
+================================================================================
+
+type Foo [<Obsolete>] () =
+    member _.X = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    name: (identifier)
+    (primary_constructor
+      (attribute
+        (attribute_target
+          name: (long_identifier
+            (identifier))))
+      (unit))
+    (member_defn
+      self: (member_self_ident
+        (identifier))
+      name: (identifier)
+      body: (int_literal))))

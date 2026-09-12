@@ -1427,3 +1427,81 @@ module L39_DocCommentInjections =
         - bullet two
     *)
     let markdownDocumented () = 1
+
+// === L40: constructs fixed 2026-09-11/12 — check colouring here ===
+// Each block below parsed WRONG (or errored) before; several used to parse with
+// zero errors but a degenerate tree, so the colours were silently wrong.
+module L40_RecentFixes =
+    // Attribute on a primary constructor whose parameter list is EMPTY. The
+    // lexer atomises `()` into the unit token, so it never reached the
+    // parameter branch. `Obsolete` must colour @attribute, not @variable.
+    type Attributed [<System.Obsolete("msg")>] () =
+        member _.X = 1
+
+    type AttributedTight [<ReflectedDefinition>]() =
+        member _.Y = 2
+
+    // Bare type ascriptions (no surrounding parens) in positions that only
+    // accepted the parenthesised `(e : T)` form before. `XName`/`int`/`Expr`
+    // must all colour @type.
+    let el = new XElement(name : XName)
+    let ascribedStatement = failwith "foo" : int
+
+    let describeOpt d =
+        match d: int option with        // ascribed scrutinee, no parens
+        | Some v -> v
+        | None -> 0
+
+    let typedListElem x =
+        match x with
+        | [arg: Expr] -> arg            // typed element inside a list pattern
+        | _ -> failwith ""
+
+    // A `;` that TERMINATES a statement before a declaration. The `;` is
+    // consumed as trivia; `type` must stay @keyword and `Marker` @type.
+    let beforeDecl () = printfn "x"
+    Console.WriteLine "x";
+    type Marker = class end
+
+    // Verbose module body — `begin`/`end` must colour @keyword.
+    module Verbose = begin
+        let inner = 1
+    end
+
+    // Object construction expression: `inherit` is a KEYWORD here, not a
+    // function being applied to a type name.
+    type Wrapped(addr: nativeint, len: int64) =
+        inherit UnmanagedMemoryStream(addr, len)
+        new(addr) = { inherit UnmanagedMemoryStream(addr, 0L)
+                      Holder = null }
+
+    // Copy-update whose base is an application with a STRING argument, and one
+    // over a parenthesised base — `with` must colour @keyword in both.
+    let includeCopy = { Include "" with Includes = [] }
+    let parenCopy ctx = { (ctx.Contents g) with showMembers = true }
+
+    // Exception declaration carrying an access modifier.
+    exception internal Wrapped2 of int
+
+    // Secondary constructor naming the instance (`as this`).
+    type Named() =
+        new(seed: int) as this = Named()
+
+    // Typed head of an unparenthesized cons pattern.
+    let headOf xs =
+        match xs with
+        | hd: _ array :: tl -> hd
+        | _ -> [||]
+
+    // Verbatim / triple-quoted strings as active-pattern ARGUMENTS in a
+    // pattern — these must colour @string, and `Regex` @constructor.
+    let routeOf line =
+        match line with
+        | Regex @"^#r\s+""(.*?)""$" [ _; path ] -> path
+        | _ -> ""
+
+    // Subtype constraint inside a TUPLED parameter list (the single-param form
+    // already worked). `IDisposable` must colour @type.
+    type Builder() =
+        member _.Using(resource: 'T :> System.IDisposable, binder: 'T -> int) =
+            binder resource
