@@ -64,3 +64,64 @@ jobs:
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
         run: ./scripts/test-expansion.py
+
+  # The scanner is 2,000 lines of hand-written C; a crash or hang there takes
+  # the editor down with it. Always fuzzed: the run is a minute, and a grammar
+  # change can push an unchanged scanner path into a case nobody hit before.
+  fuzz:
+    name: Fuzz scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the fuzzer
+        uses: tree-sitter/fuzz-action@v4
+        with:
+          # Real F# seeds, so libFuzzer starts inside the layout logic instead
+          # of from empty input.
+          corpus: examples
+          # Same release as the CLI locked in package-lock.json; `latest` would
+          # pair the generated parser with a library of a different ABI one day.
+          tree-sitter-version: v0.26.8
+
+  # The real-world regression gate: scripts/bench.py sweeps the 24 pinned repos
+  # in scripts/bench-manifest.txt and fails on any file that parses worse than
+  # test/bench/baseline.txt. Until now it only ran when someone remembered to.
+  # The clones (~1.5 GB) are cached by manifest hash, so a run is a few minutes.
+  bench:
+    name: Real-world bench
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache the pinned repos
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/fsharp-grammar-bench
+          key: bench-${{ hashFiles('scripts/bench-manifest.txt') }}
+      # git checkout does not preserve mtimes, and bench.py refuses to run when
+      # grammar.js looks newer than src/parser.c (a stale-parser guard).
+      - run: touch src/parser.c
+      - name: Sweep and compare against the baseline
+        run: ./scripts/bench.py --summary
+
+  # Helix and Zed run on Windows too, and MSVC is stricter than gcc about the
+  # scanner. Corpus + highlight tests only; the Python gates run on Linux.
+  test-windows:
+    name: Tests (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Corpus and highlight tests
+        run: npx tree-sitter test
