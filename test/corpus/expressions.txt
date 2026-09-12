@@ -3801,3 +3801,38 @@ let i = fun (x: int) (y: string) : int -> x
         (identifier))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Dynamic lookup with spaces around the question mark
+================================================================================
+
+let s = "Hello" ? Contains(10)
+let t = x ? Length
+let u = x ? ("Contains") 10
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (dynamic_expression
+        (string_literal)
+        (identifier))
+      (parenthesized_expression
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (dynamic_expression
+      (long_identifier
+        (identifier))
+      (identifier)))
+  (let_binding
+    (identifier)
+    (application_expression
+      (dynamic_expression
+        (long_identifier
+          (identifier))
+        (parenthesized_expression
+          (string_literal)))
+      (int_literal))))

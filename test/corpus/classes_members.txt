@@ -830,3 +830,29 @@ type S = struct val A: int; new(a) = { A = a }; end
             (long_identifier
               (identifier))))))))
 
+================================================================================
+Active pattern as a member name
+================================================================================
+
+type T =
+    static member (|Foo|Bar|) (x, y) = Foo
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (member_defn
+      (active_pattern_name)
+      (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (long_identifier
+        (identifier)))))

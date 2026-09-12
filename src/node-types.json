@@ -2801,6 +2801,10 @@
             "named": true
           },
           {
+            "type": "type_check_pattern",
+            "named": true
+          },
+          {
             "type": "typed_pattern",
             "named": true
           },
@@ -2971,6 +2975,10 @@
             "named": true
           },
           {
+            "type": "type_check_pattern",
+            "named": true
+          },
+          {
             "type": "typed_pattern",
             "named": true
           },
@@ -3127,6 +3135,10 @@
             "named": true
           },
           {
+            "type": "type_check_pattern",
+            "named": true
+          },
+          {
             "type": "typed_pattern",
             "named": true
           },
@@ -3179,6 +3191,10 @@
       "types": [
         {
           "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "attribute",
           "named": true
         },
         {
@@ -3281,6 +3297,10 @@
             "named": true
           },
           {
+            "type": "type_check_pattern",
+            "named": true
+          },
+          {
             "type": "typed_pattern",
             "named": true
           },
@@ -3337,6 +3357,10 @@
         },
         {
           "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "attribute",
           "named": true
         },
         {
@@ -3655,6 +3679,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "active_pattern_name",
+            "named": true
+          },
           {
             "type": "identifier",
             "named": true
@@ -4582,7 +4610,7 @@
     "named": true,
     "fields": {
       "argument": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -4591,6 +4619,10 @@
           },
           {
             "type": "string_literal",
+            "named": true
+          },
+          {
+            "type": "verbatim_string",
             "named": true
           }
         ]
@@ -4751,6 +4783,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
         {
           "type": "type_constraint",
           "named": true
@@ -7033,6 +7069,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "typed_pattern",
+            "named": true
           }
         ]
       }
@@ -7507,6 +7547,10 @@
   },
   {
     "type": "find",
+    "named": false
+  },
+  {
+    "type": "fixed",
     "named": false
   },
   {

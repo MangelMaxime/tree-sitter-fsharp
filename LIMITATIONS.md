@@ -139,8 +139,8 @@ their bench impact justified, and were removed on 2026-09-12:
 | `inherit B() with` followed by members | 342 | 2 |
 | `{ new R with a = 1 and b = 2 }` legacy object members | 108 | 1 file |
 | `T \| null` as a type abbreviation, inside parens, on `#T`, in `(# … #)` | 255 | 15 |
-| `Generic<'T>.Nested`, `'T & #I`, `< >`, attributes on a return type | 176 | 22 |
-| `use (x: T) = …`, `use! (_) = …` name patterns | 147 | 24 |
+| `Generic<'T>.Nested`, `'T & #I`, `< >` | 152 | 9 |
+| `use! (_) = …`, `use! (a, b) = …` name patterns (`use (x: T)` and `use x : T` parse) | 145 | 12 |
 
 Signature files (`.fsi`) are therefore only partially supported and need their own
 grammar (a signature grammar inheriting this one, as Ionide does) rather than more
