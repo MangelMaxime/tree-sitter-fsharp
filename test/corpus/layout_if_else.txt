@@ -684,3 +684,198 @@ printf "TEST PASSED OK" ;
       (long_identifier
         (identifier))
       (string_literal))))
+
+================================================================================
+let-in inside a computation expression body
+================================================================================
+
+let a = async { let x = 1 in x }
+let b = gen { let! a = gena in return! property a }
+let c line =
+    async {
+        let line = line.TrimStart() in
+        let index = line.IndexOfAny([| ' '; '\t' |]) in
+
+        return index
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (int_literal))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (long_identifier
+            (identifier)))
+        (ce_result_expr
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (unit)))
+        (let_expression
+          (let_decl_indented
+            (identifier)
+            (application_expression
+              (long_identifier
+                (identifier)
+                (identifier))
+              (parenthesized_expression
+                (array_expression
+                  (char_literal)
+                  (char_literal)))))
+          (ce_result_expr
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+in after a multi-line match value ends the arms and the value
+================================================================================
+
+let f sections =
+    let r =
+        match sections with
+        | a :: b -> (a, b)
+        | [] -> (1, 2) in
+
+    r
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (let_expression
+      (let_decl_indented
+        (identifier)
+        (match_expression
+          (long_identifier
+            (identifier))
+          (match_arm
+            (pattern
+              (cons_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))))
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))))))
+            (parenthesized_expression
+              (tuple_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier)))))
+          (match_arm
+            (pattern
+              (list_pattern))
+            (parenthesized_expression
+              (tuple_expression
+                (int_literal)
+                (int_literal))))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Verbose for and while loops closed by done
+================================================================================
+
+let f () =
+    for i = 0 to 10 do
+        result <- result + i
+    done
+    while x do
+        g ()
+    done
+    result
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (sequence_expression
+      (for_expression
+        (identifier)
+        (int_literal)
+        (int_literal)
+        (binary_expression
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier))))
+      (sequence_expression
+        (while_expression
+          (long_identifier
+            (identifier))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit)))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Copy-update record with the with keyword on the next line
+================================================================================
+
+let settings =
+    { InstallSettings.Default
+        with ReferenceCondition = Some "LEGACY" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (record_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (record_field
+        (long_identifier
+          (identifier))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (string_literal))))))

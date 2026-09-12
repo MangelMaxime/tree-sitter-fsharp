@@ -2682,7 +2682,7 @@ export default grammar({
                             // CE siblings. A real indented/inline loop body opens
                             // normally. (No bare `optional($._expression)` fallback:
                             // it would greedily eat the next query operator.)
-                            optional($._for_body),
+                            optional($._for_body), optional("done"),
                         ),
                         // `[ for x in xs -> expr ]` — list/seq/array comprehension
                         // yield shorthand (sugar for `do yield expr`). The `->`
@@ -2697,7 +2697,7 @@ export default grammar({
                     // `_` is a valid range-loop binder (`for _ = 0 to n do …`).
                     choice($.identifier, $.wildcard_pattern),
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
-                    optional($._for_body),
+                    optional($._for_body), optional("done"),
                 ),
             ),
         )),
@@ -2709,7 +2709,7 @@ export default grammar({
         while_expression: $ => prec.right(PREC.IF_EXPR, choice(
             prec(2, seq(
                 "while", $._expression, "do",
-                field('body', $._indented_or_inline_body),
+                field('body', $._indented_or_inline_body), optional("done"),
             )),
             prec(1, seq("while", $._expression, "do")),
         )),

@@ -92,9 +92,54 @@ typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1;
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
 
 static bool skip_bracket_attrs(TSLexer *lexer);
+// `let x = v in …` on ONE line: true when a bare `in` (outside brackets and
+// strings) follows on the rest of the line. Consumes lookahead.
+static bool line_has_in_keyword(TSLexer *lexer) {
+    int depth = 0; int32_t prev = ' ';
+    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+        int32_t c = lexer->lookahead;
+        if (c == '"') {
+            lexer->advance(lexer, true);
+            while (lexer->lookahead != '"' && lexer->lookahead != '\n' && lexer->lookahead != 0) {
+                if (lexer->lookahead == '\\') lexer->advance(lexer, true);
+                lexer->advance(lexer, true);
+            }
+            if (lexer->lookahead == '"') lexer->advance(lexer, true);
+            prev = '"'; continue;
+        }
+        if (c == '(' || c == '[' || c == '{') depth++;
+        else if (c == ')' || c == ']' || c == '}') depth--;
+        else if (c == 'i' && depth == 0 && (prev == ' ' || prev == '\t')) {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 'n') {
+                lexer->advance(lexer, true);
+                int32_t a = lexer->lookahead;
+                if (a == ' ' || a == '\t' || a == '\n' || a == '\r' || a == 0) return true;
+            }
+            prev = 'i'; continue;
+        }
+        else if (c == 'f' && depth == 0 && (prev == ' ' || prev == '\t')) {   // a `for x in` header owns its `in`
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == 'o') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == 'r') {
+                    lexer->advance(lexer, true);
+                    int32_t a = lexer->lookahead;
+                    if (a == ' ' || a == '\t' || a == '(') return false;
+                }
+            }
+            prev = 'f'; continue;
+        }
+        prev = c; lexer->advance(lexer, true);
+    }
+    return false;
+}
 // Column of an `else`/`elif` that already closed a then-body: the same token
 // must not close the enclosing then-body too (the inner `if` owns it).
 static int32_t g_else_claim_col = -1;
+// Column of an `in` that just closed an arm-list: the same `in` may close the
+// let value around it.
+static int32_t g_in_claim_col = -1;
 
 // `[?]ident ws* :` ahead, with the `:` not starting `::` `:>` `:?` `:=`: the
 // start of a labelled type element. Consumes lookahead; callers only run it
@@ -579,7 +624,8 @@ static void read_word(TSLexer *lexer, char *w, size_t cap) {
 static bool semi_blocked_word(const char *w) {
     return !strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "then") ||
            !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and") ||
-           !strcmp(w, "when");   // static-optimization equations / arm-guard continuations
+           !strcmp(w, "when") ||   // static-optimization equations / arm-guard continuations
+           !strcmp(w, "done");
 }
 
 static bool semi_blocked(TSLexer *lexer, int32_t first) {
@@ -1040,7 +1086,17 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             if (!strcmp(w, "with")) return false;   // copy-update `base with …`
             continue;                               // application arg / next path segment
         }
-        return true;                                // `}`/`;`/newline/`(`/`[`/literal/op → CE
+        if (d == '\n' || d == '\r') {             // `{ base`⏎`  with …`: copy-update on the next line
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            if (is_name_start(lexer->lookahead)) {
+                char w[8] = {0};
+                peek_name_capture(lexer, w, sizeof(w));
+                if (!strcmp(w, "with")) return false;
+            }
+            return true;
+        }
+        return true;                                // `}`/`;`/`(`/`[`/literal/op → CE
     }
     return true;
 }
@@ -1219,6 +1275,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (split_branch_body(lexer, &bc)) {
             if (!valid[PREPROC_BREAK]) return false;
             lexer->result_symbol = PREPROC_BREAK; return true;
+        }
+        // Where a CE statement `let` and an expression `let … in` both apply
+        // (CE bodies), an inline value followed by ` in` is the expression form.
+        if (inl && valid[EXPR_OPEN] && top && top->sort == S_BRACKET && line_has_in_keyword(lexer)) {
+            push(s, S_EXPR, bc); s->stk[s->n - 1].inl = 1;
+            lexer->result_symbol = EXPR_OPEN; return true;
         }
         push(s, S_LAYOUT, bc);
         if (inl && s->n) s->stk[s->n - 1].inl = 1;
@@ -1704,6 +1766,16 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (!strcmp(w, "in") && top->sort == S_LAYOUT && top->inl &&
                         s->n >= 2 && s->stk[s->n - 2].sort == S_MATCH) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    // `let x =`⏎`    match … with`⏎`    | _ -> v in`⏎`body`: the `in`
+                    // ends the arm-list, then (same position) the let value it sits in.
+                    if (!strcmp(w, "in")) {
+                        if (top->sort == S_MATCH && valid[MATCH_END]) {
+                            g_in_claim_col = (int32_t)mid_col; s->n--; lexer->result_symbol = MATCH_END; return true;
+                        }
+                        if (layoutish(top->sort) && !top->inl && valid[LAYOUT_END] && g_in_claim_col == (int32_t)mid_col) {
+                            s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                        }
                     }
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;

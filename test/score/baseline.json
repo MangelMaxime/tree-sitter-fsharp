@@ -6,8 +6,8 @@
   },
   "coverage_dotnet_valid": {
     "files": 3430,
-    "failing": 84,
-    "clean_pct": 97.55
+    "failing": 83,
+    "clean_pct": 97.58
   },
   "rejection_recall": {
     "files": 47,
@@ -20,8 +20,8 @@
     "fp_pct": 8.85
   },
   "degeneracy": {
-    "sites": 42,
-    "files": 22
+    "sites": 25,
+    "files": 13
   },
   "highlight": {
     "captures": 34,
