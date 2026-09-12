@@ -49,7 +49,6 @@ typedef enum {
     CASE_DOCS_OPEN,       // zero-width: `///` doc lines followed by `|` — docs attach to the union/enum case
     PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
     CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
-    PREPROC_INACTIVE,     // RESERVED (never emitted; kept so enum indexes match the externals array)
     BLOCK_COMMENT,        // `(* … *)` NESTED (regex can't nest)
     BLOCK_DOC_COMMENT,    // `(** … *)` doc form
     THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)

@@ -228,7 +228,6 @@ export default grammar({
         $._case_docs_open,    // zero-width gate: `///` docs followed by a `|` case — docs attach to the union/enum case
         $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
         $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
-        $.preproc_inactive,   // RESERVED (not emitted, not in extras): kept declared so external enum indexes stay stable
         $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
         $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
         $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
@@ -919,29 +918,7 @@ export default grammar({
             ))),
         ),
 
-        // Bodiless member signature (signature files, and `type X = interface … end`
-        // style sigs inside .fs):
-        //   member Name: T            static member Name<'T>: 'T -> 'T
-        //   override Name: T          member Prop: int with get, set
-        // No self-identifier, so it is distinct from `member self.Name` at the
-        // token after the name. prec.dynamic(-1): whenever an `=`-carrying member
-        // reading also survives (`static member X : int = 1`), that one wins.
-        member_signature: $ => choice(
-            seq(repeat1($.xml_doc_comment), field('decl', alias($._member_signature_core, $.member_signature))),
-            $._member_signature_core,
-        ),
 
-        _member_signature_core: $ => prec.dynamic(-1, prec.right(seq(
-            repeat($.attribute),
-            choice(seq(optional("static"), "member"), "override", "default"),
-            optional("inline"),
-            optional($.access_modifier),
-            field('name', choice($.identifier, $.operator_name)),
-            optional($.type_parameter_list),
-            ":",
-            $.type_expression,
-            optional($.auto_property_accessors),
-        ))),
 
         // get() = expr  or  set(v) = expr  (inside a property definition).
         // `inline` may precede the accessor keyword
@@ -2544,7 +2521,6 @@ export default grammar({
             "}",
         ),
 
-        legacy_object_member: $ => seq(field('name', $.identifier), repeat($.parameter), "=", $._expression),
 
         // ── Exceptions ────────────────────────────────────────────────────────
 
@@ -3549,8 +3525,6 @@ export default grammar({
             ">",
         ),
 
-        // `'T & #IParsable<'T>` - an inline intersection constraint on the typar.
-        _typar_decl: $ => seq($.type_parameter, repeat(seq("&", $.flexible_type))),
 
         // 'T :> IFoo   'T : null   'T : comparison   …
         type_constraint: $ => choice(
