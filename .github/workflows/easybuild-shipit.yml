@@ -2,9 +2,10 @@ name: EasyBuild ShipIt
 
 # Runs after the "Tests" workflow succeeds on main.
 #  - shipit-pr: opens or updates the release pull request (CHANGELOG.md +
-#    version bumps) from the Conventional Commits since the last release.
-#  - release: when that pull request lands (a `chore: release X.Y.Z` commit),
-#    builds the Wasm parser and publishes a GitHub release with it.
+#    version bumps + regenerated src/) from the Conventional Commits since the
+#    last release.
+#  - release: when that pull request lands (a `chore: release <name>@X.Y.Z`
+#    commit), builds the Wasm parser and publishes a GitHub release with it.
 # Requires "Allow GitHub Actions to create and approve pull requests" in the
 # repository settings (Actions > General).
 
@@ -13,6 +14,13 @@ on:
     workflows: ["Tests"]
     types: [completed]
     branches: [main]
+  # Manual fallback: publish the release for a version whose `chore: release`
+  # commit is already on main (e.g. after a failed run).
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.1.0 (must match a CHANGELOG.md entry)"
+        required: true
 
 permissions:
   contents: write
@@ -23,12 +31,23 @@ jobs:
     name: ShipIt - Pull Request
     runs-on: ubuntu-latest
     if: >-
+      github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       !startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # The version bump regenerates src/ (a `command` updater in CHANGELOG.md),
+      # so the tree-sitter CLI must be available to ShipIt.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install tree-sitter CLI (locked version)
+        run: npm ci
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -46,12 +65,13 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'chore: release '))
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -65,8 +85,14 @@ jobs:
         id: version
         env:
           MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          version=$(printf '%s\n' "$MESSAGE" | head -n 1 | sed 's/^chore: release //')
+          if [ -n "$INPUT_VERSION" ]; then
+            version="$INPUT_VERSION"
+          else
+            # `chore: release <name>@X.Y.Z` (ShipIt prefixes the project name) or `chore: release X.Y.Z`
+            version=$(printf '%s\n' "$MESSAGE" | head -n 1 | sed -E 's/^chore: release ([^ @]+@)?//; s/ .*$//')
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build the Wasm parser
@@ -89,4 +115,4 @@ jobs:
           gh release create "v$VERSION" tree-sitter-fsharp.wasm \
             --title "v$VERSION" \
             --notes-file release-notes.md \
-            --target "${{ github.event.workflow_run.head_sha }}"
+            --target "${{ github.event.workflow_run.head_sha || github.sha }}"

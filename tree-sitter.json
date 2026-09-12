@@ -21,19 +21,7 @@
         }
     ],
     "metadata": {
-        "version": "0.0.0",
-        "license": "MIT",
-        "description": "F# tree sitter definition",
-        "authors": [
-            {
-                "name": "Mangel Maxime",
-                "url": "https://github.com/MangelMaxime/"
-            }
-        ],
-        "links": {
-            "repository": "https://github.com/MangelMaxime/tree-sitter-fsharp/",
-            "funding": "https://mangelmaxime.github.io/sponsors/"
-        }
+        "version": "0.1.0"
     },
     "bindings": {
         "c": false,
