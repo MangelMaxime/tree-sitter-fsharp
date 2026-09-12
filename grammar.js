@@ -229,6 +229,7 @@ export default grammar({
         $._preproc_break,     // zero-width: a `#if`-family directive line separates this declaration from a line that starts a new one
         $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION — consumed as trivia so the sequence can end (see scanner)
         $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`⏎`    member …`)
+        $._label_gate,        // zero-width: `ident :` (not `::` `:>` `:?` `:=`) ahead - a labelled type element starts here
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -256,6 +257,9 @@ export default grammar({
     // Conflict declarations enable GLR exploration where LALR(1) is insufficient.
     // Without them, prec.dynamic is silently ignored.
     conflicts: $ => [
+        // `| A of x: int`: a labelled type in the anonymous field slot vs the
+        // named-field list; the fork resolves to the named fields.
+        [$.union_case_named_fields, $.type_expression],
         // `expr ;` at statement level: the `;` could continue a sequence_expression
         // (`a; b`) or terminate the statement (the `;` is then the standalone `";"`
         // _token / a body-level `optional(";")`). GLR forks; the sequence path dies
@@ -316,13 +320,10 @@ export default grammar({
         // explores both; the `:` after the first element decides.
         [$.pattern, $.tuple_typed_pattern],
         [$.identifier_pattern, $.tuple_typed_pattern],
-        // `name: T` is ambiguous: a member-signature `labelled_type`, a plain
-        // type in another context (`sizeof<…>`), or a union field (`of name: T`).
-        // GLR explores them; the enclosing construct selects the right one. Two
-        // declarations cover the 2-way (type contexts) and 3-way (union) states.
+        // `name: T` after `_label_gate` is a `labelled_type`, but `name` alone is
+        // also a plain type (`x: int list` - the postfix race). GLR explores both;
+        // the enclosing construct selects the right one.
         [$.labelled_type, $.type_expression],
-        [$.labelled_type, $._union_field_type],
-        [$.labelled_type, $._union_field_type, $.type_expression],
         // `#Foo<int>` — the `<` could extend `Foo` into a `generic_type` inside the
         // flexible type, or (after `#Foo`) start a comparison. GLR explores both;
         // in a type position the generic form wins.
@@ -1132,20 +1133,14 @@ export default grammar({
         // trailing `repeat` is the mixed remainder. `_union_field_type` excludes
         // tuple_type, so each `*` is a field separator, never a tuple inside a
         // field.
-        union_case_named_fields: $ => seq(
+        union_case_named_fields: $ => prec.dynamic(1, seq(
             repeat(seq(field('fields', $._union_field_type), "*")),
-            $.union_case_field,
+            prec.dynamic(2, alias($.labelled_type, $.union_case_field)),
             repeat(seq("*", choice(
-                $.union_case_field,
+                prec.dynamic(2, alias($.labelled_type, $.union_case_field)),
                 field('fields', $._union_field_type),
             ))),
-        ),
-
-        union_case_field: $ => seq(
-            field('name', $.identifier),
-            ":",
-            field('type', $._union_field_type),
-        ),
+        )),
 
         // Type allowed inside a named union field — excludes tuple_type so that `*`
         // between fields is never mistaken for a tuple separator inside the previous
@@ -1172,8 +1167,10 @@ export default grammar({
             // `[<ParamArray>] xs: obj[]` — attribute on a labelled (member-sig)
             // parameter. Gated by `_label_attr` (emitted by the scanner only when
             // `[<…>]+ ident:` follows) so it stays a distinct token from a
-            // member-decoration `[<…>]` and creates no type-body conflict.
-            optional(seq($._label_attr, repeat1($.attribute))),
+            // member-decoration `[<…>]` and creates no type-body conflict. The
+            // plain form is gated by `_label_gate` (`ident :` ahead) so the LR
+            // states never fork on a bare identifier in type positions.
+            choice(seq($._label_attr, repeat1($.attribute)), $._label_gate),
             optional("?"),
             field('name', $.identifier),
             ":",

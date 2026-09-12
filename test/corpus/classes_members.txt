@@ -857,3 +857,41 @@ type T =
                 (identifier))))))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Abstract signature with a spaced optional label on its own line
+================================================================================
+
+type I =
+    abstract M :
+        content : string list *
+        ? fileName : string -> int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (postfix_type
+                  (type_expression
+                    (labelled_type
+                      (identifier)
+                      (long_identifier
+                        (identifier))))
+                  (long_identifier
+                    (identifier))))
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))))
+          (type_expression
+            (long_identifier
+              (identifier))))))))

@@ -1661,3 +1661,36 @@ let unaffected = 1
   (let_binding
     (identifier)
     (int_literal)))
+
+================================================================================
+Union case with a backtick-quoted field label
+================================================================================
+
+type R =
+    | Exception of ``exception``: Exception
+    | Both of ``type``: string * ?options: int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (union_case_named_fields
+          (union_case_field
+            (identifier)
+            (long_identifier
+              (identifier)))))
+      (union_case
+        (identifier)
+        (union_case_named_fields
+          (union_case_field
+            (identifier)
+            (long_identifier
+              (identifier)))
+          (union_case_field
+            (identifier)
+            (long_identifier
+              (identifier))))))))

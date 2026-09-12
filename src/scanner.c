@@ -57,6 +57,7 @@ typedef enum {
     PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature — ends the member before the next branch's declaration line
     DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line — consumed as trivia (extras) so the sequence can end
     MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`⏎`    member …`) — pushes S_TYPEBODY
+    LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) — a labelled type element (`x: int -> …`)
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -88,6 +89,47 @@ typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; } Ctx;  /
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
 
 static bool skip_bracket_attrs(TSLexer *lexer);
+
+// `[?]ident ws* :` ahead, with the `:` not starting `::` `:>` `:?` `:=`: the
+// start of a labelled type element. Consumes lookahead; callers only run it
+// where nothing else needs the word afterwards.
+static bool try_label_gate(TSLexer *lexer) {
+    // The boundary path's infix probe may already have consumed a leading `?`.
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    if (lexer->lookahead == '?') {
+        lexer->advance(lexer, true);
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    }
+    int32_t a = lexer->lookahead;
+    if (a == '`') {
+        lexer->advance(lexer, true);
+        if (lexer->lookahead != '`') return false;
+        lexer->advance(lexer, true);
+        while (1) {
+            if (lexer->lookahead == 0 || lexer->lookahead == '\n') return false;
+            if (lexer->lookahead == '`') {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '`') { lexer->advance(lexer, true); break; }
+                continue;
+            }
+            lexer->advance(lexer, true);
+        }
+    } else {
+        if (!((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_')) return false;
+        while (1) {
+            int32_t ch = lexer->lookahead;
+            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+            else break;
+        }
+    }
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    if (lexer->lookahead != ':') return false;
+    lexer->advance(lexer, true);
+    int32_t n = lexer->lookahead;
+    if (n == ':' || n == '>' || n == '?' || n == '=') return false;
+    lexer->result_symbol = LABEL_GATE; return true;
+}
 
 // `[<…>]+ ident:` / `[<…>]+ ?ident:` ahead: an attribute on a LABELLED
 // (member-signature / delegate) parameter. Consumes lookahead; the caller
@@ -1532,6 +1574,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // Continuation closes are tried FIRST: at a `with`/`in` position
             // ELEMENT_DSL_OPEN can be co-valid (the body could continue as an
             // application) and the body-close must win.
+            // Labelled type element (`x: int -> …` in a member signature / union
+            // field). Probed FIRST: it needs the word, and a miss is only possible
+            // where no other word-led token applies.
+            if (valid[LABEL_GATE] && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '?' || c == '`')) {
+                if (try_label_gate(lexer)) return true;
+                return false;
+            }
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
@@ -2187,6 +2236,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // `[<Out>] data: byte[] * …`): the mid-line probe never sees a line
             // start, so run it here. `[` cannot start either probe below.
             if (first == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
+            if (valid[LABEL_GATE] && col > top->col &&
+                ((first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z') || first == '_' || first == '?' || first == '`')) {
+                if (try_label_gate(lexer)) return true;
+                return false;
+            }
             // Element DSL as the first statement of an indented let/expr body
             // (`let page =⏎ div() {…}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;

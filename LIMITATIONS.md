@@ -126,8 +126,8 @@ a loop body dedents, so `done` commits to being the next sibling statement befor
 ## Accepted: constructs dropped for parser size
 
 `tree-sitter generate` time and the compiled parser size scale with the dense parse
-table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,761 states, 561
-symbols and a 9.4 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
+table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,323 states, 561
+symbols and a 9.0 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
 sharing described under *Keeping the parser small*). These forms parsed at one point
 but cost more states than their bench impact justified, and were removed on
 2026-09-12:
@@ -159,6 +159,9 @@ fragment reaches. Two edits keep the table small:
   `_srtp_member_sig`, ...) instead of repeating it.
 - Split a declaration rule at its `=` into the head and a hidden `_x_rhs` rule, and put the
   parent's `prec.right` / `prec.dynamic` on the new rule.
+- Gate a rule that shares a prefix with a bigger cluster behind a zero-width scanner token
+  (`_label_gate` for `name: T` inside type expressions). The parser then never forks on
+  the shared prefix, so the cluster is not cloned per fork.
 
 A family of keywords used in one position may be one `token(prec(1, choice(...)))` aliased
 to a named node (`query_op`); drop them from the `reserved` list, since reserved words must
