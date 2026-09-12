@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 151 with errors; 994 error nodes
+# 3914 files swept; 142 with errors; 981 error nodes
 394	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 3	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -60,32 +60,24 @@
 8	Fable/src/fcs-fable/src/Compiler/Utilities/TaggedCollections.fs
 24	Fable/src/fcs-fable/src/Compiler/Utilities/range.fs
 2	Fable/tests/Beam/ApplicativeTests.fs
-1	Fable/tests/Beam/ArithmeticTests.fs
 1	Fable/tests/Beam/AsyncTests.fs
 1	Fable/tests/Beam/MailboxProcessorTests.fs
 1	Fable/tests/Beam/Misc/Aether.fs
 1	Fable/tests/Beam/TaskTests.fs
-1	Fable/tests/Dart/src/ArithmeticTests.fs
 2	Fable/tests/Dart/src/NullnessTests.fs
 2	Fable/tests/Js/Main/ApplicativeTests.fs
-1	Fable/tests/Js/Main/ArithmeticTests.fs
 2	Fable/tests/Js/Main/AsyncTests.fs
 2	Fable/tests/Js/Main/MiscTests.fs
 2	Fable/tests/Js/Main/NullnessTests.fs
-2	Fable/tests/Js/Main/TypeTests.fs
 1	Fable/tests/Js/Main/Util/Aether.fs
 1	Fable/tests/Python/Misc/Aether.fs
 2	Fable/tests/Python/TestApplicative.fs
-1	Fable/tests/Python/TestArithmetic.fs
 1	Fable/tests/Python/TestMailboxProcessor.fs
 2	Fable/tests/Python/TestNullness.fs
-2	Fable/tests/Python/TestType.fs
 2	Fable/tests/React/SpreadSheet.fs
 1	Fable/tests/Rust/tests/common/Aether.fs
 2	Fable/tests/Rust/tests/src/ApplicativeTests.fs
-1	Fable/tests/Rust/tests/src/ArithmeticTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
-2	Fable/tests/Rust/tests/src/TypeTests.fs
 7	FsCheck/src/FsCheck/Runner.fs
 2	FsCheck/src/FsCheck/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/Gen.fs
@@ -124,7 +116,6 @@
 6	expecto/Expecto.Tests/Tests.fs
 1	fantomas/src/Fantomas/Program.fs
 2	farmer/src/Farmer/Builders/Builders.TrafficManager.fs
-2	farmer/src/Tests/ServiceBus.fs
 4	fparsec/FParsec/Primitives.fs
 1	fparsec/FParsec/StaticMapping.fs
 1	fparsec/Samples/FSharpParsingSample/LexYaccVersion/pars.fs

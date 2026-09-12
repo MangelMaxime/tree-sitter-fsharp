@@ -1916,6 +1916,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // line-boundary path, so probe here (after the separator above, so a
             // SUBSEQUENT element gets its separator first then this on re-invoke).
             if (try_element_dsl(lexer, valid)) return true;
+            // Own-line `1.` element: the mid-line float probe is unreachable
+            // from the boundary path, so run it here (digit-led, nothing above
+            // consumed the lookahead).
+            if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
             return false;
         case S_MATCH:
             // Close the arm-list when a line dedents below the arm column, or sits
@@ -2046,6 +2050,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // dispatch is unreachable from here, so classify the brace content
             // now. Records / object expressions keep the literal `{` (no token).
             if (try_ce_brace(lexer, valid, first)) return true;
+            // Own-line `10.` continuation argument (`Expect.equal x`⏎`    10.`⏎
+            // `    "msg"`): same as the S_BRACKET tail above.
+            if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
             return false;
     }
     return false;

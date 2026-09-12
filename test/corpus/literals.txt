@@ -606,3 +606,39 @@ let xs = [|1.; 2.|]
     body: (array_expression
       (float_literal)
       (float_literal))))
+
+================================================================================
+Trailing-dot float on its own line
+================================================================================
+
+let t =
+    Expect.equal
+        x
+        10.
+        "msg"
+
+let xs = [
+    1.
+    2.
+]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (float_literal))
+      (string_literal)))
+  (let_binding
+    (identifier)
+    (list_expression
+      (float_literal)
+      (float_literal))))
