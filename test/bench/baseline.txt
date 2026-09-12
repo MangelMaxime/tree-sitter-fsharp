@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 159 with errors; 1023 error nodes
+# 3914 files swept; 154 with errors; 1001 error nodes
 394	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 3	FAKE/src/app/Fake.Core.Process/Process.fs
 2	FAKE/src/app/Fake.Core.String/FakePrintf.fs
@@ -70,7 +70,6 @@
 2	Fable/tests/Js/Main/ApplicativeTests.fs
 1	Fable/tests/Js/Main/ArithmeticTests.fs
 2	Fable/tests/Js/Main/AsyncTests.fs
-2	Fable/tests/Js/Main/ComparisonTests.fs
 2	Fable/tests/Js/Main/MiscTests.fs
 2	Fable/tests/Js/Main/NullnessTests.fs
 2	Fable/tests/Js/Main/TypeTests.fs
@@ -78,16 +77,13 @@
 1	Fable/tests/Python/Misc/Aether.fs
 2	Fable/tests/Python/TestApplicative.fs
 1	Fable/tests/Python/TestArithmetic.fs
-2	Fable/tests/Python/TestComparison.fs
 1	Fable/tests/Python/TestMailboxProcessor.fs
-2	Fable/tests/Python/TestMisc.fs
 2	Fable/tests/Python/TestNullness.fs
 2	Fable/tests/Python/TestType.fs
 2	Fable/tests/React/SpreadSheet.fs
 1	Fable/tests/Rust/tests/common/Aether.fs
 2	Fable/tests/Rust/tests/src/ApplicativeTests.fs
 1	Fable/tests/Rust/tests/src/ArithmeticTests.fs
-4	Fable/tests/Rust/tests/src/ComparisonTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
 2	Fable/tests/Rust/tests/src/TypeTests.fs
 7	FsCheck/src/FsCheck/Runner.fs
@@ -104,7 +100,6 @@
 3	FsToolkit.ErrorHandling/tests/FsToolkit.ErrorHandling.Tests/TestHelpers.fs
 3	Hopac/Examples/Misc/FrequencyServer.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
-7	Hopac/Libs/Hopac/Hopac.fs
 1	Hopac/Libs/Hopac/Stream.fs
 1	Hopac/Tests/AdHocTests/StreamTests.fs
 3	Paket/docs/content/resolver.fsx
@@ -156,6 +151,6 @@
 2	fsharp/src/FSharp.Core/SI.fs
 2	fsharp/src/FSharp.Core/async.fs
 3	fsharp/src/FSharp.Core/local.fs
-19	fsharp/src/FSharp.Core/prim-types.fs
+14	fsharp/src/FSharp.Core/prim-types.fs
 18	fsharp/src/FSharp.Core/quotations.fs
 3	fsharp/src/FSharp.Core/seqcore.fs

@@ -1381,3 +1381,120 @@ type internal Foo with
         (identifier))
       name: (identifier)
       body: (int_literal))))
+
+================================================================================
+Union case in full signature form
+================================================================================
+
+type Opt = | Some : Value:int -> int option
+type IntPear = | IntPear : Fst: int * Snd: int -> IntPear
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (labelled_type
+                (identifier)
+                (long_identifier
+                  (identifier))))
+            (type_expression
+              (postfix_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier)))))))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (tuple_type
+                (type_expression
+                  (labelled_type
+                    (identifier)
+                    (long_identifier
+                      (identifier))))
+                (type_expression
+                  (labelled_type
+                    (identifier)
+                    (long_identifier
+                      (identifier))))))
+            (type_expression
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Attribute on an enum case
+================================================================================
+
+type E =
+    | [<Obsolete>] A = 1
+    | B = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (enum_type_defn
+      (enum_case
+        (attribute
+          (attribute_target
+            (long_identifier
+              (identifier))))
+        (identifier)
+        (int_literal))
+      (enum_case
+        (identifier)
+        (int_literal)))))
+
+================================================================================
+Delegate with attributed labelled parameters on their own line
+================================================================================
+
+type R =
+   delegate of
+       [<Out>] data : byte[] * [<Out>] length : int -> int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (delegate_type_defn
+      (type_expression
+        (tuple_type
+          (type_expression
+            (array_type
+              (type_expression
+                (labelled_type
+                  (attribute
+                    (attribute_target
+                      (long_identifier
+                        (identifier))))
+                  (identifier)
+                  (long_identifier
+                    (identifier))))))
+          (type_expression
+            (labelled_type
+              (attribute
+                (attribute_target
+                  (long_identifier
+                    (identifier))))
+              (identifier)
+              (long_identifier
+                (identifier))))))
+      (type_expression
+        (long_identifier
+          (identifier))))))

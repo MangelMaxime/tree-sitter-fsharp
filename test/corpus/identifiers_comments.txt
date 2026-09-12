@@ -462,3 +462,20 @@ let r2 =
         (long_identifier
           (identifier))
         (int_literal)))))
+
+================================================================================
+Identifiers may contain Unicode combining marks
+================================================================================
+
+let áb = 1
+let க் = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (int_literal))
+  (let_binding
+    (identifier)
+    (int_literal)))

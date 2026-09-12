@@ -235,3 +235,220 @@ type Marker = class end
   (type_decl
     name: (identifier)
     (class_type_defn)))
+
+================================================================================
+Signature-file val declarations at module level
+================================================================================
+
+val meh: int -> int
+val inline (>>>&): int -> int -> int
+val x<'T>: 'T when 'T: comparison
+[<Literal>]
+val K: int = 3
+/// doc
+val f: a: int -> b: string -> unit
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (val_field
+    (identifier)
+    (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (val_field
+    (operator_name
+      (symbolic_op))
+    (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier))))))))
+  (val_field
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (type_expression
+      (type_parameter))
+    (type_constraint
+      (type_parameter)))
+  (val_field
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (identifier)
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (int_literal))
+  (val_field
+    (xml_doc_comment)
+    (val_field
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              (identifier)
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (function_type
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))))
+
+================================================================================
+Bodiless member signatures
+================================================================================
+
+type T =
+    member X: int
+    static member Y: int -> int
+    override Z: string
+    default W: unit -> unit
+    member P: int with get, set
+    new: unit -> T
+
+type U() =
+    static member X : int = 1
+    member this.Y : int = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (member_signature
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (member_signature
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_signature
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (member_signature
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_signature
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))
+    (secondary_constructor
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier)))))))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal))))
+
+================================================================================
+Exception abbreviation
+================================================================================
+
+exception E2 = OtherE
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (exception_decl
+    (identifier)
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Secondary constructor with an unparenthesised parameter
+================================================================================
+
+type C =
+    val A : int
+    new a = { A = a }
+    public new x = { A = x }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (secondary_constructor
+      (identifier)
+      (record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))
+    (secondary_constructor
+      (access_modifier)
+      (identifier)
+      (record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))))))

@@ -631,3 +631,20 @@ let f (x: string) =
     (preproc_endif_kw)
     (long_identifier
       (identifier))))
+
+================================================================================
+Directive keyword may be separated from # by spaces
+================================================================================
+
+# nowarn "26"
+let x = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_directive
+    (preproc_keyword)
+    (string_literal))
+  (let_binding
+    (identifier)
+    (int_literal)))

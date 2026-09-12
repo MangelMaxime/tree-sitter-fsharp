@@ -273,18 +273,22 @@ export default grammar({
         // (preferred — the standalone _token alternative carries
         // prec.dynamic(-1)) vs a standalone doc statement (survives alone at
         // end-of-scope / before un-slotted constructs).
-        [$.module_decl, $.type_decl, $.type_extension, $.let_binding, $.exception_decl, $._token],
+        [$.module_decl, $.type_decl, $.type_extension, $.let_binding, $.exception_decl, $.val_field, $._token],
         // …and the class-body twin of the same fork (incl. type bodies where a
         // doc could open a union/enum case OR a member).
-        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
-        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.member_signature, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.member_signature, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
         // KEEP despite the generator's "unnecessary conflicts" warning: the
         // checker reports the core rules under their ALIAS display names
         // (let_binding, member_defn, …) and then fails to recognise this set
         // as covering them. Removing it is a build ERROR (try it: `type X =
         // [<attr>] member …` becomes an unresolved conflict). Verified
         // 2026-06-11, tree-sitter-cli 0.26.x.
-        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
+        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._member_signature_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
+        // `static member X :` — a return-type-annotated method (`… : int = 1`)
+        // or a bodiless signature (`… : int`). GLR explores both; the signature
+        // branch carries prec.dynamic(-1) so the `=` form wins when it survives.
+        [$._static_member_prefix, $._member_signature_core],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$._record_field_core, $.postfix_type],
@@ -303,11 +307,11 @@ export default grammar({
         // token could be a standalone `_decl_or_comment` child OR the start of
         // a decl's decoration prefix. GLR explores both; we bias toward
         // attachment via `prec.dynamic` on the decl branch.
-        [$._decl_or_comment, $._let_binding_core, $._module_decl_core, $._exception_decl_core],
+        [$._decl_or_comment, $._let_binding_core, $._module_decl_core, $._exception_decl_core, $._val_field_core],
         // Same situation inside a class/type body — `[<…>]` or `///` could be
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
-        [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor, $.val_field],
+        [$._decl_or_comment, $.let_binding, $.member_defn, $.member_signature, $.abstract_member_defn, $.secondary_constructor, $.val_field],
         // `expr <` may begin a `type_application_expression`
         // (`Map.empty<string, int>`) or a `<` comparison in
         // `binary_expression`. GLR explores both; type_application only
@@ -665,6 +669,7 @@ export default grammar({
         _class_body_member: $ => choice(
             $.inherit_decl,
             $.member_defn,
+            $.member_signature,
             $.abstract_member_defn,
             $.interface_impl,
             $.secondary_constructor,
@@ -758,17 +763,28 @@ export default grammar({
             $._secondary_ctor_core,
         ),
 
-        _secondary_ctor_core: $ => prec.right(prec.dynamic(1, seq(
-            repeat($.attribute),
-            optional($.access_modifier),
-            "new",
-            field('parameters', $.tuple_params),
-            optional(seq("as", field('self', $.identifier))),
-            "=",
-            // Layout body so it closes at the next ctor/member instead of
-            // absorbing it (two `new …` in a row).
-            seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
-            optional(seq("then", seq($._layout_open, $._expression, $._layout_end))),
+        _secondary_ctor_core: $ => prec.right(prec.dynamic(1, choice(
+            seq(
+                repeat($.attribute),
+                optional($.access_modifier),
+                "new",
+                // `new x = …` — an unparenthesised single param.
+                field('parameters', choice($.tuple_params, $.identifier)),
+                optional(seq("as", field('self', $.identifier))),
+                "=",
+                // Layout body so it closes at the next ctor/member instead of
+                // absorbing it (two `new …` in a row).
+                seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+                optional(seq("then", seq($._layout_open, $._expression, $._layout_end))),
+            ),
+            // Signature form: `new: unit -> T` (signature files).
+            seq(
+                repeat($.attribute),
+                optional($.access_modifier),
+                "new",
+                ":",
+                $.type_expression,
+            ),
         ))),
 
         // `: TypeExpr` return-type annotation. Shared by let_binding, let_and_binding,
@@ -919,12 +935,39 @@ export default grammar({
             ))),
         ),
 
+        // Bodiless member signature (signature files, and `type X = interface … end`
+        // style sigs inside .fs):
+        //   member Name: T            static member Name<'T>: 'T -> 'T
+        //   override Name: T          member Prop: int with get, set
+        // No self-identifier, so it is distinct from `member self.Name` at the
+        // token after the name. prec.dynamic(-1): whenever an `=`-carrying member
+        // reading also survives (`static member X : int = 1`), that one wins.
+        member_signature: $ => choice(
+            seq(repeat1($.xml_doc_comment), field('decl', alias($._member_signature_core, $.member_signature))),
+            $._member_signature_core,
+        ),
+
+        _member_signature_core: $ => prec.dynamic(-1, prec.right(seq(
+            repeat($.attribute),
+            choice(seq(optional("static"), "member"), "override", "default"),
+            optional("inline"),
+            optional($.access_modifier),
+            field('name', choice($.identifier, $.operator_name)),
+            optional($.type_parameter_list),
+            ":",
+            choice($.type_expression, $.nullable_type),
+            optional($._when_constraints),
+            optional($.auto_property_accessors),
+        ))),
+
         // get() = expr  or  set(v) = expr  (inside a property definition).
         // `inline` may precede the accessor keyword
         // (`with inline get () = …` / `and inline set v = …`).
         // A return-type annotation is allowed after the parameters
         // (`with get (count : int) : string = …`).
         property_accessor: $ => seq(
+            repeat($.attribute),
+            optional($.access_modifier),
             optional("inline"),
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
@@ -981,6 +1024,9 @@ export default grammar({
                 ")",
             )),
             optional(seq("as", field('alias', $.identifier))),
+            // `inherit Base(x) with`⏎`    member …` — indented members only; the
+            // inline form (`inherit B() with member …`) costs ~600 parser states.
+            optional(seq("with", $._layout_open, repeat($._class_body_member), $._layout_end)),
         )),
 
         // interface IFoo with                interface IBar with
@@ -1024,16 +1070,33 @@ export default grammar({
             $._val_field_core,
         ),
 
+        // Also the signature-file form at module level (`val f: int -> int`,
+        // `val inline (>>=): …`, `val x<'T>: 'T when 'T: comparison`) and the
+        // `[<Literal>] val X: int = 3` / `val listeners = new E<_>()` initialised
+        // forms.
         _val_field_core: $ => seq(
             repeat($.attribute),
             optional("static"),
             "val",
+            optional("inline"),
             optional("mutable"),
             optional($.access_modifier),
-            field('name', $.identifier),
-            ":",
-            choice($.type_expression, $.nullable_type),
+            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),
+            optional($.type_parameter_list),
+            choice(
+                seq(
+                    ":",
+                    choice($.type_expression, $.nullable_type),
+                    optional($._when_constraints),
+                    optional(seq("=", $._val_init)),
+                ),
+                seq("=", $._val_init),
+            ),
         ),
+
+        // Layout-bounded initialiser (same opener as `member val`, closes at the
+        // next member and before an inline `with`).
+        _val_init: $ => seq($._try_open, field('body', choice($._expression, $.type_ascription_expression)), $._layout_end),
 
         // `optional(access_modifier)`: `type X = private | A | B` — a private (or
         // internal) union representation, the F# smart-constructor pattern.
@@ -1119,10 +1182,15 @@ export default grammar({
             "|",
             repeat($.attribute),   // `| [<DefaultValue>] X` — attribute on a DU case
             field('name', $.identifier),
-            optional(seq("of", choice(
-                $.union_case_named_fields,
-                field('fields', $.type_expression),
-            ))),
+            optional(choice(
+                seq("of", choice(
+                    $.union_case_named_fields,
+                    field('fields', $.type_expression),
+                )),
+                // `| Some : Value:'T -> 'T option` — full-signature case form
+                // (FSharp.Core prim-types, GADT-style declarations).
+                seq(":", field('fields', $.type_expression)),
+            )),
             repeat($.line_comment),
         )),
 
@@ -1210,10 +1278,10 @@ export default grammar({
         // type Point3D = struct val x: float … end — block-style bodies hold the
         // same class-body members as `type Foo() = …` (no _body_indent needed
         // since `struct`/`class`/`interface` is the open and `end` is the close).
-        struct_type_defn: $ => seq("struct", repeat($._class_body_member), "end"),
+        struct_type_defn: $ => seq("struct", repeat(seq($._class_body_member, optional(";"))), "end"),
 
         // type Foo() = class member … end  — explicit class block.
-        class_type_defn: $ => seq("class", repeat($._class_body_member), "end"),
+        class_type_defn: $ => seq("class", repeat(seq($._class_body_member, optional(";"))), "end"),
 
         // type IFoo = interface abstract … end  — explicit interface block.
         // Distinguished from interface_impl (which sits in class bodies as `interface T with …`)
@@ -1237,6 +1305,7 @@ export default grammar({
 
         _enum_case_core: $ => seq(
             "|",
+            repeat($.attribute),
             field('name', $.identifier),
             "=",
             // `(1uL <<< 9)` — computed flag values (FCS WellKnownAttribs style).
@@ -2463,7 +2532,11 @@ export default grammar({
             "exception",
             optional($.access_modifier),
             field('name', $.identifier),
-            optional(seq("of", $.type_expression)),
+            optional(choice(
+                seq("of", $.type_expression),
+                // `exception E2 = OtherE` — exception abbreviation.
+                seq("=", $.long_identifier),
+            )),
             // `exception WrappedError of exn * range with`⏎`  override this.Message = …`
             // — member augmentation on the exception (FCS DiagnosticsLogger idiom).
             optional($._type_augmentation),
@@ -3524,6 +3597,7 @@ export default grammar({
 
             // Value-level declarations not shared with class bodies
             $.use_binding,
+            $.val_field,           // signature-file `val f: int -> int`
 
             // attribute + let_binding + do_stmt + the four comment forms
             // (shared with `_class_body_member` via `_decl_or_comment`).
@@ -3567,7 +3641,7 @@ export default grammar({
         // backticks are allowed inside (``returns an error if `--flag` is
         // missing`` — BDD-style test names).
         identifier: _ => token(choice(
-            /[\p{L}_][\p{L}\p{Nd}_']*/,
+            /[\p{L}_][\p{L}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}_']*/,
             /``([^`\n\r\t]|`[^`\n\r\t])+``/,
         )),
 
@@ -3811,7 +3885,7 @@ export default grammar({
 
         // Non-structural directives: `#nowarn`, `#r`, `#load`, `#line`, … Structural
         // directives `#if/#elif/#else/#endif` use dedicated higher-priority tokens.
-        preproc_keyword: _ => token(seq("#", /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
+        preproc_keyword: _ => token(seq("#", /[ \t]*/, /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
 
         // `# 14 "pars.fs"` — fsyacc/fslex LINE directives (also `#line 14 "f"`).
         // Pure trivia: an EXTRA token, skipped by the scanner's geometry too.

@@ -8,7 +8,8 @@
             "scope": "source.fsharp",
             "file-types": [
                 "fs",
-                "fsx"
+                "fsx",
+                "fsi"
             ],
             "highlights": "queries/highlights.scm",
             "locals": "queries/locals.scm",

@@ -1091,6 +1091,10 @@
           "named": true
         },
         {
+          "type": "member_signature",
+          "named": true
+        },
+        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -1594,6 +1598,10 @@
       "required": false,
       "types": [
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "xml_doc_comment",
           "named": true
         }
@@ -1673,7 +1681,15 @@
           "named": true
         },
         {
+          "type": "long_identifier",
+          "named": true
+        },
+        {
           "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
           "named": true
         },
         {
@@ -2119,6 +2135,50 @@
         {
           "type": "_expression",
           "named": true
+        },
+        {
+          "type": "abstract_member_defn",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "do_stmt",
+          "named": true
+        },
+        {
+          "type": "inherit_decl",
+          "named": true
+        },
+        {
+          "type": "interface_impl",
+          "named": true
+        },
+        {
+          "type": "let_binding",
+          "named": true
+        },
+        {
+          "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
+          "named": true
+        },
+        {
+          "type": "secondary_constructor",
+          "named": true
+        },
+        {
+          "type": "val_field",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
         }
       ]
     }
@@ -2205,6 +2265,10 @@
           "named": true
         },
         {
+          "type": "member_signature",
+          "named": true
+        },
+        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -2253,6 +2317,10 @@
         },
         {
           "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
           "named": true
         },
         {
@@ -3450,6 +3518,74 @@
     }
   },
   {
+    "type": "member_signature",
+    "named": true,
+    "fields": {
+      "decl": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "member_signature",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "operator_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "auto_property_accessors",
+          "named": true
+        },
+        {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
+          "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "type_parameter_list",
+          "named": true
+        },
+        {
+          "type": "xml_doc_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "module_decl",
     "named": true,
     "fields": {
@@ -3546,6 +3682,10 @@
         },
         {
           "type": "type_extension",
+          "named": true
+        },
+        {
+          "type": "val_field",
           "named": true
         },
         {
@@ -3860,6 +4000,10 @@
         },
         {
           "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
           "named": true
         },
         {
@@ -4359,6 +4503,14 @@
       "required": false,
       "types": [
         {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "type_constraint",
           "named": true
         }
@@ -4849,6 +5001,10 @@
         "required": false,
         "types": [
           {
+            "type": "identifier",
+            "named": true
+          },
+          {
             "type": "tuple_params",
             "named": true
           }
@@ -4879,6 +5035,10 @@
         },
         {
           "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "type_expression",
           "named": true
         },
         {
@@ -4966,6 +5126,10 @@
         },
         {
           "type": "type_extension",
+          "named": true
+        },
+        {
+          "type": "val_field",
           "named": true
         },
         {
@@ -5275,6 +5439,10 @@
         },
         {
           "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
           "named": true
         },
         {
@@ -5631,6 +5799,10 @@
           "named": true
         },
         {
+          "type": "member_signature",
+          "named": true
+        },
+        {
           "type": "prefix_type_parameters",
           "named": true
         },
@@ -5928,6 +6100,10 @@
           "named": true
         },
         {
+          "type": "member_signature",
+          "named": true
+        },
+        {
           "type": "prefix_type_parameters",
           "named": true
         },
@@ -6104,6 +6280,10 @@
         },
         {
           "type": "member_defn",
+          "named": true
+        },
+        {
+          "type": "member_signature",
           "named": true
         },
         {
@@ -6585,6 +6765,20 @@
     "type": "val_field",
     "named": true,
     "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          },
+          {
+            "type": "type_ascription_expression",
+            "named": true
+          }
+        ]
+      },
       "decl": {
         "multiple": false,
         "required": false,
@@ -6600,7 +6794,15 @@
         "required": false,
         "types": [
           {
+            "type": "active_pattern_name",
+            "named": true
+          },
+          {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "operator_name",
             "named": true
           }
         ]
@@ -6608,7 +6810,7 @@
     },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "access_modifier",
@@ -6623,7 +6825,15 @@
           "named": true
         },
         {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "type_parameter_list",
           "named": true
         },
         {

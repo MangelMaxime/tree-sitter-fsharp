@@ -87,6 +87,27 @@ typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; } Ctx;  /
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
 
+static bool skip_bracket_attrs(TSLexer *lexer);
+
+// `[<…>]+ ident:` / `[<…>]+ ?ident:` ahead: an attribute on a LABELLED
+// (member-signature / delegate) parameter. Consumes lookahead; the caller
+// must not probe further on a miss.
+static bool try_label_attr(TSLexer *lexer) {
+    if (!skip_bracket_attrs(lexer)) return false;
+    if (lexer->lookahead == '?') lexer->advance(lexer, true);
+    int32_t a = lexer->lookahead;
+    if (!((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_')) return false;
+    while (1) {
+        int32_t ch = lexer->lookahead;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+        else break;
+    }
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    if (lexer->lookahead == ':') { lexer->result_symbol = LABEL_ATTR; return true; }
+    return false;
+}
+
 // Is there a match/try/function arm-list (S_MATCH) anywhere on the stack? Used to
 // tell a real match-arm `|` (close the inline arm body first) from a UNION case
 // separator `type X = A | B` (no arm-list — must NOT close the enclosing body).
@@ -306,6 +327,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
         if (lexer->lookahead == 0) return false;
         if (lexer->lookahead == '#') {
             lexer->advance(lexer, true);
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             char w[8]; size_t wi = 0;
             while (wi < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
             w[wi] = '\0';
@@ -1112,6 +1134,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
         uint32_t bc;
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+                   lexer->lookahead != '/'  && lexer->lookahead != 0;
         // A split declaration's `#if` branch ends at its own `=`: emit the break
         // (the grammar then takes the body-less path) instead of opening a body
         // that would swallow the `#else` branch's declaration.
@@ -1119,7 +1144,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (!valid[PREPROC_BREAK]) return false;
             lexer->result_symbol = PREPROC_BREAK; return true;
         }
-        push(s, S_LAYOUT, bc); lexer->result_symbol = LAYOUT_OPEN; return true;
+        push(s, S_LAYOUT, bc);
+        if (inl && s->n) s->stk[s->n - 1].inl = 1;
+        lexer->result_symbol = LAYOUT_OPEN; return true;
     }
     // FOR_OPEN: the body of a `for … do`. Like LAYOUT_OPEN but SUPPRESSED when the
     // body would not indent past the enclosing context — that's a query-CE
@@ -1426,20 +1453,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // `ident:` (or `?ident:`). Done HERE (mid-line, gated on `c == '['`) so a
             // non-match falls through to the closer logic / `return false` exactly as
             // before — it never pre-empts the layout opens above.
-            if (c == '[' && valid[LABEL_ATTR] && skip_bracket_attrs(lexer)) {
-                if (lexer->lookahead == '?') lexer->advance(lexer, true);
-                int32_t a = lexer->lookahead;
-                if ((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_') {
-                    while (1) {
-                        int32_t ch = lexer->lookahead;
-                        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-                            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
-                        else break;
-                    }
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-                    if (lexer->lookahead == ':') { lexer->result_symbol = LABEL_ATTR; return true; }
-                }
-            }
+            if (c == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
             bool closer = (c == ')' || c == ']' || c == '}');
             if (!closer && c == '@') {            // `@>` / `@@>` code-quotation close
                 lexer->advance(lexer, true);
@@ -1515,6 +1529,26 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                     if (top->sort == S_TRY && (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    // `end` is exclusively a closer: it ends ANY inline layout body
+                    // (`struct val A: int; new(a) = { A = a }; end`).
+                    if (!strcmp(w, "end") && layoutish(top->sort)) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    // A mid-line `and` after an INLINE body starts the next
+                    // binding / accessor (`let a = 1 and b = 2`, `with get () = x
+                    // and set v = …`). Without this the body absorbed `and …` as
+                    // an application and `and` lexed as an identifier.
+                    // Not when a type variable or `(` follows: that is a constraint
+                    // chain (`when ^t: null and ^t: struct`), which can sit inside
+                    // a still-open (or stale, post-recovery) inline context.
+                    if (!strcmp(w, "and") && layoutish(top->sort) && top->inl) {
+                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        int32_t a = lexer->lookahead;
+                        if (a != '\'' && a != '^' && a != '(') {
+                            s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                        }
+                        return false;
                     }
                     // KNOWN GAP: a mid-line `with` after a NEXT-LINE record type
                     // body (`type M =⏎  { fields } with⏎  member …`, FSharpPlus
@@ -1973,6 +2007,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (!semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
                 return false;   // peeks consumed the lookahead — no further probing
             }
+            // Attributed labelled param on its own line (`delegate of`⏎
+            // `[<Out>] data: byte[] * …`): the mid-line probe never sees a line
+            // start, so run it here. `[` cannot start either probe below.
+            if (first == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
             // Element DSL as the first statement of an indented let/expr body
             // (`let page =⏎ div() {…}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;
