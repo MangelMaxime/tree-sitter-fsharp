@@ -302,7 +302,7 @@ export default grammar({
         [$._type_head, $.type_extension_name],
         // After `module M =`, the identifier is either a module abbreviation target
         // or the first declaration of a nested module body.
-        [$._module_decl_core],
+        [$._module_rhs],
         // Attribute / doc-comment prefix: at top level the same `[<…>]` or `///`
         // token could be a standalone `_decl_or_comment` child OR the start of
         // a decl's decoration prefix. GLR explores both; we bias toward
@@ -386,16 +386,7 @@ export default grammar({
             optional($.access_modifier),
             optional("rec"),
             field('name', $.long_identifier),
-            optional(seq("=", optional(choice(
-                field('abbrev', $.long_identifier),
-                // Verbose syntax: `module M = begin … end`.
-                seq("begin", repeat($._token), "end"),
-                seq(
-                    $._block_open,
-                    repeat($._token),
-                    $._layout_end,
-                ),
-            )))),
+            optional($._module_rhs),
         ),
 
         access_modifier: _ => choice("private", "internal", "public"),
@@ -620,11 +611,7 @@ export default grammar({
             field('name', $.type_extension_name),
             optional($.type_parameter_list),
             "with",
-            optional(seq(
-                $._layout_open,
-                repeat($._class_body_member),
-                $._layout_end,
-            )),
+            optional($._class_body_block),
         ),
 
         // Body of `type Foo = …` (or `and Foo = …`): inline `_type_decl_body`
@@ -934,19 +921,7 @@ export default grammar({
                 "val",
                 optional($.access_modifier),   // `member val public N = …`
                 field('name', $.identifier),
-                optional($._return_type_annot),
-                "=",
-                // Layout-bounded init expression. Without a body context the
-                // init greedily sequences into the next member (`member val A =
-                // x⏎ member val B = y` → `A = (x; …)`). Reuse the S_TRY opener
-                // (`_try_open`): like a generic layout body it dedent-closes at
-                // the next member, but it ALSO closes before an inline `with`, so
-                // the `with get, set` accessor form still attaches.
-                $._try_body_ascribable,
-                // prec.right (whole branch): in the INLINE single-member type
-                // body (`type X = member val N = e with get, set`), the `with`
-                // shifts into the accessors rather than starting an augmentation.
-                optional($.auto_property_accessors),
+                $._member_val_rhs,
             ))),
         ),
 
@@ -983,11 +958,7 @@ export default grammar({
             optional("inline"),
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
-            optional($._return_type_annot),
-            "=",
-            // Layout body (like every other `=` body) so it closes at the next
-            // member/decl instead of absorbing it.
-            $._layout_body,
+            $._accessor_rhs,
         ),
 
         // with get [, set]  (auto-property accessor list)
@@ -1015,10 +986,7 @@ export default grammar({
             "abstract",
             optional("member"),
             field('name', $.identifier),
-            optional($.type_parameter_list),
-            ":",
-            $.type_expression,
-            optional($.auto_property_accessors),
+            $._abstract_tail,
         ))),
 
         // inherit BaseClass(arg1, arg2) [as super]
@@ -1086,9 +1054,7 @@ export default grammar({
             optional("mutable"),
             optional($.access_modifier),
             field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),
-            ":",
-            choice($.type_expression, $.nullable_type),
-            optional(seq("=", $._literal)),
+            $._val_tail,
         ),
 
         // Layout-bounded initialiser (same opener as `member val`, closes at the
@@ -2055,6 +2021,20 @@ export default grammar({
         _use_rhs: $ => prec.right(seq(optional(seq(":", $.type_expression)), "=", $._use_body)),
 
         _ctor_rhs: $ => prec.right(seq("=", $._layout_body, optional(seq("then", $._layout_body)))),
+
+        _member_val_rhs: $ => prec.right(seq(optional($._return_type_annot), "=", $._try_body_ascribable, optional($.auto_property_accessors))),
+
+        _val_tail: $ => seq(":", choice($.type_expression, $.nullable_type), optional(seq("=", $._literal))),
+
+        _abstract_tail: $ => prec.right(seq(optional($.type_parameter_list), ":", $.type_expression, optional($.auto_property_accessors))),
+
+        _module_rhs: $ => seq("=", optional(choice(
+            field('abbrev', $.long_identifier),
+            seq("begin", repeat($._token), "end"),
+            seq($._block_open, repeat($._token), $._layout_end),
+        ))),
+
+        _accessor_rhs: $ => seq(optional($._return_type_annot), "=", $._layout_body),
 
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
