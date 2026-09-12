@@ -223,7 +223,6 @@ type Speed = float<m/s>
             (long_identifier
               (identifier))))))))
 
-
 ================================================================================
 Flexible type in a parameter annotation
 ================================================================================
@@ -549,21 +548,21 @@ let copyAll (src: Stream) =
       (type_expression
         (long_identifier
           (identifier))))
-    body: (use_binding
-      name: (identifier)
-      (sequence_expression
+    body: (sequence_expression
+      (use_binding
+        name: (identifier)
+        body: (application_expression
+          (long_identifier
+            (identifier))
+          (int_literal)))
+      (application_expression
         (application_expression
           (long_identifier
             (identifier))
-          (int_literal))
-        (application_expression
-          (application_expression
-            (long_identifier
-              (identifier))
-            (long_identifier
-              (identifier)))
           (long_identifier
-            (identifier)))))))
+            (identifier)))
+        (long_identifier
+          (identifier))))))
 
 ================================================================================
 Cast to an array type with no space before the bracket

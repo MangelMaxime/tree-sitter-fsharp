@@ -647,3 +647,32 @@ let listBlock =
     body: (list_expression
       (int_literal)
       (int_literal))))
+
+================================================================================
+groupValBy without into
+================================================================================
+
+let q = query {
+    for c in d do
+    groupValBy c c.Age
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (for_expression
+        (identifier)
+        (long_identifier
+          (identifier)))
+      (query_group_by_operator
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)
+            (identifier)))))))

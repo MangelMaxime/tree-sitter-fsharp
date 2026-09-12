@@ -474,3 +474,25 @@ type Foo [<Obsolete>] () =
         (identifier))
       name: (identifier)
       body: (int_literal))))
+
+================================================================================
+Attribute with an array argument
+================================================================================
+
+[<Array [| 42 |]>]
+type C() = class end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))
+      (array_expression
+        (int_literal))))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (class_type_defn)))

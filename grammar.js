@@ -454,6 +454,7 @@ export default grammar({
             $.string_literal, $.verbatim_string, $.triple_quoted_string,
             $.interpolated_string, $.interpolated_verbatim_string,
             $.interpolated_triple_string, $.bool_literal, $.long_identifier,
+            $.array_expression, $.list_expression,
         ),
 
 
@@ -1359,6 +1360,7 @@ export default grammar({
 
         _literal: $ => choice(
             $.measure_literal,
+            $.from_end_index,
             $.int_literal,
             $.float_literal,
             $.char_literal,
@@ -1503,12 +1505,12 @@ export default grammar({
         // The closers carry explicit LEXICAL precedence: `.` is an operator char,
         // so `@>.` / `@@>.` in `<@ e @>.Type` would otherwise out-lex the closer
         // as one longer `symbolic_op` and swallow the member access.
-        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression,
+        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", choice($._expression, $.type_ascription_expression),
             choice(alias(token(prec(1, "@>")), "@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
         // <@@ expr @@>  — untyped quotation (Expr)
-        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
+        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", choice($._expression, $.type_ascription_expression),
             choice(alias(token(prec(1, "@@>")), "@@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
@@ -1519,7 +1521,7 @@ export default grammar({
         // The operand is `_simple_expression` (like `deref_expression`'s) so
         // `&x` binds tighter than application and works as an application
         // ARGUMENT (`seekReadInt32Adv &addr` — byref-heavy reader code).
-        address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._simple_expression)),
+        address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._prefix_operand)),
 
         // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics.
         // The keyword is fused with its REQUIRED adjacent `<` into a single
@@ -1708,7 +1710,9 @@ export default grammar({
             // typar token (longer match) and `^^^`/`^=` etc. are symbolic_op.
             prec.right(PREC.INFIX_OP,      seq(field('left', $._expression), field('operator', alias("^", $.symbolic_op)), field('right', $._expression))),
             prec.right(PREC.LARROW,        seq(field('left', $._expression), field('operator', "<-"), field('right', $._expression))),
-            prec.right(1,                  seq(field('left', $._expression), field('operator', ".."), field('right', $._expression))),
+            // TUPLE_EXPR + 1: `f.['a'..'z', *]` - a `,` after a range separates
+            // index dimensions rather than extending the upper bound into a tuple.
+            prec.right(PREC.TUPLE_EXPR + 1, seq(field('left', $._expression), field('operator', ".."), field('right', $._expression))),
         ),
 
         // Two-branch form (like `if_expression`):
@@ -1722,16 +1726,25 @@ export default grammar({
                 prec(2, seq(
                     "fun",
                     repeat1($.parameter),
+                    optional($._lambda_return_annot),
                     "->",
                     field('body', $._indented_or_inline_body),
                 )),
                 prec(1, seq(
                     "fun",
                     repeat1($.parameter),
+                    optional($._lambda_return_annot),
                     "->",
                 )),
             ),
         ),
+
+        // `fun (x: int) : int -> x` - an arrow-free type, so the `->` stays the
+        // lambda's (a function_type would swallow it).
+        _lambda_return_annot: $ => prec(1, seq(
+            ":",
+            choice($.generic_type, $.postfix_type, $.array_type, $.parenthesized_type, $.type_parameter, $.long_identifier),
+        )),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
             // `%`/`%%` are the quotation splice (anti-quotation) prefixes —
@@ -1739,21 +1752,34 @@ export default grammar({
             // NOTE: `!` (ref-cell deref) is NOT here — it's a HIGH-precedence prefix
             // (see `deref_expression`) so it can be an application argument; the ops
             // here are low-precedence (`f - x` must stay a subtraction, not `f (-x)`).
-            choice("not", "~~~", "-", "+", "%%", "%"),
+            // `~-x` / `~~127` (`~`-led prefix operators; the "~~~" string stays
+            // first: it wins the lex over the regex at equal length).
+            // Lexical prec -1: in `(~-)` the operator_name's symbolic_op must win.
+            choice("not", "~~~", "-", "+", "%%", "%",
+                   alias(token(prec(-1, /~[!$%&*+\-.\/<=>?@^|~]+/)), $.symbolic_op)),
             $._expression,
         )),
 
         // `!cell` — ref-cell dereference. Unlike `-`, it binds TIGHTER than
         // application, so `f !cell` = `f (!cell)`. It's a `_simple_expression`
         // precisely so it can be an application ARGUMENT.
-        deref_expression: $ => prec(PREC.PREFIX_EXPR, seq("!", $._simple_expression)),
+        deref_expression: $ => prec(PREC.PREFIX_EXPR, seq("!", $._prefix_operand)),
+
+        // Operand of the tight prefix operators: a simple expression, or a
+        // parenthesised one with a member chain (`!!(b).C`, `&(C() :> I).P`).
+        // NOT `dot_expression` itself: its application-expression object would
+        // let `!! 1 m` shift into an application and die.
+        _prefix_operand: $ => choice(
+            $._simple_expression,
+            prec(1, alias(seq($.parenthesized_expression, repeat1(seq(".", $.identifier))), $.dot_expression)),
+        ),
 
         // `!!`, `!%`, `!^` … — a `!`-led symbolic operator (2+ chars) used as a
         // custom PREFIX operator (e.g. FAKE's `(!!)` glob operator: `!! "*.fs"`,
         // `!! 1 m`). Distinct token from `symbolic_op` so it can LEAD an
         // expression; bare `!` (deref) stays its own token. Binds tighter than
         // application, so `!! 1 m` = `((!!) 1) m`.
-        prefix_bang_expression: $ => prec(PREC.PREFIX_EXPR, seq(field('operator', $.bang_op), $._simple_expression)),
+        prefix_bang_expression: $ => prec(PREC.PREFIX_EXPR, seq(field('operator', $.bang_op), $._prefix_operand)),
         bang_op: _ => token(/![!$%&*+\-.\/<=>?@^|~]+/),
 
         // `not` used as a first-class function value — it's an ordinary
@@ -1990,6 +2016,10 @@ export default grammar({
                 "~~~",   // shares unary_expression's STRING token — symbolic_op's
                          // regex loses the lex to it, so list it explicitly
                 "*",     // `( * )` — spaced to dodge the `(*` comment opener
+                seq("..", ".."),            // `(.. ..)` stepped range
+                seq(".", $.unit),           // `(.())` custom indexer
+                seq(".", $.unit, "<-"),     // `(.()<-)` custom indexed setter
+                alias(token(">:"), $.symbolic_op),   // only lexable here (`F<'T>: 'T` elsewhere)
             ),
             ")",
         ),
@@ -2021,8 +2051,9 @@ export default grammar({
         // single-token trick as `active_pattern_member`: the tail `.(+)` is ONE
         // token, so it never competes with a `long_identifier`'s own `.` (a
         // plain `.Sub` has no operator chars before `)`).
-        qualified_operator_expression: $ => seq($.long_identifier, $.operator_member),
-        operator_member: _ => token(seq(".", "(", /[ \t]*/, /[!%&*+\-./<=>?@^|~$?]+/, /[ \t]*/, ")")),
+        // `Unchecked.(+)`; also `'T.(+)` - an operator resolved on a type parameter (IWSAM).
+        qualified_operator_expression: $ => seq(choice($.long_identifier, $.type_parameter), $.operator_member),
+        operator_member: _ => token(seq(".", "(", /[ \t]*/, /[!%&*+\-./<=>?@^|~$?:]+/, /[ \t]*/, ")")),
 
         // The bindable name in any let-family rule. Shared by let_binding,
         // let_and_binding, let_decl_indented, and let_expression Branch B.
@@ -2213,7 +2244,7 @@ export default grammar({
 
         // `use r = resource` — auto-disposes r at end of enclosing scope.
         use_expression: $ => prec.right(PREC.LET_EXPR,
-            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), optional(seq(":", $.type_expression)), "=", $._use_body),
         ),
 
         // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
@@ -2226,7 +2257,7 @@ export default grammar({
         dot_expression: $ => prec(PREC.DOT, seq(
             field('object', $._dot_object),
             ".",
-            field('member', $.identifier),
+            field('member', choice($.identifier, $.int_literal)),   // `.1`: tuple item of an operator value (`cons.( :: ).1`)
         )),
 
         // `obj?member` / `obj?(expr)` — F#'s dynamic-lookup operator (`(?)`), used
@@ -2267,6 +2298,7 @@ export default grammar({
             // quotation literal.
             $.typed_quotation,
             $.untyped_quotation,
+            $.qualified_operator_expression,
             // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
             // nested-type) access on a generic type name. Without this, the
             // type_application_expression isn't a valid member-access object, so
@@ -2302,7 +2334,7 @@ export default grammar({
         bracket_index_expression: $ => prec(PREC.INDEX_EXPR, seq(
             field('object', $._expression),
             token.immediate("["),
-            field('index', $._index_args),
+            field('index', optional($._index_args)),   // `TreeNode[]` - an empty list argument
             "]",
         )),
 
@@ -2313,14 +2345,18 @@ export default grammar({
 
         // `expr..`, `..expr`, or `expr..expr` inside index args. Preferred over
         // binary_expression's `..` alternative (which has no rhs before `]` or `,`).
-        index_slice: $ => prec.dynamic(PREC.DOTDOT_SLICE, choice(
+        // Static prec above TUPLE_EXPR: `m.[..0, ..1]` - the `,` after the
+        // bound separates dimensions, it does not extend `0` into a tuple.
+        index_slice: $ => prec.dynamic(PREC.DOTDOT_SLICE, prec(PREC.TUPLE_EXPR + 1, choice(
             seq($._expression, ".."),
             seq("..", $._expression),
-        )),
+        ))),
 
+        // prec(TUPLE_EXPR + 1): a `,` between args separates DIMENSIONS
+        // (`m.[1, *, 1..4]`, `m.[..0, ..1]`), never forms a tuple argument.
         _index_arg: $ => choice(
             $.index_slice,
-            $._expression,
+            prec(PREC.TUPLE_EXPR + 1, $._expression),
         ),
 
         // ── Type casts ────────────────────────────────────────────────────────
@@ -2345,13 +2381,19 @@ export default grammar({
         // A trailing `;` after the body is a no-op statement terminator
         // (`let getDir () = … directory;` — Paket style). Accept and discard it.
         _ascribable_body: $ => seq(
-            choice($._expression, $.type_ascription_expression),
-            // FSharp.Core-only "static optimization" equations (prim-types.fs):
-            //   let inline GenericComparisonFast (x:'T) (y:'T) : int =
-            //        GenericComparisonIntrinsic x y
-            //        when 'T : bool = (# "cgt" x y : int #)
-            //        when 'T : char = …
-            repeat($.static_optimization),
+            choice(
+                seq(
+                    choice($._expression, $.type_ascription_expression),
+                    // FSharp.Core-only "static optimization" equations (prim-types.fs):
+                    //   let inline GenericComparisonFast (x:'T) (y:'T) : int =
+                    //        GenericComparisonIntrinsic x y
+                    //        when 'T : bool = (# "cgt" x y : int #)
+                    //        when 'T : char = …
+                    repeat($.static_optimization),
+                ),
+                // …or ONLY equations (`let inline f (x: 'T) =`⏎`    when 'T : int32 = …`).
+                repeat1($.static_optimization),
+            ),
             optional(";"),
         ),
 
@@ -2404,8 +2446,12 @@ export default grammar({
             seq(
                 "(",
                 "(",
-                choice($.type_parameter, $.long_identifier),
-                repeat1(seq("or", choice($.type_parameter, $.long_identifier))),
+                // `((^A) : …)` may have no `or`; a parenthesised IDENTIFIER
+                // must (`((float) x)` is an ordinary application).
+                choice(
+                    seq($.type_parameter, repeat(seq("or", choice($.type_parameter, $.long_identifier)))),
+                    seq($.long_identifier, repeat1(seq("or", choice($.type_parameter, $.long_identifier)))),
+                ),
                 ")",
                 ":",
                 "(",
@@ -2497,10 +2543,17 @@ export default grammar({
             )),
             optional(seq(
                 "with",
-                repeat($._class_body_member),
+                choice(
+                    repeat($._class_body_member),
+                    // Pre-F#-2 member syntax: `{ new R with a = 1 and b = 2 }`,
+                    // `{ new X with M() = failwith "" }`.
+                    seq($.legacy_object_member, repeat(seq("and", $.legacy_object_member))),
+                ),
             )),
             "}",
         ),
+
+        legacy_object_member: $ => seq(field('name', $.identifier), repeat($.parameter), "=", $._expression),
 
         // ── Exceptions ────────────────────────────────────────────────────────
 
@@ -2681,7 +2734,7 @@ export default grammar({
                         // biases the parser to end the `in` expression and take
                         // this arm rather than read `->` as a `symbolic_op`
                         // extending the enumerable into a bogus binary_expression.
-                        prec.dynamic(1, seq("->", field('body', $._expression))),
+                        prec.dynamic(1, seq("->", field('body', choice($._expression, $.type_ascription_expression)))),
                     ),
                 ),
                 seq(
@@ -2825,8 +2878,7 @@ export default grammar({
         query_group_by_operator: $ => seq(
             choice("groupBy", "groupValBy", "groupJoin"),
             field('key', $._expression),
-            "into",
-            field('into', $.identifier),
+            optional(seq("into", field('into', $.identifier))),   // `groupValBy c c.Age` (no `into`)
         ),
 
         // `leftOuterJoin name in source on (key1 = key2) into groupName`
@@ -2845,8 +2897,15 @@ export default grammar({
         // (no operator names, active patterns, lists, or arrays).
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
-            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $.identifier), "=", $._expression),
+            seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), optional(seq(":", $.type_expression)), "=", $._use_body),
         ),
+
+        // Layout body like a let's, so `use x =`⏎`    multi-line value` closes at
+        // the dedent instead of gluing the following statements into the value.
+        _use_body: $ => seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
+
+        // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
+        _use_name: $ => choice($.identifier, $.wildcard_pattern, $.typed_pattern, $.tuple_pattern, $.unit),
 
         // match! expr with | pat -> expr …
         ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
@@ -3195,6 +3254,7 @@ export default grammar({
                 seq(
                     $._list_pattern_item,
                     repeat(seq(";", $._list_pattern_item)),
+                    optional(";"),
                 ),
             )),
             "]",
@@ -3213,6 +3273,7 @@ export default grammar({
                 seq(
                     $._list_pattern_item,
                     repeat(seq(";", $._list_pattern_item)),
+                    optional(";"),
                 ),
             )),
             "|]",
@@ -3851,7 +3912,15 @@ export default grammar({
         // both as the unit literal. token() with a regex so whitespace
         // INSIDE the literal is part of the token rather than being
         // absorbed as `extras`.
-        unit: _ => token(/\([ \t]*\)/),
+        // Whitespace (incl. newlines: fsyacc emits `(`⏎`)`) and block comments
+        // (`((* c *))`) may sit between the parens.
+        unit: _ => token(seq("(", repeat(choice(/\s/, /\(\*([^*]|\*+[^)*])*\*+\)/)), ")")),
+
+        // `^1` in `arr[^1]` / `arr.[^3..^1]`. One token, digits only: a bare `^`
+        // prefix would out-lex the `^a` type parameter (whose token prec is -1).
+        // Lexical prec -1 so the measure power `^` wins where it is valid
+        // (`type ml = cm^3`: a statement could also start after the alias).
+        from_end_index: _ => token(prec(-1, seq("^", /[0-9][0-9_]*/))),
 
         null_literal: _ => token("null"),
 

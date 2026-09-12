@@ -223,7 +223,6 @@ a || b, c
     (long_identifier
       (identifier))))
 
-
 ================================================================================
 Ref-cell assignment operator
 ================================================================================
@@ -388,3 +387,74 @@ let conss x xs = Promise.start ^ xs
       operator: (symbolic_op)
       right: (long_identifier
         (identifier)))))
+
+================================================================================
+Operator definitions for stepped ranges, indexers and >:
+================================================================================
+
+let (.. ..) a s b = [a .. s .. b]
+let (.()) v1 v2 = v1 + v2
+let (.()<-) v1 v2 v3 = ()
+let (>:) x y = x
+cons.( :: ).1 <- t
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (operator_name)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (list_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (operator_name
+      (unit))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (operator_name
+      (unit))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (unit))
+  (let_binding
+    (operator_name
+      (symbolic_op))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (long_identifier
+      (identifier)))
+  (binary_expression
+    (dot_expression
+      (qualified_operator_expression
+        (long_identifier
+          (identifier))
+        (operator_member))
+      (int_literal))
+    (long_identifier
+      (identifier))))

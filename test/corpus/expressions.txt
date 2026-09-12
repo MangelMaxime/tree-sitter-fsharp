@@ -494,9 +494,8 @@ let x = matrix.[0, 1]
     body: (index_expression
       object: (long_identifier
         (identifier))
-      index: (tuple_expression
-        (int_literal)
-        (int_literal)))))
+      index: (int_literal)
+      index: (int_literal))))
 
 ================================================================================
 Object expression basic
@@ -3648,3 +3647,235 @@ let f () =
             (identifier))))
       (long_identifier
         (identifier)))))
+
+================================================================================
+Multi-dimensional slices, wildcard dimensions and from-end indices
+================================================================================
+
+let a = x.[1, *, 1..4]
+let b = x.[..0, ..1]
+let c = f.['a'..'z', *]
+let d = arr[^1]
+let e = arr.[^3..^1]
+let g = TreeNode[]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (index_expression
+      (long_identifier
+        (identifier))
+      (int_literal)
+      (binary_expression
+        (int_literal)
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (index_expression
+      (long_identifier
+        (identifier))
+      (index_slice
+        (int_literal))
+      (index_slice
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (index_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (char_literal)
+        (char_literal))))
+  (let_binding
+    (identifier)
+    (bracket_index_expression
+      (long_identifier
+        (identifier))
+      (from_end_index)))
+  (let_binding
+    (identifier)
+    (index_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (from_end_index)
+        (symbolic_op)
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (bracket_index_expression
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Prefix operators on parenthesised operands and tilde operators
+================================================================================
+
+let f b = !!(b).C
+let addr = &(C() :> I).P
+let n = ~-x
+let m = ~~127
+let ops = SignedIntegerUnaryOp g (~-) (~-) a
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (prefix_bang_expression
+      (bang_op)
+      (dot_expression
+        (long_identifier
+          (identifier)))
+      (dot_expression
+        (identifier))))
+  (let_binding
+    (identifier)
+    (address_of_expression
+      (dot_expression
+        (typecast_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (dot_expression
+        (identifier))))
+  (let_binding
+    (identifier)
+    (unary_expression
+      (symbolic_op)
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (unary_expression
+      (symbolic_op)
+      (int_literal)))
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (application_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (operator_name
+            (symbolic_op)))
+        (operator_name
+          (symbolic_op)))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Ascription inside quotations and comprehension arrows
+================================================================================
+
+let x = <@ 1: int @>
+let y = <@@ None: string[] option @@>
+let xs = [ for b in bs -> { R = k }: ILExceptionSpec ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (typed_quotation
+      (type_ascription_expression
+        (int_literal)
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (identifier)
+    (untyped_quotation
+      (type_ascription_expression
+        (long_identifier
+          (identifier))
+        (type_expression
+          (postfix_type
+            (type_expression
+              (array_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))))
+            (long_identifier
+              (identifier)))))))
+  (let_binding
+    (identifier)
+    (list_expression
+      (for_expression
+        (identifier)
+        (long_identifier
+          (identifier))
+        (type_ascription_expression
+          (record_expression
+            (record_field
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Lambda with a return annotation and legacy object expressions
+================================================================================
+
+let i = fun (x: int) (y: string) : int -> x
+let rval = { new RecordType with a = 1 and b = 2 }
+let o = { new X with M() = failwith "" }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (lambda_expression
+      (parameter
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (parameter
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (object_expression
+      (long_identifier
+        (identifier))
+      (legacy_object_member
+        (identifier)
+        (int_literal))
+      (legacy_object_member
+        (identifier)
+        (int_literal))))
+  (let_binding
+    (identifier)
+    (object_expression
+      (long_identifier
+        (identifier))
+      (legacy_object_member
+        (identifier)
+        (parameter
+          (unit))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (string_literal))))))

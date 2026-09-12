@@ -642,3 +642,22 @@ let xs = [
     (list_expression
       (float_literal)
       (float_literal))))
+
+================================================================================
+Unit spanning lines or holding a comment
+================================================================================
+
+let x =
+    (
+    )
+let y = ((* c *))
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (unit))
+  (let_binding
+    (identifier)
+    (unit)))

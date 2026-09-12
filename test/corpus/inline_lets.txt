@@ -13,18 +13,18 @@ let f () =
     name: (identifier)
     parameters: (parameter
       (unit))
-    body: (use_binding
-      name: (identifier)
-      (sequence_expression
-        (application_expression
+    body: (sequence_expression
+      (use_binding
+        name: (identifier)
+        body: (application_expression
           (long_identifier
             (identifier))
-          (unit))
-        (application_expression
-          (long_identifier
-            (identifier)
-            (identifier))
-          (unit))))))
+          (unit)))
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (unit)))))
 
 ================================================================================
 Inline let with sibling at same column

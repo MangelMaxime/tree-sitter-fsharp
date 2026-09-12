@@ -640,3 +640,68 @@ let abstract = 1
 (source_file
   (ERROR
     (ERROR)))
+
+================================================================================
+SRTP call with a parenthesised type parameter and operator on a type parameter
+================================================================================
+
+let inline f x = ((^A) : (static member M : _ -> _) x)
+let inline g x y = 'T.(+)(x, y)
+let inline h (x: 'T) =
+    when 'T : int32 = 1
+    when 'T : int64 = 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (srtp_call_expression
+      (type_parameter)
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (application_expression
+      (qualified_operator_expression
+        (type_parameter)
+        (operator_member))
+      (parenthesized_expression
+        (tuple_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (static_optimization
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal))
+    (static_optimization
+      (type_parameter)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal))))
