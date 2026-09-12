@@ -812,12 +812,14 @@ let q =
         (long_identifier
           (identifier)))
       (query_operator
+        op: (query_op)
         (parenthesized_expression
           (binary_expression
             left: (long_identifier
               (identifier))
             right: (int_literal))))
       (query_operator
+        op: (query_op)
         (long_identifier
           (identifier))))))
 

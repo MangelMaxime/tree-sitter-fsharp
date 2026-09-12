@@ -182,13 +182,6 @@ export default grammar({
         // than extending it, so the query-CE set must re-list the global words or
         // every keyword stops being reserved inside a CE body.
         query_ce: _ => [...GLOBAL_RESERVED,
-            'select', 'where', 'sortBy', 'sortByDescending',
-            'thenBy', 'thenByDescending', 'take', 'skip',
-            'takeWhile', 'skipWhile', 'distinct', 'count',
-            'head', 'last', 'exactlyOne',
-            'minBy', 'maxBy', 'sumBy', 'averageBy',
-            'find', 'exists', 'all', 'contains', 'nth',
-            'headOrDefault', 'lastOrDefault', 'exactlyOneOrDefault',
             'groupBy', 'groupValBy', 'groupJoin',
             'join', 'leftOuterJoin', 'on', 'into',
         ],
@@ -2803,17 +2796,16 @@ export default grammar({
         // `query_ce` reserved set + `reserved('query_ce', …)` wrap), so usages like
         // `List.where`, `let take n = …` outside any CE keep their identifier shape.
         query_operator: $ => prec.right(seq(
-            field('op', choice(
-                "select", "where", "sortBy", "sortByDescending",
-                "thenBy", "thenByDescending", "take", "skip",
-                "takeWhile", "skipWhile", "distinct", "count",
-                "head", "last", "exactlyOne",
-                "minBy", "maxBy", "sumBy", "averageBy",
-                "find", "exists", "all", "contains", "nth",
-                "headOrDefault", "lastOrDefault", "exactlyOneOrDefault",
-            )),
+            field('op', alias($._query_op_word, $.query_op)),
             optional($._expression),
         )),
+
+        // One token for the simple query operators instead of one keyword symbol
+        // each (a symbol is a column in every dense parser state). Lexical prec
+        // 1 beats `identifier` where both are valid (a CE statement start);
+        // elsewhere the token is not valid and the word lexes as an identifier.
+        _query_op_word: _ => token(prec(1, choice("select", "where", "sortBy", "sortByDescending", "thenBy", "thenByDescending", "take", "skip", "takeWhile", "skipWhile", "distinct", "count", "head", "last", "exactlyOne", "minBy", "maxBy", "sumBy", "averageBy", "find", "exists", "all", "contains", "nth", "headOrDefault", "lastOrDefault", "exactlyOneOrDefault"))),
+
 
         // `join name in source on (key1 = key2)`
         query_join_operator: $ => seq(

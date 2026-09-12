@@ -10491,117 +10491,13 @@
             "type": "FIELD",
             "name": "op",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "select"
-                },
-                {
-                  "type": "STRING",
-                  "value": "where"
-                },
-                {
-                  "type": "STRING",
-                  "value": "sortBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "sortByDescending"
-                },
-                {
-                  "type": "STRING",
-                  "value": "thenBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "thenByDescending"
-                },
-                {
-                  "type": "STRING",
-                  "value": "take"
-                },
-                {
-                  "type": "STRING",
-                  "value": "skip"
-                },
-                {
-                  "type": "STRING",
-                  "value": "takeWhile"
-                },
-                {
-                  "type": "STRING",
-                  "value": "skipWhile"
-                },
-                {
-                  "type": "STRING",
-                  "value": "distinct"
-                },
-                {
-                  "type": "STRING",
-                  "value": "count"
-                },
-                {
-                  "type": "STRING",
-                  "value": "head"
-                },
-                {
-                  "type": "STRING",
-                  "value": "last"
-                },
-                {
-                  "type": "STRING",
-                  "value": "exactlyOne"
-                },
-                {
-                  "type": "STRING",
-                  "value": "minBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "maxBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "sumBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "averageBy"
-                },
-                {
-                  "type": "STRING",
-                  "value": "find"
-                },
-                {
-                  "type": "STRING",
-                  "value": "exists"
-                },
-                {
-                  "type": "STRING",
-                  "value": "all"
-                },
-                {
-                  "type": "STRING",
-                  "value": "contains"
-                },
-                {
-                  "type": "STRING",
-                  "value": "nth"
-                },
-                {
-                  "type": "STRING",
-                  "value": "headOrDefault"
-                },
-                {
-                  "type": "STRING",
-                  "value": "lastOrDefault"
-                },
-                {
-                  "type": "STRING",
-                  "value": "exactlyOneOrDefault"
-                }
-              ]
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_query_op_word"
+              },
+              "named": true,
+              "value": "query_op"
             }
           },
           {
@@ -10617,6 +10513,126 @@
             ]
           }
         ]
+      }
+    },
+    "_query_op_word": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "select"
+            },
+            {
+              "type": "STRING",
+              "value": "where"
+            },
+            {
+              "type": "STRING",
+              "value": "sortBy"
+            },
+            {
+              "type": "STRING",
+              "value": "sortByDescending"
+            },
+            {
+              "type": "STRING",
+              "value": "thenBy"
+            },
+            {
+              "type": "STRING",
+              "value": "thenByDescending"
+            },
+            {
+              "type": "STRING",
+              "value": "take"
+            },
+            {
+              "type": "STRING",
+              "value": "skip"
+            },
+            {
+              "type": "STRING",
+              "value": "takeWhile"
+            },
+            {
+              "type": "STRING",
+              "value": "skipWhile"
+            },
+            {
+              "type": "STRING",
+              "value": "distinct"
+            },
+            {
+              "type": "STRING",
+              "value": "count"
+            },
+            {
+              "type": "STRING",
+              "value": "head"
+            },
+            {
+              "type": "STRING",
+              "value": "last"
+            },
+            {
+              "type": "STRING",
+              "value": "exactlyOne"
+            },
+            {
+              "type": "STRING",
+              "value": "minBy"
+            },
+            {
+              "type": "STRING",
+              "value": "maxBy"
+            },
+            {
+              "type": "STRING",
+              "value": "sumBy"
+            },
+            {
+              "type": "STRING",
+              "value": "averageBy"
+            },
+            {
+              "type": "STRING",
+              "value": "find"
+            },
+            {
+              "type": "STRING",
+              "value": "exists"
+            },
+            {
+              "type": "STRING",
+              "value": "all"
+            },
+            {
+              "type": "STRING",
+              "value": "contains"
+            },
+            {
+              "type": "STRING",
+              "value": "nth"
+            },
+            {
+              "type": "STRING",
+              "value": "headOrDefault"
+            },
+            {
+              "type": "STRING",
+              "value": "lastOrDefault"
+            },
+            {
+              "type": "STRING",
+              "value": "exactlyOneOrDefault"
+            }
+          ]
+        }
       }
     },
     "query_join_operator": {
@@ -16058,114 +16074,6 @@
       {
         "type": "STRING",
         "value": "when"
-      },
-      {
-        "type": "STRING",
-        "value": "select"
-      },
-      {
-        "type": "STRING",
-        "value": "where"
-      },
-      {
-        "type": "STRING",
-        "value": "sortBy"
-      },
-      {
-        "type": "STRING",
-        "value": "sortByDescending"
-      },
-      {
-        "type": "STRING",
-        "value": "thenBy"
-      },
-      {
-        "type": "STRING",
-        "value": "thenByDescending"
-      },
-      {
-        "type": "STRING",
-        "value": "take"
-      },
-      {
-        "type": "STRING",
-        "value": "skip"
-      },
-      {
-        "type": "STRING",
-        "value": "takeWhile"
-      },
-      {
-        "type": "STRING",
-        "value": "skipWhile"
-      },
-      {
-        "type": "STRING",
-        "value": "distinct"
-      },
-      {
-        "type": "STRING",
-        "value": "count"
-      },
-      {
-        "type": "STRING",
-        "value": "head"
-      },
-      {
-        "type": "STRING",
-        "value": "last"
-      },
-      {
-        "type": "STRING",
-        "value": "exactlyOne"
-      },
-      {
-        "type": "STRING",
-        "value": "minBy"
-      },
-      {
-        "type": "STRING",
-        "value": "maxBy"
-      },
-      {
-        "type": "STRING",
-        "value": "sumBy"
-      },
-      {
-        "type": "STRING",
-        "value": "averageBy"
-      },
-      {
-        "type": "STRING",
-        "value": "find"
-      },
-      {
-        "type": "STRING",
-        "value": "exists"
-      },
-      {
-        "type": "STRING",
-        "value": "all"
-      },
-      {
-        "type": "STRING",
-        "value": "contains"
-      },
-      {
-        "type": "STRING",
-        "value": "nth"
-      },
-      {
-        "type": "STRING",
-        "value": "headOrDefault"
-      },
-      {
-        "type": "STRING",
-        "value": "lastOrDefault"
-      },
-      {
-        "type": "STRING",
-        "value": "exactlyOneOrDefault"
       },
       {
         "type": "STRING",

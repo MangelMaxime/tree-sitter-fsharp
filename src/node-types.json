@@ -4859,112 +4859,8 @@
         "required": true,
         "types": [
           {
-            "type": "all",
-            "named": false
-          },
-          {
-            "type": "averageBy",
-            "named": false
-          },
-          {
-            "type": "contains",
-            "named": false
-          },
-          {
-            "type": "count",
-            "named": false
-          },
-          {
-            "type": "distinct",
-            "named": false
-          },
-          {
-            "type": "exactlyOne",
-            "named": false
-          },
-          {
-            "type": "exactlyOneOrDefault",
-            "named": false
-          },
-          {
-            "type": "exists",
-            "named": false
-          },
-          {
-            "type": "find",
-            "named": false
-          },
-          {
-            "type": "head",
-            "named": false
-          },
-          {
-            "type": "headOrDefault",
-            "named": false
-          },
-          {
-            "type": "last",
-            "named": false
-          },
-          {
-            "type": "lastOrDefault",
-            "named": false
-          },
-          {
-            "type": "maxBy",
-            "named": false
-          },
-          {
-            "type": "minBy",
-            "named": false
-          },
-          {
-            "type": "nth",
-            "named": false
-          },
-          {
-            "type": "select",
-            "named": false
-          },
-          {
-            "type": "skip",
-            "named": false
-          },
-          {
-            "type": "skipWhile",
-            "named": false
-          },
-          {
-            "type": "sortBy",
-            "named": false
-          },
-          {
-            "type": "sortByDescending",
-            "named": false
-          },
-          {
-            "type": "sumBy",
-            "named": false
-          },
-          {
-            "type": "take",
-            "named": false
-          },
-          {
-            "type": "takeWhile",
-            "named": false
-          },
-          {
-            "type": "thenBy",
-            "named": false
-          },
-          {
-            "type": "thenByDescending",
-            "named": false
-          },
-          {
-            "type": "where",
-            "named": false
+            "type": "query_op",
+            "named": true
           }
         ]
       }
@@ -7305,10 +7201,6 @@
     "named": true
   },
   {
-    "type": "all",
-    "named": false
-  },
-  {
     "type": "and",
     "named": false
   },
@@ -7318,10 +7210,6 @@
   },
   {
     "type": "assert",
-    "named": false
-  },
-  {
-    "type": "averageBy",
     "named": false
   },
   {
@@ -7351,23 +7239,11 @@
     "named": false
   },
   {
-    "type": "contains",
-    "named": false
-  },
-  {
-    "type": "count",
-    "named": false
-  },
-  {
     "type": "default",
     "named": false
   },
   {
     "type": "delegate",
-    "named": false
-  },
-  {
-    "type": "distinct",
     "named": false
   },
   {
@@ -7407,19 +7283,7 @@
     "named": false
   },
   {
-    "type": "exactlyOne",
-    "named": false
-  },
-  {
-    "type": "exactlyOneOrDefault",
-    "named": false
-  },
-  {
     "type": "exception",
-    "named": false
-  },
-  {
-    "type": "exists",
     "named": false
   },
   {
@@ -7432,10 +7296,6 @@
   },
   {
     "type": "finally",
-    "named": false
-  },
-  {
-    "type": "find",
     "named": false
   },
   {
@@ -7488,14 +7348,6 @@
     "named": false
   },
   {
-    "type": "head",
-    "named": false
-  },
-  {
-    "type": "headOrDefault",
-    "named": false
-  },
-  {
     "type": "identifier",
     "named": true
   },
@@ -7532,14 +7384,6 @@
     "named": false
   },
   {
-    "type": "last",
-    "named": false
-  },
-  {
-    "type": "lastOrDefault",
-    "named": false
-  },
-  {
     "type": "lazy",
     "named": false
   },
@@ -7570,15 +7414,7 @@
     "named": false
   },
   {
-    "type": "maxBy",
-    "named": false
-  },
-  {
     "type": "member",
-    "named": false
-  },
-  {
-    "type": "minBy",
     "named": false
   },
   {
@@ -7607,10 +7443,6 @@
   },
   {
     "type": "not",
-    "named": false
-  },
-  {
-    "type": "nth",
     "named": false
   },
   {
@@ -7680,6 +7512,10 @@
     "named": false
   },
   {
+    "type": "query_op",
+    "named": true
+  },
+  {
     "type": "rec",
     "named": false
   },
@@ -7692,32 +7528,12 @@
     "named": false
   },
   {
-    "type": "select",
-    "named": false
-  },
-  {
     "type": "set",
     "named": false
   },
   {
     "type": "shebang",
     "named": true
-  },
-  {
-    "type": "skip",
-    "named": false
-  },
-  {
-    "type": "skipWhile",
-    "named": false
-  },
-  {
-    "type": "sortBy",
-    "named": false
-  },
-  {
-    "type": "sortByDescending",
-    "named": false
   },
   {
     "type": "static",
@@ -7728,31 +7544,11 @@
     "named": false
   },
   {
-    "type": "sumBy",
-    "named": false
-  },
-  {
     "type": "symbolic_op",
     "named": true
   },
   {
-    "type": "take",
-    "named": false
-  },
-  {
-    "type": "takeWhile",
-    "named": false
-  },
-  {
     "type": "then",
-    "named": false
-  },
-  {
-    "type": "thenBy",
-    "named": false
-  },
-  {
-    "type": "thenByDescending",
     "named": false
   },
   {
@@ -7805,10 +7601,6 @@
   },
   {
     "type": "when",
-    "named": false
-  },
-  {
-    "type": "where",
     "named": false
   },
   {
