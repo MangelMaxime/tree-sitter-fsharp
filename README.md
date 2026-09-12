@@ -452,6 +452,21 @@ First run clones the corpus (~1.5 GB) into `~/.cache/fsharp-grammar-bench`
 (override with `$FSHARP_BENCH_DIR`). Too heavy for CI by design - run it
 locally before merging grammar or scanner changes.
 
+## Releases
+
+Releases are cut by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt)
+from the Conventional Commits on `main` (`.github/workflows/easybuild-shipit.yml`):
+
+1. After the tests pass on `main`, ShipIt opens or updates the `release/main` pull
+   request. It writes the next entry of `CHANGELOG.md` and bumps the version in
+   `tree-sitter.json` and `package.json`. `feat`/`perf` bump the minor version, `fix` the
+   patch version, a `!` or `BREAKING CHANGE` footer the major version.
+2. Merging that pull request pushes a `chore: release X.Y.Z` commit. The workflow then
+   builds `tree-sitter-fsharp.wasm` and publishes the GitHub release `vX.Y.Z` with it
+   and the changelog entry as notes.
+
+Only the front matter of `CHANGELOG.md` is hand-edited; the rest is generated.
+
 ## Licence
 
 Apache 2.0

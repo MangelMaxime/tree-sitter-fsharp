@@ -1,0 +1,92 @@
+name: EasyBuild ShipIt
+
+# Runs after the "Tests" workflow succeeds on main.
+#  - shipit-pr: opens or updates the release pull request (CHANGELOG.md +
+#    version bumps) from the Conventional Commits since the last release.
+#  - release: when that pull request lands (a `chore: release X.Y.Z` commit),
+#    builds the Wasm parser and publishes a GitHub release with it.
+# Requires "Allow GitHub Actions to create and approve pull requests" in the
+# repository settings (Actions > General).
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  shipit-pr:
+    name: ShipIt - Pull Request
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      !startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dotnet tools
+        run: dotnet tool restore
+
+      - name: ShipIt (Pull Request)
+        run: dotnet shipit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install tree-sitter CLI (locked version)
+        run: npm ci
+
+      - name: Read the released version
+        id: version
+        env:
+          MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
+        run: |
+          version=$(printf '%s\n' "$MESSAGE" | head -n 1 | sed 's/^chore: release //')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build the Wasm parser
+        run: npx tree-sitter build --wasm -o tree-sitter-fsharp.wasm
+
+      - name: Extract the release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; if ($2 == v) { found = 1; next } }
+            found' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" tree-sitter-fsharp.wasm \
+            --title "v$VERSION" \
+            --notes-file release-notes.md \
+            --target "${{ github.event.workflow_run.head_sha }}"
