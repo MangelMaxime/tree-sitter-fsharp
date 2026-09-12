@@ -438,6 +438,12 @@ static bool scan_trailing_dot_float(TSLexer *lexer) {
 
 static bool is_close_bracket(int32_t c) { return c == ']' || c == '}'; }
 
+static bool is_opchar(int32_t c) {
+    return c == '!' || c == '%' || c == '&' || c == '*' || c == '+' || c == '-' || c == '.' ||
+           c == '/' || c == '<' || c == '=' || c == '>' || c == '?' || c == '@' || c == '^' ||
+           c == '|' || c == '~' || c == '$' || c == ':';
+}
+
 // Consume one identifier segment at the lookahead — a plain ident
 // (`Foo`/`foo'`/`x9`) or a ``quoted name``. Caller ensures the first char is an
 // identifier start. Used by the RECORD_OPEN field peek so a qualified field name
@@ -1872,7 +1878,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // mildly-dedented op still continues the body — but one dedented WELL below
     // (`|>` at the pipeline col under a match arm body, Chocolatey style) is
     // offside and must close the body/arm-list first.
-    bool infix_continues = !(top->sort == S_EXPR && col < top->col) &&
+    // S_EXPR: FSC grants an infix token offside grace of its length + 1, so
+    // `let v =    a`⏎`           ||| b` continues while `>> g` four columns
+    // left of a lambda body closes it. Measured inside the block below; the
+    // `+`/`-`/`@`/`.` leads keep the strict rule (expr_strict).
+    bool expr_strict = (top->sort == S_EXPR && col < top->col);
+    bool infix_continues = 
                            // ≤ for S_MATCH: an op AT the arm column can't be an
                            // arm — the arm-list must END so the op continues the
                            // whole match (`| false -> b⏎|> g` at the arm col).
@@ -1885,10 +1896,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (infix_continues) {
         int32_t c0 = first;
         if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
-            c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':') {
+            c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':' || c0 == '?') {
             int32_t c1;
             if (c0 == '|') c1 = bar_c1;                  // already peeked above
             else { lexer->advance(lexer, true); c1 = lexer->lookahead; }
+            int oplen = 1;
+            if (is_opchar(c1)) {
+                oplen = 2; lexer->advance(lexer, true);
+                while (is_opchar(lexer->lookahead)) { oplen++; lexer->advance(lexer, true); }
+            }
             bool infix = false;
             // `|` + any operator char = a custom `|`-led infix operator
             // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, …). A match-arm
@@ -1900,9 +1916,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                                          c1 == '<' || c1 == '=' || c1 == '^' ||
                                          c1 == '~' || c1 == '$');
             else if (c0 == '&') infix = (c1 == '&');                        // &&
-            else if (c0 == ':') infix = (c1 == ':' || c1 == '>' || c1 == '?'); // :: :> :?
+            // `::` `:>` `:?`, and a bare `: T` ascription on its own line
+            // (`{ A = 1 }`⏎`: R`): no statement starts with `:`.
+            else if (c0 == ':') infix = true;
+            // `?=>!`-style operators; `?ident` is an optional named argument
+            // (that line is a new statement / element).
+            else if (c0 == '?') infix = (c1 == '!' || c1 == '%' || c1 == '&' || c1 == '*' ||
+                                         c1 == '+' || c1 == '-' || c1 == '.' || c1 == '/' ||
+                                         c1 == '<' || c1 == '=' || c1 == '>' || c1 == '?' ||
+                                         c1 == '@' || c1 == '^' || c1 == '|' || c1 == '~' ||
+                                         c1 == '$' || c1 == ':');
             else if (c0 == '/') infix = (c1 != '/');                       // `//` = COMMENT, not an operator
             else                infix = true;                              // = < > * % ^
+            if (infix && top->sort == S_EXPR && col + oplen + 1 < top->col) infix = false;
             if (infix) return false;
         }
 
@@ -1912,7 +1938,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // `@"…"` (verbatim string), `@>` / `@@>` (code-quotation close).
         // `@@` followed by anything but `>` is the custom path-concat operator
         // (FAKE's `dir @@ file` written leading) — a continuation.
-        if (layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
+        if (!expr_strict && layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
             lexer->advance(lexer, true);
             int32_t c1 = lexer->lookahead;
             if (first == '+') return false;
@@ -1935,7 +1961,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // A leading `.` is always a continuation: a fluent member chain on its
         // own line (`builder⏎ .Method()`), a `.`-led custom operator (`.>>.`,
         // FParsec style), or a `..` range — no F# statement can START with `.`.
-        if (layoutish(top->sort) && first == '.') return false;
+        if (!expr_strict && layoutish(top->sort) && first == '.') return false;
     }
 
     switch (top->sort) {

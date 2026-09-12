@@ -3570,3 +3570,81 @@ let g () = let f t = match t with | A -> 1 | B -> 2 in f 1
         (long_identifier
           (identifier))
         (int_literal)))))
+
+================================================================================
+Bare ascription on the line after a record expression
+================================================================================
+
+let r =
+    { A = 1
+      B = 2 }
+    : R
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (type_ascription_expression
+      (record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (int_literal))
+        (record_field
+          (long_identifier
+            (identifier))
+          (int_literal)))
+      (type_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Line-leading custom operators starting with a question mark
+================================================================================
+
+let f () =
+    a
+    ?=>! b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (symbolic_op)
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+Infix operator slightly left of its first operand
+================================================================================
+
+let f () =
+    let v =    a
+           ||| b
+    v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (let_expression
+      (let_decl_indented
+        (identifier)
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (symbolic_op)
+          (long_identifier
+            (identifier))))
+      (long_identifier
+        (identifier)))))
