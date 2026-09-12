@@ -1498,3 +1498,74 @@ type R =
       (type_expression
         (long_identifier
           (identifier))))))
+
+================================================================================
+Non-indented union cases followed by another type
+================================================================================
+
+type C =
+|   A of int
+|   B of int
+
+type D(a) =
+    member x.M = 1
+
+[<Sealed>]
+type E = | X
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (tuple_param
+        (identifier)))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (int_literal)))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)))))
+
+================================================================================
+Enum whose first case has no bar and later cases dedent
+================================================================================
+
+type E =
+      A = 0
+    | B = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (enum_type_defn
+      (enum_case
+        (identifier)
+        (int_literal))
+      (enum_case
+        (identifier)
+        (int_literal)))))

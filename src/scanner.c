@@ -1940,6 +1940,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // fork dies at the close that follows), then the dedent re-fires.
             if (valid[LAYOUT_END] && col < top->col &&
                 g_skipped_doc_lines && g_doc_indent >= top->col) return false;
+            // A `|` case LEFT of a bare first case is still a case of this type
+            // (`type E =`⏎`      A = 0`⏎`    | B = 1`); types never nest inside
+            // match arms, so a dedented `|` under a type body is never an arm.
+            if (valid[LAYOUT_END] && col < top->col && top->sort == S_TYPEBODY && bar_arm) return false;
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `#if`-family directive line sits between this declaration and a
             // line that starts a NEW one: the two are alternative spellings of the
@@ -1990,16 +1994,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // DU (`type T =⏎| A⏎| B⏎open …`) puts the body at the module column, so
             // a dedent never fires; without this, the union field type
             // over-consumes the following `open Foo` as a postfix type.
+            // `type` too: a non-indented DU (`| A` at column 0) followed by the
+            // next `type` decl - with or without an attribute row before it.
             if (top->sort == S_TYPEBODY && valid[LAYOUT_END] && col == top->col &&
-                first >= 'a' && first <= 'z') {
-                char w[12]; size_t wn = 0; int32_t lk = lexer->lookahead;
-                while (wn < 11 && lk >= 'a' && lk <= 'z') { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
-                w[wn] = '\0';
-                bool boundary = !((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
-                                  (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'');
-                if (boundary && (!strcmp(w, "open") || !strcmp(w, "module") ||
-                                 !strcmp(w, "namespace") || !strcmp(w, "exception"))) {
-                    s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                ((first >= 'a' && first <= 'z') || first == '[')) {
+                bool ok = true;
+                if (first == '[') ok = skip_bracket_attrs(lexer);
+                if (ok) {
+                    char w[12]; size_t wn = 0; int32_t lk = lexer->lookahead;
+                    while (wn < 11 && lk >= 'a' && lk <= 'z') { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
+                    w[wn] = '\0';
+                    bool boundary = !((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
+                                      (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'');
+                    if (boundary && (!strcmp(w, "open") || !strcmp(w, "module") ||
+                                     !strcmp(w, "namespace") || !strcmp(w, "exception") ||
+                                     !strcmp(w, "type"))) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
                 }
             }
             // Separator decision. Both word peeks below (decl_starter,
