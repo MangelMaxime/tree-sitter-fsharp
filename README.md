@@ -25,7 +25,7 @@ See everything at once in [`examples/layout.fsx`](examples/layout.fsx).
 | --------------------------------- | --------------- | -------------------------------------------------------------------------- |
 | [Helix](#helix)                   | ✅ Supported    | Full set (highlights, injections, locals, textobjects, indents, rainbows)  |
 | [Zed](#zed)                       | ✅ Supported    | Dedicated queries in `queries/zed/` |
-| [Neovim](#neovim-experimental)    | 🧪 Experimental | Reuses the Helix queries (capture names map only roughly)                   |
+| [Neovim](#neovim)                 | ✅ Supported    | `queries/nvim/` (highlights derived from Helix, indents, folds, textobjects) |
 
 PRs for editor-specific queries are welcome.
 
@@ -247,16 +247,20 @@ rainbow-brackets = true
 > [!NOTE]
 > At the time of writing, you need to build Helix from source to get rainbow brackets support
 
-## Neovim (experimental)
+## Neovim
 
 > [!NOTE]
-> **Neovim support is experimental.** There are no Neovim-specific queries yet:
-> the shared `.scm` files target Helix's capture names, which map onto Neovim's
-> highlight groups only roughly - highlighting is "ok" today, far from perfect.
+> **Neovim support is less travelled than Helix and Zed.** `queries/nvim/`
+> holds the Neovim-specific files: `highlights.scm` is generated from the Helix
+> one by `scripts/derive-queries.py` (Neovim capture names, `#lua-match?`
+> predicates, plus the refinements in `scripts/nvim-highlights-extra.scm`),
+> and `indents.scm`, `folds.scm` and `textobjects.scm` are written in
+> nvim-treesitter's dialects. `injections`, `locals`, `rainbows` and `tags`
+> are shared with Helix. The installer below prefers a `queries/nvim/` file
+> when one exists.
 >
-> **This is where help is most valuable.** PRs adding Neovim-specific queries
-> (capture mappings, `injections`, `locals`, `folds`, indentation) are very
-> welcome - the grammar is shared, only the queries need editor-specific love.
+> Feedback and PRs from daily Neovim users are very welcome - the grammar is
+> shared, only the queries need editor-specific love.
 >
 > Historically, the [Ionide grammar](https://github.com/ionide/tree-sitter-fsharp) targets Neovim,
 > but it supports fewer coloration features than this one and is more brittle.

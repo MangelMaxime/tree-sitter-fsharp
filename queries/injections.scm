@@ -7,3 +7,12 @@
 ((xml_doc_comment) @injection.content
  (#set! injection.language "xml")
  (#set! injection.combined))
+
+; TODO:/FIXME: markers through Helix's built-in `comment` grammar (the same
+; injection Helix's own Rust queries use). Doc comments are excluded: they
+; already inject markdown/xml.
+([
+  (line_comment)
+  (block_comment)
+] @injection.content
+ (#set! injection.language "comment"))

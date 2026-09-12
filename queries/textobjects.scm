@@ -64,6 +64,20 @@
 (parameter) @parameter.inside @parameter.around
 (tuple_param) @parameter.inside @parameter.around
 
+; ── Entries (`mie`/`mae`) ────────────────────────────────────────────────────
+; One element of a collection literal, one field of a record, one case of a
+; union/enum, or one arm of a match: the things you step through with `]e`.
+(list_expression (_) @entry.inside @entry.around)
+(array_expression (_) @entry.inside @entry.around)
+(tuple_expression (_) @entry.inside @entry.around)
+(struct_tuple_expression (_) @entry.inside @entry.around)
+(record_expression (record_field) @entry.inside @entry.around)
+(anonymous_record_expression (record_field) @entry.inside @entry.around)
+(record_type_defn (record_type_field) @entry.inside @entry.around)
+(union_type_defn (union_case) @entry.inside @entry.around)
+(enum_type_defn (enum_case) @entry.inside @entry.around)
+(match_arm body: (_) @entry.inside) @entry.around
+
 ; ── Comments ─────────────────────────────────────────────────────────────────
 [
   (line_comment)

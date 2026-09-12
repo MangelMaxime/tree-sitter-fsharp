@@ -36,7 +36,9 @@ QUERY_DEST="$CONFIG_DIR/queries/fsharp"
 # Every query file we ship. Missing ones get empty placeholders so Neovim
 # doesn't fall back to a tree-sitter plugin's bundled F# queries (built for
 # the upstream Ionide grammar, whose node types don't exist here).
-QUERIES=(highlights indents injections locals rainbows tags textobjects)
+# queries/nvim/<name>.scm (Neovim capture names and dialects) takes precedence
+# over the shared Helix file queries/<name>.scm.
+QUERIES=(highlights indents injections locals rainbows tags textobjects folds)
 
 # --- Pick a tree-sitter CLI ---
 if command -v tree-sitter >/dev/null 2>&1; then
@@ -83,7 +85,10 @@ echo "Installed parser → $PARSER_DEST/fsharp.so"
 
 echo "Installing queries → $QUERY_DEST"
 for q in "${QUERIES[@]}"; do
-    if [ -s "$SRC/queries/${q}.scm" ]; then
+    if [ -s "$SRC/queries/nvim/${q}.scm" ]; then
+        cp "$SRC/queries/nvim/${q}.scm" "$QUERY_DEST/${q}.scm"
+        echo "  ${q}.scm  (Neovim-specific)"
+    elif [ -s "$SRC/queries/${q}.scm" ]; then
         cp "$SRC/queries/${q}.scm" "$QUERY_DEST/${q}.scm"
         echo "  ${q}.scm"
     else
