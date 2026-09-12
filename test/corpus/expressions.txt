@@ -3776,64 +3776,10 @@ let ops = SignedIntegerUnaryOp g (~-) (~-) a
         (identifier)))))
 
 ================================================================================
-Ascription inside quotations and comprehension arrows
-================================================================================
-
-let x = <@ 1: int @>
-let y = <@@ None: string[] option @@>
-let xs = [ for b in bs -> { R = k }: ILExceptionSpec ]
-
---------------------------------------------------------------------------------
-
-(source_file
-  (let_binding
-    (identifier)
-    (typed_quotation
-      (type_ascription_expression
-        (int_literal)
-        (type_expression
-          (long_identifier
-            (identifier))))))
-  (let_binding
-    (identifier)
-    (untyped_quotation
-      (type_ascription_expression
-        (long_identifier
-          (identifier))
-        (type_expression
-          (postfix_type
-            (type_expression
-              (array_type
-                (type_expression
-                  (long_identifier
-                    (identifier)))))
-            (long_identifier
-              (identifier)))))))
-  (let_binding
-    (identifier)
-    (list_expression
-      (for_expression
-        (identifier)
-        (long_identifier
-          (identifier))
-        (type_ascription_expression
-          (record_expression
-            (record_field
-              (long_identifier
-                (identifier))
-              (long_identifier
-                (identifier))))
-          (type_expression
-            (long_identifier
-              (identifier))))))))
-
-================================================================================
-Lambda with a return annotation and legacy object expressions
+Lambda with a return annotation
 ================================================================================
 
 let i = fun (x: int) (y: string) : int -> x
-let rval = { new RecordType with a = 1 and b = 2 }
-let o = { new X with M() = failwith "" }
 
 --------------------------------------------------------------------------------
 
@@ -3854,28 +3800,4 @@ let o = { new X with M() = failwith "" }
       (long_identifier
         (identifier))
       (long_identifier
-        (identifier))))
-  (let_binding
-    (identifier)
-    (object_expression
-      (long_identifier
-        (identifier))
-      (legacy_object_member
-        (identifier)
-        (int_literal))
-      (legacy_object_member
-        (identifier)
-        (int_literal))))
-  (let_binding
-    (identifier)
-    (object_expression
-      (long_identifier
-        (identifier))
-      (legacy_object_member
-        (identifier)
-        (parameter
-          (unit))
-        (application_expression
-          (long_identifier
-            (identifier))
-          (string_literal))))))
+        (identifier)))))

@@ -121,3 +121,26 @@ enough preceding file context. Same root cause as the scanner's exact-column wor
 `done` (4 sites) resisted a grammar-only fix: the scanner emits a statement separator when
 a loop body dedents, so `done` commits to being the next sibling statement before
 `optional("done")` can apply.
+
+## Accepted: constructs dropped for parser size
+
+`tree-sitter generate` time scales with the parser's state count (about 9 ms per state
+here; 20,513 states = 18 s). These forms parsed at one point but cost more states than
+their bench impact justified, and were removed on 2026-09-12:
+
+| construct | states | bench sites |
+|---|---|---|
+| bare ascription inside `<@ … @>` and after a comprehension `->` | 1,304 | 4 |
+| bodiless `member X: T` / `static member X: T` (signature files) | 731 | .fsi only |
+| `val x<'T>: T` type parameters and `val x: T when …` | 624 | .fsi only |
+| `val x = expr` initialiser (`[<Literal>] val X: int = 3` still parses) | 512 | 2 |
+| access modifier or attribute on a `get`/`set` accessor | 360 | 30 |
+| `inherit B() with` followed by members | 342 | 2 |
+| `{ new R with a = 1 and b = 2 }` legacy object members | 108 | 1 file |
+| `T \| null` as a type abbreviation, inside parens, on `#T`, in `(# … #)` | 255 | 15 |
+| `Generic<'T>.Nested`, `'T & #I`, `< >`, attributes on a return type | 176 | 22 |
+| `use (x: T) = …`, `use! (_) = …` name patterns | 147 | 24 |
+
+Signature files (`.fsi`) are therefore only partially supported and need their own
+grammar (a signature grammar inheriting this one, as Ionide does) rather than more
+alternatives in the shared rules.

@@ -1107,10 +1107,6 @@
           "named": true
         },
         {
-          "type": "member_signature",
-          "named": true
-        },
-        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -1731,10 +1727,6 @@
           "named": true
         },
         {
-          "type": "member_signature",
-          "named": true
-        },
-        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -1847,10 +1839,6 @@
         "types": [
           {
             "type": "_expression",
-            "named": true
-          },
-          {
-            "type": "type_ascription_expression",
             "named": true
           }
         ]
@@ -1969,10 +1957,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "identifier",
-          "named": true
-        },
         {
           "type": "long_identifier",
           "named": true
@@ -2189,50 +2173,6 @@
         {
           "type": "_expression",
           "named": true
-        },
-        {
-          "type": "abstract_member_defn",
-          "named": true
-        },
-        {
-          "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "do_stmt",
-          "named": true
-        },
-        {
-          "type": "inherit_decl",
-          "named": true
-        },
-        {
-          "type": "interface_impl",
-          "named": true
-        },
-        {
-          "type": "let_binding",
-          "named": true
-        },
-        {
-          "type": "member_defn",
-          "named": true
-        },
-        {
-          "type": "member_signature",
-          "named": true
-        },
-        {
-          "type": "secondary_constructor",
-          "named": true
-        },
-        {
-          "type": "val_field",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
-          "named": true
         }
       ]
     }
@@ -2323,10 +2263,6 @@
           "named": true
         },
         {
-          "type": "member_signature",
-          "named": true
-        },
-        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -2375,10 +2311,6 @@
         },
         {
           "type": "member_defn",
-          "named": true
-        },
-        {
-          "type": "member_signature",
           "named": true
         },
         {
@@ -2608,36 +2540,6 @@
         },
         {
           "type": "type_parameter",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "legacy_object_member",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "_expression",
-          "named": true
-        },
-        {
-          "type": "parameter",
           "named": true
         }
       ]
@@ -3073,10 +2975,6 @@
           "named": true
         },
         {
-          "type": "attribute",
-          "named": true
-        },
-        {
           "type": "let_and_binding",
           "named": true
         },
@@ -3216,10 +3114,6 @@
         },
         {
           "type": "access_modifier",
-          "named": true
-        },
-        {
-          "type": "attribute",
           "named": true
         },
         {
@@ -3638,74 +3532,6 @@
     }
   },
   {
-    "type": "member_signature",
-    "named": true,
-    "fields": {
-      "decl": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "member_signature",
-            "named": true
-          }
-        ]
-      },
-      "name": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "operator_name",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "access_modifier",
-          "named": true
-        },
-        {
-          "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "auto_property_accessors",
-          "named": true
-        },
-        {
-          "type": "nullable_type",
-          "named": true
-        },
-        {
-          "type": "type_constraint",
-          "named": true
-        },
-        {
-          "type": "type_expression",
-          "named": true
-        },
-        {
-          "type": "type_parameter_list",
-          "named": true
-        },
-        {
-          "type": "xml_doc_comment",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "module_decl",
     "named": true,
     "fields": {
@@ -4026,10 +3852,6 @@
           "named": true
         },
         {
-          "type": "flexible_type",
-          "named": true
-        },
-        {
           "type": "generic_type",
           "named": true
         },
@@ -4119,19 +3941,11 @@
           "named": true
         },
         {
-          "type": "legacy_object_member",
-          "named": true
-        },
-        {
           "type": "let_binding",
           "named": true
         },
         {
           "type": "member_defn",
-          "named": true
-        },
-        {
-          "type": "member_signature",
           "named": true
         },
         {
@@ -4296,15 +4110,7 @@
       "required": true,
       "types": [
         {
-          "type": "nullable_tuple_type",
-          "named": true
-        },
-        {
           "type": "nullable_type",
-          "named": true
-        },
-        {
-          "type": "type_constraint",
           "named": true
         },
         {
@@ -4646,14 +4452,6 @@
       "multiple": true,
       "required": false,
       "types": [
-        {
-          "type": "access_modifier",
-          "named": true
-        },
-        {
-          "type": "attribute",
-          "named": true
-        },
         {
           "type": "type_constraint",
           "named": true
@@ -5594,10 +5392,6 @@
           "named": true
         },
         {
-          "type": "member_signature",
-          "named": true
-        },
-        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -5862,10 +5656,6 @@
             "named": true
           },
           {
-            "type": "nullable_type",
-            "named": true
-          },
-          {
             "type": "type_expression",
             "named": true
           }
@@ -5952,10 +5742,6 @@
         },
         {
           "type": "member_defn",
-          "named": true
-        },
-        {
-          "type": "member_signature",
           "named": true
         },
         {
@@ -6167,10 +5953,6 @@
             "named": true
           },
           {
-            "type": "nullable_type",
-            "named": true
-          },
-          {
             "type": "type_expression",
             "named": true
           }
@@ -6257,10 +6039,6 @@
         },
         {
           "type": "member_defn",
-          "named": true
-        },
-        {
-          "type": "member_signature",
           "named": true
         },
         {
@@ -6443,10 +6221,6 @@
           "named": true
         },
         {
-          "type": "member_signature",
-          "named": true
-        },
-        {
           "type": "secondary_constructor",
           "named": true
         },
@@ -6520,14 +6294,10 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "flexible_type",
           "named": true
         },
         {
@@ -6616,10 +6386,6 @@
       "types": [
         {
           "type": "_expression",
-          "named": true
-        },
-        {
-          "type": "type_ascription_expression",
           "named": true
         }
       ]
@@ -6907,10 +6673,6 @@
         {
           "type": "_expression",
           "named": true
-        },
-        {
-          "type": "type_ascription_expression",
-          "named": true
         }
       ]
     }
@@ -6948,22 +6710,6 @@
           {
             "type": "identifier",
             "named": true
-          },
-          {
-            "type": "tuple_pattern",
-            "named": true
-          },
-          {
-            "type": "typed_pattern",
-            "named": true
-          },
-          {
-            "type": "unit",
-            "named": true
-          },
-          {
-            "type": "wildcard_pattern",
-            "named": true
           }
         ]
       }
@@ -6983,20 +6729,6 @@
     "type": "val_field",
     "named": true,
     "fields": {
-      "body": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "_expression",
-            "named": true
-          },
-          {
-            "type": "type_ascription_expression",
-            "named": true
-          }
-        ]
-      },
       "decl": {
         "multiple": false,
         "required": false,
@@ -7028,8 +6760,12 @@
     },
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
+        {
+          "type": "_literal",
+          "named": true
+        },
         {
           "type": "access_modifier",
           "named": true
@@ -7043,15 +6779,7 @@
           "named": true
         },
         {
-          "type": "type_constraint",
-          "named": true
-        },
-        {
           "type": "type_expression",
-          "named": true
-        },
-        {
-          "type": "type_parameter_list",
           "named": true
         },
         {

@@ -771,58 +771,6 @@ type Foo =
               (identifier))))))))
 
 ================================================================================
-Property accessors with access modifiers and attributes
-================================================================================
-
-type T() =
-    member this.A with public get () = 1
-    member x.B with private set v = () and public get () = 2
-    member this.C with [<Obsolete>] get () = 3
-
---------------------------------------------------------------------------------
-
-(source_file
-  (type_decl
-    (identifier)
-    (primary_constructor
-      (unit))
-    (member_defn
-      (member_self_ident
-        (identifier))
-      (identifier)
-      (property_accessor
-        (access_modifier)
-        (parameter
-          (unit))
-        (int_literal)))
-    (member_defn
-      (member_self_ident
-        (identifier))
-      (identifier)
-      (property_accessor
-        (access_modifier)
-        (parameter
-          (identifier))
-        (unit))
-      (property_accessor
-        (access_modifier)
-        (parameter
-          (unit))
-        (int_literal)))
-    (member_defn
-      (member_self_ident
-        (identifier))
-      (identifier)
-      (property_accessor
-        (attribute
-          (attribute_target
-            (long_identifier
-              (identifier))))
-        (parameter
-          (unit))
-        (int_literal)))))
-
-================================================================================
 Inline get/set accessor pair joined by and
 ================================================================================
 
@@ -855,34 +803,6 @@ type T() =
             (identifier)))))))
 
 ================================================================================
-Inherit with a member block
-================================================================================
-
-type C(x) =
-    inherit MyType(x) with
-        member this.X = 1
-
---------------------------------------------------------------------------------
-
-(source_file
-  (type_decl
-    (identifier)
-    (primary_constructor
-      (tuple_param
-        (identifier)))
-    (inherit_decl
-      (type_expression
-        (long_identifier
-          (identifier)))
-      (long_identifier
-        (identifier))
-      (member_defn
-        (member_self_ident
-          (identifier))
-        (identifier)
-        (int_literal)))))
-
-================================================================================
 Inline struct body with semicolon-separated members
 ================================================================================
 
@@ -910,26 +830,3 @@ type S = struct val A: int; new(a) = { A = a }; end
             (long_identifier
               (identifier))))))))
 
-================================================================================
-Val field with an initialiser
-================================================================================
-
-type C() =
-    val listeners = new E<_>()
-
---------------------------------------------------------------------------------
-
-(source_file
-  (type_decl
-    (identifier)
-    (primary_constructor
-      (unit))
-    (val_field
-      (identifier)
-      (new_expression
-        (generic_type
-          (long_identifier
-            (identifier))
-          (type_expression
-            (long_identifier
-              (identifier))))))))

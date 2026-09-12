@@ -707,30 +707,14 @@ let inline h (x: 'T) =
       (int_literal))))
 
 ================================================================================
-Intersection constraint on a type parameter, generic terms in an or-list, empty type parameters
+Generic terms in an SRTP or-list
 ================================================================================
 
-let g<'T & #IParsable<'T>> x = 1
 let inline sum< ^M when (Sum or seq< ^M> or ^M) : (static member Sum: seq<'M> -> 'M)> (x: seq<'M>) = x
-let f1< > (x: int) = x
-let y = MyClass< >.M<int>(box 12)
 
 --------------------------------------------------------------------------------
 
 (source_file
-  (let_binding
-    (identifier)
-    (type_parameter_list
-      (type_parameter)
-      (flexible_type
-        (generic_type
-          (long_identifier
-            (identifier))
-          (type_expression
-            (type_parameter)))))
-    (parameter
-      (identifier))
-    (int_literal))
   (let_binding
     (identifier)
     (type_parameter_list
@@ -764,30 +748,4 @@ let y = MyClass< >.M<int>(box 12)
           (type_expression
             (type_parameter)))))
     (long_identifier
-      (identifier)))
-  (let_binding
-    (identifier)
-    (type_parameter_list)
-    (parameter
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier))))
-    (long_identifier
-      (identifier)))
-  (let_binding
-    (identifier)
-    (binary_expression
-      (binary_expression
-        (dot_expression
-          (type_application_expression
-            (long_identifier
-              (identifier)))
-          (identifier))
-        (long_identifier
-          (identifier)))
-      (parenthesized_expression
-        (application_expression
-          (long_identifier
-            (identifier))
-          (int_literal))))))
+      (identifier))))

@@ -276,19 +276,18 @@ export default grammar({
         [$.module_decl, $.type_decl, $.type_extension, $.let_binding, $.exception_decl, $.val_field, $._token],
         // …and the class-body twin of the same fork (incl. type bodies where a
         // doc could open a union/enum case OR a member).
-        [$._class_body_member, $.secondary_constructor, $.member_defn, $.member_signature, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
-        [$._class_body_member, $.secondary_constructor, $.member_defn, $.member_signature, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
+        [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
         // KEEP despite the generator's "unnecessary conflicts" warning: the
         // checker reports the core rules under their ALIAS display names
         // (let_binding, member_defn, …) and then fails to recognise this set
         // as covering them. Removing it is a build ERROR (try it: `type X =
         // [<attr>] member …` becomes an unresolved conflict). Verified
         // 2026-06-11, tree-sitter-cli 0.26.x.
-        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._member_signature_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
+        [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
         // `static member X :` — a return-type-annotated method (`… : int = 1`)
         // or a bodiless signature (`… : int`). GLR explores both; the signature
         // branch carries prec.dynamic(-1) so the `=` form wins when it survives.
-        [$._static_member_prefix, $._member_signature_core],
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
         [$._record_field_core, $.postfix_type],
@@ -311,7 +310,7 @@ export default grammar({
         // Same situation inside a class/type body — `[<…>]` or `///` could be
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
-        [$._decl_or_comment, $.let_binding, $.member_defn, $.member_signature, $.abstract_member_defn, $.secondary_constructor, $.val_field],
+        [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor, $.val_field],
         // `expr <` may begin a `type_application_expression`
         // (`Map.empty<string, int>`) or a `<` comparison in
         // `binary_expression`. GLR explores both; type_application only
@@ -484,7 +483,6 @@ export default grammar({
             // `type A<'T> = seq<'T> | null` (F# 9 nullable abbreviation). `| null`
             // is ONE token here so the lexer, not the parser, tells it from a
             // bare union `type U = A | B` (LR(1) cannot see past the `|`).
-            field('alias', alias($._nullable_alias_body, $.nullable_type)),
         ),
 
         _nullable_alias_body: $ => seq(
@@ -683,7 +681,6 @@ export default grammar({
         _class_body_member: $ => choice(
             $.inherit_decl,
             $.member_defn,
-            $.member_signature,
             $.abstract_member_defn,
             $.interface_impl,
             $.secondary_constructor,
@@ -812,7 +809,6 @@ export default grammar({
         //       = …
         _return_type_annot: $ => seq(
             ":",
-            repeat($.attribute),   // `: [<CA1("A1")>] int`
             field('return_type', choice($.type_expression, $.nullable_type, $.nullable_tuple_type)),
             optional(seq(
                 "when",
@@ -971,7 +967,6 @@ export default grammar({
             optional($.type_parameter_list),
             ":",
             choice($.type_expression, $.nullable_type),
-            optional($._when_constraints),
             optional($.auto_property_accessors),
         ))),
 
@@ -981,8 +976,6 @@ export default grammar({
         // A return-type annotation is allowed after the parameters
         // (`with get (count : int) : string = …`).
         property_accessor: $ => seq(
-            repeat($.attribute),
-            optional($.access_modifier),
             optional("inline"),
             choice("get", "set"),
             field('parameters', repeat($.parameter)),
@@ -1041,7 +1034,6 @@ export default grammar({
             optional(seq("as", field('alias', $.identifier))),
             // `inherit Base(x) with`⏎`    member …` — indented members only; the
             // inline form (`inherit B() with member …`) costs ~600 parser states.
-            optional(seq("with", $._layout_open, repeat($._class_body_member), $._layout_end)),
         )),
 
         // interface IFoo with                interface IBar with
@@ -1097,16 +1089,9 @@ export default grammar({
             optional("mutable"),
             optional($.access_modifier),
             field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),
-            optional($.type_parameter_list),
-            choice(
-                seq(
-                    ":",
-                    choice($.type_expression, $.nullable_type),
-                    optional($._when_constraints),
-                    optional(seq("=", $._val_init)),
-                ),
-                seq("=", $._val_init),
-            ),
+            ":",
+            choice($.type_expression, $.nullable_type),
+            optional(seq("=", $._literal)),
         ),
 
         // Layout-bounded initialiser (same opener as `member val`, closes at the
@@ -1519,12 +1504,12 @@ export default grammar({
         // The closers carry explicit LEXICAL precedence: `.` is an operator char,
         // so `@>.` / `@@>.` in `<@ e @>.Type` would otherwise out-lex the closer
         // as one longer `symbolic_op` and swallow the member access.
-        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", choice($._expression, $.type_ascription_expression),
+        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression,
             choice(alias(token(prec(1, "@>")), "@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
         // <@@ expr @@>  — untyped quotation (Expr)
-        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", choice($._expression, $.type_ascription_expression),
+        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
             choice(alias(token(prec(1, "@@>")), "@@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
@@ -1573,10 +1558,8 @@ export default grammar({
         type_application_expression: $ => seq(
             $.long_identifier,
             "<",
-            optional(seq(   // `MyClass< >.M<int>(…)`
-                choice($.type_expression, $.nullable_type),
-                repeat(seq(",", choice($.type_expression, $.nullable_type))),
-            )),
+            choice($.type_expression, $.nullable_type),
+            repeat(seq(",", choice($.type_expression, $.nullable_type))),
             ">",
         ),
 
@@ -2559,12 +2542,7 @@ export default grammar({
             )),
             optional(seq(
                 "with",
-                choice(
-                    repeat($._class_body_member),
-                    // Pre-F#-2 member syntax: `{ new R with a = 1 and b = 2 }`,
-                    // `{ new X with M() = failwith "" }`.
-                    seq($.legacy_object_member, repeat(seq("and", $.legacy_object_member))),
-                ),
+                repeat($._class_body_member),
             )),
             "}",
         ),
@@ -2750,7 +2728,7 @@ export default grammar({
                         // biases the parser to end the `in` expression and take
                         // this arm rather than read `->` as a `symbolic_op`
                         // extending the enumerable into a bogus binary_expression.
-                        prec.dynamic(1, seq("->", field('body', choice($._expression, $.type_ascription_expression)))),
+                        prec.dynamic(1, seq("->", field('body', $._expression))),
                     ),
                 ),
                 seq(
@@ -2921,7 +2899,7 @@ export default grammar({
         _use_body: $ => seq($._layout_open, field('body', $._ascribable_body), $._layout_end),
 
         // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
-        _use_name: $ => choice($.identifier, $.wildcard_pattern, $.typed_pattern, $.tuple_pattern, $.unit),
+        _use_name: $ => $.identifier,
 
         // match! expr with | pat -> expr …
         ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
@@ -3460,7 +3438,6 @@ export default grammar({
             $._generic_type_arg,
             repeat(seq(",", $._generic_type_arg)),
             ">",
-            repeat(seq(".", $.identifier)),   // `ImmutableArray<'T>.Builder` - nested type
         )),
 
         _generic_type_arg: $ => choice(
@@ -3523,8 +3500,7 @@ export default grammar({
 
         // (int -> string)  /  (string | null)
         // Also `(string | null * bool)` and `('R :> IDisposable)` inside the parens.
-        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type, $.nullable_tuple_type,
-                                                  alias($.subtype_type_arg, $.type_constraint)), ")"),
+        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type), ")"),
 
         // `string | null` — F# 9 nullable reference type. Deliberately NOT a
         // member of the general `type_expression` choice: its `|` would clash with
@@ -3534,7 +3510,7 @@ export default grammar({
         // type head (incl. a parenthesised type, so `(string list) | null` works).
         nullable_type: $ => seq(
             choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
-                $.parenthesized_type, $.type_parameter, $.flexible_type),
+                $.parenthesized_type, $.type_parameter),
             "|",
             "null",
         ),
@@ -3574,16 +3550,13 @@ export default grammar({
         // <'T, 'U when 'T :> IFoo and 'U : comparison>
         // A type parameter may carry an attribute (`<[<Measure>] 'u>`,
         // `<[<EqualityConditionalOn>] 'T>`).
-        type_parameter_list: $ => choice(
-            seq(
-                "<",
-                repeat($.attribute), $._typar_decl,
-                repeat(seq(",", repeat($.attribute), $._typar_decl)),
-                optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
-                optional($._when_constraints),
-                ">",
-            ),
-            seq("<", ">"),   // `let f1< > (x: int) = x`
+        type_parameter_list: $ => seq(
+            "<",
+            repeat($.attribute), $.type_parameter,
+            repeat(seq(",", repeat($.attribute), $.type_parameter)),
+            optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
+            optional($._when_constraints),
+            ">",
         ),
 
         // `'T & #IParsable<'T>` - an inline intersection constraint on the typar.

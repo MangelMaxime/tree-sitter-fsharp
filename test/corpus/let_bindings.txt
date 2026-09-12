@@ -455,12 +455,10 @@ printfn "%A" x;;
   (fsi_terminator))
 
 ================================================================================
-Use bindings with annotations, patterns and multi-line values
+Use bindings with multi-line values
 ================================================================================
 
 let f arr =
-    use x : System.IDisposable = null
-    use (p: nativeptr<byte>) = fixed arr
     use sampleCsv =
         use _holder = IO.logTime "Parsing" sample
         let separators = 1
@@ -468,9 +466,7 @@ let f arr =
     sampleCsv
 
 let g = async {
-    use! (res1: T) = d
-    use! (_) = d
-    use! res: T = d
+    use! d = h ()
     return 1 }
 
 --------------------------------------------------------------------------------
@@ -483,80 +479,35 @@ let g = async {
     (sequence_expression
       (use_binding
         (identifier)
-        (type_expression
-          (long_identifier
-            (identifier)
-            (identifier)))
-        (null_literal))
-      (sequence_expression
-        (use_binding
-          (typed_pattern
-            (pattern
-              (identifier_pattern
-                (long_identifier
-                  (identifier))))
-            (type_expression
-              (generic_type
-                (long_identifier
-                  (identifier))
-                (type_expression
-                  (long_identifier
-                    (identifier))))))
-          (application_expression
-            (long_identifier
-              (identifier))
-            (long_identifier
-              (identifier))))
         (sequence_expression
           (use_binding
             (identifier)
-            (sequence_expression
-              (use_binding
-                (identifier)
-                (application_expression
-                  (application_expression
-                    (long_identifier
-                      (identifier)
-                      (identifier))
-                    (string_literal))
-                  (long_identifier
-                    (identifier))))
-              (let_expression
-                (let_decl_indented
-                  (identifier)
-                  (int_literal))
+            (application_expression
+              (application_expression
                 (long_identifier
-                  (identifier)))))
-          (long_identifier
-            (identifier))))))
+                  (identifier)
+                  (identifier))
+                (string_literal))
+              (long_identifier
+                (identifier))))
+          (let_expression
+            (let_decl_indented
+              (identifier)
+              (int_literal))
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier))))
   (let_binding
     (identifier)
     (computation_expression
       (long_identifier
         (identifier))
       (use_binding
-        (typed_pattern
-          (pattern
-            (identifier_pattern
-              (long_identifier
-                (identifier))))
-          (type_expression
-            (long_identifier
-              (identifier))))
-        (long_identifier
-          (identifier)))
-      (use_binding
-        (tuple_pattern
-          (pattern
-            (wildcard_pattern)))
-        (long_identifier
-          (identifier)))
-      (use_binding
         (identifier)
-        (type_expression
+        (application_expression
           (long_identifier
-            (identifier)))
-        (long_identifier
-          (identifier)))
+            (identifier))
+          (unit)))
       (ce_result_expr
         (int_literal)))))

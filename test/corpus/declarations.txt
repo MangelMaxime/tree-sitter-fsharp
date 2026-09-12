@@ -242,7 +242,6 @@ Signature-file val declarations at module level
 
 val meh: int -> int
 val inline (>>>&): int -> int -> int
-val x<'T>: 'T when 'T: comparison
 [<Literal>]
 val K: int = 3
 /// doc
@@ -278,14 +277,6 @@ val f: a: int -> b: string -> unit
               (long_identifier
                 (identifier))))))))
   (val_field
-    (identifier)
-    (type_parameter_list
-      (type_parameter))
-    (type_expression
-      (type_parameter))
-    (type_constraint
-      (type_parameter)))
-  (val_field
     (attribute
       (attribute_target
         (long_identifier
@@ -316,91 +307,6 @@ val f: a: int -> b: string -> unit
               (type_expression
                 (long_identifier
                   (identifier))))))))))
-
-================================================================================
-Bodiless member signatures
-================================================================================
-
-type T =
-    member X: int
-    static member Y: int -> int
-    override Z: string
-    default W: unit -> unit
-    member P: int with get, set
-    new: unit -> T
-
-type U() =
-    static member X : int = 1
-    member this.Y : int = 2
-
---------------------------------------------------------------------------------
-
-(source_file
-  (type_decl
-    (identifier)
-    (member_signature
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier))))
-    (member_signature
-      (identifier)
-      (type_expression
-        (function_type
-          (type_expression
-            (long_identifier
-              (identifier)))
-          (type_expression
-            (long_identifier
-              (identifier))))))
-    (member_signature
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier))))
-    (member_signature
-      (identifier)
-      (type_expression
-        (function_type
-          (type_expression
-            (long_identifier
-              (identifier)))
-          (type_expression
-            (long_identifier
-              (identifier))))))
-    (member_signature
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier)))
-      (auto_property_accessors))
-    (secondary_constructor
-      (type_expression
-        (function_type
-          (type_expression
-            (long_identifier
-              (identifier)))
-          (type_expression
-            (long_identifier
-              (identifier)))))))
-  (type_decl
-    (identifier)
-    (primary_constructor
-      (unit))
-    (member_defn
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier)))
-      (int_literal))
-    (member_defn
-      (member_self_ident
-        (identifier))
-      (identifier)
-      (type_expression
-        (long_identifier
-          (identifier)))
-      (int_literal))))
 
 ================================================================================
 Exception abbreviation
