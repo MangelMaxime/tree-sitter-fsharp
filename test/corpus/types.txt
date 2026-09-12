@@ -610,3 +610,222 @@ let grid = o :?> int[,]
           (type_expression
             (long_identifier
               (identifier))))))))
+
+================================================================================
+Nullable types in abbreviation, tuple, flexible, cast and IL positions
+================================================================================
+
+type A<'T> = seq<'T> | null
+type B = System.Uri | null
+let args: (string | null * bool) list = []
+type T() =
+    member _.R (i: #System.IDisposable | null) = 1
+let x = y :?> ICriticalNotifyCompletion | null
+let inline f (v: 'T) = (# "" v : 'T | null #)
+type U = A | B
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (type_parameter_list
+      (type_parameter))
+    (nullable_type
+      (generic_type
+        (long_identifier
+          (identifier))
+        (type_expression
+          (type_parameter)))))
+  (type_decl
+    (identifier)
+    (nullable_type
+      (long_identifier
+        (identifier)
+        (identifier))))
+  (let_binding
+    (identifier)
+    (type_expression
+      (postfix_type
+        (type_expression
+          (parenthesized_type
+            (nullable_tuple_type
+              (nullable_type
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))
+        (long_identifier
+          (identifier))))
+    (list_expression))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (identifier)
+        (nullable_type
+          (flexible_type
+            (long_identifier
+              (identifier)
+              (identifier)))))
+      (int_literal)))
+  (let_binding
+    (identifier)
+    (typecast_expression
+      (long_identifier
+        (identifier))
+      (nullable_type
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (type_parameter)))
+    (inline_il_expression
+      (string_literal)
+      (long_identifier
+        (identifier))
+      (nullable_type
+        (type_parameter))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier)))))
+
+================================================================================
+Nested type after generic arguments, flexible parenthesised type, paren subtype
+================================================================================
+
+let create n : ImmutableArray<'T>.Builder = x
+let f (r: #(FormatResult seq)) = r
+type T() =
+    member inline _.Using(resource: ('R :> System.IDisposable), c) = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (type_expression
+          (type_parameter))
+        (identifier)))
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (flexible_type
+          (parenthesized_type
+            (type_expression
+              (postfix_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (long_identifier
+                  (identifier))))))))
+    (long_identifier
+      (identifier)))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (parenthesized_type
+                (type_constraint
+                  (type_parameter)
+                  (type_expression
+                    (long_identifier
+                      (identifier)
+                      (identifier)))))))
+          (tuple_param
+            (identifier))))
+      (int_literal))))
+
+================================================================================
+Attributes on a return type
+================================================================================
+
+let f(x) : [<CA1("A1")>] int = x + 1
+type T() =
+    static member Parenthesized(name: string) :
+        [<System.Obsolete("first")>]
+        (string * string) = name, name
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)))
+    (type_expression
+      (long_identifier
+        (identifier)))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal)))
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (identifier)
+      (parameter
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier)
+            (identifier))
+          (string_literal)))
+      (type_expression
+        (parenthesized_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier)))))))
+      (tuple_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))

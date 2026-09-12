@@ -474,10 +474,23 @@ export default grammar({
             $.class_type_defn,
             $.interface_type_defn,
             field('alias', $.measure_expression),
+            // `[<Measure>] type hertz = / second` - a reciprocal measure. Only
+            // here: inside measure_expression it would compete with juxtaposition.
+            field('alias', alias(seq("/", $.measure_expression), $.measure_expression)),
             // `type ``[,]``<'T> = (# "!0[0 ...,0 ...]" #)` — IL array type
             // definitions (FSharp.Core prim-types-prelude only).
             field('alias', $.inline_il_expression),
             prec.dynamic(1, field('alias', $.type_expression)),
+            // `type A<'T> = seq<'T> | null` (F# 9 nullable abbreviation). `| null`
+            // is ONE token here so the lexer, not the parser, tells it from a
+            // bare union `type U = A | B` (LR(1) cannot see past the `|`).
+            field('alias', alias($._nullable_alias_body, $.nullable_type)),
+        ),
+
+        _nullable_alias_body: $ => seq(
+            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
+                $.parenthesized_type, $.type_parameter, $.flexible_type),
+            alias(token(seq("|", /[ \t]*/, "null")), "null"),
         ),
 
         // `=` is optional: `[<Measure>] type kg` and empty class/interface bodies have none.
@@ -799,6 +812,7 @@ export default grammar({
         //       = …
         _return_type_annot: $ => seq(
             ":",
+            repeat($.attribute),   // `: [<CA1("A1")>] int`
             field('return_type', choice($.type_expression, $.nullable_type, $.nullable_tuple_type)),
             optional(seq(
                 "when",
@@ -1559,8 +1573,10 @@ export default grammar({
         type_application_expression: $ => seq(
             $.long_identifier,
             "<",
-            choice($.type_expression, $.nullable_type),
-            repeat(seq(",", choice($.type_expression, $.nullable_type))),
+            optional(seq(   // `MyClass< >.M<int>(…)`
+                choice($.type_expression, $.nullable_type),
+                repeat(seq(",", choice($.type_expression, $.nullable_type))),
+            )),
             ">",
         ),
 
@@ -1575,7 +1591,7 @@ export default grammar({
             // `type ('T)` IL type arguments (`(# "unbox.any !0" type ('T) x : 'T #)`,
             // FSharp.Core prim-types style).
             repeat(choice($._simple_expression, seq("type", "(", $.type_expression, ")"))),
-            optional(seq(":", $.type_expression)),
+            optional(seq(":", choice($.type_expression, $.nullable_type))),
             token(prec(2, "#)")),
         ),
 
@@ -2364,7 +2380,7 @@ export default grammar({
         // (`o :?> byte[]` no-space works via array_type's prec'd immediate-`[`
         // — the token-level tie-break; see array_type.)
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
-            seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
+            seq($._expression, choice(":>", ":?>", ":?"), choice($.type_expression, $.nullable_type)),
         ),
 
         // `body : Type` — bare type ascription on a BINDING/MEMBER BODY tail. Pervasive
@@ -2449,8 +2465,8 @@ export default grammar({
                 // `((^A) : …)` may have no `or`; a parenthesised IDENTIFIER
                 // must (`((float) x)` is an ordinary application).
                 choice(
-                    seq($.type_parameter, repeat(seq("or", choice($.type_parameter, $.long_identifier)))),
-                    seq($.long_identifier, repeat1(seq("or", choice($.type_parameter, $.long_identifier)))),
+                    seq($.type_parameter, repeat(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type)))),
+                    seq($.long_identifier, repeat1(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type)))),
                 ),
                 ")",
                 ":",
@@ -3385,7 +3401,7 @@ export default grammar({
         // type_expression, so `#` doesn't swallow a trailing `->`/`*`.
         flexible_type: $ => prec(TYPE_PREC.APP, seq(
             "#",
-            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type),
+            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type, $.parenthesized_type),
         )),
 
         // `#A & #B [& #C …]` — flexible-type intersection: a value that is a subtype
@@ -3444,6 +3460,7 @@ export default grammar({
             $._generic_type_arg,
             repeat(seq(",", $._generic_type_arg)),
             ">",
+            repeat(seq(".", $.identifier)),   // `ImmutableArray<'T>.Builder` - nested type
         )),
 
         _generic_type_arg: $ => choice(
@@ -3505,7 +3522,9 @@ export default grammar({
         )),
 
         // (int -> string)  /  (string | null)
-        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type), ")"),
+        // Also `(string | null * bool)` and `('R :> IDisposable)` inside the parens.
+        parenthesized_type: $ => seq("(", choice($.type_expression, $.nullable_type, $.nullable_tuple_type,
+                                                  alias($.subtype_type_arg, $.type_constraint)), ")"),
 
         // `string | null` — F# 9 nullable reference type. Deliberately NOT a
         // member of the general `type_expression` choice: its `|` would clash with
@@ -3515,7 +3534,7 @@ export default grammar({
         // type head (incl. a parenthesised type, so `(string list) | null` works).
         nullable_type: $ => seq(
             choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
-                $.parenthesized_type, $.type_parameter),
+                $.parenthesized_type, $.type_parameter, $.flexible_type),
             "|",
             "null",
         ),
@@ -3555,14 +3574,20 @@ export default grammar({
         // <'T, 'U when 'T :> IFoo and 'U : comparison>
         // A type parameter may carry an attribute (`<[<Measure>] 'u>`,
         // `<[<EqualityConditionalOn>] 'T>`).
-        type_parameter_list: $ => seq(
-            "<",
-            repeat($.attribute), $.type_parameter,
-            repeat(seq(",", repeat($.attribute), $.type_parameter)),
-            optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
-            optional($._when_constraints),
-            ">",
+        type_parameter_list: $ => choice(
+            seq(
+                "<",
+                repeat($.attribute), $._typar_decl,
+                repeat(seq(",", repeat($.attribute), $._typar_decl)),
+                optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
+                optional($._when_constraints),
+                ">",
+            ),
+            seq("<", ">"),   // `let f1< > (x: int) = x`
         ),
+
+        // `'T & #IParsable<'T>` - an inline intersection constraint on the typar.
+        _typar_decl: $ => seq($.type_parameter, repeat(seq("&", $.flexible_type))),
 
         // 'T :> IFoo   'T : null   'T : comparison   …
         type_constraint: $ => choice(
@@ -3603,8 +3628,8 @@ export default grammar({
             // type identifier (`CFunctor`), joined by `or`.
             seq(
                 "(",
-                choice($.type_parameter, $.long_identifier),
-                repeat1(seq("or", choice($.type_parameter, $.long_identifier))),
+                choice($.type_parameter, $.long_identifier, $.generic_type),
+                repeat1(seq("or", choice($.type_parameter, $.long_identifier, $.generic_type))),
                 ")",
                 ":",
                 "(",

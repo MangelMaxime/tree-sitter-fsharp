@@ -176,3 +176,23 @@ type m
         (identifier))))
   (type_decl
     name: (identifier)))
+
+================================================================================
+Reciprocal measure abbreviation
+================================================================================
+
+[<Measure>] type hertz = / second
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (measure_expression)
+    (measure_expression
+      (long_identifier
+        (identifier)))))
