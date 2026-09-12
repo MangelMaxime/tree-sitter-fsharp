@@ -1615,6 +1615,20 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead != ';') {          // leave `;;` to the extras
                     lexer->mark_end(lexer);             // token = just the `;`
                     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    // Same-line closer right after the `;`: the inline body ends
+                    // here (`f (fun () -> g (); )`, `[a; if c then x else y; ]`).
+                    // valid[LAYOUT_END] already excludes `(a; )` inside a body
+                    // whose own paren is still open.
+                    {
+                        int32_t a = lexer->lookahead;
+                        bool closer = (a == ')' || a == ']' || a == '}');
+                        if (!closer && a == '|') {
+                            lexer->advance(lexer, true);
+                            closer = (lexer->lookahead == ']' || lexer->lookahead == '}');
+                        }
+                        if (closer) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                        if (a == '|') return false;     // lookahead consumed; not a closer
+                    }
                     if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
                         uint32_t ncol; int32_t nfirst = 0;
                         if (!next_line_indent(lexer, &ncol, &nfirst) || ncol < top->col) {

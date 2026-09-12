@@ -3393,3 +3393,50 @@ let f a b =
         (long_identifier
           (identifier))
         (int_literal)))))
+
+================================================================================
+Trailing semicolon before a closing delimiter ends an inline body
+================================================================================
+
+let a = f (fun () -> g (); )
+let b = [ 1; if c then x else y; ]
+let d = [| 1; if c then x else y; |]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (parenthesized_expression
+        (lambda_expression
+          (parameter
+            (unit))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))))))
+  (let_binding
+    (identifier)
+    (list_expression
+      (int_literal)
+      (if_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (array_expression
+      (int_literal)
+      (if_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
