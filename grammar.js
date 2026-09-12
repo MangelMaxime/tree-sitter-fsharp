@@ -1467,15 +1467,18 @@ export default grammar({
         //
         // Accepted tradeoff: because the lexer can't see whitespace, a spaced
         // `a < b > c` is read as generic application `a<b> c`, not `(a < b) > c`.
+        // prec.dynamic(1): when both readings survive to the end of a layout
+        // body (`if a <> f<_> then`⏎ statements), the comparison reading used
+        // to win and swallow the body (ilnativeres.fs, 58 keyword sites).
         // (Real F# disambiguates these by spacing; we can't, and generic
         // application is the more useful reading for a highlighter.)
-        type_application_expression: $ => seq(
+        type_application_expression: $ => prec.dynamic(1, seq(
             $.long_identifier,
             "<",
             $.type_expression,
             repeat(seq(",", $.type_expression)),
             ">",
-        ),
+        )),
 
         parenthesized_expression: $ => seq("(", $._expression, ")"),
 
@@ -1591,10 +1594,9 @@ export default grammar({
             $.computation_expression,
             // `f <@ expr @>` — a code quotation as an application ARGUMENT. Without
             // this, `<@` after a value lexes as the `<@` symbolic_op (binary), so
-            // `EvaluateQuotation <@ 42 @>` mis-parses. (Only the typed `<@ @>` form
-            // is added here; `untyped_quotation`'s `<@@` ripples GLR states and
-            // regresses Set.fs, and isn't used as an application arg in practice.)
+            // `EvaluateQuotation <@ 42 @>` mis-parses.
             $.typed_quotation,
+            $.untyped_quotation,
         ),
 
         // All infix operations in one rule (one rule keeps post-_expression state bloat down).

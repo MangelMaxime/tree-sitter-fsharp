@@ -436,6 +436,10 @@
         "named": true
       },
       {
+        "type": "untyped_quotation",
+        "named": true
+      },
+      {
         "type": "verbatim_string",
         "named": true
       }

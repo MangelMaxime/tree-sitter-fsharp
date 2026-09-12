@@ -1355,19 +1355,18 @@ let c = Map.empty<string, int>.Count
         (identifier))))
   (let_binding
     (identifier)
-    (tuple_expression
-      (binary_expression
+    (dot_expression
+      (type_application_expression
         (long_identifier
           (identifier)
           (identifier))
-        (long_identifier
-          (identifier)))
-      (binary_expression
-        (long_identifier
-          (identifier))
-        (symbolic_op)
-        (long_identifier
-          (identifier))))))
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (identifier))))
 
 ================================================================================
 Generic type static member access inside a type augmentation
@@ -3838,3 +3837,33 @@ let u = x ? ("Contains") 10
         (parenthesized_expression
           (string_literal)))
       (int_literal))))
+
+================================================================================
+Untyped quotation as an application argument
+================================================================================
+
+let f = emit V <@@ Single.NaN @@>
+let g = emit <@@ 1 @@>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (application_expression
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (untyped_quotation
+        (long_identifier
+          (identifier)
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (application_expression
+      (long_identifier
+        (identifier))
+      (untyped_quotation
+        (int_literal)))))
