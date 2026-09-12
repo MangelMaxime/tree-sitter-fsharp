@@ -102,16 +102,17 @@ longest match, so the body-present form wins even with high precedence on the bo
 Irregular, and not fixable with tree-sitter's LR generator. Every highlight rule and
 textobject handles both shapes.
 
-## Known gap: members below a same-line type body
+## Resolved: members below a same-line type body
 
 ```fsharp
 type DU = | A
           member this.F = 1
 ```
 
-The members parse as an application chain headed by `member` - error-free and wrong. Adding
-`_type_open` to `_type_decl_body_or_class` is **not** the fix: it corrupts the layout stack
-(644 failing files, 555 regressions). This blocks reserving `member`.
+Handled by the `_members_open` scanner token: emitted only when the line after a same-line
+body indents past the enclosing context and starts with a member keyword or `[<`. An
+ungated `_type_open` in that slot corrupted the layout stack (644 failing files); the
+keyword gate is what makes it safe.
 
 ## Known gap: keywords mis-coloured through accumulated offside state
 

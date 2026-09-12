@@ -1569,3 +1569,95 @@ type E =
       (enum_case
         (identifier)
         (int_literal)))))
+
+================================================================================
+Members indented below a same-line type body
+================================================================================
+
+type Code = | A of int | B of int
+    static member op_Addition(a, b) = GroupBlock 1
+    member x.M = 2
+
+type DU = | A
+          member this.F = 1
+
+type R = { X: int }
+    [<CompiledName("Y")>]
+    member r.Y = 1
+
+type Alias = int
+let unaffected = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (int_literal)))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (int_literal)))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (int_literal)))
+  (type_decl
+    (identifier)
+    (record_type_defn
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))
+          (string_literal)))
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (int_literal)))
+  (type_decl
+    (identifier)
+    (type_expression
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (identifier)
+    (int_literal)))

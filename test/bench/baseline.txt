@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 93 with errors; 535 error nodes
+# 3914 files swept; 92 with errors; 532 error nodes
 92	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
@@ -57,7 +57,6 @@
 2	Fable/tests/Python/TestApplicative.fs
 1	Fable/tests/Python/TestMailboxProcessor.fs
 2	Fable/tests/Python/TestNullness.fs
-2	Fable/tests/React/SpreadSheet.fs
 1	Fable/tests/Rust/tests/common/Aether.fs
 2	Fable/tests/Rust/tests/src/ApplicativeTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
@@ -91,5 +90,5 @@
 2	fsharp/src/Compiler/Utilities/ImmutableArray.fs
 1	fsharp/src/Compiler/Utilities/lib.fs
 1	fsharp/src/FSharp.Core/async.fs
-11	fsharp/src/FSharp.Core/prim-types.fs
+10	fsharp/src/FSharp.Core/prim-types.fs
 16	fsharp/src/FSharp.Core/quotations.fs

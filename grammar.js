@@ -236,6 +236,7 @@ export default grammar({
         $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = …` — only when `ident ( … ) ,` follows (fn defs never have `,` after params)
         $._preproc_break,     // zero-width: a `#if`-family directive line separates this declaration from a line that starts a new one
         $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION — consumed as trivia so the sequence can end (see scanner)
+        $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`⏎`    member …`)
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -633,7 +634,12 @@ export default grammar({
         // `_type_decl_body` (for record/union/enum/alias whose first significant
         // token sits at the body column) or a sequence of class-body members.
         _type_decl_body_or_class: $ => choice(
-            $._type_decl_body,
+            // A same-line body may be followed by INDENTED members
+            // (`type DU = | A`⏎`    member this.F = 1`). `_members_open` is a
+            // scanner gate: emitted only when the next line indents past the
+            // enclosing context AND starts with a member keyword (or `[<`) -
+            // an ungated `_type_open` here corrupted the layout stack.
+            seq($._type_decl_body, optional(seq($._members_open, repeat1($._class_body_member), $._layout_end))),
             seq(
                 $._type_open,
                 choice(
@@ -1704,6 +1710,10 @@ export default grammar({
             // ambiguous with an optional named arg `f ?x`; the no-space dynamic
             // form `o?member` is `dynamic_expression`.)
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', alias("$", $.symbolic_op)), field('right', $._expression))),
+            // Spaced dynamic lookup `a ? b` / `"s" ? Contains (10)`. prec.dynamic(-1):
+            // when the application + optional-named-arg reading `f ?x` also
+            // survives, that one wins.
+            prec.dynamic(-1, prec.left(PREC.DOT, seq(field('left', $._expression), field('operator', alias("?", $.symbolic_op)), field('right', $._expression)))),
             // Single-char `^` infix (Hopac's high-precedence apply, `f ^ x`).
             // RIGHT-assoc per F#'s `^`-op rule. Spaced use only — `^ident` is a
             // typar token (longer match) and `^^^`/`^=` etc. are symbolic_op.

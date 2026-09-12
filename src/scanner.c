@@ -57,6 +57,7 @@ typedef enum {
     CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` — only when `ident ( … ) ,` follows
     PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature — ends the member before the next branch's declaration line
     DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line — consumed as trivia (extras) so the sequence can end
+    MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`⏎`    member …`) — pushes S_TYPEBODY
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -2048,6 +2049,26 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_EXPR:
         case S_DECL:
         case S_TRY:
+            // MEMBERS_OPEN: after a SAME-LINE type body, a line indented past the
+            // enclosing context that starts with a member keyword (or `[<`)
+            // opens an S_TYPEBODY at its column, so the members become children
+            // of the type instead of an application chain headed by `member`.
+            // Decided HERE (boundary path) so a miss keeps the ordinary
+            // close/separator handling below (`type A = B`⏎`and C = D`).
+            if (valid[MEMBERS_OPEN] && col > top->col) {
+                bool ok = false;
+                if (first == '[') {
+                    lexer->advance(lexer, true);
+                    ok = (lexer->lookahead == '<');
+                } else if (first >= 'a' && first <= 'z') {
+                    char w[12]; read_word(lexer, w, sizeof w);
+                    ok = !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "override") ||
+                         !strcmp(w, "default") || !strcmp(w, "abstract") || !strcmp(w, "interface") ||
+                         !strcmp(w, "val") || !strcmp(w, "new") || !strcmp(w, "inherit");
+                }
+                if (ok) { push(s, S_TYPEBODY, col); lexer->result_symbol = MEMBERS_OPEN; return true; }
+                return false;   // lookahead consumed: a continuation line after an inline type body
+            }
             // DANGLING DOC: skipped `///` lines sit AT/INSIDE this body, but
             // the line after them dedents — the docs belong to THIS body (a
             // floating doc statement), not to the dedented declaration. Hold
