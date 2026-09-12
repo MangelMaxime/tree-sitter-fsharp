@@ -2062,6 +2062,10 @@ export default grammar({
             // (first tuple element type-annotated); `tuple_pattern` already handles
             // the untyped-first / later-typed cases.
             $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, alias($.ctor_first_tuple_pattern, $.unparenthesized_tuple_pattern), $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
+            // `let a :: b :: c = …`, `let _ :: x | x = …`, `let c1 | c2 = …`, `let a1 & a2 = …`.
+            alias(prec.right(2, seq($._tuple_elem_pattern, "::", $.pattern)), $.cons_pattern),
+            alias(prec.left(1, seq($._tuple_elem_pattern, "|", $.pattern)), $.or_pattern),
+            alias(prec.left(1, seq($._tuple_elem_pattern, "&", $.pattern)), $.and_pattern),
             // `let () = init ()` / `let! () = start ()` — unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
             // (A general literal pattern here would let `let 0leaderingzero = …`
@@ -3047,7 +3051,7 @@ export default grammar({
         and_pattern: $ => prec.left(1, seq($.pattern, "&", $.pattern)),
 
         // (pat : type)  — type annotation on a pattern, always parenthesised.
-        typed_pattern: $ => seq("(", $.pattern, ":", $.type_expression, ")"),
+        typed_pattern: $ => seq("(", $.pattern, ":", $.type_expression, repeat(seq(choice("&", "|"), $.pattern)), ")"),
 
         // { Field = pat; Field2 = pat2 }  — destructure a record. prec.dynamic prefers
         // starting a new field over extending the previous value via identifier_pattern.
@@ -3082,7 +3086,7 @@ export default grammar({
                 $.type_parameter,
                 $.long_identifier,
             ),
-            optional(seq("as", $.identifier)),
+            optional(seq("as", choice($.identifier, alias(prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern))), $.identifier_pattern)))),
         )),
 
         // x :: rest  — right-assoc; prec 2 > or_pattern (1) > as_pattern (0).
@@ -3182,6 +3186,7 @@ export default grammar({
         // constructor-application form which would otherwise consume `add a b` in
         // `let add a b = ...` before the parser sees there's no `,`.
         _tuple_elem_pattern: $ => choice(
+            seq("(", $.operator_name, repeat1($._simple_expression), ")"),   // `| NLambdas ((-) n 1) (vs, b) ->`
             $.long_identifier,
             $.wildcard_pattern,
             $.literal_pattern,
@@ -3247,7 +3252,7 @@ export default grammar({
         as_pattern: $ => prec.right(seq(
             $.pattern,
             "as",
-            $.identifier,
+            choice($.identifier, $.tuple_pattern),
         )),
 
         // A `;`-separated element may itself be an unparenthesized tuple:

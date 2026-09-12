@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 94 with errors; 536 error nodes
+# 3914 files swept; 93 with errors; 535 error nodes
 92	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
@@ -12,9 +12,9 @@
 2	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlGenerator.fs
 3	FSharp.Data/src/FSharp.Data.DesignTime/Xml/XmlProvider.fs
 2	FSharp.Data/tests/FSharp.Data.Tests/CsvProvider.fs
-1	FSharpPlus/docsrc/content/abstraction-applicative.fsx
-18	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
-69	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
+3	FSharpPlus/docsrc/content/abstraction-applicative.fsx
+20	FSharpPlus/docsrc/content/abstraction-zipapplicative.fsx
+70	FSharpPlus/src/FSharpPlus.TypeLevel/TypeNat.fs
 3	FSharpPlus/src/FSharpPlus/Control/Applicative.fs
 5	FSharpPlus/src/FSharpPlus/Control/Numeric.fs
 3	FSharpPlus/src/FSharpPlus/Control/ZipApplicative.fs
@@ -26,7 +26,6 @@
 2	Fable/src/Fable.Compiler/ProjectCracker.fs
 4	Fable/src/Fable.Core/Fable.Core.Extensions.fs
 3	Fable/src/Fable.Core/Fable.Core.Types.fs
-2	Fable/src/Fable.Transforms/Python/Replacements.fs
 2	Fable/src/Fable.Transforms/Rust/AST/Rust.AST.Parser.fs
 3	Fable/src/fable-library-ts/BigInt/n.fs
 5	Fable/src/fcs-fable/codegen/lex.fs
@@ -37,7 +36,7 @@
 12	Fable/src/fcs-fable/src/Compiler/Facilities/prim-parsing.fs
 3	Fable/src/fcs-fable/src/Compiler/Optimize/Optimizer.fs
 2	Fable/src/fcs-fable/src/Compiler/Service/ServiceParsedInputOps.fs
-3	Fable/src/fcs-fable/src/Compiler/Service/SynExpr.fs
+2	Fable/src/fcs-fable/src/Compiler/Service/SynExpr.fs
 3	Fable/src/fcs-fable/src/Compiler/Symbols/FSharpDiagnostic.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/Cancellable.fs
 2	Fable/src/fcs-fable/src/Compiler/Utilities/ImmutableArray.fs
@@ -87,10 +86,10 @@
 3	fsharp/src/Compiler/AbstractIL/ilread.fs
 6	fsharp/src/Compiler/Driver/GraphChecking/FileContentMapping.fs
 2	fsharp/src/Compiler/Service/ServiceParsedInputOps.fs
-3	fsharp/src/Compiler/Service/SynExpr.fs
+2	fsharp/src/Compiler/Service/SynExpr.fs
 2	fsharp/src/Compiler/TypedTree/TypedTreeOps.Attributes.fs
 2	fsharp/src/Compiler/Utilities/ImmutableArray.fs
 1	fsharp/src/Compiler/Utilities/lib.fs
 1	fsharp/src/FSharp.Core/async.fs
 11	fsharp/src/FSharp.Core/prim-types.fs
-18	fsharp/src/FSharp.Core/quotations.fs
+16	fsharp/src/FSharp.Core/quotations.fs

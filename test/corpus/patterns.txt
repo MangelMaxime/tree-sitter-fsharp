@@ -1601,3 +1601,199 @@ let g { Setup = _: 'Model, setup } = setup
                 (identifier)))))))
     (long_identifier
       (identifier))))
+
+================================================================================
+Cons, or and and patterns as let names; typed patterns with or/and tails
+================================================================================
+
+let _ :: x | x = [1 .. 2]
+let a :: b :: c = [1; 2; 3]
+let c1 | c1 = 3
+let a1 & a2 = 3
+let (_ : exn & Failure _ | _) = exn ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (cons_pattern
+      (wildcard_pattern))
+    (cons_pattern)
+    (cons_pattern
+      (or_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (list_expression
+      (binary_expression
+        (int_literal)
+        (int_literal))))
+  (let_binding
+    (cons_pattern
+      (long_identifier
+        (identifier)))
+    (cons_pattern)
+    (cons_pattern
+      (cons_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (list_expression
+      (int_literal)
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    (or_pattern
+      (long_identifier
+        (identifier)))
+    (or_pattern)
+    (or_pattern
+      (identifier_pattern
+        (long_identifier
+          (identifier))))
+    (int_literal))
+  (let_binding
+    (and_pattern
+      (long_identifier
+        (identifier)))
+    (and_pattern)
+    (and_pattern
+      (identifier_pattern
+        (long_identifier
+          (identifier))))
+    (int_literal))
+  (let_binding
+    (typed_pattern
+      (pattern
+        (wildcard_pattern))
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (pattern
+        (or_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))
+              (wildcard_pattern)))
+          (pattern
+            (wildcard_pattern)))))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (unit))))
+
+================================================================================
+as binding a tuple pattern, type test with a constructor as-pattern, operator application argument
+================================================================================
+
+match a, b with
+| X t, (:? Y as Y o) -> 1
+| None, ("a" | "b") as (_, m) -> 2
+| Error (_: exn & :? System.NullReferenceException) -> 3
+| NLambdas ((-) n 1) (vs, b) -> 4
+| _ -> 5
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (tuple_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      (pattern
+        (tuple_pattern
+          (pattern
+            (type_check_pattern
+              (long_identifier
+                (identifier))
+              (identifier_pattern
+                (identifier))
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (int_literal))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))))
+      (pattern
+        (as_pattern
+          (pattern
+            (tuple_pattern
+              (pattern
+                (or_pattern
+                  (pattern
+                    (literal_pattern
+                      (string_literal)))
+                  (pattern
+                    (literal_pattern
+                      (string_literal)))))))
+          (tuple_pattern
+            (pattern
+              (wildcard_pattern))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (int_literal))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (typed_pattern
+            (pattern
+              (wildcard_pattern))
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (pattern
+              (type_check_pattern
+                (long_identifier
+                  (identifier)
+                  (identifier)))))))
+      (int_literal))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (operator_name)
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (tuple_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))))
+      (int_literal))
+    (match_arm
+      (pattern
+        (wildcard_pattern))
+      (int_literal))))
