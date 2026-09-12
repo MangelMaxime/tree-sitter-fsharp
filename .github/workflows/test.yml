@@ -65,6 +65,27 @@ jobs:
       - name: Expansion tests
         run: ./scripts/test-expansion.py
 
+      # `tree-sitter test` exercises highlights.scm and locals.scm only; the
+      # other Helix, Zed and Neovim queries can name a node that no longer
+      # exists and stay silent until an editor loads them.
+      - name: Every query compiles
+        run: |
+          status=0
+          for q in queries/*.scm queries/zed/*.scm queries/nvim/*.scm; do
+            if ! npx tree-sitter query "$q" examples/references.fsx > /dev/null 2>&1; then
+              echo "::error::$q does not compile against the grammar"
+              npx tree-sitter query "$q" examples/references.fsx 2>&1 | head -5
+              status=1
+            fi
+          done
+          exit $status
+
+      # queries/nvim/highlights.scm is generated from the Helix file, and
+      # queries/zed/highlights.scm must contain the same patterns under Zed's
+      # capture names; a rule added to one and forgotten in the other fails here.
+      - name: Derived highlight queries are in sync
+        run: python3 scripts/derive-queries.py --check
+
   # The scanner is 2,000 lines of hand-written C; a crash or hang there takes
   # the editor down with it. Always fuzzed: the run is a minute, and a grammar
   # change can push an unchanged scanner path into a case nobody hit before.

@@ -149,7 +149,7 @@ tasks:
       # until an editor loads them.
       - |
         status=0
-        for q in queries/*.scm queries/zed/*.scm; do
+        for q in queries/*.scm queries/zed/*.scm queries/nvim/*.scm; do
           [ -f "$q" ] || continue
           if ! tree-sitter query "$q" examples/references.fsx > /dev/null 2>&1; then
             echo "INVALID: $q"
