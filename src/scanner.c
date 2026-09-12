@@ -1732,7 +1732,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
-                strcpy(g_midline_word, w);   // the CTOR_TUPLE_GATE tail below resumes past it
+                memcpy(g_midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
                 if (top && valid[LAYOUT_END]) {
                     // `else`/`elif` close only an INLINE body: a same-line `else`
                     // after an INDENTED then-body belongs to an INNER if on this
