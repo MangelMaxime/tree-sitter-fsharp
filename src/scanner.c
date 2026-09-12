@@ -1725,13 +1725,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;
             }
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-                uint32_t mid_col = lexer->get_column(lexer);
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
+                // get_column walks back to the line start (O(line length)): compute the
+                // word's column only where a close records it, never per token.
+                #define MID_COL() ((int32_t)lexer->get_column(lexer) - (int32_t)n)
                 memcpy(g_midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
                 if (top && valid[LAYOUT_END]) {
                     // `else`/`elif` close only an INLINE body: a same-line `else`
@@ -1755,9 +1757,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // enclosing bodies once the owner has closed.
                     bool thn_below = false;
                     for (int i = (int)s->n - 2; i >= 0 && !thn_below; i--) thn_below = s->stk[i].thn != 0;
-                    if (top->sort == S_EXPR && (else_kw ? (g_else_claim_col != (int32_t)mid_col && (top->thn != 0 || (top->inl && thn_below)))
+                    if (top->sort == S_EXPR && (else_kw ? ((top->thn != 0 || (top->inl && thn_below)) && g_else_claim_col != MID_COL())
                                                 : (!strcmp(w, "in") || !strcmp(w, "end")))) {
-                        if (else_kw && top->thn) g_else_claim_col = (int32_t)mid_col;
+                        if (else_kw && top->thn) g_else_claim_col = MID_COL();
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     // `in` after an inline match-arm body (`let f t = match t with
@@ -1775,9 +1777,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // ends the arm-list, then (same position) the let value it sits in.
                     if (!strcmp(w, "in")) {
                         if (top->sort == S_MATCH && valid[MATCH_END]) {
-                            g_in_claim_col = (int32_t)mid_col; s->n--; lexer->result_symbol = MATCH_END; return true;
+                            g_in_claim_col = MID_COL(); s->n--; lexer->result_symbol = MATCH_END; return true;
                         }
-                        if (layoutish(top->sort) && !top->inl && valid[LAYOUT_END] && g_in_claim_col == (int32_t)mid_col) {
+                        if (layoutish(top->sort) && !top->inl && valid[LAYOUT_END] && g_in_claim_col == MID_COL()) {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
                         }
                     }
@@ -1831,7 +1833,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // The arm list itself closes at a mid-line `in`/`end` once its
                 // last arm body has closed (`… | B -> 2 in f 1`).
                 if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
-                    if (!strcmp(w, "in")) g_in_claim_col = (int32_t)mid_col;
+                    if (!strcmp(w, "in")) g_in_claim_col = MID_COL();
                     s->n--; lexer->result_symbol = MATCH_END; return true;
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
