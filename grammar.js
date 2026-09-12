@@ -2064,7 +2064,15 @@ export default grammar({
             $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, alias($.ctor_first_tuple_pattern, $.unparenthesized_tuple_pattern), $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
             // `let () = init ()` / `let! () = start ()` — unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
+            // (A general literal pattern here would let `let 0leaderingzero = …`
+            // parse as `let 0 leaderingzero`.)
             $.unit,
+            // `let NormalizedBinding(valSynData = v) [as bind] = …` named-field
+            // deconstruction. GATED by the scanner (`name ( ident =` ahead): ungated,
+            // the `(` after any `let name` shifted into this path and every
+            // `let f (x: int)` died.
+            seq($._ctor_tuple_gate, $.named_field_pattern),
+            alias(seq($._ctor_tuple_gate, $.named_field_pattern, "as", $.identifier), $.as_pattern),
             // `let a as b = …` — bare as-pattern name (as_tuple_elem_pattern
             // wins the lex-prec race over the pattern-route as_pattern, so it
             // must be a valid standalone name too).
@@ -2694,6 +2702,11 @@ export default grammar({
                         $.struct_tuple_pattern,
                         // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
                         $.as_pattern,
+                        // `for 1 in …`, `for [|a; b|] in …`, `for (k: string, r: string) in …`.
+                        // (An or-pattern binder is not accepted: via `pattern` it
+                        // overlaps the constructor-application binder below.)
+                        $.literal_pattern, $.array_pattern, $.list_pattern,
+                        $.tuple_typed_first_pattern,
                         // Parenthesised / bare-single typed binder:
                         //   `for (line: string) in …`  ·  `for s: string in …`.
                         $.typed_pattern,
@@ -3047,7 +3060,13 @@ export default grammar({
         record_field_pattern: $ => seq(
             field('name', $.long_identifier),
             "=",
-            field('value', $.pattern),
+            // `{ Setup = a, b }` / `{ Setup = _: 'Model, setup }` - an
+            // unparenthesised (optionally annotated) tuple as the value.
+            field('value', choice(
+                $.pattern,
+                $.list_tuple_pattern,
+                seq($.tuple_typed_pattern, repeat(seq(",", choice($.pattern, $.tuple_typed_pattern)))),
+            )),
         ),
 
         // | :? TypeName [as x] ->   (type-test pattern in match arms)
@@ -3190,10 +3209,11 @@ export default grammar({
         ctor_first_tuple_pattern: $ => seq(
             $._ctor_tuple_gate,
             $.long_identifier,
-            $.tuple_pattern,
+            // `Ctor(a, b), …` / `AesKey key, …` (the gate only fires on bare identifier args).
+            choice($.tuple_pattern, repeat1(choice($.long_identifier, $.wildcard_pattern))),
             ",",
-            $._tuple_elem_pattern,
-            repeat(seq(",", $._tuple_elem_pattern)),
+            $._tuple_elem_or_ctor,
+            repeat(seq(",", $._tuple_elem_or_ctor)),
         ),
 
         as_tuple_elem_pattern: $ => prec.right(1, seq(
@@ -3206,11 +3226,22 @@ export default grammar({
         // `a, b` or `a, b, c` — bare tuple pattern without outer parens. Valid as the
         // bound name in let/let!/and!. Deliberately NOT included in $.pattern: match
         // arms handle commas via their own repeat.
+        // Elements may carry an access modifier (`let private a, private b = …`).
+        // After a `,` an element may be a constructor application (`let AesKey
+        // key, AesIV iv = …`): unambiguous there, unlike the first element.
         unparenthesized_tuple_pattern: $ => seq(
-            $._tuple_elem_pattern,
+            $._tuple_elem_pattern,   // a leading modifier belongs to the let signature
             ",",
-            $._tuple_elem_pattern,
-            repeat(seq(",", $._tuple_elem_pattern)),
+            $._tuple_elem_or_ctor,
+            repeat(seq(",", $._tuple_elem_or_ctor)),
+        ),
+
+        _tuple_elem_or_ctor: $ => seq(
+            optional($.access_modifier),
+            choice(
+                $._tuple_elem_pattern,
+                alias(prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern))), $.identifier_pattern),
+            ),
         ),
 
         as_pattern: $ => prec.right(seq(
@@ -3290,6 +3321,11 @@ export default grammar({
             // subtype form `(resource: 'T :> IDisposable)`.
             prec(20, seq("(", repeat($.attribute), $.identifier, ":", choice($.type_expression, $.nullable_type), optional(choice($._when_constraints, seq(":>", choice($.type_expression, $.nullable_type)))), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
+            // `let f ((|App|_|) : _ -> _) e` / `let f q (|Pat|_|)` - an active
+            // pattern as a parameter; `let f (<) = …` - an operator as a parameter.
+            $.active_pattern_name,
+            prec(20, seq("(", $.active_pattern_name, ":", choice($.type_expression, $.nullable_type), ")")),
+            $.operator_name,
             // `?loc` — bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
             // the return type, not the param type.
@@ -3619,9 +3655,9 @@ export default grammar({
         // never splits `(|` as `(` + `|`, which would break `let (|>) a b = …`.
         active_pattern_name: _ => token(seq(
             "(|",
-            /[a-zA-Z_][a-zA-Z0-9_']*/,
-            repeat(seq("|", /[a-zA-Z_][a-zA-Z0-9_']*/)),
-            optional(seq("|", "_")),
+            choice(/[a-zA-Z_][a-zA-Z0-9_']*/, /``[^`\n\r\t]+``/),
+            repeat(seq("|", choice(/[a-zA-Z_][a-zA-Z0-9_']*/, /``[^`\n\r\t]+``/))),
+            optional(seq(/[ \t]*/, "|", /[ \t]*/, "_", /[ \t]*/)),   // `(|``Alpha Beta`` |_|)`
             "|)",
         )),
 

@@ -1,14 +1,11 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 104 with errors; 559 error nodes
+# 3914 files swept; 94 with errors; 536 error nodes
 92	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
-3	FAKE/src/app/Fake.Core.Process/Process.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
-2	FAKE/src/app/Fake.Core.Target/Target.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
 4	FAKE/src/app/Fake.Runtime/CoreCache.fs
 30	FAKE/src/app/Fake.Runtime/YaafFSharpScripting.fs
 4	FAKE/src/legacy/FakeLib/TaskRunnerHelper.fs
-2	FAKE/src/legacy/FakeLib/TemplateHelper.fs
 2	FSharp.Data/src/FSharp.Data.DesignTime/Csv/CsvProvider.fs
 3	FSharp.Data/src/FSharp.Data.DesignTime/Json/JsonGenerator.fs
 5	FSharp.Data/src/FSharp.Data.DesignTime/Json/JsonProvider.fs
@@ -36,10 +33,8 @@
 31	Fable/src/fcs-fable/codegen/pars.fs
 2	Fable/src/fcs-fable/service_slim.fs
 3	Fable/src/fcs-fable/src/Compiler/AbstractIL/ilread.fs
-2	Fable/src/fcs-fable/src/Compiler/Checking/CheckDeclarations.fs
 2	Fable/src/fcs-fable/src/Compiler/Checking/Expressions/CheckExpressions.fs
 12	Fable/src/fcs-fable/src/Compiler/Facilities/prim-parsing.fs
-2	Fable/src/fcs-fable/src/Compiler/Optimize/LowerComputedCollections.fs
 3	Fable/src/fcs-fable/src/Compiler/Optimize/Optimizer.fs
 2	Fable/src/fcs-fable/src/Compiler/Service/ServiceParsedInputOps.fs
 3	Fable/src/fcs-fable/src/Compiler/Service/SynExpr.fs
@@ -68,9 +63,7 @@
 2	Fable/tests/Rust/tests/src/ApplicativeTests.fs
 2	Fable/tests/Rust/tests/src/NullnessTests.fs
 7	FsCheck/src/FsCheck/Runner.fs
-2	FsCheck/src/FsCheck/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/Gen.fs
-4	FsCheck/tests/FsCheck.Test/StateMachine.fs
 2	FsCheck/tests/FsCheck.Test/TypeClass.fs
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncOptionOp.fs
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/AsyncResultOp.fs
@@ -81,7 +74,6 @@
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
 1	Hopac/Libs/Hopac/Stream.fs
 1	Paket/paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/AssemblyReader.fs
-2	Paket/src/Paket.Core/Common/Encryption.fs
 3	Paket/src/Paket.Core/Dependencies/NuGet.fs
 4	Paket/src/Paket.Core/PackageAnalysis/Queries.fs
 3	Paket/src/Paket.Core/Packaging/PackageMetaData.fs
@@ -93,9 +85,7 @@
 4	fparsec/FParsec/Primitives.fs
 1	fparsec/Samples/FSharpParsingSample/LexYaccVersion/pars.fs
 3	fsharp/src/Compiler/AbstractIL/ilread.fs
-2	fsharp/src/Compiler/Checking/CheckDeclarations.fs
 6	fsharp/src/Compiler/Driver/GraphChecking/FileContentMapping.fs
-2	fsharp/src/Compiler/Optimize/LowerComputedCollections.fs
 2	fsharp/src/Compiler/Service/ServiceParsedInputOps.fs
 3	fsharp/src/Compiler/Service/SynExpr.fs
 2	fsharp/src/Compiler/TypedTree/TypedTreeOps.Attributes.fs

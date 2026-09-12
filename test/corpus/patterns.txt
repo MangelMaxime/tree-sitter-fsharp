@@ -1508,3 +1508,96 @@ match x with
       (pattern
         (wildcard_pattern))
       (bool_literal))))
+
+================================================================================
+For binders and record field patterns with tuples
+================================================================================
+
+for (k: string, r: string) in xs do ignore k
+for 1 in [1; 2; 3] do ()
+for [| a; b |] in ars do ()
+for { Setup = a, b } in xs do ()
+let g { Setup = _: 'Model, setup } = setup
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sequence_expression
+    (for_expression
+      (tuple_typed_first_pattern
+        (tuple_typed_pattern
+          (long_identifier
+            (identifier))
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (tuple_typed_pattern
+          (long_identifier
+            (identifier))
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))
+    (sequence_expression
+      (for_expression
+        (literal_pattern
+          (int_literal))
+        (list_expression
+          (int_literal)
+          (int_literal)
+          (int_literal))
+        (unit))
+      (sequence_expression
+        (for_expression
+          (array_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier)))))
+          (long_identifier
+            (identifier))
+          (unit))
+        (for_expression
+          (record_pattern
+            (record_field_pattern
+              (long_identifier
+                (identifier))
+              (list_tuple_pattern
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier))))
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier)))))))
+          (long_identifier
+            (identifier))
+          (unit)))))
+  (let_binding
+    (identifier)
+    (parameter
+      (record_pattern
+        (record_field_pattern
+          (long_identifier
+            (identifier))
+          (tuple_typed_pattern
+            (wildcard_pattern)
+            (type_expression
+              (type_parameter)))
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier)))))))
+    (long_identifier
+      (identifier))))

@@ -245,6 +245,8 @@ static bool g_skipped_alt_directive = false;
 // separator would let the decl nest inside the previous statement's body).
 static char g_post_doc_word[10] = {0};
 
+static char g_midline_word[10];   // last word read by the mid-line word dispatch
+
 static bool word_is_decl_kw(const char *w) {
     return !strcmp(w, "let") || !strcmp(w, "type") || !strcmp(w, "open") ||
            !strcmp(w, "module") || !strcmp(w, "exception") || !strcmp(w, "member") ||
@@ -1537,6 +1539,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
+                strcpy(g_midline_word, w);   // the CTOR_TUPLE_GATE tail below resumes past it
                 if (top && valid[LAYOUT_END]) {
                     // `else`/`elif` close only an INLINE body: a same-line `else`
                     // after an INDENTED then-body belongs to an INNER if on this
@@ -1762,14 +1765,52 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // the first ≤9 identifier chars; resume from wherever we are.
             if (valid[CTOR_TUPLE_GATE] &&
                 ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')) {
+                char w0[10]; size_t w0n = 0;
                 while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
                        (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
                        (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
                        lexer->lookahead == '_' || lexer->lookahead == '\'' ||
-                       lexer->lookahead == '.') lexer->advance(lexer, true);
+                       lexer->lookahead == '.') {
+                    if (w0n < 9) w0[w0n++] = (char)lexer->lookahead;
+                    lexer->advance(lexer, true);
+                }
+                w0[w0n] = '\0';
+                const char *first_word = w0n ? w0 : g_midline_word;   // word-branch may have eaten it
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                // `let AesKey key, AesIV iv = …`: a constructor applied to bare
+                // argument names, then `,`. Not when the first word was a binding
+                // modifier (`let mutable a, b = …`, `let private a, b = …`).
+                if (!strcmp(first_word, "mutable") || !strcmp(first_word, "inline") || !strcmp(first_word, "rec") ||
+                    !strcmp(first_word, "private") || !strcmp(first_word, "internal") || !strcmp(first_word, "public")) return false;
+                if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                    (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
+                    while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                           (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
+                        while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                               (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
+                               (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                               lexer->lookahead == '_' || lexer->lookahead == '\'') lexer->advance(lexer, true);
+                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    }
+                    if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
+                    return false;
+                }
                 if (lexer->lookahead == '(') {
                     lexer->advance(lexer, true);
+                    // `let Ctor(field = pat) …`: a named-field deconstruction.
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                        (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
+                        while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+                               (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
+                               (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                               lexer->lookahead == '_' || lexer->lookahead == '\'') lexer->advance(lexer, true);
+                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        if (lexer->lookahead == '=') {
+                            lexer->advance(lexer, true);
+                            if (lexer->lookahead != '=') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
+                        }
+                    }
                     int pdepth = 1, guard = 0;
                     bool ok = true;
                     while (pdepth > 0 && ok) {

@@ -511,3 +511,187 @@ let g = async {
           (unit)))
       (ce_result_expr
         (int_literal)))))
+
+================================================================================
+Tuple bindings with per-element access modifiers and constructor elements
+================================================================================
+
+let private a, private b, private c = f ()
+let private d, public e = g ()
+let AesKey key, AesIV iv = h x
+let Ctor(a, b), rest = k x
+let mutable m, n = 1, 2
+let NormalizedBinding(valSynData = v) as bind = x
+let SynTypeDefnSig(typeRepr = trepr) = spec
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (access_modifier)
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (access_modifier)
+      (long_identifier
+        (identifier))
+      (access_modifier)
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (unit)))
+  (let_binding
+    (access_modifier)
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (access_modifier)
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (unit)))
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))
+      (identifier_pattern
+        (identifier))
+      (identifier_pattern
+        (long_identifier
+          (identifier))))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier))))
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))
+    (tuple_expression
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    (as_pattern)
+    (as_pattern
+      (long_identifier
+        (identifier))
+      (named_field_pat
+        (identifier)
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (as_pattern)
+    (as_pattern)
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (named_field_pattern
+      (long_identifier
+        (identifier))
+      (named_field_pat
+        (identifier)
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))))
+    (long_identifier
+      (identifier))))
+
+================================================================================
+Active patterns and operators as parameters
+================================================================================
+
+let f ((|App|_|) : _ -> _ voption) e = e
+let matchQuote q (|Pat|_|) = q
+let g (<) = 1 < 2
+let (|``A B C``|) (x: int) = x * 2
+let (|``Alpha Beta`` |_|) x = Some x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (active_pattern_name)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (postfix_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (long_identifier
+                (identifier)))))))
+    (parameter
+      (identifier))
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (active_pattern_name))
+    (long_identifier
+      (identifier)))
+  (let_binding
+    (identifier)
+    (parameter
+      (operator_name))
+    (binary_expression
+      (int_literal)
+      (int_literal)))
+  (let_binding
+    (active_pattern_name)
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (int_literal)))
+  (let_binding
+    (active_pattern_name)
+    (parameter
+      (identifier))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (long_identifier
+        (identifier)))))

@@ -687,10 +687,21 @@
   {
     "type": "as_pattern",
     "named": true,
-    "fields": {},
+    "fields": {
+      "constructor": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "long_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "array_pattern",
@@ -706,6 +717,10 @@
         },
         {
           "type": "long_identifier",
+          "named": true
+        },
+        {
+          "type": "named_field_pat",
           "named": true
         },
         {
@@ -2001,6 +2016,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "list_pattern",
           "named": true
         },
@@ -2582,7 +2601,7 @@
         ]
       },
       "name": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -2603,6 +2622,10 @@
           },
           {
             "type": "list_pattern",
+            "named": true
+          },
+          {
+            "type": "named_field_pattern",
             "named": true
           },
           {
@@ -2736,7 +2759,7 @@
         ]
       },
       "name": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -2757,6 +2780,10 @@
           },
           {
             "type": "list_pattern",
+            "named": true
+          },
+          {
+            "type": "named_field_pattern",
             "named": true
           },
           {
@@ -2876,7 +2903,7 @@
         ]
       },
       "name": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
           {
@@ -2897,6 +2924,10 @@
           },
           {
             "type": "list_pattern",
+            "named": true
+          },
+          {
+            "type": "named_field_pattern",
             "named": true
           },
           {
@@ -3014,7 +3045,7 @@
         ]
       },
       "name": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -3035,6 +3066,10 @@
           },
           {
             "type": "list_pattern",
+            "named": true
+          },
+          {
+            "type": "named_field_pattern",
             "named": true
           },
           {
@@ -4040,6 +4075,10 @@
       "required": true,
       "types": [
         {
+          "type": "active_pattern_name",
+          "named": true
+        },
+        {
           "type": "attribute",
           "named": true
         },
@@ -4053,6 +4092,10 @@
         },
         {
           "type": "nullable_type",
+          "named": true
+        },
+        {
+          "type": "operator_name",
           "named": true
         },
         {
@@ -4803,11 +4846,23 @@
         ]
       },
       "value": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
           {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "list_tuple_pattern",
+            "named": true
+          },
+          {
             "type": "pattern",
+            "named": true
+          },
+          {
+            "type": "tuple_typed_pattern",
             "named": true
           }
         ]
@@ -6616,11 +6671,19 @@
       "required": true,
       "types": [
         {
+          "type": "access_modifier",
+          "named": true
+        },
+        {
           "type": "array_pattern",
           "named": true
         },
         {
           "type": "as_pattern",
+          "named": true
+        },
+        {
+          "type": "identifier_pattern",
           "named": true
         },
         {
