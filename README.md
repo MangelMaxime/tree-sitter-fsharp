@@ -428,6 +428,9 @@ python3 scripts/test-expansion.py -i multiDoc # filter by substring
 
 ### Benchmark (real-world coverage)
 
+CI runs this sweep on every push and pull request (the `bench` job, clones cached by
+manifest hash) and fails on any file that parses worse than the baseline.
+
 The numbers in *Why this grammar* come from `scripts/bench.py`: it sweeps
 every `.fs`/`.fsx` file of 24 pinned repositories (23 popular projects +
 `dotnet/fsharp`'s `src/`, ~3 900 files) and diffs the per-file error counts
