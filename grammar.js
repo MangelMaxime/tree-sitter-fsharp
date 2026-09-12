@@ -294,6 +294,7 @@ export default grammar({
         // A single long_identifier could be either a measure or a type expression
         // inside generic args or aliases.
         [$.measure_expression, $.type_expression],
+        [$.measure_expression, $._atomic_type],
         // After `type Foo`, the following `=` chooses type_decl, `with` chooses type_extension.
         [$._type_head, $.type_extension_name],
         // After `module M =`, the identifier is either a module abbreviation target
@@ -1147,14 +1148,9 @@ export default grammar({
         // field's annotation.
         _union_field_type: $ => choice(
             $.function_type,
-            $.postfix_type,
-            $.generic_type,
-            $.array_type,
-            $.parenthesized_type,
+            $._atomic_type,
             $.anonymous_record_type,
             $.struct_anonymous_record_type,
-            $.type_parameter,
-            $.long_identifier,
         ),
 
         // `name: T` / `?name: T` — a labelled element in a member/abstract
@@ -1175,14 +1171,9 @@ export default grammar({
             field('name', $.identifier),
             ":",
             field('type', choice(
-                $.postfix_type,
-                $.generic_type,
-                $.array_type,
-                $.parenthesized_type,
+                $._atomic_type,
                 $.anonymous_record_type,
                 $.struct_anonymous_record_type,
-                $.type_parameter,
-                $.long_identifier,
                 $.flexible_type,        // `source: #TypedArray`
                 // (nullable `value: string | null` not added here: labelled_type
                 // is shared with union NAMED fields, where `|` is the case
@@ -1665,7 +1656,7 @@ export default grammar({
         // lambda's (a function_type would swallow it).
         _lambda_return_annot: $ => prec(1, seq(
             ":",
-            choice($.generic_type, $.postfix_type, $.array_type, $.parenthesized_type, $.type_parameter, $.long_identifier),
+            $._atomic_type,
         )),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
@@ -3006,14 +2997,7 @@ export default grammar({
         // separator. Function types in patterns need explicit parens: `:? (int -> string)`.
         type_check_pattern: $ => prec.right(TYPE_PREC.POSTFIX + 1, seq(
             ":?",
-            choice(
-                $.generic_type,
-                $.postfix_type,
-                $.array_type,
-                $.parenthesized_type,
-                $.type_parameter,
-                $.long_identifier,
-            ),
+            $._atomic_type,
             optional(seq("as", choice($.identifier, alias(prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern))), $.identifier_pattern)))),
         )),
 
@@ -3314,15 +3298,10 @@ export default grammar({
             $.function_type,
             $.tuple_type,
             $.struct_tuple_type,
-            $.postfix_type,
-            $.generic_type,
-            $.array_type,
-            $.parenthesized_type,
+            $._atomic_type,
             $.anonymous_record_type,
             $.struct_anonymous_record_type,
             $.measure_power_type,
-            $.type_parameter,
-            $.long_identifier,
             // `#IDisposable` / `#seq<'T>` — flexible type (this type or a subtype).
             $.flexible_type,
             // `#A & #B` — flexible-type intersection (F# 7+ interface constraint).
@@ -3337,7 +3316,7 @@ export default grammar({
         // type_expression, so `#` doesn't swallow a trailing `->`/`*`.
         flexible_type: $ => prec(TYPE_PREC.APP, seq(
             "#",
-            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type, $.parenthesized_type),
+            $._atomic_type,
         )),
 
         // `#A & #B [& #C …]` — flexible-type intersection: a value that is a subtype
@@ -3372,6 +3351,17 @@ export default grammar({
         // type_expression — a bare `|` after a labelled union-field type means
         // the NEXT DU case, so this shape is only reachable from annotation
         // slots that already accept nullable_type (returns, typed patterns).
+
+        // The type heads that never contain a bare `*`, `->` or `| null`. Shared by
+        // every slot that must stop before such a separator.
+        _atomic_type: $ => choice(
+            $.generic_type,
+            $.postfix_type,
+            $.array_type,
+            $.parenthesized_type,
+            $.type_parameter,
+            $.long_identifier,
+        ),
 
         // int list, int option  (left-assoc: int list option = (int list) option)
         postfix_type: $ => prec.left(TYPE_PREC.POSTFIX, seq(
@@ -3465,8 +3455,7 @@ export default grammar({
         // `int * string | null` = `int * (string | null)`, `int list | null` =
         // `(int list) | null`.
         nullable_type: $ => seq(
-            choice($.long_identifier, $.generic_type, $.postfix_type, $.array_type,
-                $.parenthesized_type, $.type_parameter, $.flexible_type),
+            choice($._atomic_type, $.flexible_type),
             alias(token(seq("|", /[ \t]*/, "null")), "null"),
         ),
 

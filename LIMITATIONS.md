@@ -126,8 +126,8 @@ a loop body dedents, so `done` commits to being the next sibling statement befor
 ## Accepted: constructs dropped for parser size
 
 `tree-sitter generate` time and the compiled parser size scale with the dense parse
-table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,323 states, 561
-symbols and a 9.0 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
+table, `LARGE_STATE_COUNT x SYMBOL_COUNT` in `src/parser.c` (15,207 states, 562
+symbols and a 8.9 MB `.so` at the time of writing; 22,364 states and 14.0 MB before the
 sharing described under *Keeping the parser small*). These forms parsed at one point
 but cost more states than their bench impact justified, and were removed on
 2026-09-12:

@@ -1979,6 +1979,10 @@
         {
           "type": "postfix_type",
           "named": true
+        },
+        {
+          "type": "type_parameter",
+          "named": true
         }
       ]
     }

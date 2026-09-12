@@ -3184,19 +3184,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "postfix_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "generic_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "array_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "parenthesized_type"
+          "name": "_atomic_type"
         },
         {
           "type": "SYMBOL",
@@ -3205,14 +3193,6 @@
         {
           "type": "SYMBOL",
           "name": "struct_anonymous_record_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "type_parameter"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "long_identifier"
         }
       ]
     },
@@ -3276,19 +3256,7 @@
             "members": [
               {
                 "type": "SYMBOL",
-                "name": "postfix_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "generic_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "array_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "parenthesized_type"
+                "name": "_atomic_type"
               },
               {
                 "type": "SYMBOL",
@@ -3297,14 +3265,6 @@
               {
                 "type": "SYMBOL",
                 "name": "struct_anonymous_record_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "type_parameter"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "long_identifier"
               },
               {
                 "type": "SYMBOL",
@@ -5490,33 +5450,8 @@
             "value": ":"
           },
           {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "generic_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "postfix_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "array_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "parenthesized_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "type_parameter"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "long_identifier"
-              }
-            ]
+            "type": "SYMBOL",
+            "name": "_atomic_type"
           }
         ]
       }
@@ -11622,33 +11557,8 @@
             "value": ":?"
           },
           {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "generic_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "postfix_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "array_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "parenthesized_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "type_parameter"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "long_identifier"
-              }
-            ]
+            "type": "SYMBOL",
+            "name": "_atomic_type"
           },
           {
             "type": "CHOICE",
@@ -12930,19 +12840,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "postfix_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "generic_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "array_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "parenthesized_type"
+          "name": "_atomic_type"
         },
         {
           "type": "SYMBOL",
@@ -12955,14 +12853,6 @@
         {
           "type": "SYMBOL",
           "name": "measure_power_type"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "type_parameter"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "long_identifier"
         },
         {
           "type": "SYMBOL",
@@ -12989,29 +12879,8 @@
             "value": "#"
           },
           {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "long_identifier"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "generic_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "postfix_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "array_type"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "parenthesized_type"
-              }
-            ]
+            "type": "SYMBOL",
+            "name": "_atomic_type"
           }
         ]
       }
@@ -13123,6 +12992,35 @@
           }
         ]
       }
+    },
+    "_atomic_type": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "generic_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "postfix_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "array_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "parenthesized_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "type_parameter"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "long_identifier"
+        }
+      ]
     },
     "postfix_type": {
       "type": "PREC_LEFT",
@@ -13396,27 +13294,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "long_identifier"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "generic_type"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "postfix_type"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "array_type"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "parenthesized_type"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "type_parameter"
+              "name": "_atomic_type"
             },
             {
               "type": "SYMBOL",
@@ -15643,6 +15521,10 @@
     [
       "measure_expression",
       "type_expression"
+    ],
+    [
+      "measure_expression",
+      "_atomic_type"
     ],
     [
       "_type_head",
