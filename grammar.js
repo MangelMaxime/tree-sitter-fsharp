@@ -231,6 +231,7 @@ export default grammar({
         $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`⏎`    member …`)
         $._label_gate,        // zero-width: `ident :` (not `::` `:>` `:?` `:=`) ahead - a labelled type element starts here
         $._paren_block_open,  // zero-width: `(` followed by a newline - the body is a layout block closed by `)`
+        $._infix_block_open,  // zero-width: `&&` / `||` at the end of a line with a deeper next line - the right operand is a layout block
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1618,6 +1619,10 @@ export default grammar({
             prec.left(PREC.PIPE_EXPR,      seq(field('left', $._expression), field('operator', choice("|>", "<|", ">>", "<<")), field('right', $._expression))),
             prec.left(PREC.BOOL_OR,        seq(field('left', $._expression), field('operator', "||"), field('right', $._expression))),
             prec.left(PREC.BOOL_AND,       seq(field('left', $._expression), field('operator', "&&"), field('right', $._expression))),
+            // `a &&`⏎`    let x = …`⏎`    x > 1`: a right operand on its own deeper
+            // lines is a layout block (the scanner opens it only in that shape).
+            prec.left(PREC.BOOL_OR,        seq(field('left', $._expression), field('operator', "||"), $._infix_block_open, field('right', $._expression), $._layout_end)),
+            prec.left(PREC.BOOL_AND,       seq(field('left', $._expression), field('operator', "&&"), $._infix_block_open, field('right', $._expression), $._layout_end)),
             prec.left(PREC.ADDITIVE,       seq(field('left', $._expression), field('operator', choice("+", "-")), field('right', $._expression))),
             prec.left(PREC.MULTIPLICATIVE, seq(field('left', $._expression), field('operator', choice("*", "/", "%")), field('right', $._expression))),
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', choice(">", "<", ">=", "<=", "=", "<>")), field('right', $._expression))),

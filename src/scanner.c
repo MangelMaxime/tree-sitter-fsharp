@@ -59,6 +59,7 @@ typedef enum {
     MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`⏎`    member …`) — pushes S_TYPEBODY
     LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) — a labelled type element (`x: int -> …`)
     PAREN_BLOCK_OPEN,     // zero-width: `(` followed by a newline - pushes S_EXPR at the body column, closed by `)`
+    INFIX_BLOCK_OPEN,     // zero-width: `&&`/`||` then a newline and a deeper line - pushes S_EXPR at that column
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -84,12 +85,15 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY }
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
-typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; uint8_t par; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it)
+typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; uint8_t par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
 
 static bool skip_bracket_attrs(TSLexer *lexer);
+// Column of an `else`/`elif` that already closed a then-body: the same token
+// must not close the enclosing then-body too (the inner `if` owns it).
+static int32_t g_else_claim_col = -1;
 
 // `[?]ident ws* :` ahead, with the `:` not starting `::` `:>` `:?` `:=`: the
 // start of a labelled type element. Consumes lookahead; callers only run it
@@ -178,7 +182,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, u
 }
 
 static void push(Scanner *s, uint8_t sort, uint32_t col) {
-    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->n++; }
+    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->n++; }
 }
 
 // Compute the indent + first significant char of the NEXT non-blank, non-comment
@@ -350,6 +354,14 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 g_comment_doc = (lexer->lookahead == '*');
                 if (!skip_comment_body(lexer, false)) return false;
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                // Further block comments on the same line (`(* a *) (* b *)`).
+                while (lexer->lookahead == '(') {
+                    lexer->advance(lexer, false);
+                    if (lexer->lookahead != '*') { if (first) *first = '('; *col = indent; return true; }
+                    lexer->advance(lexer, false);
+                    if (!skip_comment_body(lexer, false)) return false;
+                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                }
                 if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
                     lexer->mark_end(lexer);            // full comment span (+trailing ws)
                     // mark_end ONLY here: in the comment-LED branch below the
@@ -1246,6 +1258,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
         push(s, S_EXPR, peek_body_col(lexer));
         if (s->n) { s->stk[s->n - 1].thn = 1; if (inl) s->stk[s->n - 1].inl = 1; }
+        g_else_claim_col = -1;
         lexer->result_symbol = THEN_OPEN;   return true;
     }
     if (valid[LAZY_OPEN])   {
@@ -1278,6 +1291,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         push(s, S_EXPR, col);
         if (!nl_before && s->n) s->stk[s->n - 1].inl = 1;
+        g_else_claim_col = -1;
         lexer->result_symbol = ELSE_OPEN; return true;
     }
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
@@ -1320,6 +1334,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (next_line_indent(lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
         }
         return false; // inline type body (record/alias/inline DU) — let it match
+    }
+    // INFIX_BLOCK_OPEN: the right operand of a line-ending `&&`/`||` starts on
+    // a deeper line.
+    if (valid[INFIX_BLOCK_OPEN]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            uint32_t col; int32_t bfirst = 0;
+            // Only a `let`/`use`-led operand needs the block; anything else
+            // continues the operator line as before.
+            if (next_line_indent(lexer, &col, &bfirst) && top && col > top->col && (bfirst == 'l' || bfirst == 'u')) {
+                char w[12]; read_word(lexer, w, sizeof w);
+                if (!strcmp(w, "let") || !strcmp(w, "use")) {
+                    push(s, S_EXPR, col); s->stk[s->n - 1].inf = 1; lexer->result_symbol = INFIX_BLOCK_OPEN; return true;
+                }
+            }
+        }
+        return false;
     }
     // PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
     // for an empty `(`⏎`)` (that is the `unit` token).
@@ -1544,6 +1575,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // non-match falls through to the closer logic / `return false` exactly as
             // before — it never pre-empts the layout opens above.
             if (c == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
+            // An infix right-operand block ends before a same-line `->` (guard arrow).
+            if (c == '-' && top && top->sort == S_EXPR && top->inf && valid[LAYOUT_END]) {
+                lexer->advance(lexer, true);
+                if (lexer->lookahead == '>') { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                return false;
+            }
             bool closer = (c == ')' || c == ']' || c == '}');
             if (!closer && c == '@') {            // `@>` / `@@>` code-quotation close
                 lexer->advance(lexer, true);
@@ -1607,6 +1644,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;
             }
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                uint32_t mid_col = lexer->get_column(lexer);
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
                 while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
                                  (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
@@ -1621,8 +1659,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // the greedy close handed it to the OUTER if and stranded the
                     // outer `else` line, TaggedCollections/FCS style). `in`/`end`
                     // keep the unconditional close.
-                    if (top->sort == S_EXPR && ((!strcmp(w, "else") || !strcmp(w, "elif")) ? (top->inl != 0 && top->thn != 0)
+                    bool else_kw = !strcmp(w, "else") || !strcmp(w, "elif");
+                    if (top->sort == S_EXPR && top->inf && (!strcmp(w, "then") || !strcmp(w, "do") || !strcmp(w, "with"))) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    if (top->sort == S_EXPR && (else_kw ? (top->inl != 0 && top->thn != 0 && g_else_claim_col != (int32_t)mid_col)
                                                 : (!strcmp(w, "in") || !strcmp(w, "end")))) {
+                        if (else_kw) g_else_claim_col = (int32_t)mid_col;
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     // `in` after an inline match-arm body (`let f t = match t with
@@ -2165,7 +2208,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (top->par && col < top->col && first != ')' && !is_close_bracket(first) &&
                 !decl_starter(lexer, first)) return false;
             if (top->par && first == ',') return false;
-            if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+            if (valid[LAYOUT_END] && col < top->col) {
+                if (top->sort == S_EXPR && top->thn && first == 'e') {
+                    char w[12]; read_word(lexer, w, sizeof w);
+                    if (!strcmp(w, "else") || !strcmp(w, "elif")) g_else_claim_col = (int32_t)col;
+                }
+                s->n--; lexer->result_symbol = LAYOUT_END; return true;
+            }
             // A `#if`-family directive line sits between this declaration and a
             // line that starts a NEW one: the two are alternative spellings of the
             // same declaration, sharing the parameters/body that follow `#endif`.
@@ -2256,11 +2305,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     if (top->sort == S_DECL && decl_starter_word(w)) return false;
-                    if (!semi_blocked_word(w)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+                    // `new (...) as this =`⏎`    body`⏎`    then`⏎`    effects`: the
+                    // constructor body ends at a `then` at its own column.
+                    if (!strcmp(w, "then") && valid[LAYOUT_END]) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
+                    // `else` at a then-body's own column ends the body unless the
+                    // body is itself an `if` (which then owns the `else`).
+                    if ((!strcmp(w, "else") || !strcmp(w, "elif")) && top->sort == S_EXPR && top->thn &&
+                        g_else_claim_col != (int32_t)col && valid[LAYOUT_END]) {
+                        g_else_claim_col = (int32_t)col;
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
+                    if (!semi_blocked_word(w)) { g_else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
                     return false;
                 }
                 if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
-                if (!semi_blocked(lexer, first)) { lexer->result_symbol = LAYOUT_SEMI; return true; }
+                if (!semi_blocked(lexer, first)) { g_else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
                 return false;   // peeks consumed the lookahead — no further probing
             }
             // …and RIGHT of it (a continuation-indented `with`). Nothing after

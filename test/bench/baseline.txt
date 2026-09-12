@@ -1,5 +1,5 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 74 with errors; 552 error nodes
+# 3914 files swept; 73 with errors; 549 error nodes
 167	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
@@ -59,7 +59,6 @@
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultOp.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
 1	Hopac/Libs/Hopac/Stream.fs
-3	Paket/src/Paket.Core/Packaging/PackageMetaData.fs
 5	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
 3	Paket/src/Paket.Core/PaketConfigFiles/SolutionFile.fs
 2	Saturn/sample/ChannelsSample/ChannelsSample.fs

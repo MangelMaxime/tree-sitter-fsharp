@@ -1,0 +1,343 @@
+================================================================================
+else at a then-body's column belongs to a nested if that is the body's last statement
+================================================================================
+
+let f a b =
+    if a then
+        foo ()
+        if b then
+            bar ()
+        else
+            baz ()
+    else
+        qux ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (if_expression
+      (long_identifier
+        (identifier))
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (if_expression
+          (long_identifier
+            (identifier))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (unit))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit)))))
+
+================================================================================
+Inline nested if keeps its else and the outer if takes the elif
+================================================================================
+
+let f a b c =
+    if a then if b then 1 else 2
+    elif c then 3
+    else 4
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (parameter
+      (identifier))
+    (if_expression
+      (long_identifier
+        (identifier))
+      (if_expression
+        (long_identifier
+          (identifier))
+        (int_literal)
+        (int_literal))
+      (long_identifier
+        (identifier))
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+else indented to the then-body column ends the body
+================================================================================
+
+let f n =
+    if n = 0 then 0
+    else if n = 1 then
+        1
+        else
+            2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (int_literal)
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (int_literal))
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Constructor then clause on its own line after a blank line
+================================================================================
+
+type ResourceSection() =
+    new(sectionBytes: byte[]) as this =
+        ResourceSection()
+
+        then
+            Debug.Assert(sectionBytes :> obj <> Unchecked.defaultof<_>)
+            this.X <- 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (secondary_constructor
+      (tuple_params
+        (tuple_param
+          (identifier)
+          (type_expression
+            (array_type
+              (type_expression
+                (long_identifier
+                  (identifier)))))))
+      (identifier)
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit))
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (binary_expression
+              (typecast_expression
+                (long_identifier
+                  (identifier))
+                (type_expression
+                  (long_identifier
+                    (identifier))))
+              (type_application_expression
+                (long_identifier
+                  (identifier)
+                  (identifier))
+                (type_expression
+                  (long_identifier
+                    (identifier)))))))
+        (binary_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (int_literal))))))
+
+================================================================================
+Two block comments on a dedented comment-only line do not close the body
+================================================================================
+
+let f () =
+    bb.EmitZ32 pnum
+  (* ElemMul *) (* z_u32 0x1l *)
+    match additive with
+    | None -> ()
+    | Some x -> g x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (sequence_expression
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (block_comment)
+      (match_expression
+        (long_identifier
+          (identifier))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (unit))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Right operand of a line-ending && on deeper lines is a layout block
+================================================================================
+
+let f () =
+    a &&
+        let x = 1
+        if x then 1
+        elif y then 2
+        else 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (let_expression
+        (let_decl_indented
+          (identifier)
+          (int_literal))
+        (if_expression
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (int_literal))))))
+
+================================================================================
+Infix block inside a match guard ends before the arrow
+================================================================================
+
+let f x =
+    match x with
+    | A aref
+        when not g.isInteractive &&
+             aref.Name <> g.primaryAssemblyName &&
+             let ctok = AssumeCompilationThread()
+             (match loader.Find (ctok, m, aref) with
+              | Resolved ccu -> ccu.IsProviderGenerated
+              | Unresolved _ -> false) ->
+        true
+    | _ ->
+        false
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (binary_expression
+          (binary_expression
+            (unary_expression
+              (long_identifier
+                (identifier)
+                (identifier)))
+            (binary_expression
+              (long_identifier
+                (identifier)
+                (identifier))
+              (long_identifier
+                (identifier)
+                (identifier))))
+          (let_expression
+            (let_decl_indented
+              (identifier)
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (unit)))
+            (parenthesized_expression
+              (match_expression
+                (application_expression
+                  (long_identifier
+                    (identifier)
+                    (identifier))
+                  (parenthesized_expression
+                    (tuple_expression
+                      (tuple_expression
+                        (long_identifier
+                          (identifier))
+                        (long_identifier
+                          (identifier)))
+                      (long_identifier
+                        (identifier)))))
+                (match_arm
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier))
+                      (long_identifier
+                        (identifier))))
+                  (long_identifier
+                    (identifier)
+                    (identifier)))
+                (match_arm
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier))
+                      (wildcard_pattern)))
+                  (bool_literal))))))
+        (bool_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (bool_literal)))))
