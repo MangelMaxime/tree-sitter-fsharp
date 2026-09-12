@@ -4340,6 +4340,10 @@
           "named": true
         },
         {
+          "type": "struct_tuple_pattern",
+          "named": true
+        },
+        {
           "type": "tuple_params",
           "named": true
         },

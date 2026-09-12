@@ -6130,12 +6130,38 @@
             "value": "="
           },
           {
-            "type": "FIELD",
-            "name": "value",
-            "content": {
-              "type": "SYMBOL",
-              "name": "_expression"
-            }
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_field_block_open"
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "value",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "_expression"
+                    }
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "_layout_end"
+                  }
+                ]
+              },
+              {
+                "type": "FIELD",
+                "name": "value",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              }
+            ]
           }
         ]
       }
@@ -12612,6 +12638,10 @@
           "name": "wildcard_pattern"
         },
         {
+          "type": "SYMBOL",
+          "name": "struct_tuple_pattern"
+        },
+        {
           "type": "PREC",
           "value": 20,
           "content": {
@@ -15897,6 +15927,10 @@
     {
       "type": "SYMBOL",
       "name": "_infix_block_open"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_field_block_open"
     }
   ],
   "inline": [],
@@ -16014,6 +16048,22 @@
       {
         "type": "STRING",
         "value": "when"
+      },
+      {
+        "type": "STRING",
+        "value": "then"
+      },
+      {
+        "type": "STRING",
+        "value": "elif"
+      },
+      {
+        "type": "STRING",
+        "value": "else"
+      },
+      {
+        "type": "STRING",
+        "value": "if"
       }
     ],
     "query_ce": [
@@ -16124,6 +16174,22 @@
       {
         "type": "STRING",
         "value": "when"
+      },
+      {
+        "type": "STRING",
+        "value": "then"
+      },
+      {
+        "type": "STRING",
+        "value": "elif"
+      },
+      {
+        "type": "STRING",
+        "value": "else"
+      },
+      {
+        "type": "STRING",
+        "value": "if"
       },
       {
         "type": "STRING",

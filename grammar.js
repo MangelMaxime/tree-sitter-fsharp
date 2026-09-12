@@ -122,6 +122,7 @@ const GLOBAL_RESERVED = [
     'assert', 'default', 'exception', 'function', 'inline', 'interface',
     'internal', 'module', 'mutable', 'namespace', 'new', 'or',
     'public', 'rec', 'static', 'to', 'val', 'when',
+    'then', 'elif', 'else', 'if',
     // Batch C was ATTEMPTED IN FULL and reverted 2026-09-11 - the lever is
     // exhausted here. Every remaining keyword is either inert or costly:
     //   fun open override while - each cost a valid bench file, all inside a
@@ -232,6 +233,7 @@ export default grammar({
         $._label_gate,        // zero-width: `ident :` (not `::` `:>` `:?` `:=`) ahead - a labelled type element starts here
         $._paren_block_open,  // zero-width: `(` followed by a newline - the body is a layout block closed by `)`
         $._infix_block_open,  // zero-width: `&&` / `||` at the end of a line with a deeper next line - the right operand is a layout block
+        $._field_block_open,  // zero-width: record field `=` followed by a newline - the value is a layout block
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -1832,10 +1834,15 @@ export default grammar({
 
         // prec(APP_EXPR) lets prec.dynamic in record_expression/anonymous_record_expression
         // prefer starting a new field over extending the value via application_expression.
+        // `parameters =`⏎`    let d = …`⏎`    for x in xs do …`⏎`    d`: a value on
+        // its own lines is a layout block so its statements sequence.
         record_field: $ => prec(PREC.APP_EXPR, seq(
             field('name', $.long_identifier),
             "=",
-            field('value', $._expression),
+            choice(
+                seq($._field_block_open, field('value', $._expression), $._layout_end),
+                field('value', $._expression),
+            ),
         )),
 
         tuple_expression: $ => prec.left(PREC.TUPLE_EXPR, seq(
@@ -3238,6 +3245,7 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
+            $.struct_tuple_pattern,   // `fun struct (depth, ty) -> …`
             // `([<Attr>] x: int)` / `([<Attr>] x)` — attributes on curried params
             // (used for ParamArray, optional/caller-info attributes outside tuple
             // form, etc.).

@@ -1,6 +1,6 @@
 # Parser benchmark baseline — regenerate with: ./scripts/bench.py --update-baseline
-# 3914 files swept; 73 with errors; 549 error nodes
-167	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
+# 3914 files swept; 73 with errors; 588 error nodes
+207	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 3	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs
 7	FAKE/src/app/Fake.Runtime/CoreCache.fs
@@ -17,7 +17,7 @@
 3	FSharpPlus/src/FSharpPlus/Data/Cont.fs
 1	FSharpPlus/src/FSharpPlus/Data/NonEmptyList.fs
 5	FSharpPlus/src/FSharpPlus/Data/Validation.fs
-8	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
+5	FSharpPlus/src/FSharpPlus/Extensions/Array.fs
 3	FSharpPlus/src/FSharpPlus/Internals.fs
 2	Fable/src/Fable.Compiler/ProjectCracker.fs
 4	Fable/src/Fable.Core/Fable.Core.Extensions.fs
@@ -59,7 +59,7 @@
 2	FsToolkit.ErrorHandling/src/FsToolkit.ErrorHandling/ResultOp.fs
 4	Hopac/Libs/Hopac.Experimental/SelectableQueue.fs
 1	Hopac/Libs/Hopac/Stream.fs
-5	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
+7	Paket/src/Paket.Core/PaketConfigFiles/ProjectFile.fs
 3	Paket/src/Paket.Core/PaketConfigFiles/SolutionFile.fs
 2	Saturn/sample/ChannelsSample/ChannelsSample.fs
 6	expecto/Expecto.Tests/Tests.fs

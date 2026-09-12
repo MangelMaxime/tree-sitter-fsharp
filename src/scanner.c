@@ -60,6 +60,7 @@ typedef enum {
     LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) — a labelled type element (`x: int -> …`)
     PAREN_BLOCK_OPEN,     // zero-width: `(` followed by a newline - pushes S_EXPR at the body column, closed by `)`
     INFIX_BLOCK_OPEN,     // zero-width: `&&`/`||` then a newline and a deeper line - pushes S_EXPR at that column
+    FIELD_BLOCK_OPEN,     // zero-width: record field `=` then a newline - pushes S_EXPR at the value column
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -85,7 +86,7 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY }
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
-typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; uint8_t par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
+typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
@@ -182,7 +183,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, u
 }
 
 static void push(Scanner *s, uint8_t sort, uint32_t col) {
-    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->n++; }
+    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = (uint16_t)col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->n++; }
 }
 
 // Compute the indent + first significant char of the NEXT non-blank, non-comment
@@ -1279,7 +1280,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         bool nl_before = (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == '/');
         uint32_t col = peek_body_col(lexer);  // positions lexer at the body's first char
-        if (!nl_before && lexer->lookahead == 'i') {
+        // `else`⏎`if …` at the enclosing body's own column is a flat else-if
+        // chain too (LargeConditionals: 200 levels would overflow the stack).
+        bool flat_col = nl_before && top && col <= top->col;
+        if ((!nl_before || flat_col) && lexer->lookahead == 'i') {
             lexer->advance(lexer, true);
             if (lexer->lookahead == 'f') {
                 lexer->advance(lexer, true);
@@ -1334,6 +1338,17 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (next_line_indent(lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
         }
         return false; // inline type body (record/alias/inline DU) — let it match
+    }
+    // FIELD_BLOCK_OPEN: a record field value that starts on the next line.
+    if (valid[FIELD_BLOCK_OPEN]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            uint32_t col; int32_t bfirst = 0;
+            if (next_line_indent(lexer, &col, &bfirst) && top && col > top->col && bfirst != '}' && bfirst != '|') {
+                push(s, S_EXPR, col); lexer->result_symbol = FIELD_BLOCK_OPEN; return true;
+            }
+        }
+        return false;
     }
     // INFIX_BLOCK_OPEN: the right operand of a line-ending `&&`/`||` starts on
     // a deeper line.
@@ -1660,12 +1675,23 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // outer `else` line, TaggedCollections/FCS style). `in`/`end`
                     // keep the unconditional close.
                     bool else_kw = !strcmp(w, "else") || !strcmp(w, "elif");
+                    // `new(x) as this = { A = x } then this.B <- 1`: the inline ctor body
+                    // ends before its `then`.
+                    if (!strcmp(w, "then") && top->sort == S_LAYOUT && top->inl && valid[LAYOUT_END]) {
+                        s->n--; lexer->result_symbol = LAYOUT_END; return true;
+                    }
                     if (top->sort == S_EXPR && top->inf && (!strcmp(w, "then") || !strcmp(w, "do") || !strcmp(w, "with"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
-                    if (top->sort == S_EXPR && (else_kw ? (top->inl != 0 && top->thn != 0 && g_else_claim_col != (int32_t)mid_col)
+                    // An `else` also ends an INLINE non-then body (a lambda inside the
+                    // then-branch: `if c then f >>= fun () -> g else h`) as long as a
+                    // then-body further down owns it; the claim stops the close at the
+                    // enclosing bodies once the owner has closed.
+                    bool thn_below = false;
+                    for (int i = (int)s->n - 2; i >= 0 && !thn_below; i--) thn_below = s->stk[i].thn != 0;
+                    if (top->sort == S_EXPR && (else_kw ? (g_else_claim_col != (int32_t)mid_col && (top->thn != 0 || (top->inl && thn_below)))
                                                 : (!strcmp(w, "in") || !strcmp(w, "end")))) {
-                        if (else_kw) g_else_claim_col = (int32_t)mid_col;
+                        if (else_kw && top->thn) g_else_claim_col = (int32_t)mid_col;
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     // `in` after an inline match-arm body (`let f t = match t with
@@ -1804,10 +1830,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead != ';') {          // leave `;;` to fsi_terminator
                     lexer->mark_end(lexer);             // token = just the `;`
                     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    // A `;` that ends the file is a terminator too.
+                    if (lexer->lookahead == 0) { lexer->result_symbol = DECL_SEMI; return true; }
                     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
                         uint32_t ncol; int32_t nfirst = 0;
-                        if (next_line_indent(lexer, &ncol, &nfirst) &&
-                            decl_starter(lexer, nfirst)) {
+                        if (!next_line_indent(lexer, &ncol, &nfirst) || decl_starter(lexer, nfirst)) {
                             lexer->result_symbol = DECL_SEMI; return true;
                         }
                     }
@@ -2142,6 +2169,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // before `else`/`elif`/… — otherwise `if c then return a`⏎`else …`
             // inside a CE detaches the else (banked-fix #3, in the new model).
             if (valid[BRACKET_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = BRACKET_SEMI; return true; }
+            // A DEEPER line led by a statement keyword is still a new element
+            // (`[ yield a`⏎`    for x in xs do …`): no expression continues with it.
+            if (valid[BRACKET_SEMI] && col > top->col && first >= 'a' && first <= 'z') {
+                char w[12]; read_word(lexer, w, sizeof w);
+                if (!strcmp(w, "yield") || !strcmp(w, "for") || !strcmp(w, "let") || !strcmp(w, "use") ||
+                    !strcmp(w, "match") || !strcmp(w, "while") || !strcmp(w, "return") || !strcmp(w, "try") ||
+                    !strcmp(w, "if") || !strcmp(w, "do")) { lexer->result_symbol = BRACKET_SEMI; return true; }
+                return false;
+            }
             // First element of a `{`-block body that is itself an element DSL
             // (`div() {⏎ span() {…}`): the mid-line block is unreachable from the
             // line-boundary path, so probe here (after the separator above, so a

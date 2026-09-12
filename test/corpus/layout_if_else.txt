@@ -341,3 +341,346 @@ let f x =
         (pattern
           (wildcard_pattern))
         (bool_literal)))))
+
+================================================================================
+else after a lambda inside an inline then-branch
+================================================================================
+
+let rec lp i = if i <= hi then i2uJ i >>= fun () -> lp (i+1) else unit ()
+
+let flags =
+    (if equalityDependsOn then
+                       0b00000100000000000 else 0) |||
+    (if supportsNullFlex then
+                       0b00100000000000000 else 0)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (symbolic_op)
+        (lambda_expression
+          (parameter
+            (unit))
+          (application_expression
+            (long_identifier
+              (identifier))
+            (parenthesized_expression
+              (binary_expression
+                (long_identifier
+                  (identifier))
+                (int_literal))))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (unit))))
+  (let_binding
+    (identifier)
+    (binary_expression
+      (parenthesized_expression
+        (if_expression
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (int_literal)))
+      (symbolic_op)
+      (parenthesized_expression
+        (if_expression
+          (long_identifier
+            (identifier))
+          (int_literal)
+          (int_literal))))))
+
+================================================================================
+Deeper keyword-led lines inside a bracket are new elements
+================================================================================
+
+let rec getGenericArgs (typeDef: System.Type) : string list =
+    [ yield typeDef.Name
+        for genericTypeArg in typeDef.GetGenericArguments() do
+        yield! getGenericArgs genericTypeArg ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)
+          (identifier))))
+    (type_expression
+      (postfix_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (long_identifier
+          (identifier))))
+    (list_expression
+      (ce_result_expr
+        (long_identifier
+          (identifier)
+          (identifier)))
+      (for_expression
+        (identifier)
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (unit))
+        (ce_result_expr
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Struct tuple pattern as a lambda parameter
+================================================================================
+
+let f = cont << fun struct (depth, ty) -> depth + 1, mkFunTy g ty
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (binary_expression
+      (long_identifier
+        (identifier))
+      (lambda_expression
+        (parameter
+          (struct_tuple_pattern
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))
+            (pattern
+              (identifier_pattern
+                (long_identifier
+                  (identifier))))))
+        (tuple_expression
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (int_literal))
+          (application_expression
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+Record field value on its own lines is a layout block
+================================================================================
+
+let r =
+    {|
+        template = processTemplate this.Template
+        parameters =
+            let p = Dictionary<string, obj>()
+            for a in b do
+                p.Add(a.Key, 1)
+            // comment between the loops
+            for c in d do
+                p.[c.Key] <- c.Value
+            p
+    |}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (anonymous_record_expression
+      (record_field
+        (long_identifier
+          (identifier))
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)
+            (identifier))))
+      (record_field
+        (long_identifier
+          (identifier))
+        (let_expression
+          (let_decl_indented
+            (identifier)
+            (application_expression
+              (type_application_expression
+                (long_identifier
+                  (identifier))
+                (type_expression
+                  (long_identifier
+                    (identifier)))
+                (type_expression
+                  (long_identifier
+                    (identifier))))
+              (unit)))
+          (sequence_expression
+            (for_expression
+              (identifier)
+              (long_identifier
+                (identifier))
+              (application_expression
+                (long_identifier
+                  (identifier)
+                  (identifier))
+                (parenthesized_expression
+                  (tuple_expression
+                    (long_identifier
+                      (identifier)
+                      (identifier))
+                    (int_literal)))))
+            (line_comment)
+            (sequence_expression
+              (for_expression
+                (identifier)
+                (long_identifier
+                  (identifier))
+                (binary_expression
+                  (index_expression
+                    (long_identifier
+                      (identifier))
+                    (long_identifier
+                      (identifier)
+                      (identifier)))
+                  (long_identifier
+                    (identifier)
+                    (identifier))))
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+else at the end of a line with the next if at the same column is a flat chain
+================================================================================
+
+let f () =
+    if rnd.Next(3) = 1 then 1 else
+    if rnd.Next(3) = 1 then 2 else
+    if rnd.Next(3) = 1 then 3 else
+    4
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (if_expression
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (int_literal)))
+        (int_literal))
+      (int_literal)
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (int_literal)))
+        (int_literal))
+      (int_literal)
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (int_literal)))
+        (int_literal))
+      (int_literal)
+      (int_literal))))
+
+================================================================================
+Inline constructor body followed by then on the same line
+================================================================================
+
+type Point =
+    val mutable m_x : float
+    val mutable m_y : float
+    new(x, y) as this = { m_y = y } then this.m_x <- x
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (secondary_constructor
+      (tuple_params
+        (tuple_param
+          (identifier))
+        (tuple_param
+          (identifier)))
+      (identifier)
+      (record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      (binary_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+Statement-ending semicolon at the end of the file
+================================================================================
+
+printfn "x"
+printf "TEST PASSED OK" ;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sequence_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))))
