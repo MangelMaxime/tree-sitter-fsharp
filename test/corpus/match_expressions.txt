@@ -273,3 +273,34 @@ let tyconSearch () =
           (wildcard_pattern))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Ascribed match scrutinee without parentheses
+================================================================================
+
+match d: int option with
+| Some v -> v
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (match_expression
+    (type_ascription_expression
+      (long_identifier
+        (identifier))
+      (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))
+    (match_arm
+      (pattern
+        (identifier_pattern
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier))))
+      body: (long_identifier
+        (identifier)))))

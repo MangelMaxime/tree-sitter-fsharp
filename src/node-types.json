@@ -653,6 +653,10 @@
         {
           "type": "pattern",
           "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
+          "named": true
         }
       ]
     }
@@ -3063,6 +3067,10 @@
         {
           "type": "pattern",
           "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
+          "named": true
         }
       ]
     }
@@ -3208,6 +3216,10 @@
         },
         {
           "type": "match_arm",
+          "named": true
+        },
+        {
+          "type": "type_ascription_expression",
           "named": true
         }
       ]
@@ -3517,6 +3529,10 @@
           "named": true
         },
         {
+          "type": "type_ascription_expression",
+          "named": true
+        },
+        {
           "type": "type_decl",
           "named": true
         },
@@ -3683,6 +3699,10 @@
         },
         {
           "type": "triple_quoted_string",
+          "named": true
+        },
+        {
+          "type": "type_ascription_expression",
           "named": true
         },
         {
@@ -4926,6 +4946,10 @@
         },
         {
           "type": "shebang",
+          "named": true
+        },
+        {
+          "type": "type_ascription_expression",
           "named": true
         },
         {

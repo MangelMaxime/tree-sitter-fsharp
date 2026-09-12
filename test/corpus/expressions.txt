@@ -3308,3 +3308,42 @@ let x = { (a) with F = 1 }
         name: (long_identifier
           (identifier))
         value: (int_literal)))))
+
+================================================================================
+Bare type ascription as an argument to new
+================================================================================
+
+let el = new XElement(name : XName)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (new_expression
+      (long_identifier
+        (identifier))
+      (type_ascription_expression
+        (long_identifier
+          (identifier))
+        (type_expression
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+Bare type ascription as a statement
+================================================================================
+
+failwith "foo" : int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_ascription_expression
+    (application_expression
+      (long_identifier
+        (identifier))
+      (string_literal))
+    (type_expression
+      (long_identifier
+        (identifier)))))

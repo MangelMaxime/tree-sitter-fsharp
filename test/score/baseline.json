@@ -1,13 +1,13 @@
 {
   "coverage_bench": {
     "files": 3913,
-    "failing": 166,
-    "clean_pct": 95.76
+    "failing": 159,
+    "clean_pct": 95.94
   },
   "coverage_dotnet_valid": {
     "files": 3467,
-    "failing": 290,
-    "clean_pct": 91.64
+    "failing": 284,
+    "clean_pct": 91.81
   },
   "rejection_recall": {
     "files": 47,
@@ -16,8 +16,8 @@
   },
   "rejection_false_positive": {
     "files": 373,
-    "flagged": 42,
-    "fp_pct": 11.26
+    "flagged": 41,
+    "fp_pct": 10.99
   },
   "degeneracy": {
     "sites": 300,

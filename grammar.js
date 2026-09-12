@@ -2359,7 +2359,14 @@ export default grammar({
                 choice(
                     seq(
                         "(",
-                        optional(seq($._expression, repeat(seq(",", $._expression)))),
+                        // An argument may carry a bare ascription:
+                        // `new XElement(name : XName)`. The parens belong to the
+                        // call, so `typed_expression` (which owns its own) cannot
+                        // match here.
+                        optional(seq(
+                            choice($._expression, $.type_ascription_expression),
+                            repeat(seq(",", choice($._expression, $.type_ascription_expression))),
+                        )),
                         ")",
                     ),
                     // Single UN-parenthesised atomic argument:
@@ -2776,7 +2783,9 @@ export default grammar({
         match_expression: ($) => prec.right(PREC.MATCH_EXPR,
             seq(
                 "match",
-                $._expression,
+                // `match x: int option with` - the scrutinee may carry a bare
+                // ascription; the parenthesised form is a plain _expression.
+                choice($._expression, $.type_ascription_expression),
                 "with",
                 $._match_arms,
             ),
@@ -3075,7 +3084,10 @@ export default grammar({
         // here are FULL patterns — inside `[ ]` a constructor application like
         // `Ctor(x, y)` is unambiguous (`[ A.Tag, B.Coll(o, t) ]`).
         list_tuple_pattern: $ => prec.right(seq($.pattern, repeat1(seq(",", $.pattern)))),
-        _list_pattern_item: $ => choice($.pattern, $.list_tuple_pattern),
+        // `| [arg: Expr] ->` - the brackets stand in for the per-element parens
+        // that `typed_pattern` requires, exactly as `tuple_typed_pattern` does
+        // inside a parenthesised tuple.
+        _list_pattern_item: $ => choice($.pattern, $.list_tuple_pattern, $.tuple_typed_pattern),
 
         // Both forms: inline `[ a; b ]` and block/newline-aligned
         // (`| [ [| Target "T1" |]⏎     [| Target "T2" |] ]` — Fake.Core tests).
@@ -3509,6 +3521,12 @@ export default grammar({
             // being statically resolved toward the sequence shift — which made
             // a trailing `stmt;` unparseable.
             prec(PREC.SEQ_EXPR, $._expression),
+
+            // A bare ascription as a STATEMENT: `failwith "foo" : int`.
+            // `typed_expression` owns its parens so it cannot cover this, and
+            // `type_ascription_expression` is otherwise reachable only as a
+            // binding body (_ascribable_body).
+            prec(PREC.SEQ_EXPR, $.type_ascription_expression),
 
             // FSI / script trailing `;` after a top-level / module-body
             // declaration (`open System;`). (`;;` is handled as an extra.)
