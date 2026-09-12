@@ -26,3 +26,52 @@ fsharp/tests/service/data/SyntaxTree/UnionCase/Missing name 05.fs
 fsharp/tests/service/data/SyntaxTree/Member/Auto property 03.fs
 # `exception MyException` declared inside a type body
 fsharp/tests/service/data/SyntaxTree/Type/Exception Inside Type 01.fs
+
+# Negative parser tests whose own <Expects status="error"> annotation says they must
+# NOT parse. They live under Diagnostics/ (no E_/neg prefix), so the classifier
+# files them as valid. Sibling *b.fs variants are status="notin" (valid) and stay.
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/attrUnionCaseDecl01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/braceExpr01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/fileModuleImpl01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/fileModuleImpl02.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/fileModuleImpl04.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/interactiveExprOrDefinitionsTerminator01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/interactiveExprOrDefinitionsTerminator02.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/interactiveExprOrDefinitionsTerminator05.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/interactiveExprOrDefinitionsTerminator06.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/memberDefinitionWithoutType01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/monadicExprNonEmptyInitial01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/monadicPatternClauses01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/tuplewithlazy01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/tuplewithlazy01b.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/typ01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/typeConstraint01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/typedSeqExprBlock01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/NONTERM/typedSeqExprBlock02.fs
+# Files deliberately truncated mid-construct at EOF (status="error").
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/du_with01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/for_in01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/for_in_range01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/if01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/match01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/try01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/type_id_equal_curly01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/type_id_parens01.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/ParsingAtEOF/while_cond01.fs
+# `use! [| r1; r2 |] = ...` - the file name says wrong form (status="error").
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Diagnostics/async/UseBindingWrongForm01.fs
+
+# Not UTF-8: UTF-16LE, ISO-8859 or UTF-7 sources for codepage tests.
+fsharp/tests/FSharp.Compiler.ComponentTests/CompilerOptions/fsc/codepage/libCodepage.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/Conformance/Expressions/DataExpressions/QueryExpressions/UppercaseIdentifier04.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/StringsAndCharacters/ByteChars02.fs
+fsharp/tests/FSharp.Compiler.ComponentTests/resources/tests/Conformance/LexicalAnalysis/StringsAndCharacters/TripleQuoteString02.fs
+fsharp/tests/fsharp/core/unicode/kanji-unicode-utf16.fs
+fsharp/tests/fsharp/core/unicode/kanji-unicode-utf7-codepage-65000.fs
+
+# Visual Studio templates with $safeprojectname$ / $safeitemrootname$ placeholders.
+fsharp/vsintegration/ItemTemplates/CodeFile/Template/File.fs
+fsharp/vsintegration/ProjectTemplates/LibraryProject/Template/Library1.fs
+
+# Pseudo-code sketch with literal `...` bodies.
+fsharp/tests/fsharp/core/members/absil.fs
