@@ -58,6 +58,7 @@ typedef enum {
     DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line — consumed as trivia (extras) so the sequence can end
     MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`⏎`    member …`) — pushes S_TYPEBODY
     LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) — a labelled type element (`x: int -> …`)
+    PAREN_BLOCK_OPEN,     // zero-width: `(` followed by a newline - pushes S_EXPR at the body column, closed by `)`
 } Sym;
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
@@ -83,7 +84,7 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY }
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
-typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else)
+typedef struct { uint32_t col; uint8_t sort; uint8_t inl; uint8_t thn; uint8_t par; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it)
 
 #define MAXD 512
 typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
@@ -177,7 +178,7 @@ void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, u
 }
 
 static void push(Scanner *s, uint8_t sort, uint32_t col) {
-    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->n++; }
+    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->n++; }
 }
 
 // Compute the indent + first significant char of the NEXT non-blank, non-comment
@@ -1320,6 +1321,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         return false; // inline type body (record/alias/inline DU) — let it match
     }
+    // PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
+    // for an empty `(`⏎`)` (that is the `unit` token).
+    if (valid[PAREN_BLOCK_OPEN]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        int32_t c0 = lexer->lookahead;
+        if (c0 == '\n' || c0 == '\r') {
+            uint32_t col; int32_t bfirst = 0;
+            if (next_line_indent(lexer, &col, &bfirst) && bfirst != ')' && !is_opchar(bfirst)) {
+                push(s, S_EXPR, col); s->stk[s->n - 1].par = 1; lexer->result_symbol = PAREN_BLOCK_OPEN; return true;
+            }
+            return false;
+        }
+        // Inline-first content anchors the body at its own column, so a line
+        // aligned with it is a new statement (F# sequences it too). Operator-led
+        // content (`(+)`, `(-x)`, `(<@ e @>)`) and comment-led content keep the
+        // plain form.
+        if (c0 == ')' || c0 == 0 || c0 == '\'' || is_opchar(c0)) return false;
+        uint32_t inline_col = lexer->get_column(lexer);
+        if (c0 == '(') {
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '*' || lexer->lookahead == '^' || lexer->lookahead == '\'') return false;
+        }
+        push(s, S_EXPR, inline_col); s->stk[s->n - 1].par = 1; lexer->result_symbol = PAREN_BLOCK_OPEN; return true;
+    }
     if (valid[BRACKET_OPEN]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1533,7 +1558,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                          c1 != '%' && c1 != '&' && c1 != '*' && c1 != '+' && c1 != '-' &&
                          c1 != '.' && c1 != '/' && c1 != '<' && c1 != '=' && c1 != '^' &&
                          c1 != '~' && c1 != '$' &&   // `|?>`/`||>`-style custom ops are INFIX, not an arm `|` (fix-3's boundary rule, mid-line flavor)
-                         top && layoutish(top->sort) && valid[LAYOUT_END] && has_match_ctx(s)) {
+                         top && layoutish(top->sort) && !top->par && valid[LAYOUT_END] && has_match_ctx(s)) {
                     // A bare same-line `|` is the next match arm; close the inline
                     // arm body first (`function | 0 -> "a" | _ -> "b"`). Gated on an
                     // S_MATCH being on the stack so a UNION case separator
@@ -2025,7 +2050,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                                          c1 == '$' || c1 == ':');
             else if (c0 == '/') infix = (c1 != '/');                       // `//` = COMMENT, not an operator
             else                infix = true;                              // = < > * % ^
-            if (infix && top->sort == S_EXPR && col + oplen + 1 < top->col) infix = false;
+            if (infix && top->sort == S_EXPR && !top->par && col + oplen + 1 < top->col) infix = false;
             if (infix) return false;
         }
 
@@ -2039,7 +2064,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             lexer->advance(lexer, true);
             int32_t c1 = lexer->lookahead;
             if (first == '+') return false;
-            if (first == '-' && c1 != '>') return false;
+            if (first == '-') {
+                if (c1 != '>') return false;
+                // `->=` / `->!`-style custom operators continue the line; a bare
+                // `->` is a lambda / arm arrow.
+                lexer->advance(lexer, true);
+                if (is_opchar(lexer->lookahead)) return false;
+            }
             if (first == '@') {
                 if (c1 != '"' && c1 != '>' && c1 != '@') return false;
                 // `@>` / `@@>` at the BODY column closes a multi-line quotation
@@ -2128,6 +2159,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // (`type E =`⏎`      A = 0`⏎`    | B = 1`); types never nest inside
             // match arms, so a dedented `|` under a type body is never an arm.
             if (valid[LAYOUT_END] && col < top->col && top->sort == S_TYPEBODY && bar_arm) return false;
+            // A `(` block closes only at a closer: a dedented line inside it is a
+            // continuation (`when (match x with`⏎`  | A -> …`, `(f a`⏎`  +> g)`).
+            // A dedented declaration keyword is recovery for an unclosed `(`.
+            if (top->par && col < top->col && first != ')' && !is_close_bracket(first) &&
+                !decl_starter(lexer, first)) return false;
+            if (top->par && first == ',') return false;
             if (valid[LAYOUT_END] && col < top->col) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `#if`-family directive line sits between this declaration and a
             // line that starts a NEW one: the two are alternative spellings of the
@@ -2144,9 +2181,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // body must close so the over-indented arm reaches the enclosing
             // match. Gated on such a match existing further left, and NOT
             // S_TYPEBODY (DU cases legitimately lead with `|` at the body col).
+            // `<=`: an arm body opened AT the arm column (`| p ->`⏎`| body` with
+            // the body undented to the `|`, LexFilter.fs) ends at the next arm.
             if (valid[LAYOUT_END] && bar_arm && col == top->col && top->sort != S_TYPEBODY) {
                 for (int i = (int)s->n - 2; i >= 0; i--) {
-                    if (s->stk[i].sort == S_MATCH && s->stk[i].col < col) {
+                    if (s->stk[i].sort == S_MATCH && s->stk[i].col <= col) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     if (s->stk[i].col < col && s->stk[i].sort != S_MATCH) break;

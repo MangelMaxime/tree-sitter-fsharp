@@ -1,0 +1,353 @@
+================================================================================
+Parenthesised multi-line body sequences its statements
+================================================================================
+
+let r = (
+    a ()
+    let e = 1
+    e)
+
+let r2 =
+    async {
+        return! (
+            x.Dispose ()
+            let e = handler exn
+            e)
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parenthesized_expression
+      (sequence_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (unit))
+        (let_expression
+          (let_decl_indented
+            (identifier)
+            (int_literal))
+          (long_identifier
+            (identifier))))))
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (ce_result_expr
+        (parenthesized_expression
+          (sequence_expression
+            (application_expression
+              (long_identifier
+                (identifier)
+                (identifier))
+              (unit))
+            (let_expression
+              (let_decl_indented
+                (identifier)
+                (application_expression
+                  (long_identifier
+                    (identifier))
+                  (long_identifier
+                    (identifier))))
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Inline-first paren content anchors the body at its own column
+================================================================================
+
+let f () =
+    if kind = shiftFlag then
+        (if count > 0 then
+             count <- count - 1
+         let next = actionValue action
+         next)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (if_expression
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier)))
+      (parenthesized_expression
+        (sequence_expression
+          (if_expression
+            (binary_expression
+              (long_identifier
+                (identifier))
+              (int_literal))
+            (binary_expression
+              (binary_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier)))
+              (int_literal)))
+          (let_expression
+            (let_decl_indented
+              (identifier)
+              (application_expression
+                (long_identifier
+                  (identifier))
+                (long_identifier
+                  (identifier))))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+do with an indented multi-statement body inside a function
+================================================================================
+
+let t () =
+    do
+        f x
+        let x = 1
+        g x
+    1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (sequence_expression
+      (do_expression
+        (sequence_expression
+          (application_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier)))
+          (let_expression
+            (let_decl_indented
+              (identifier)
+              (int_literal))
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier))))))
+      (int_literal))))
+
+================================================================================
+Generic application in an if condition followed by more statements
+================================================================================
+
+let m =
+    seq {
+        if a <> Unchecked.defaultof<_> then
+            yield 1
+
+        yield 2
+
+        if c <> Unchecked.defaultof<_> then
+            yield 3
+    }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (if_expression
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (type_application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (type_expression
+              (long_identifier
+                (identifier)))))
+        (ce_result_expr
+          (int_literal)))
+      (ce_result_expr
+        (int_literal))
+      (if_expression
+        (binary_expression
+          (long_identifier
+            (identifier))
+          (type_application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (type_expression
+              (long_identifier
+                (identifier)))))
+        (ce_result_expr
+          (int_literal))))))
+
+================================================================================
+Arrow-led custom operator continues the previous line inside call arguments
+================================================================================
+
+Assert.Seq(
+    "usage",
+    "10 20 40"
+    ->= [ ("<kind>", Argument("10"))
+          ("<name>", Argument("20")) ],
+    "x" ->! typeof<ArgvException>
+)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (application_expression
+    (long_identifier
+      (identifier)
+      (identifier))
+    (parenthesized_expression
+      (tuple_expression
+        (tuple_expression
+          (string_literal)
+          (binary_expression
+            (string_literal)
+            (symbolic_op)
+            (list_expression
+              (parenthesized_expression
+                (tuple_expression
+                  (string_literal)
+                  (application_expression
+                    (long_identifier
+                      (identifier))
+                    (parenthesized_expression
+                      (string_literal)))))
+              (parenthesized_expression
+                (tuple_expression
+                  (string_literal)
+                  (application_expression
+                    (long_identifier
+                      (identifier))
+                    (parenthesized_expression
+                      (string_literal))))))))
+        (binary_expression
+          (string_literal)
+          (symbolic_op)
+          (type_keyword_expression
+            (type_intrinsic)
+            (type_expression
+              (long_identifier
+                (identifier)))))))))
+
+================================================================================
+Parenthesised match with arms left of the match keyword and a body at the arm column
+================================================================================
+
+let f ctxts =
+    match offsideStack with
+    | STRUCT, ctxts
+            when (match ctxts with
+                    | CtxtSeqBlock _ :: _ ->
+                    true
+                    | _ -> false) ->
+        1
+    | _ -> 0
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (parenthesized_expression
+          (match_expression
+            (long_identifier
+              (identifier))
+            (match_arm
+              (pattern
+                (cons_pattern
+                  (pattern
+                    (identifier_pattern
+                      (long_identifier
+                        (identifier))
+                      (wildcard_pattern)))
+                  (pattern
+                    (wildcard_pattern))))
+              (bool_literal))
+            (match_arm
+              (pattern
+                (wildcard_pattern))
+              (bool_literal))))
+        (int_literal))
+      (match_arm
+        (pattern
+          (wildcard_pattern))
+        (int_literal)))))
+
+================================================================================
+Nullable ascription inside a parenthesised call in a match arm body
+================================================================================
+
+let f () =
+    match x with
+    | A(fspec) ->
+        g.GetValue(null: obj | null)
+    | B -> 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (match_expression
+      (long_identifier
+        (identifier))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (tuple_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))))
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (type_ascription_expression
+              (null_literal)
+              (type_expression
+                (nullable_type
+                  (long_identifier
+                    (identifier))))))))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (int_literal)))))

@@ -3323,12 +3323,13 @@ let el = new XElement(name : XName)
     body: (new_expression
       (long_identifier
         (identifier))
-      (type_ascription_expression
-        (long_identifier
-          (identifier))
-        (type_expression
+      (parenthesized_expression
+        (type_ascription_expression
           (long_identifier
-            (identifier)))))))
+            (identifier))
+          (type_expression
+            (long_identifier
+              (identifier))))))))
 
 ================================================================================
 Bare type ascription as a statement

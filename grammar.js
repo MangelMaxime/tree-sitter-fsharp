@@ -230,6 +230,7 @@ export default grammar({
         $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION — consumed as trivia so the sequence can end (see scanner)
         $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`⏎`    member …`)
         $._label_gate,        // zero-width: `ident :` (not `::` `:>` `:?` `:=`) ahead - a labelled type element starts here
+        $._paren_block_open,  // zero-width: `(` followed by a newline - the body is a layout block closed by `)`
     ],
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
@@ -997,7 +998,7 @@ export default grammar({
         // static do runs once at type initialization time
         // Layout body so `[static] do expr` closes at the next member/statement
         // instead of absorbing it (e.g. `static do printfn …` before members).
-        do_stmt: $ => seq(optional("static"), "do", $._indented_or_inline_body),
+        do_stmt: $ => prec(3, seq(optional("static"), "do", $._indented_or_inline_body)),
 
         // Explicit field in a class:
         //   val mutable field: int
@@ -1480,7 +1481,13 @@ export default grammar({
             ">",
         )),
 
-        parenthesized_expression: $ => seq("(", $._expression, ")"),
+        // `(`⏎`    stmt`⏎`    stmt`⏎`)`: a multi-line body is a layout block (the
+        // scanner opens it only when a newline follows the `(`), so newline-aligned
+        // statements sequence instead of chaining into one application.
+        parenthesized_expression: $ => seq("(", choice(
+            seq($._paren_block_open, choice($._expression, $.type_ascription_expression), $._layout_end),
+            $._expression,
+        ), ")"),
 
         // Inline IL: `(# "IL.opcode" arg* [: type] #)` — a low-level intrinsic
         // (e.g. `(# "" x : 'b #)` for an unsafe cast). `(#`/`#)` are glued tokens
@@ -1594,7 +1601,9 @@ export default grammar({
             $.computation_expression,
             // `f <@ expr @>` — a code quotation as an application ARGUMENT. Without
             // this, `<@` after a value lexes as the `<@` symbolic_op (binary), so
-            // `EvaluateQuotation <@ 42 @>` mis-parses.
+            // `EvaluateQuotation <@ 42 @>` mis-parses. (Only the typed `<@ @>` form
+            // is added here; `untyped_quotation`'s `<@@` ripples GLR states and
+            // regresses Set.fs, and isn't used as an application arg in practice.)
             $.typed_quotation,
             $.untyped_quotation,
         ),
@@ -1950,7 +1959,12 @@ export default grammar({
 
         _for_body: $ => seq($._for_open, field('body', $._expression), $._layout_end),
 
-        _paren_args: $ => seq("(", optional(seq($._expression, repeat(seq(",", $._expression)))), ")"),
+        // Block-aware like parenthesized_expression: the scanner opens a `(`
+        // body for any inline content, so `{ new T("x") with` must accept it.
+        _paren_args: $ => seq("(", choice(
+            seq($._paren_block_open, $._expression, repeat(seq(",", $._expression)), $._layout_end),
+            optional(seq($._expression, repeat(seq(",", $._expression)))),
+        ), ")"),
 
         _block_elements: $ => seq($._bracket_open, $._expression, repeat(prec(PREC.PAREN_EXPR, seq(choice(";", $._bracket_semi), $._expression))), optional(choice(";", $._bracket_semi)), $._bracket_close),
 
@@ -2591,7 +2605,7 @@ export default grammar({
         // keeps the following lines as siblings — while the operand still grabs a
         // full application / assignment (prec ≥ 4). (A `|>`/tuple operand, prec 1,
         // would bind outside the `do`, but that form is degenerate for `do`.)
-        do_expression: $ => prec.right(2, seq("do", $._expression)),
+        do_expression: $ => prec.right(2, seq("do", $._indented_or_inline_body)),
 
         // begin expr end  — sequenced block (equivalent to parenthesized).
         // Layout body so the MULTI-LINE form works: `begin`⏎`  a ()`⏎`  b ()`⏎
