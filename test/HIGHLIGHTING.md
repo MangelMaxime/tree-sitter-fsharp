@@ -22,29 +22,31 @@ regenerates it and the diff is reviewed like any other change.
 ## Decisions
 
 Syntax alone cannot tell a union case from a type or a module from a class. The
-convention below is what the tests pin. `trial` means agreed to try and review in the tests; `confirmed` is settled.
+convention below is what the tests pin. `confirmed` is pinned by a reviewed family file;
+`trial` is agreed but not yet pinned by one (D10 to D15 are not implemented yet: those keywords
+all resolve to `keyword.control` today).
 
 | # | Situation | Capture | Status |
 |---|---|---|---|
 | D1 | `let f x = ...` (has parameters) | name `function`, parameters `variable.parameter` | confirmed |
 | D2 | `let x = ...` (no parameters) | name `function`: a value is often a partial application or a lambda, so one colour for every `let` name; a `use` name is `variable` (always a disposable value) | confirmed |
 | D3 | `List.map xs`, `System.IO.Path.Combine(a, b)`, `Inner.v` | every capitalised qualifier `namespace`; the called segment `function`; a lowercase last segment that is not called (`Q.value`, `List.map` as an argument) `function` too, see D2 | confirmed |
-| D4 | `x.Length`, `x.ToString()`: member access on a value | member `variable.other.member`, called member `function.method` | trial |
+| D4 | `x.Length`, `x.ToString()`: member access on a value | member `variable.other.member`, called member `function.method` | confirmed |
 | D5 | Bare capitalised name in an expression (`None`, `Aligned`) | `constructor` | trial |
 | D6 | `Result.Error x`, `File.OpenRead p`: qualified name applied | qualifier `namespace`, last segment `function` whatever its case: static method calls are far more common than applied qualified constructors | trial |
 | D7 | Capitalised single segment in a type position | `type` | confirmed |
-| D8 | `int`, `string`, `unit`, `bool`, `float`, `obj`, `exn`... | `type.builtin` | trial |
+| D8 | `int`, `string`, `unit`, `bool`, `float`, `obj`, `exn`... | `type.builtin` | confirmed |
 | D9 | CE builder (`async { }`, `task { }`) | `keyword` (current) | trial |
 | D10 | `if`/`then`/`elif`/`else`/`match`/`with`/`when` | `keyword.control.conditional` | trial |
 | D11 | `for`/`while`/`to`/`downto`/`do` in loops | `keyword.control.repeat` | trial |
 | D12 | `return`/`yield` and the `!` forms | `keyword.control.return` | trial |
-| D13 | `open` | `keyword.control.import`; `#r`, `#load`, `#nowarn` stay `keyword.directive` | trial |
+| D13 | `open` | `keyword.control.import`; `#r`, `#load`, `#nowarn` stay `keyword.directive` | confirmed |
 | D14 | `try`/`with`/`finally`/`raise`/`failwith`/`reraise` | `keyword.control.exception` | trial |
 | D15 | `fun`, `function` | `keyword.function` | trial |
-| D16 | `type`, `module`, `namespace`, `exception` | `keyword.storage.type` | trial |
-| D17 | `mutable`, `inline`, `static`, `abstract`, `override`, `rec`, access modifiers | `keyword.storage.modifier` | trial |
+| D16 | `type`, `module`, `namespace`, `exception` | `keyword.storage.type` | confirmed |
+| D17 | `mutable`, `inline`, `static`, `abstract`, `override`, `rec`, access modifiers | `keyword.storage.modifier` | confirmed |
 | D18 | `_` in patterns and parameters | `wildcard` (current, theme-neutral) | trial |
-| D19 | `[<Literal>] let X = 1` | declaration name `constant`; uses cannot be told from other values | trial |
+| D19 | `[<Literal>] let X = 1` | declaration name `constant`; uses cannot be told from other values | confirmed |
 | D20 | `this`/`self` identifier in members, `base` | `variable.builtin` | confirmed |
 | D21 | Doc comments `///`, `(** *)` | `comment.line.documentation` / `comment.block.documentation` | confirmed |
 | D22 | Format specifiers `%d`, interpolation holes | `string.special`, braces `punctuation.special` | confirmed |
