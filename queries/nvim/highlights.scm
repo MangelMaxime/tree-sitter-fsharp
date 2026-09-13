@@ -4,30 +4,18 @@
 ; scripts/nvim-highlights-extra.scm.
 
 [
-  "namespace"
-  "module"
-  "open"
-  "type"
   "let"
-  "rec"
   "fun"
   "as"
   "in"
-  "inline"
-  "mutable"
   "of"
   "member"
-  "override"
-  "default"
-  "abstract"
   "inherit"
   "interface"
-  "static"
   "val"
   "do"
   "use"
   "new"
-  "exception"
   "extern"
   "do!"
   "get" "set" "and"
@@ -41,10 +29,14 @@
 
 (namespace_decl "global" @module)
 
+; Declaration keywords (D16) and imports (D13).
+["type" "module" "namespace" "exception"] @keyword.type
+"open" @keyword.import
+
+; Modifiers and access keywords (D17).
 [
-  "private"
-  "internal"
-  "public"
+  "rec" "inline" "mutable" "static" "abstract" "override" "default"
+  "private" "internal" "public"
 ] @keyword.modifier
 
 ; Unary prefix operators on a single expression — same semantic role as
@@ -59,9 +51,6 @@
 ; The `&` combining an and-pattern (`A a & B b`) is a pattern combinator like the
 ; or-pattern `|`, so it shares the @keyword slot rather than @operator.
 (and_pattern "&" @keyword)
-; The `&` combining a flexible-type intersection (`#A & #B`) is a type operator,
-; like the tuple-type `*` → @operator.
-(type_intersection "&" @operator)
 (optional_named_arg "?" @operator)
 (tuple_param "?" @operator)
 (parameter "?" @operator)
@@ -134,6 +123,11 @@
 
 (symbolic_op) @operator
 
+; Type-level `*`, `&` and `->` are keywords (D25), not value operators.
+(tuple_type "*" @keyword)
+(type_intersection "&" @keyword)
+(function_type "->" @keyword)
+
 ":" @punctuation.delimiter
 
 [
@@ -156,6 +150,8 @@
 (typed_quotation "@>" @punctuation.special)
 (untyped_quotation "<@@" @punctuation.special)
 (untyped_quotation "@@>" @punctuation.special)
+; Inline IL `(# "cgt" x y : int #)` brackets read like quotation brackets (D26).
+(inline_il_expression ["(#" "#)"] @punctuation.special)
 
 [
   ";"
@@ -222,7 +218,7 @@
     (identifier) @variable.parameter)*)
 
 (let_binding
-  name: (operator_name) @function
+  name: (operator_name)
   parameters: (parameter
     (identifier) @variable.parameter)*)
 
@@ -235,7 +231,7 @@
     (identifier) @variable.parameter)*)
 
 (let_decl_indented
-  name: (operator_name) @function
+  name: (operator_name)
   parameters: (parameter
     (identifier) @variable.parameter)*)
 
@@ -311,6 +307,9 @@
   name: (identifier) @function
   parameters: (parameter
     (identifier) @variable.parameter)*)
+
+(let_and_binding
+  name: (active_pattern_name) @function)
 
 (lambda_expression
   (parameter
@@ -741,6 +740,41 @@
    (record_field value: (long_identifier . (identifier) @constructor .))
  ] (#lua-match? @constructor "^[A-Z]"))
 
+; Builtin types (D8): only in type positions, so `string x` stays a call.
+((type_expression (long_identifier . (identifier) @type.builtin .))
+ (#any-of? @type.builtin "int" "string" "unit" "bool" "float" "obj" "exn" "char" "byte" "sbyte" "int8" "int16" "int32" "int64" "uint8" "uint16" "uint32" "uint64" "float32" "double" "single" "decimal" "nativeint" "unativeint" "bigint" "option" "voption" "list" "array" "seq" "Result" "ResizeArray" "Map" "Set" "Async" "Task"))
+
+; `[<Literal>] let X = 1` declares a constant (D19).
+((let_binding (attribute (attribute_target name: (long_identifier) @attribute)) name: (identifier) @constant)
+ (#eq? @attribute "Literal"))
+
+; `Inner.v`, `A.B.c`, `List.map` passed as a value (D3): a capitalised path with a
+; lowercase last segment is a module-qualified let binding. One fully anchored
+; pattern per length: the highlighter keeps only one of two matches of the same
+; pattern that capture the same node, so an unanchored middle segment loses.
+((long_identifier . (identifier) @module . (identifier) @function .)
+ (#lua-match? @module "^[A-Z]") (#lua-match? @function "^[a-z_]"))
+((long_identifier . (identifier) @module . (identifier) @module . (identifier) @function .)
+ (#lua-match? @module "^[A-Z]") (#lua-match? @function "^[a-z_]"))
+((long_identifier . (identifier) @module . (identifier) @module . (identifier) @module . (identifier) @function .)
+ (#lua-match? @module "^[A-Z]") (#lua-match? @function "^[a-z_]"))
+
+; `x.ToString()`, `directory.Create()` (D4): an applied member is a method call. The
+; D3 rules below recolour the capitalised-root cases.
+(application_expression . (long_identifier (identifier) . (identifier) @function.method.call .))
+
+; `File.OpenRead x`, `List.map f`, `System.IO.Path.Combine(a, b)` (D3, D6): every
+; capitalised qualifier of a call is a namespace and the applied last segment is
+; the function called, whatever its case.
+((application_expression . (long_identifier . (identifier) @module . (identifier) @function .))
+ (#lua-match? @module "^[A-Z]"))
+((application_expression . (long_identifier . (identifier) @module . (identifier) @module . (identifier) @function .))
+ (#lua-match? @module "^[A-Z]"))
+((application_expression . (long_identifier . (identifier) @module . (identifier) @module . (identifier) @module . (identifier) @function .))
+ (#lua-match? @module "^[A-Z]"))
+((application_expression . (long_identifier . (identifier) @module . (identifier) @module . (identifier) @module . (identifier) @module . (identifier) @function .))
+ (#lua-match? @module "^[A-Z]"))
+
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
 (new_expression (generic_type (long_identifier) @type))
@@ -870,13 +904,11 @@
 (try_expression ["try" "with" "finally"] @keyword.exception)
 (match_expression "with" @keyword.conditional)
 
-"open" @keyword.import
-
 ["let" "use" "member" "fun" "function"] @keyword.function
 
-["type" "exception" "inherit" "interface" "class" "struct" "delegate" "enum"] @keyword.type
+["inherit" "interface" "class" "struct" "delegate" "enum"] @keyword.type
 
-["abstract" "static" "inline" "mutable" "override" "rec" "default" "extern"] @keyword.modifier
+"extern" @keyword.modifier
 
 ; Computation-expression builders (`async { }`, `task { }`): nvim-treesitter
 ; files them under @constant.macro, as ionide/tree-sitter-fsharp does. The

@@ -20,7 +20,9 @@ let item = list.Head
 //              ^ variable.other.member
 
 let pair: int * string = (1, "a")
-//        ^ type
+//        ^ type.builtin
+//            ^ keyword
+//              ^ type.builtin
 
 type Box<'T> = { Value: 'T }
 //       ^ type.parameter

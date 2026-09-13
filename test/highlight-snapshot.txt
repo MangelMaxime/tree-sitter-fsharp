@@ -12,7 +12,7 @@
 10:0	// Match / Let / Brackets) plus the accu...	comment.line
 11:0	// =====================================...	comment.line
 13:0	// ── Decl: literals & inline let bodies...	comment.line
-14:0	module	keyword
+14:0	module	keyword.storage.type
 14:7	L01_InlineLet	namespace
 14:21	=	operator
 15:4	let	keyword
@@ -56,11 +56,11 @@
 24:8	(	punctuation.bracket
 24:9	typed_a	function
 24:16	:	punctuation.delimiter
-24:18	int	type
+24:18	int	type.builtin
 24:21	,	punctuation.delimiter
 24:23	typed_b	function
 24:30	:	punctuation.delimiter
-24:32	string	type
+24:32	string	type.builtin
 24:38	)	punctuation.bracket
 24:40	=	operator
 24:42	pair	-
@@ -94,7 +94,7 @@
 35:25	=	operator
 36:8	$$"""\n        line { one }\n        {{h...	string
 41:0	// ── Decl: own-line let bodies ────────...	comment.line
-42:0	module	keyword
+42:0	module	keyword.storage.type
 42:7	L02_OwnLineLet	namespace
 42:22	=	operator
 43:4	let	keyword
@@ -120,9 +120,9 @@
 50:16	3	constant.numeric.integer
 50:18	]	punctuation.bracket
 51:8	|>	operator
-51:11	List	type
+51:11	List	namespace
 51:15	.	punctuation
-51:16	map	variable.other.member
+51:16	map	function
 51:20	(	punctuation.bracket
 51:21	fun	keyword
 51:25	x	variable.parameter
@@ -132,11 +132,11 @@
 51:34	1	constant.numeric.integer
 51:35	)	punctuation.bracket
 52:8	|>	operator
-52:11	List	type
+52:11	List	namespace
 52:15	.	punctuation
-52:16	sum	variable.other.member
+52:16	sum	function
 54:0	// ── Decl: functions ──────────────────...	comment.line
-55:0	module	keyword
+55:0	module	keyword.storage.type
 55:7	L03_Functions	namespace
 55:21	=	operator
 56:4	let	keyword
@@ -152,15 +152,15 @@
 57:14	(	punctuation.bracket
 57:15	a	variable.parameter
 57:16	:	punctuation.delimiter
-57:18	int	type
+57:18	int	type.builtin
 57:21	)	punctuation.bracket
 57:23	(	punctuation.bracket
 57:24	b	variable.parameter
 57:25	:	punctuation.delimiter
-57:27	int	type
+57:27	int	type.builtin
 57:30	)	punctuation.bracket
 57:32	:	punctuation.delimiter
-57:34	int	type
+57:34	int	type.builtin
 57:38	=	operator
 57:40	a	-
 57:42	+	operator
@@ -180,9 +180,9 @@
 59:48	=	operator
 59:50	value	-
 59:56	=	operator
-59:58	Unchecked	type
+59:58	Unchecked	namespace
 59:67	.	punctuation
-59:68	defaultof	variable.other.member
+59:68	defaultof	function
 59:77	<	operator
 59:78	'T	type.parameter
 59:80	>	operator
@@ -204,18 +204,18 @@
 61:46	<	operator
 61:47	'K	type.parameter
 61:49	,	punctuation.delimiter
-61:51	int	type
+61:51	int	type.builtin
 61:54	>	operator
 61:55	)	punctuation.bracket
 61:57	=	operator
-61:59	Map	type
+61:59	Map	namespace
 61:62	.	punctuation
-61:63	toList	variable.other.member
+61:63	toList	function
 61:70	m	-
 61:72	|>	operator
-61:75	List	type
+61:75	List	namespace
 61:79	.	punctuation
-61:80	head	variable.other.member
+61:80	head	function
 61:85	|>	operator
 61:88	fst	-
 62:4	// IWSAM / bare-interface constraint (F#...	comment.line
@@ -232,14 +232,14 @@
 63:39	(	punctuation.bracket
 63:40	s	variable.parameter
 63:41	:	punctuation.delimiter
-63:43	string	type
+63:43	string	type.builtin
 63:49	)	punctuation.bracket
 63:51	=	operator
 63:53	's'	constant.character
 64:4	// Trailing `..` in a typar list — "and ...	comment.line
 65:4	// (FSharpPlus SeqT style).	comment.line
 66:4	let	keyword
-66:8	inline	keyword
+66:8	inline	keyword.storage.modifier
 66:15	runThen	function
 66:22	<	operator
 66:23	'T	type.parameter
@@ -266,7 +266,7 @@
 68:52	=	operator
 68:54	r	-
 68:55	.	punctuation
-68:56	Dispose	variable.other.member
+68:56	Dispose	function.method
 68:64	()	constant.builtin
 69:4	// Single-case union deconstruction in a...	comment.line
 70:4	let	keyword
@@ -287,13 +287,13 @@
 73:20	Wrap	constructor
 73:25	inner	variable.parameter
 73:30	:	punctuation.delimiter
-73:32	int	type
+73:32	int	type.builtin
 73:35	,	punctuation.delimiter
 73:37	g	variable.parameter
 73:38	:	punctuation.delimiter
-73:40	int	type
-73:44	->	keyword.control
-73:47	int	type
+73:40	int	type.builtin
+73:44	->	keyword
+73:47	int	type.builtin
 73:50	)	punctuation.bracket
 73:52	=	operator
 73:54	g	function
@@ -305,7 +305,7 @@
 76:23	(	punctuation.bracket
 76:24	s	variable.parameter
 76:25	:	punctuation.delimiter
-76:27	int	type
+76:27	int	type.builtin
 76:30	,	punctuation.delimiter
 76:32	(	punctuation.bracket
 76:33	r	variable.parameter
@@ -313,9 +313,9 @@
 76:36	x	variable.parameter
 76:37	)	punctuation.bracket
 76:38	:	punctuation.delimiter
-76:40	int	type
-76:44	*	operator
-76:46	float	type
+76:40	int	type.builtin
+76:44	*	keyword
+76:46	float	type.builtin
 76:51	)	punctuation.bracket
 76:53	=	operator
 76:55	s	-
@@ -327,11 +327,11 @@
 78:20	(	punctuation.bracket
 78:21	_	-
 78:22	:	punctuation.delimiter
-78:24	int	type
+78:24	int	type.builtin
 78:27	,	punctuation.delimiter
 78:29	x	variable.parameter
 78:30	:	punctuation.delimiter
-78:32	string	type
+78:32	string	type.builtin
 78:38	)	punctuation.bracket
 78:40	=	operator
 78:42	x	-
@@ -342,20 +342,20 @@
 81:18	(	punctuation.bracket
 81:19	x	variable.parameter
 81:20	:	punctuation.delimiter
-81:22	int	type
+81:22	int	type.builtin
 81:25	,	punctuation.delimiter
 81:27	(	punctuation.bracket
 81:28	pc	variable.parameter
 81:30	:	punctuation.delimiter
-81:32	int	type
-81:36	->	keyword.control
-81:39	int	type
+81:32	int	type.builtin
+81:36	->	keyword
+81:39	int	type.builtin
 81:43	option	type
 81:49	)	punctuation.bracket
 81:50	,	punctuation.delimiter
 81:52	y	variable.parameter
 81:53	:	punctuation.delimiter
-81:55	int	type
+81:55	int	type.builtin
 81:58	)	punctuation.bracket
 81:60	=	operator
 81:62	x	-
@@ -378,7 +378,7 @@
 88:31	value	-
 88:37	]	punctuation.bracket
 88:39	:	punctuation.delimiter
-88:41	int	type
+88:41	int	type.builtin
 88:45	list	type
 89:4	let	keyword
 89:8	mapAsc	function
@@ -391,7 +391,7 @@
 89:28	x	-
 89:29	)	punctuation.bracket
 89:31	:	punctuation.delimiter
-89:33	obj	type
+89:33	obj	type.builtin
 90:4	// …and on a LAMBDA body (`fun x -> … : ...	comment.line
 91:4	let	keyword
 91:8	lambdaAsc	function
@@ -403,7 +403,7 @@
 91:31	g	function
 91:33	x	-
 91:35	:	punctuation.delimiter
-91:37	int	type
+91:37	int	type.builtin
 92:4	let	keyword
 92:8	lambdaLetInAsc	function
 92:23	f	variable.parameter
@@ -421,7 +421,7 @@
 92:53	g	function
 92:55	r	-
 92:57	:	punctuation.delimiter
-92:59	string	type
+92:59	string	type.builtin
 93:4	// …and on a NESTED let body followed by...	comment.line
 94:4	// Traversable style — this one cascaded...	comment.line
 95:4	let	keyword
@@ -434,17 +434,17 @@
 96:16	sequence	function
 96:25	lst	-
 96:29	:	punctuation.delimiter
-96:31	int	type
+96:31	int	type.builtin
 96:35	list	type
 97:8	map	function
 97:12	W	constructor
 97:14	s	-
 97:16	:	punctuation.delimiter
-97:18	int	type
+97:18	int	type.builtin
 99:4	// `when` constraint on a tuple-param el...	comment.line
 100:4	// the FSharpPlus Control/* `Default1` o...	comment.line
 101:4	let	keyword
-101:8	inline	keyword
+101:8	inline	keyword.storage.modifier
 101:15	applyDefault	function
 101:28	(	punctuation.bracket
 101:29	_output	variable.parameter
@@ -461,16 +461,16 @@
 101:69	,	punctuation.delimiter
 101:71	_mthd	variable.parameter
 101:76	:	punctuation.delimiter
-101:78	int	type
+101:78	int	type.builtin
 101:81	)	punctuation.bracket
 101:83	=	operator
 101:85	()	constant.builtin
-102:4	type	keyword
+102:4	type	keyword.storage.type
 102:9	ApplyLike	type
 102:19	=	operator
-103:8	static	keyword
+103:8	static	keyword.storage.modifier
 103:15	member	keyword
-103:22	inline	keyword
+103:22	inline	keyword.storage.modifier
 103:29	Ap	function
 103:32	(	punctuation.bracket
 103:33	f	variable.parameter
@@ -483,7 +483,7 @@
 103:58	,	punctuation.delimiter
 103:60	_mthd	variable.parameter
 103:65	:	punctuation.delimiter
-103:67	obj	type
+103:67	obj	type.builtin
 103:70	)	punctuation.bracket
 103:72	=	operator
 103:74	f	-
@@ -600,9 +600,9 @@
 128:4	let	keyword
 128:8	combine	function
 128:16	=	operator
-128:18	List	type
+128:18	List	namespace
 128:22	.	punctuation
-128:23	reduce	variable.other.member
+128:23	reduce	function
 128:30	(	punctuation.bracket
 128:31	+	operator
 128:32	)	punctuation.bracket
@@ -610,7 +610,7 @@
 129:8	typeName	function
 129:17	=	operator
 129:19	typeof<	keyword.operator
-129:26	int	type
+129:26	int	type.builtin
 129:29	>	operator
 129:30	.	punctuation
 129:31	Name	variable.other.member
@@ -619,7 +619,7 @@
 131:8	rankName	function
 131:17	=	operator
 131:19	typeof<	keyword.operator
-131:26	int	type
+131:26	int	type.builtin
 131:29	[	punctuation.bracket
 131:30	,	punctuation.delimiter
 131:31	,	punctuation.delimiter
@@ -632,7 +632,7 @@
 132:18	(	punctuation.bracket
 132:19	m	variable.parameter
 132:20	:	punctuation.delimiter
-132:22	float	type
+132:22	float	type.builtin
 132:27	[	punctuation.bracket
 132:28	,	punctuation.delimiter
 132:29	]	punctuation.bracket
@@ -645,12 +645,12 @@
 134:16	(	punctuation.bracket
 134:17	o	variable.parameter
 134:18	:	punctuation.delimiter
-134:20	obj	type
+134:20	obj	type.builtin
 134:23	)	punctuation.bracket
 134:25	=	operator
 134:27	o	-
 134:29	:?>	operator
-134:33	byte	type
+134:33	byte	type.builtin
 134:37	[	punctuation.bracket
 134:38	]	punctuation.bracket
 135:4	let	keyword
@@ -658,7 +658,7 @@
 135:17	(	punctuation.bracket
 135:18	s	variable.parameter
 135:19	:	punctuation.delimiter
-135:21	obj	type
+135:21	obj	type.builtin
 135:24	)	punctuation.bracket
 135:26	=	operator
 135:28	box	function
@@ -716,15 +716,15 @@
 143:12	(	punctuation.bracket
 143:13	f	variable.parameter
 143:14	:	punctuation.delimiter
-143:16	obj	type
+143:16	obj	type.builtin
 143:19	)	punctuation.bracket
 143:21	(	punctuation.bracket
 143:22	x	variable.parameter
 143:23	:	punctuation.delimiter
-143:25	obj	type
+143:25	obj	type.builtin
 143:28	)	punctuation.bracket
 143:30	:	punctuation.delimiter
-143:32	obj	type
+143:32	obj	type.builtin
 143:36	=	operator
 143:38	f	-
 145:4	// Code quotation as an application argu...	comment.line
@@ -761,7 +761,7 @@
 150:24	)	punctuation.bracket
 152:4	// Inline IL intrinsic `(# "opcode" args...	comment.line
 153:4	let	keyword
-153:8	inline	keyword
+153:8	inline	keyword.storage.modifier
 153:15	retype	function
 153:22	(	punctuation.bracket
 153:23	x	variable.parameter
@@ -771,12 +771,12 @@
 153:30	:	punctuation.delimiter
 153:32	'b	type.parameter
 153:35	=	operator
-153:37	(#	-
+153:37	(#	punctuation.special
 153:40	""	string
 153:43	x	-
 153:45	:	punctuation.delimiter
 153:47	'b	type.parameter
-153:50	#)	-
+153:50	#)	punctuation.special
 155:4	// Attribute with a target specifier (`r...	comment.line
 156:4	[<	punctuation.bracket
 156:6	return	keyword.control
@@ -799,7 +799,7 @@
 157:53	else	keyword.control
 157:58	ValueNone	constructor
 159:0	// ── Decl: multi-statement sequences (v...	comment.line
-160:0	module	keyword
+160:0	module	keyword.storage.type
 160:7	L04_Sequences	namespace
 160:21	=	operator
 161:4	let	keyword
@@ -873,7 +873,7 @@
 181:35	then	keyword.control
 182:12	directory	-
 182:21	.	punctuation
-182:22	Create	variable.other.member
+182:22	Create	function.method
 182:28	()	constant.builtin
 183:8	directory	-
 184:4	let	keyword
@@ -920,7 +920,7 @@
 196:18	1	constant.numeric.integer
 197:8	}	punctuation.bracket
 199:0	// ── Then: if / elif / else ───────────...	comment.line
-200:0	module	keyword
+200:0	module	keyword.storage.type
 200:7	L05_If	namespace
 200:14	=	operator
 201:4	let	keyword
@@ -1008,7 +1008,7 @@
 232:17	0	constant.numeric.integer
 233:8	)	punctuation.bracket
 235:0	// ── Match: arms, guards, nesting ─────...	comment.line
-236:0	module	keyword
+236:0	module	keyword.storage.type
 236:7	L06_Match	namespace
 236:17	=	operator
 237:4	let	keyword
@@ -1305,11 +1305,11 @@
 320:17	(	punctuation.bracket
 320:18	a	function
 320:19	:	punctuation.delimiter
-320:21	int	type
+320:21	int	type.builtin
 320:24	,	punctuation.delimiter
 320:26	b	function
 320:27	:	punctuation.delimiter
-320:29	string	type
+320:29	string	type.builtin
 320:35	)	punctuation.bracket
 320:37	=	operator
 320:39	fetch	function
@@ -1320,7 +1320,7 @@
 321:22	b	-
 322:8	}	punctuation.bracket
 324:0	// ── Match: function / lambda ─────────...	comment.line
-325:0	module	keyword
+325:0	module	keyword.storage.type
 325:7	L07_Lambda	namespace
 325:18	=	operator
 326:4	let	keyword
@@ -1378,9 +1378,9 @@
 337:14	x	variable.parameter
 337:16	xs	variable.parameter
 337:19	=	operator
-337:21	Promise	type
+337:21	Promise	namespace
 337:28	.	punctuation
-337:29	start	variable.other.member
+337:29	start	function
 337:35	^	operator
 337:37	xs	-
 337:40	>>-	operator
@@ -1397,9 +1397,9 @@
 339:8	mapMatch	function
 339:17	m2	variable.parameter
 339:20	=	operator
-340:8	Map	type
+340:8	Map	namespace
 340:11	.	punctuation
-340:12	map	variable.other.member
+340:12	map	function
 340:16	(	punctuation.bracket
 340:17	fun	keyword
 340:21	k	variable.parameter
@@ -1420,7 +1420,7 @@
 343:23	)	punctuation.bracket
 343:25	m2	-
 345:0	// ── Let: let … in ────────────────────...	comment.line
-346:0	module	keyword
+346:0	module	keyword.storage.type
 346:7	L08_LetIn	namespace
 346:17	=	operator
 347:4	let	keyword
@@ -1451,7 +1451,7 @@
 352:10	+	operator
 352:12	y	-
 354:0	// ── Do: for / while ──────────────────...	comment.line
-355:0	module	keyword
+355:0	module	keyword.storage.type
 355:7	L09_Loops	namespace
 355:17	=	operator
 356:4	let	keyword
@@ -1533,7 +1533,7 @@
 377:8	for	keyword.control
 377:12	s	variable
 377:13	:	punctuation.delimiter
-377:15	string	type
+377:15	string	type.builtin
 377:22	in	keyword
 377:25	xs	-
 377:28	do	keyword
@@ -1543,7 +1543,7 @@
 379:12	(	punctuation.bracket
 379:13	line	variable
 379:17	:	punctuation.delimiter
-379:19	string	type
+379:19	string	type.builtin
 379:25	)	punctuation.bracket
 379:27	in	keyword
 379:30	xs	-
@@ -1553,11 +1553,11 @@
 381:8	for	keyword.control
 381:12	k	variable
 381:13	:	punctuation.delimiter
-381:15	string	type
+381:15	string	type.builtin
 381:21	,	punctuation.delimiter
 381:23	r	variable
 381:24	:	punctuation.delimiter
-381:26	string	type
+381:26	string	type.builtin
 381:33	in	keyword
 381:36	rows	-
 381:41	do	keyword
@@ -1573,7 +1573,7 @@
 383:13	,	punctuation.delimiter
 383:15	name	variable
 383:19	:	punctuation.delimiter
-383:21	string	type
+383:21	string	type.builtin
 383:27	,	punctuation.delimiter
 383:29	v	variable
 383:31	in	keyword
@@ -1665,11 +1665,11 @@
 403:26	(	punctuation.bracket
 403:27	a	variable.parameter
 403:28	:	punctuation.delimiter
-403:30	int	type
+403:30	int	type.builtin
 403:33	,	punctuation.delimiter
 403:35	b	variable.parameter
 403:36	:	punctuation.delimiter
-403:38	int	type
+403:38	int	type.builtin
 403:41	)	punctuation.bracket
 403:42	)	punctuation.bracket
 403:44	=	operator
@@ -1688,7 +1688,7 @@
 406:17	(	punctuation.bracket
 406:18	a	variable
 406:19	:	punctuation.delimiter
-406:21	int	type
+406:21	int	type.builtin
 406:24	,	punctuation.delimiter
 406:26	b	variable
 406:27	)	punctuation.bracket
@@ -1723,7 +1723,7 @@
 413:18	()	punctuation.bracket
 413:21	=	operator
 414:8	let	keyword
-414:12	mutable	keyword
+414:12	mutable	keyword.storage.modifier
 414:20	i	function
 414:22	=	operator
 414:24	0	constant.numeric.integer
@@ -1807,9 +1807,9 @@
 441:32	=	operator
 442:8	ignore	function
 442:15	(	punctuation.bracket
-442:16	Set	type
+442:16	Set	namespace
 442:19	.	punctuation
-442:20	add	variable.other.member
+442:20	add	function
 442:24	1	constant.numeric.integer
 442:26	!	operator
 442:27	cell	-
@@ -1822,24 +1822,24 @@
 446:4	// expression, binds tighter than applic...	comment.line
 447:4	// and is still usable as a first-class ...	comment.line
 448:4	let	keyword
-448:8	private	keyword.control.access
+448:8	private	keyword.storage.modifier
 448:16	(	punctuation.bracket
 448:17	!!	operator
 448:19	)	punctuation.bracket
 448:21	(	punctuation.bracket
 448:22	i	variable.parameter
 448:23	:	punctuation.delimiter
-448:25	int	type
+448:25	int	type.builtin
 448:28	)	punctuation.bracket
 448:30	(	punctuation.bracket
 448:31	m	variable.parameter
 448:32	:	punctuation.delimiter
-448:34	string	type
+448:34	string	type.builtin
 448:40	)	punctuation.bracket
 448:42	=	operator
 448:44	m	-
 448:45	.	punctuation
-448:46	Substring	variable.other.member
+448:46	Substring	function.method
 448:56	i	-
 449:4	let	keyword
 449:8	bangPrefix	function
@@ -1880,21 +1880,21 @@
 457:14	(	punctuation.bracket
 457:15	m	variable.parameter
 457:16	:	punctuation.delimiter
-457:18	int	type
+457:18	int	type.builtin
 457:22	option	type
 457:28	)	punctuation.bracket
 457:30	(	punctuation.bracket
 457:31	f	variable.parameter
 457:32	:	punctuation.delimiter
-457:34	int	type
-457:38	->	keyword.control
-457:41	int	type
+457:34	int	type.builtin
+457:38	->	keyword
+457:41	int	type.builtin
 457:45	option	type
 457:51	)	punctuation.bracket
 457:53	=	operator
-457:55	Option	type
+457:55	Option	namespace
 457:61	.	punctuation
-457:62	bind	variable.other.member
+457:62	bind	function
 457:67	f	-
 457:69	m	-
 458:4	let	keyword
@@ -1904,9 +1904,9 @@
 458:14	f	variable.parameter
 458:16	x	variable.parameter
 458:18	=	operator
-458:20	List	type
+458:20	List	namespace
 458:24	.	punctuation
-458:25	map	variable.other.member
+458:25	map	function
 458:29	f	-
 458:31	x	-
 459:4	let	keyword
@@ -2029,9 +2029,9 @@
 475:22	=	operator
 475:24	xs	-
 475:27	|>	operator
-475:30	List	type
+475:30	List	namespace
 475:34	.	punctuation
-475:35	map	variable.other.member
+475:35	map	function
 475:39	(	punctuation.bracket
 475:40	(	punctuation.bracket
 475:41	+	operator
@@ -2039,9 +2039,9 @@
 475:44	1	constant.numeric.integer
 475:45	)	punctuation.bracket
 475:47	|>	operator
-475:50	List	type
+475:50	List	namespace
 475:54	.	punctuation
-475:55	filter	variable.other.member
+475:55	filter	function
 475:62	(	punctuation.bracket
 475:63	(	punctuation.bracket
 475:64	<	operator
@@ -2049,9 +2049,9 @@
 475:67	0	constant.numeric.integer
 475:68	)	punctuation.bracket
 475:70	|>	operator
-475:73	List	type
+475:73	List	namespace
 475:77	.	punctuation
-475:78	sum	variable.other.member
+475:78	sum	function
 476:4	let	keyword
 476:8	composed	function
 476:17	=	operator
@@ -2110,7 +2110,7 @@
 489:25	=	operator
 490:8	builder	-
 491:8	.	punctuation
-491:9	AddThing	variable.other.member
+491:9	AddThing	function.method
 491:17	(	punctuation.bracket
 491:18	1	constant.numeric.integer
 491:19	)	punctuation.bracket
@@ -2118,7 +2118,7 @@
 492:9	Build	variable.other.member
 492:14	()	constant.builtin
 494:0	// ── Brackets: lists / arrays ─────────...	comment.line
-495:0	module	keyword
+495:0	module	keyword.storage.type
 495:7	L10_ListsArrays	namespace
 495:23	=	operator
 496:4	let	keyword
@@ -2212,9 +2212,9 @@
 528:4	let	keyword
 528:8	appliedToList	function
 528:22	=	operator
-528:24	List	type
+528:24	List	namespace
 528:28	.	punctuation
-528:29	map	variable.other.member
+528:29	map	function
 528:33	id	-
 528:36	[	punctuation.bracket
 528:38	1	constant.numeric.integer
@@ -2225,46 +2225,46 @@
 528:46	]	punctuation.bracket
 528:50	// space → application, not index	comment.line
 530:0	// ── Brackets: records ────────────────...	comment.line
-531:0	module	keyword
+531:0	module	keyword.storage.type
 531:7	L11_Records	namespace
 531:19	=	operator
-532:4	type	keyword
+532:4	type	keyword.storage.type
 532:9	Point	type
 532:15	=	operator
 532:17	{	punctuation.bracket
 532:19	X	variable.other.member
 532:20	:	punctuation.delimiter
-532:22	int	type
+532:22	int	type.builtin
 532:25	;	punctuation.delimiter
 532:27	Y	variable.other.member
 532:28	:	punctuation.delimiter
-532:30	int	type
+532:30	int	type.builtin
 532:34	}	punctuation.bracket
 534:4	// Attribute on a record field (own-line...	comment.line
-535:4	type	keyword
+535:4	type	keyword.storage.type
 535:9	Dto	type
 535:13	=	operator
 536:8	{	punctuation.bracket
 537:12	Name	variable.other.member
 537:16	:	punctuation.delimiter
-537:18	string	type
+537:18	string	type.builtin
 538:12	[<	punctuation.bracket
 538:14	JsonRequired	attribute
 538:26	>]	punctuation.bracket
 539:12	Age	variable.other.member
 539:15	:	punctuation.delimiter
-539:17	int	type
+539:17	int	type.builtin
 540:12	[<	punctuation.bracket
 540:14	DefaultValue	attribute
 540:26	>]	punctuation.bracket
-540:29	mutable	keyword
+540:29	mutable	keyword.storage.modifier
 540:37	Score	variable.other.member
 540:42	:	punctuation.delimiter
-540:44	int	type
+540:44	int	type.builtin
 541:8	}	punctuation.bracket
 543:4	// The FIRST offside field carries an at...	comment.line
 544:4	// `= {`-on-one-line and the `{`-on-next...	comment.line
-545:4	type	keyword
+545:4	type	keyword.storage.type
 545:9	Resource	type
 545:18	=	operator
 546:8	{	punctuation.bracket
@@ -2276,7 +2276,7 @@
 546:33	>]	punctuation.bracket
 547:10	Type	variable.other.member
 547:14	:	punctuation.delimiter
-547:16	string	type
+547:16	string	type.builtin
 548:10	[<	punctuation.bracket
 548:12	JsonProperty	attribute
 548:24	(	punctuation.bracket
@@ -2285,9 +2285,9 @@
 548:31	>]	punctuation.bracket
 549:10	Id	variable.other.member
 549:12	:	punctuation.delimiter
-549:14	string	type
+549:14	string	type.builtin
 549:21	}	punctuation.bracket
-551:4	type	keyword
+551:4	type	keyword.storage.type
 551:9	Catalog	type
 551:17	=	operator
 551:19	{	punctuation.bracket
@@ -2299,10 +2299,10 @@
 552:32	>]	punctuation.bracket
 553:8	Source	variable.other.member
 553:14	:	punctuation.delimiter
-553:16	string	type
+553:16	string	type.builtin
 554:8	Cursor	variable.other.member
 554:14	:	punctuation.delimiter
-554:16	int	type
+554:16	int	type.builtin
 555:4	}	punctuation.bracket
 557:4	let	keyword
 557:8	inlineRec	function
@@ -2364,7 +2364,7 @@
 578:16	2	constant.numeric.integer
 579:8	}	punctuation.bracket
 581:0	// ── Brackets: computation expressions ...	comment.line
-582:0	module	keyword
+582:0	module	keyword.storage.type
 582:7	L12_ComputationExpr	namespace
 582:27	=	operator
 583:4	let	keyword
@@ -2382,9 +2382,9 @@
 585:36	42	constant.numeric.integer
 585:39	}	punctuation.bracket
 586:12	do!	keyword
-586:16	Async	type
+586:16	Async	namespace
 586:21	.	punctuation
-586:22	Sleep	variable.other.member
+586:22	Sleep	function
 586:28	0	constant.numeric.integer
 587:12	return	keyword.control
 587:19	x	-
@@ -2413,7 +2413,7 @@
 599:20	)	punctuation.bracket
 599:22	=	operator
 600:8	use	keyword
-600:12	mutable	keyword
+600:12	mutable	keyword.storage.modifier
 600:20	buffer	variable
 600:27	=	operator
 600:29	rent	function
@@ -2461,7 +2461,7 @@
 612:16	}	punctuation.bracket
 614:12	stream	-
 614:18	.	punctuation
-614:19	Dispose	variable.other.member
+614:19	Dispose	function.method
 614:26	()	constant.builtin
 615:8	}	punctuation.bracket
 617:4	let	keyword
@@ -2536,27 +2536,27 @@
 633:44	)	punctuation.bracket
 634:12	}	punctuation.bracket
 636:0	// ── Decl: types (DU / record / alias) ...	comment.line
-637:0	module	keyword
+637:0	module	keyword.storage.type
 637:7	L13_Types	namespace
 637:17	=	operator
-638:4	type	keyword
+638:4	type	keyword.storage.type
 638:9	Shape	type
 638:15	=	operator
 639:8	|	keyword.control
 639:10	Circle	constructor
 639:17	of	keyword
-639:20	float	type
+639:20	float	type.builtin
 640:8	|	keyword.control
 640:10	Rectangle	constructor
 640:20	of	keyword
-640:23	float	type
-640:29	*	operator
-640:31	float	type
+640:23	float	type.builtin
+640:29	*	keyword
+640:31	float	type.builtin
 641:8	|	keyword.control
 641:10	Point	constructor
 643:4	// Non-indented DU cases (at the `type` ...	comment.line
 644:4	// declaration — the type body must clos...	comment.line
-645:4	type	keyword
+645:4	type	keyword.storage.type
 645:9	Token	type
 645:15	=	operator
 646:4	|	keyword.control
@@ -2564,49 +2564,49 @@
 647:4	|	keyword.control
 647:6	Minus	constructor
 647:12	of	keyword
-647:15	int	type
-649:4	open	keyword
+647:15	int	type.builtin
+649:4	open	keyword.control.import
 649:9	System	namespace
 651:4	let	keyword
 651:8	tokenZero	function
 651:18	=	operator
 651:20	Plus	constructor
-653:4	type	keyword
+653:4	type	keyword.storage.type
 653:9	Person	type
 653:16	=	operator
 654:8	{	punctuation.bracket
 655:12	Name	variable.other.member
 655:16	:	punctuation.delimiter
-655:18	string	type
+655:18	string	type.builtin
 656:12	Age	variable.other.member
 656:15	:	punctuation.delimiter
-656:17	int	type
+656:17	int	type.builtin
 657:8	}	punctuation.bracket
-659:4	type	keyword
+659:4	type	keyword.storage.type
 659:9	MyInt	type
 659:15	=	operator
-659:17	int	type
-660:4	type	keyword
+659:17	int	type.builtin
+660:4	type	keyword.storage.type
 660:9	Pair	type
 660:14	=	operator
-660:16	int	type
-660:20	*	operator
-660:22	string	type
+660:16	int	type.builtin
+660:20	*	keyword
+660:22	string	type.builtin
 661:4	// A type ALIAS may carry a trailing com...	comment.line
 662:4	// between an alias and the next declara...	comment.line
 663:4	// the old `type A = B // comment` wall:...	comment.line
 664:4	// comment and commit to a doomed bare-u...	comment.line
-665:4	type	keyword
+665:4	type	keyword.storage.type
 665:9	ILCodeLabel	type
 665:21	=	operator
-665:23	int	type
+665:23	int	type.builtin
 665:27	// a label	comment.line
-666:4	type	keyword
+666:4	type	keyword.storage.type
 666:9	Offset	type
 666:16	=	operator
-666:18	int	type
+666:18	int	type.builtin
 668:4	// Enum with the FIRST case bare on one ...	comment.line
-669:4	type	keyword
+669:4	type	keyword.storage.type
 669:9	ByteFlags	type
 669:19	=	operator
 669:21	A	constructor
@@ -2622,19 +2622,19 @@
 669:45	4uy	constant.numeric.integer
 671:4	// `#nowarn`/`#warnon` directives BETWEE...	comment.line
 672:4	// they don't dedent-close the type body...	comment.line
-673:4	type	keyword
+673:4	type	keyword.storage.type
 673:9	CliArgs	type
 673:17	=	operator
 674:8	|	keyword.control
 674:10	First	constructor
 674:16	of	keyword
-674:19	int	type
+674:19	int	type.builtin
 675:0	#nowarn 	keyword.directive
 675:8	44	constant.numeric.integer
 676:8	|	keyword.control
 676:10	Rest_Arg	constructor
 676:19	of	keyword
-676:22	int	type
+676:22	int	type.builtin
 677:0	#warnon 	keyword.directive
 677:8	44	constant.numeric.integer
 678:8	|	keyword.control
@@ -2642,10 +2642,10 @@
 678:15	of	keyword
 678:18	chars	variable.other.member
 678:23	:	punctuation.delimiter
-678:25	char	type
+678:25	char	type.builtin
 678:30	list	type
 680:4	// Attribute on a non-first tuple parame...	comment.line
-681:4	type	keyword
+681:4	type	keyword.storage.type
 681:9	Mapper	type
 681:15	()	punctuation.bracket
 681:18	=	operator
@@ -2661,7 +2661,7 @@
 682:41	>]	punctuation.bracket
 682:44	comparer	variable.parameter
 682:52	:	punctuation.delimiter
-682:54	int	type
+682:54	int	type.builtin
 682:57	)	punctuation.bracket
 682:59	=	operator
 682:61	f	function
@@ -2681,7 +2681,7 @@
 686:43	| null	type
 686:50	=	operator
 686:52	s	-
-687:4	type	keyword
+687:4	type	keyword.storage.type
 687:9	Holder	type
 687:16	=	operator
 687:18	{	punctuation.bracket
@@ -2697,35 +2697,35 @@
 690:17	(	punctuation.bracket
 690:18	f	variable.parameter
 690:19	:	punctuation.delimiter
-690:21	string	type
-690:28	->	keyword.control
+690:21	string	type.builtin
+690:28	->	keyword
 690:31	int	type
 690:35	| null	type
 690:41	)	punctuation.bracket
 690:43	=	operator
 690:45	f	-
-691:4	type	keyword
+691:4	type	keyword.storage.type
 691:9	Parser	type
 691:16	=	operator
 691:18	A	constructor
 691:20	of	keyword
 691:23	(	punctuation.bracket
-691:24	int	type
-691:28	->	keyword.control
+691:24	int	type.builtin
+691:28	->	keyword
 691:31	string	type
 691:38	| null	type
 691:44	)	punctuation.bracket
 691:46	|	keyword.control
 691:48	B	constructor
 691:50	of	keyword
-691:53	int	type
-692:4	type	keyword
+691:53	int	type.builtin
+692:4	type	keyword.storage.type
 692:9	Outcome	type
 692:17	=	operator
 693:8	|	keyword.control
 693:10	Ok	constructor
 693:13	of	keyword
-693:16	int	type
+693:16	int	type.builtin
 694:8	|	keyword.control
 694:10	Failed	constructor
 694:17	of	keyword
@@ -2742,7 +2742,7 @@
 698:16	:	punctuation.delimiter
 698:18	Dictionary	type
 698:28	<	operator
-698:29	string	type
+698:29	string	type.builtin
 698:35	,	punctuation.delimiter
 698:37	ResizeArray	type
 698:48	<	operator
@@ -2762,11 +2762,11 @@
 699:30	string	type
 699:37	| null	type
 699:43	,	punctuation.delimiter
-699:45	int	type
+699:45	int	type.builtin
 699:48	>	operator
 699:49	()	constant.builtin
 701:4	// `T | null` in a comma-separated membe...	comment.line
-702:4	type	keyword
+702:4	type	keyword.storage.type
 702:9	Tag	type
 702:12	(	punctuation.bracket
 702:13	text	variable.parameter
@@ -2775,13 +2775,13 @@
 702:26	| null	type
 702:32	)	punctuation.bracket
 702:34	=	operator
-703:8	static	keyword
+703:8	static	keyword.storage.modifier
 703:15	member	keyword
 703:22	attr	function
 703:26	(	punctuation.bracket
 703:27	name	variable.parameter
 703:31	:	punctuation.delimiter
-703:33	string	type
+703:33	string	type.builtin
 703:39	,	punctuation.delimiter
 703:41	value	variable.parameter
 703:46	:	punctuation.delimiter
@@ -2791,7 +2791,7 @@
 703:63	=	operator
 703:65	value	-
 705:4	// ML-style prefix type parameters (befo...	comment.line
-706:4	type	keyword
+706:4	type	keyword.storage.type
 706:9	'T	type.parameter
 706:12	container	type
 706:22	=	operator
@@ -2805,7 +2805,7 @@
 706:55	<	operator
 706:56	'T	type.parameter
 706:58	>	operator
-707:4	type	keyword
+707:4	type	keyword.storage.type
 707:9	(	punctuation.bracket
 707:10	'k	type.parameter
 707:12	,	punctuation.delimiter
@@ -2820,7 +2820,7 @@
 707:35	'v	type.parameter
 707:37	>	operator
 709:4	// Constraint clause OUTSIDE the `<…>` l...	comment.line
-710:4	type	keyword
+710:4	type	keyword.storage.type
 710:9	Bag	type
 710:12	<	operator
 710:13	[<	punctuation.bracket
@@ -2836,24 +2836,24 @@
 710:65	'T	type.parameter
 710:68	list	type
 712:4	// Record type with consecutive `mutable...	comment.line
-713:4	type	keyword
+713:4	type	keyword.storage.type
 713:9	Cursor	type
 713:16	=	operator
 714:8	{	punctuation.bracket
-715:12	mutable	keyword
+715:12	mutable	keyword.storage.modifier
 715:20	index	variable.other.member
 715:25	:	punctuation.delimiter
-715:27	int	type
-716:12	mutable	keyword
+715:27	int	type.builtin
+716:12	mutable	keyword.storage.modifier
 716:20	active	variable.other.member
 716:26	:	punctuation.delimiter
-716:28	bool	type
+716:28	bool	type.builtin
 717:8	}	punctuation.bracket
 719:4	// Abstract members with attributes on l...	comment.line
-720:4	type	keyword
+720:4	type	keyword.storage.type
 720:9	IConsole	type
 720:18	=	operator
-721:8	abstract	keyword
+721:8	abstract	keyword.storage.modifier
 721:17	log	function
 721:20	:	punctuation.delimiter
 721:22	[<	punctuation.bracket
@@ -2864,15 +2864,15 @@
 721:43	obj	type
 721:46	[	punctuation.bracket
 721:47	]	punctuation.bracket
-721:49	->	keyword.control
-721:52	unit	type
-722:8	abstract	keyword
+721:49	->	keyword
+721:52	unit	type.builtin
+722:8	abstract	keyword.storage.modifier
 722:17	assert'	function
 722:24	:	punctuation.delimiter
 722:26	condition	variable.parameter
 722:35	:	punctuation.delimiter
 722:37	bool	type
-722:42	*	operator
+722:42	*	keyword
 722:44	[<	punctuation.bracket
 722:46	ParamArray	attribute
 722:56	>]	punctuation.bracket
@@ -2881,28 +2881,28 @@
 722:65	obj	type
 722:68	[	punctuation.bracket
 722:69	]	punctuation.bracket
-722:71	->	keyword.control
-722:74	unit	type
-723:8	abstract	keyword
+722:71	->	keyword
+722:74	unit	type.builtin
+723:8	abstract	keyword.storage.modifier
 723:17	write	function
 723:22	:	punctuation.delimiter
 723:24	source	variable.parameter
 723:30	:	punctuation.delimiter
 723:32	#	punctuation.special
 723:33	IDisposable	type
-723:45	*	operator
+723:45	*	keyword
 723:47	?	-
 723:48	offset	variable.parameter
 723:54	:	punctuation.delimiter
 723:56	int	type
-723:60	->	keyword.control
-723:63	unit	type
+723:60	->	keyword
+723:63	unit	type.builtin
 723:69	// flexible-type labelled param	comment.line
-725:4	type	keyword
+725:4	type	keyword.storage.type
 725:9	Node	type
 725:14	=	operator
 726:8	// Bare (un-parenthesized) curried optio...	comment.line
-727:8	static	keyword
+727:8	static	keyword.storage.modifier
 727:15	member	keyword
 727:22	leaf	function
 727:27	?	operator
@@ -2910,12 +2910,12 @@
 727:32	:	punctuation.delimiter
 727:34	Node	type
 727:39	=	operator
-727:41	Node	type
+727:41	Node	namespace
 727:45	.	punctuation
-727:46	leaf	variable.other.member
+727:46	leaf	function
 729:4	// `new 'T()` — construct a generic type...	comment.line
 730:4	let	keyword
-730:8	inline	keyword
+730:8	inline	keyword.storage.modifier
 730:15	createDefault	function
 730:28	<	operator
 730:29	'T	type.parameter
@@ -2925,8 +2925,8 @@
 730:41	(	punctuation.bracket
 730:42	new	keyword
 730:45	:	punctuation.delimiter
-730:47	unit	type
-730:52	->	keyword.control
+730:47	unit	type.builtin
+730:52	->	keyword
 730:55	'T	type.parameter
 730:57	)	punctuation.bracket
 730:58	>	operator
@@ -2938,7 +2938,7 @@
 730:72	)	punctuation.bracket
 731:4	// SRTP CALL with a constructor signatur...	comment.line
 732:4	let	keyword
-732:8	inline	keyword
+732:8	inline	keyword.storage.modifier
 732:15	ofSeq	function
 732:21	(	punctuation.bracket
 732:22	x	variable.parameter
@@ -2959,19 +2959,19 @@
 732:52	<	operator
 732:53	't	type.parameter
 732:55	>	operator
-732:57	->	keyword.control
+732:57	->	keyword
 732:60	^R	type.parameter
 732:62	)	punctuation.bracket
 732:64	x	type
 732:65	)	punctuation.bracket
 733:4	// `when` constraint (incl. an SRTP memb...	comment.line
 734:4	// PARENTHESIZED tuple pattern (FSharpPl...	comment.line
-735:4	type	keyword
+735:4	type	keyword.storage.type
 735:9	MapLike	type
 735:17	=	operator
-736:8	static	keyword
+736:8	static	keyword.storage.modifier
 736:15	member	keyword
-736:22	inline	keyword
+736:22	inline	keyword.storage.modifier
 736:29	F	function
 736:31	(	punctuation.bracket
 736:32	(	punctuation.bracket
@@ -2982,32 +2982,32 @@
 736:44	^t	type.parameter
 736:47	:	punctuation.delimiter
 736:49	(	punctuation.bracket
-736:50	static	keyword
+736:50	static	keyword.storage.modifier
 736:57	member	keyword
 736:64	(	punctuation.bracket
 736:65	>>=	operator
 736:68	)	punctuation.bracket
 736:70	:	punctuation.delimiter
-736:72	int	type
-736:76	->	keyword.control
-736:79	int	type
+736:72	int	type.builtin
+736:76	->	keyword
+736:79	int	type.builtin
 736:82	)	punctuation.bracket
 736:83	,	punctuation.delimiter
 736:85	f	variable.parameter
 736:86	:	punctuation.delimiter
-736:88	int	type
+736:88	int	type.builtin
 736:91	)	punctuation.bracket
 736:92	,	punctuation.delimiter
 736:94	m	variable.parameter
 736:95	:	punctuation.delimiter
-736:97	int	type
+736:97	int	type.builtin
 736:100	)	punctuation.bracket
 736:102	=	operator
 736:104	x	-
 738:4	// Type-provider STATIC arguments: posit...	comment.line
 739:4	// and named constants (`Name=value`, sp...	comment.line
 740:4	// an int, or a `[<Literal>]` constant r...	comment.line
-741:4	type	keyword
+741:4	type	keyword.storage.type
 741:9	Stocks	type
 741:16	=	operator
 741:18	CsvProvider	type
@@ -3018,14 +3018,14 @@
 741:58	=	operator
 741:59	";"	string
 741:62	>	operator
-742:4	type	keyword
+742:4	type	keyword.storage.type
 742:9	Sample	type
 742:16	=	operator
 742:18	JsonProvider	type
 742:30	<	operator
 742:31	""" [1, 2, 3] """	string
 742:48	>	operator
-743:4	type	keyword
+743:4	type	keyword.storage.type
 743:9	Nat	type
 743:13	=	operator
 743:15	TypeNat	type
@@ -3034,7 +3034,7 @@
 743:29	=	operator
 743:31	4	constant.numeric.integer
 743:32	>	operator
-744:4	type	keyword
+744:4	type	keyword.storage.type
 744:9	Person	type
 744:16	=	operator
 744:18	JsonProvider	type
@@ -3047,7 +3047,7 @@
 744:79	=	operator
 744:80	true	constant.builtin.boolean
 744:84	>	operator
-745:4	type	keyword
+745:4	type	keyword.storage.type
 745:9	Bank	type
 745:14	=	operator
 745:16	WorldBankDataProvider	type
@@ -3059,20 +3059,20 @@
 745:65	true	constant.builtin.boolean
 745:69	>	operator
 747:0	// ── Decl: nested modules ─────────────...	comment.line
-748:0	module	keyword
+748:0	module	keyword.storage.type
 748:7	L14_NestedModules	namespace
 748:25	=	operator
-749:4	module	keyword
+749:4	module	keyword.storage.type
 749:11	Inner	namespace
 749:17	=	operator
-750:8	module	keyword
+750:8	module	keyword.storage.type
 750:15	Deeper	namespace
 750:22	=	operator
 751:12	let	keyword
 751:16	value	function
 751:22	=	operator
 751:24	1	constant.numeric.integer
-753:4	module	keyword
+753:4	module	keyword.storage.type
 753:11	Sibling	namespace
 753:19	=	operator
 754:8	let	keyword
@@ -3080,10 +3080,10 @@
 754:18	=	operator
 754:20	2	constant.numeric.integer
 756:4	// FSI / script trailing `;` after a dec...	comment.line
-757:4	module	keyword
+757:4	module	keyword.storage.type
 757:11	WithSemis	namespace
 757:21	=	operator
-758:8	open	keyword
+758:8	open	keyword.control.import
 758:13	System	namespace
 758:19	;	punctuation.delimiter
 759:8	let	keyword
@@ -3108,15 +3108,15 @@
 763:21	scriptVal	-
 763:30	;;	punctuation.delimiter
 765:0	// ── Decl: classes & members ──────────...	comment.line
-766:0	module	keyword
+766:0	module	keyword.storage.type
 766:7	L15_Classes	namespace
 766:19	=	operator
-767:4	type	keyword
+767:4	type	keyword.storage.type
 767:9	Counter	type
 767:16	()	punctuation.bracket
 767:19	=	operator
 768:8	let	keyword
-768:12	mutable	keyword
+768:12	mutable	keyword.storage.modifier
 768:20	n	function
 768:22	=	operator
 768:24	0	constant.numeric.integer
@@ -3137,12 +3137,12 @@
 770:17	Value	function
 770:23	=	operator
 770:25	n	-
-772:4	type	keyword
+772:4	type	keyword.storage.type
 772:9	Animal	type
 772:15	(	punctuation.bracket
 772:16	name	variable.parameter
 772:20	:	punctuation.delimiter
-772:22	string	type
+772:22	string	type.builtin
 772:28	)	punctuation.bracket
 772:30	=	operator
 773:8	member	keyword
@@ -3161,7 +3161,7 @@
 775:20	"%s"	string
 775:25	name	-
 777:4	// Attribute on the primary constructor ...	comment.line
-778:4	type	keyword
+778:4	type	keyword.storage.type
 778:9	Options	type
 779:8	[<	punctuation.bracket
 779:10	ParamObject	attribute
@@ -3170,12 +3170,12 @@
 781:12	?	operator
 781:13	width	variable.parameter
 781:18	:	punctuation.delimiter
-781:20	int	type
+781:20	int	type.builtin
 781:23	,	punctuation.delimiter
 782:12	?	operator
 782:13	height	variable.parameter
 782:19	:	punctuation.delimiter
-782:21	int	type
+782:21	int	type.builtin
 783:8	)	punctuation.bracket
 783:10	=	operator
 784:8	member	keyword
@@ -3192,16 +3192,16 @@
 786:4	// Consecutive auto-properties without a...	comment.line
 787:4	// close before the next `member val` (a...	comment.line
 788:4	// attaches, as on Width above).	comment.line
-789:4	type	keyword
+789:4	type	keyword.storage.type
 789:9	Bag2	type
 789:13	(	punctuation.bracket
 789:14	a	variable.parameter
 789:15	:	punctuation.delimiter
-789:17	int	type
+789:17	int	type.builtin
 789:20	,	punctuation.delimiter
 789:22	b	variable.parameter
 789:23	:	punctuation.delimiter
-789:25	string	type
+789:25	string	type.builtin
 789:31	)	punctuation.bracket
 789:33	=	operator
 790:8	member	keyword
@@ -3217,7 +3217,7 @@
 792:8	// Access modifier on an auto-property.	comment.line
 793:8	member	keyword
 793:15	val	keyword
-793:19	public	keyword.control.access
+793:19	public	keyword.storage.modifier
 793:26	Third	function
 793:32	=	operator
 793:34	0	constant.numeric.integer
@@ -3227,12 +3227,12 @@
 793:46	set	keyword
 795:4	// `override val` / `default val` auto-p...	comment.line
 796:4	// property (the fantomas SyntaxOak idio...	comment.line
-797:4	type	keyword
+797:4	type	keyword.storage.type
 797:9	LeafNode	type
 797:17	(	punctuation.bracket
 797:18	content	variable.parameter
 797:25	:	punctuation.delimiter
-797:27	string	type
+797:27	string	type.builtin
 797:33	)	punctuation.bracket
 797:35	=	operator
 798:8	inherit	keyword
@@ -3244,14 +3244,14 @@
 799:19	Content	function
 799:27	=	operator
 799:29	content	-
-800:8	override	keyword
+800:8	override	keyword.storage.modifier
 800:17	val	keyword
 800:21	Children	function
 800:30	=	operator
-800:32	Array	type
+800:32	Array	namespace
 800:37	.	punctuation
-800:38	empty	variable.other.member
-801:8	default	keyword
+800:38	empty	function
+801:8	default	keyword.storage.modifier
 801:16	val	keyword
 801:20	Extra	function
 801:26	=	operator
@@ -3261,7 +3261,7 @@
 801:38	,	punctuation.delimiter
 801:40	set	keyword
 803:4	// Object expression whose `{` ends the ...	comment.line
-804:4	type	keyword
+804:4	type	keyword.storage.type
 804:9	Factory	type
 804:16	()	punctuation.bracket
 804:19	=	operator
@@ -3286,10 +3286,10 @@
 807:38	()	constant.builtin
 808:8	}	punctuation.bracket
 810:0	// ── Match: type augmentation `with` (t...	comment.line
-811:0	module	keyword
+811:0	module	keyword.storage.type
 811:7	L16_Augmentation	namespace
 811:24	=	operator
-812:4	type	keyword
+812:4	type	keyword.storage.type
 812:9	Reference	type
 812:19	=	operator
 813:8	|	keyword.control
@@ -3305,7 +3305,7 @@
 814:31	:	punctuation.delimiter
 814:33	int	type
 815:4	with	keyword.control
-816:8	static	keyword
+816:8	static	keyword.storage.modifier
 816:15	member	keyword
 816:22	toId	function
 816:27	=	operator
@@ -3326,7 +3326,7 @@
 817:27	this	-
 819:4	// Next-line record body with the `with`...	comment.line
 820:4	// (FSharpPlus NonEmptyMap style) — memb...	comment.line
-821:4	type	keyword
+821:4	type	keyword.storage.type
 821:9	NonEmptyMap	type
 821:20	<	operator
 821:21	'K	type.parameter
@@ -3336,7 +3336,7 @@
 821:33	comparison	keyword
 821:43	>	operator
 821:45	=	operator
-822:8	private	keyword.control.access
+822:8	private	keyword.storage.modifier
 822:16	{	punctuation.bracket
 822:18	Value	variable.other.member
 822:23	:	punctuation.delimiter
@@ -3344,7 +3344,7 @@
 822:28	<	operator
 822:29	'K	type.parameter
 822:31	,	punctuation.delimiter
-822:33	int	type
+822:33	int	type.builtin
 822:36	>	operator
 822:38	}	punctuation.bracket
 822:40	with	keyword.control
@@ -3360,7 +3360,7 @@
 823:39	.[	punctuation.bracket
 823:41	k	-
 823:42	]	punctuation.bracket
-824:8	static	keyword
+824:8	static	keyword.storage.modifier
 824:15	member	keyword
 824:22	Create	function
 824:29	v	variable.parameter
@@ -3371,18 +3371,18 @@
 824:43	v	-
 824:45	}	punctuation.bracket
 826:0	// ── Decl: exceptions & special binders...	comment.line
-827:0	module	keyword
+827:0	module	keyword.storage.type
 827:7	L23_ExceptionsAndBinders	namespace
 827:32	=	operator
 828:4	// Exception with member augmentation (F...	comment.line
-829:4	exception	keyword
+829:4	exception	keyword.storage.type
 829:14	WrappedError	type
 829:27	of	keyword
-829:30	exn	type
-829:34	*	operator
-829:36	string	type
+829:30	exn	type.builtin
+829:34	*	keyword
+829:36	string	type.builtin
 829:43	with	keyword.control
-830:8	override	keyword
+830:8	override	keyword.storage.modifier
 830:17	this	variable.builtin
 830:21	.	punctuation
 830:22	Message	function
@@ -3413,7 +3413,7 @@
 842:0	// Expand-selection should walk doc → de...	comment.line
 843:0	// position gets a snippet; positions wi...	comment.line
 844:0	// statement (never an ERROR).	comment.line
-845:0	module	keyword
+845:0	module	keyword.storage.type
 845:7	L24_DocComments	namespace
 845:23	=	operator
 846:4	/// Attaches to the let binding.	comment.line.documentation
@@ -3442,33 +3442,33 @@
 856:22	=	operator
 856:24	1	constant.numeric.integer
 858:4	/// Attaches to the type declaration.	comment.line.documentation
-859:4	type	keyword
+859:4	type	keyword.storage.type
 859:9	Shape	type
 859:15	=	operator
 860:8	/// Attaches to the Circle case.	comment.line.documentation
 861:8	|	keyword.control
 861:10	Circle	constructor
 861:17	of	keyword
-861:20	float	type
+861:20	float	type.builtin
 862:8	/// Attaches to the Point case.	comment.line.documentation
 863:8	|	keyword.control
 863:10	Point	constructor
 865:4	/// A documented record.	comment.line.documentation
-866:4	type	keyword
+866:4	type	keyword.storage.type
 866:9	Point2	type
 866:16	=	operator
 867:8	{	punctuation.bracket
 868:12	/// The X coordinate.	comment.line.documentation
 869:12	X	variable.other.member
 869:13	:	punctuation.delimiter
-869:15	int	type
+869:15	int	type.builtin
 870:12	/// The Y coordinate.	comment.line.documentation
 871:12	Y	variable.other.member
 871:13	:	punctuation.delimiter
-871:15	int	type
+871:15	int	type.builtin
 872:8	}	punctuation.bracket
 874:4	/// A documented enum.	comment.line.documentation
-875:4	type	keyword
+875:4	type	keyword.storage.type
 875:9	Flags	type
 875:15	=	operator
 876:8	/// First flag.	comment.line.documentation
@@ -3482,14 +3482,14 @@
 879:12	=	operator
 879:14	2	constant.numeric.integer
 881:4	/// Attaches to the module declaration.	comment.line.documentation
-882:4	module	keyword
+882:4	module	keyword.storage.type
 882:11	Inner	namespace
 882:17	=	operator
 883:8	let	keyword
 883:12	v	function
 883:14	=	operator
 883:16	1	constant.numeric.integer
-885:4	type	keyword
+885:4	type	keyword.storage.type
 885:9	Documented	type
 885:19	()	punctuation.bracket
 885:22	=	operator
@@ -3524,18 +3524,18 @@
 892:28	()	punctuation.bracket
 892:31	=	operator
 892:33	()	constant.builtin
-894:4	type	keyword
+894:4	type	keyword.storage.type
 894:9	IFace	type
 894:15	=	operator
 895:8	/// Attaches to the abstract member.	comment.line.documentation
-896:8	abstract	keyword
+896:8	abstract	keyword.storage.modifier
 896:17	Do	function
 896:19	:	punctuation.delimiter
-896:21	unit	type
-896:26	->	keyword.control
-896:29	int	type
+896:21	unit	type.builtin
+896:26	->	keyword
+896:29	int	type.builtin
 898:4	/// Docs attach across `and` type-recurs...	comment.line.documentation
-899:4	type	keyword
+899:4	type	keyword.storage.type
 899:9	Tree	type
 899:14	=	operator
 900:8	|	keyword.control
@@ -3552,7 +3552,7 @@
 903:22	list	type
 905:4	/// …and across `let rec … and` too.	comment.line.documentation
 906:4	let	keyword
-906:8	rec	keyword
+906:8	rec	keyword.storage.modifier
 906:12	fEven	function
 906:18	x	variable.parameter
 906:20	=	operator
@@ -3571,15 +3571,15 @@
 911:20	=	operator
 911:22	1	constant.numeric.integer
 912:4	/// A stray doc before an `open` (docume...	comment.line.documentation
-913:4	open	keyword
+913:4	open	keyword.control.import
 913:9	System	namespace
 914:4	/// A dangling doc at the end of the mod...	comment.line.documentation
 916:0	// ── Accumulated-state regressions (mus...	comment.line
-917:0	module	keyword
+917:0	module	keyword.storage.type
 917:7	L17_AccumulatedState	namespace
 917:28	=	operator
 918:4	// The `dd` repro: class-lets + member +...	comment.line
-919:4	type	keyword
+919:4	type	keyword.storage.type
 919:9	Writer	type
 919:15	()	punctuation.bracket
 919:18	=	operator
@@ -3644,7 +3644,7 @@
 940:24	()	constant.builtin
 941:12	}	punctuation.bracket
 943:0	// ── Types: flexible (subtype) constrai...	comment.line
-944:0	module	keyword
+944:0	module	keyword.storage.type
 944:7	L18_FlexibleTypes	namespace
 944:25	=	operator
 945:4	// `#T` means "T or any subtype". Valid ...	comment.line
@@ -3660,7 +3660,7 @@
 947:34	=	operator
 947:36	x	-
 947:37	.	punctuation
-947:38	Dispose	variable.other.member
+947:38	Dispose	function.method
 947:46	()	constant.builtin
 949:4	let	keyword
 949:8	firstOf	function
@@ -3670,13 +3670,13 @@
 949:21	#	punctuation.special
 949:22	seq	type
 949:25	<	operator
-949:26	int	type
+949:26	int	type.builtin
 949:29	>	operator
 949:30	)	punctuation.bracket
 949:32	=	operator
-949:34	Seq	type
+949:34	Seq	namespace
 949:37	.	punctuation
-949:38	head	variable.other.member
+949:38	head	function
 949:43	xs	-
 951:4	let	keyword
 951:8	using	function
@@ -3691,8 +3691,8 @@
 951:39	:	punctuation.delimiter
 951:41	#	punctuation.special
 951:42	IDisposable	type
-951:54	->	keyword.control
-951:57	unit	type
+951:54	->	keyword
+951:57	unit	type.builtin
 951:61	)	punctuation.bracket
 951:63	=	operator
 951:65	body	function
@@ -3702,7 +3702,7 @@
 953:21	(	punctuation.bracket
 953:22	x	variable.parameter
 953:23	:	punctuation.delimiter
-953:25	obj	type
+953:25	obj	type.builtin
 953:28	)	punctuation.bracket
 953:30	=	operator
 953:32	x	-
@@ -3717,13 +3717,13 @@
 956:20	:	punctuation.delimiter
 956:22	#	punctuation.special
 956:23	IReader	type
-956:31	&	operator
+956:31	&	keyword
 956:33	#	punctuation.special
 956:34	ILogger	type
 956:41	)	punctuation.bracket
 956:43	=	operator
 956:45	env	-
-958:4	type	keyword
+958:4	type	keyword.storage.type
 958:9	Sink	type
 958:13	()	punctuation.bracket
 958:16	=	operator
@@ -3741,12 +3741,12 @@
 959:38	>	operator
 959:39	)	punctuation.bracket
 959:41	=	operator
-959:43	Seq	type
+959:43	Seq	namespace
 959:46	.	punctuation
-959:47	length	variable.other.member
+959:47	length	function
 959:54	items	-
 961:0	// ── Expr: dynamic-access operator `?` ...	comment.line
-962:0	module	keyword
+962:0	module	keyword.storage.type
 962:7	L19_DynamicAccess	namespace
 962:25	=	operator
 963:4	// `obj?member` is the dynamic-lookup op...	comment.line
@@ -3872,12 +3872,12 @@
 985:18	(	punctuation.bracket
 985:19	key	variable.parameter
 985:22	:	punctuation.delimiter
-985:24	string	type
+985:24	string	type.builtin
 985:30	)	punctuation.bracket
 985:32	=	operator
 985:34	doc	-
 985:37	.	punctuation
-985:38	GetProperty	variable.other.member
+985:38	GetProperty	function.method
 985:50	key	-
 986:4	let	keyword
 986:8	qmarkVal	function
@@ -3886,7 +3886,7 @@
 986:20	?	operator
 986:21	)	punctuation.bracket
 988:0	// ── Expr: element-DSL computation expr...	comment.line
-989:0	module	keyword
+989:0	module	keyword.storage.type
 989:7	L20_ElementDSL	namespace
 989:22	=	operator
 990:4	// The CE builder is an APPLICATION `tag...	comment.line
@@ -4106,7 +4106,7 @@
 1054:0	// First element on the SAME line as `[`...	comment.line
 1055:0	// elements — the bracket context opens ...	comment.line
 1056:0	// later lines still separate (instead o...	comment.line
-1057:0	module	keyword
+1057:0	module	keyword.storage.type
 1057:7	L21b_InlineFirstComprehension	namespace
 1057:37	=	operator
 1058:4	let	keyword
@@ -4122,9 +4122,9 @@
 1061:14	yield!	keyword.control
 1061:21	fields	-
 1062:14	if	keyword.control
-1062:17	Seq	type
+1062:17	Seq	namespace
 1062:20	.	punctuation
-1062:21	length	variable.other.member
+1062:21	length	function
 1062:28	fields	-
 1062:35	>	operator
 1062:37	0	constant.numeric.integer
@@ -4135,9 +4135,9 @@
 1064:21	funcs	-
 1064:27	]	punctuation.bracket
 1065:8	|>	operator
-1065:11	Seq	type
+1065:11	Seq	namespace
 1065:14	.	punctuation
-1065:15	distinct	variable.other.member
+1065:15	distinct	function
 1067:4	// Same in a CE builder (`seq { x`⏎`  y ...	comment.line
 1068:4	let	keyword
 1068:8	items	function
@@ -4155,7 +4155,7 @@
 1075:0	// a copy-update (`{ base with … }`), `h...	comment.line
 1076:0	// that object/record. The scanner class...	comment.line
 1077:0	// builder stays a plain name and the ge...	comment.line
-1078:0	module	keyword
+1078:0	module	keyword.storage.type
 1078:7	L22_BraceArgDisambiguation	namespace
 1078:34	=	operator
 1079:4	// Application whose argument is an OBJE...	comment.line
@@ -4170,7 +4170,7 @@
 1081:30	=	operator
 1082:8	shape	-
 1082:13	.	punctuation
-1082:14	Accept	variable.other.member
+1082:14	Accept	function.method
 1082:21	{	punctuation.bracket
 1082:23	new	keyword
 1082:27	IVisitor	type
@@ -4262,7 +4262,7 @@
 1097:21	{|	punctuation.bracket
 1097:24	route	-
 1097:29	.	punctuation
-1097:30	Create	variable.other.member
+1097:30	Create	function.method
 1097:36	(	punctuation.bracket
 1097:37	name	-
 1097:41	)	punctuation.bracket
@@ -4278,7 +4278,7 @@
 1098:23	{|	punctuation.bracket
 1099:8	routes	-
 1099:14	.	punctuation
-1099:15	Create	variable.other.member
+1099:15	Create	function.method
 1099:21	(	punctuation.bracket
 1099:22	name	-
 1099:26	)	punctuation.bracket
@@ -4449,7 +4449,7 @@
 1124:0	// declaration / dedents out of a module...	comment.line
 1125:0	// must still fire — otherwise `pipeline...	comment.line
 1126:0	let	keyword
-1126:4	private	keyword.control.access
+1126:4	private	keyword.storage.modifier
 1126:12	topLevelCfg	function
 1126:24	=	operator
 1126:26	0	constant.numeric.integer
@@ -4471,14 +4471,14 @@
 1137:9	100	constant.numeric.integer
 1137:13	}	punctuation.bracket
 1137:15	|>	operator
-1137:18	Seq	type
+1137:18	Seq	namespace
 1137:21	.	punctuation
-1137:22	map	variable.other.member
+1137:22	map	function
 1137:26	id	-
 1137:29	|>	operator
 1137:32	ignore	-
 1139:0	// === L25: #if/#else — BOTH branches pa...	comment.line
-1140:0	module	keyword
+1140:0	module	keyword.storage.type
 1140:7	L25_PreprocBranches	namespace
 1140:27	=	operator
 1141:4	let	keyword
@@ -4499,7 +4499,7 @@
 1148:8	describe	function
 1148:17	value	variable.parameter
 1148:23	:	punctuation.delimiter
-1148:25	string	type
+1148:25	string	type.builtin
 1148:32	=	operator
 1149:8	match	keyword.control
 1149:14	value	-
@@ -4537,7 +4537,7 @@
 1163:8	3	constant.numeric.integer
 1164:0	#endif	keyword.directive
 1166:0	// === L26: operator values — qualified ...	comment.line
-1167:0	module	keyword
+1167:0	module	keyword.storage.type
 1167:7	L26_OperatorValues	namespace
 1167:26	=	operator
 1168:4	let	keyword
@@ -4558,9 +4558,9 @@
 1169:8	sorted	function
 1169:15	xs	variable.parameter
 1169:18	=	operator
-1169:20	List	type
+1169:20	List	namespace
 1169:24	.	punctuation
-1169:25	sortWith	variable.other.member
+1169:25	sortWith	function
 1169:34	Operators	-
 1169:43	.(<)	operator
 1169:48	xs	-
@@ -4596,9 +4596,9 @@
 1173:4	let	keyword
 1173:8	product	function
 1173:16	=	operator
-1173:18	List	type
+1173:18	List	namespace
 1173:22	.	punctuation
-1173:23	fold	variable.other.member
+1173:23	fold	function
 1173:28	(	punctuation.bracket
 1173:30	*	operator
 1173:32	)	punctuation.bracket
@@ -4624,10 +4624,10 @@
 1177:4	// Overloaded `(*)` operator MEMBERS — `...	comment.line
 1178:4	// Two or more consecutive members used ...	comment.line
 1179:4	// line up to the next `(*)`'s `*)`, col...	comment.line
-1180:4	type	keyword
+1180:4	type	keyword.storage.type
 1180:9	Vector	type
 1180:16	=	operator
-1181:8	static	keyword
+1181:8	static	keyword.storage.modifier
 1181:15	member	keyword
 1181:22	(	punctuation.bracket
 1181:23	*	operator
@@ -4637,7 +4637,7 @@
 1181:28	,	punctuation.delimiter
 1181:30	i	variable.parameter
 1181:31	:	punctuation.delimiter
-1181:33	int	type
+1181:33	int	type.builtin
 1181:36	)	punctuation.bracket
 1181:38	=	operator
 1181:40	scale	function
@@ -4646,7 +4646,7 @@
 1181:48	,	punctuation.delimiter
 1181:50	i	-
 1181:51	)	punctuation.bracket
-1182:8	static	keyword
+1182:8	static	keyword.storage.modifier
 1182:15	member	keyword
 1182:22	(	punctuation.bracket
 1182:23	*	operator
@@ -4656,7 +4656,7 @@
 1182:28	,	punctuation.delimiter
 1182:30	i	variable.parameter
 1182:31	:	punctuation.delimiter
-1182:33	int64	type
+1182:33	int64	type.builtin
 1182:38	)	punctuation.bracket
 1182:40	=	operator
 1182:42	scale	function
@@ -4665,7 +4665,7 @@
 1182:50	,	punctuation.delimiter
 1182:52	i	-
 1182:53	)	punctuation.bracket
-1183:8	static	keyword
+1183:8	static	keyword.storage.modifier
 1183:15	member	keyword
 1183:22	(	punctuation.bracket
 1183:23	*	operator
@@ -4675,7 +4675,7 @@
 1183:28	,	punctuation.delimiter
 1183:30	f	variable.parameter
 1183:31	:	punctuation.delimiter
-1183:33	float	type
+1183:33	float	type.builtin
 1183:38	)	punctuation.bracket
 1183:40	=	operator
 1183:42	scale	function
@@ -4695,9 +4695,9 @@
 1188:4	let	keyword
 1188:8	product	function
 1188:16	=	operator
-1188:18	List	type
+1188:18	List	namespace
 1188:22	.	punctuation
-1188:23	fold	variable.other.member
+1188:23	fold	function
 1188:28	(	punctuation.bracket
 1188:29	*	operator
 1188:30	)	punctuation.bracket
@@ -4710,7 +4710,7 @@
 1188:42	3	constant.numeric.integer
 1188:44	]	punctuation.bracket
 1190:0	// === L27: over-indented continuation a...	comment.line
-1191:0	module	keyword
+1191:0	module	keyword.storage.type
 1191:7	L27_OverIndentedArm	namespace
 1191:27	=	operator
 1192:4	let	keyword
@@ -4764,9 +4764,9 @@
 1204:24	recdTy	-
 1204:31	id	-
 1205:12	|?>	operator
-1205:16	List	type
+1205:16	List	namespace
 1205:20	.	punctuation
-1205:21	map	variable.other.member
+1205:21	map	function
 1205:25	(	punctuation.bracket
 1205:26	fun	keyword
 1205:30	x	variable.parameter
@@ -4782,7 +4782,7 @@
 1206:12	->	keyword.control
 1206:15	NoResults	constructor
 1208:0	// === L28: dangling else — inline if/el...	comment.line
-1209:0	module	keyword
+1209:0	module	keyword.storage.type
 1209:7	L28_DanglingElse	namespace
 1209:24	=	operator
 1210:4	let	keyword
@@ -4859,14 +4859,14 @@
 1225:60	.	punctuation
 1225:61	Empty	variable.other.member
 1227:0	// === L29: attribute between `module`/`...	comment.line
-1228:0	module	keyword
+1228:0	module	keyword.storage.type
 1228:7	[<	punctuation.bracket
 1228:9	AutoOpen	attribute
 1228:17	>]	punctuation.bracket
 1228:20	L29_KeywordAttrs	namespace
 1228:37	=	operator
 1229:4	let	keyword
-1229:8	inline	keyword
+1229:8	inline	keyword.storage.modifier
 1229:15	runT	function
 1229:20	x	variable.parameter
 1229:22	=	operator
@@ -4874,7 +4874,7 @@
 1229:31	x	-
 1231:4	(* keep (* nested comments *) colored *)	comment.block
 1232:4	let	keyword
-1232:8	rec	keyword
+1232:8	rec	keyword.storage.modifier
 1232:12	genTail	function
 1232:20	cenv	variable.parameter
 1232:25	x	variable.parameter
@@ -4885,7 +4885,7 @@
 1234:8	[<	punctuation.bracket
 1234:10	Inline	attribute
 1234:16	>]	punctuation.bracket
-1234:19	(|BoolLit|_|)	-
+1234:19	(|BoolLit|_|)	function
 1234:33	=	operator
 1235:8	function	keyword
 1236:8	|	keyword.control
@@ -4899,14 +4899,14 @@
 1237:12	->	keyword.control
 1237:15	ValueNone	constructor
 1239:0	# 100 "layout.fsx"	keyword.directive
-1240:0	module	keyword
+1240:0	module	keyword.storage.type
 1240:7	L30_LineDirectives	namespace
 1240:26	=	operator
 1241:4	let	keyword
 1241:8	generated	function
 1241:18	=	operator
 1241:20	1	constant.numeric.integer
-1243:0	type	keyword
+1243:0	type	keyword.storage.type
 1243:5	L31_CtorAttrsModifier	type
 1243:27	[<	punctuation.bracket
 1243:29	ParamObject	attribute
@@ -4916,15 +4916,15 @@
 1243:47	"$0"	string
 1243:51	)	punctuation.bracket
 1243:52	>]	punctuation.bracket
-1244:4	private	keyword.control.access
+1244:4	private	keyword.storage.modifier
 1244:12	(	punctuation.bracket
 1244:13	name	variable.parameter
 1244:17	:	punctuation.delimiter
-1244:19	string	type
+1244:19	string	type.builtin
 1244:25	,	punctuation.delimiter
 1244:27	weight	variable.parameter
 1244:33	:	punctuation.delimiter
-1244:35	float	type
+1244:35	float	type.builtin
 1244:40	)	punctuation.bracket
 1244:42	=	operator
 1246:4	member	keyword
@@ -4963,7 +4963,7 @@
 1252:16	(	punctuation.bracket
 1252:17	xs	variable.parameter
 1252:19	:	punctuation.delimiter
-1252:21	int	type
+1252:21	int	type.builtin
 1252:25	[	punctuation.bracket
 1252:26	]	punctuation.bracket
 1252:27	)	punctuation.bracket
@@ -4987,7 +4987,7 @@
 1252:75	else	keyword.control
 1252:80	None	-
 1252:85	:	punctuation.delimiter
-1252:87	int	type
+1252:87	int	type.builtin
 1252:91	option	type
 1254:4	let	keyword
 1254:8	emptyBag	function
@@ -5000,7 +5000,7 @@
 1256:8	{|	punctuation.bracket
 1257:12	profiles	-
 1257:20	.	punctuation
-1257:21	Create	variable.other.member
+1257:21	Create	function.method
 1257:27	(	punctuation.bracket
 1257:28	name	-
 1257:32	,	punctuation.delimiter
@@ -5039,9 +5039,9 @@
 1262:32	:	punctuation.delimiter
 1262:34	Lens	type
 1262:38	<	operator
-1262:39	int	type
+1262:39	int	type.builtin
 1262:42	,	punctuation.delimiter
-1262:44	int	type
+1262:44	int	type.builtin
 1262:47	>	operator
 1262:48	)	punctuation.bracket
 1262:50	=	operator
@@ -5049,9 +5049,9 @@
 1263:4	let	keyword
 1263:8	emptyDiv	function
 1263:17	=	operator
-1264:8	Html	type
+1264:8	Html	namespace
 1264:12	.	punctuation
-1264:13	div	variable.other.member
+1264:13	div	function
 1264:17	[	punctuation.bracket
 1266:8	]	punctuation.bracket
 1268:4	let	keyword
@@ -5066,22 +5066,22 @@
 1273:8	@>	punctuation.special
 1274:8	|>	operator
 1274:11	wrapReader	-
-1276:0	type	keyword
+1276:0	type	keyword.storage.type
 1276:5	L32_InlineMemberBody	type
 1276:26	=	operator
-1276:28	static	keyword
+1276:28	static	keyword.storage.modifier
 1276:35	member	keyword
-1276:42	inline	keyword
+1276:42	inline	keyword.storage.modifier
 1276:49	Invoke	function
 1276:56	(	punctuation.bracket
 1276:57	x	variable.parameter
 1276:58	:	punctuation.delimiter
-1276:60	int	type
+1276:60	int	type.builtin
 1276:63	)	punctuation.bracket
 1276:65	=	operator
 1276:67	lift	function
 1276:72	x	-
-1278:0	module	keyword
+1278:0	module	keyword.storage.type
 1278:7	L33_Extern	namespace
 1278:18	=	operator
 1279:4	[<	punctuation.bracket
@@ -5091,15 +5091,15 @@
 1279:26	)	punctuation.bracket
 1279:27	>]	punctuation.bracket
 1280:4	extern	keyword
-1280:11	bool	type
-1280:16	private	keyword.control.access
+1280:11	bool	type.builtin
+1280:16	private	keyword.storage.modifier
 1280:24	GetConsoleMode	-
 1280:38	(	punctuation.bracket
 1280:39	void	type
 1280:43	*	operator
 1280:45	_hConsoleHandle	-
 1280:60	,	punctuation.delimiter
-1280:62	int	type
+1280:62	int	type.builtin
 1280:65	*	operator
 1280:67	_lpMode	-
 1280:74	)	punctuation.bracket
@@ -5120,9 +5120,9 @@
 1289:4	let	keyword
 1289:8	timesAll	function
 1289:17	=	operator
-1289:19	List	type
+1289:19	List	namespace
 1289:23	.	punctuation
-1289:24	fold	variable.other.member
+1289:24	fold	function
 1289:29	(	punctuation.bracket
 1289:30	*	operator
 1289:31	)	punctuation.bracket
@@ -5135,15 +5135,15 @@
 1289:43	4	constant.numeric.integer
 1289:45	]	punctuation.bracket
 1291:4	let	keyword
-1291:8	inline	keyword
+1291:8	inline	keyword.storage.modifier
 1291:15	maxOf	function
 1291:21	source	variable.parameter
 1291:28	=	operator
 1291:30	source	-
 1291:37	|>	operator
-1291:40	Seq	type
+1291:40	Seq	namespace
 1291:43	.	punctuation
-1291:44	max	variable.other.member
+1291:44	max	function
 1291:48	:	punctuation.delimiter
 1291:50	'T	type.parameter
 1291:53	when	keyword.control
@@ -5151,12 +5151,12 @@
 1291:61	:	punctuation.delimiter
 1291:63	comparison	keyword
 1293:0	// === L34: FSharp.Core inline IL + stat...	comment.line
-1294:0	module	keyword
+1294:0	module	keyword.storage.type
 1294:7	L34_StaticOptimizations	namespace
 1294:31	=	operator
 1295:4	//	comment.line
 1296:4	let	keyword
-1296:8	inline	keyword
+1296:8	inline	keyword.storage.modifier
 1296:15	compareFast	function
 1296:27	(	punctuation.bracket
 1296:28	x	variable.parameter
@@ -5169,7 +5169,7 @@
 1296:37	'T	type.parameter
 1296:39	)	punctuation.bracket
 1296:41	:	punctuation.delimiter
-1296:43	int	type
+1296:43	int	type.builtin
 1296:47	=	operator
 1297:9	compareIntrinsic	function
 1297:26	x	-
@@ -5177,28 +5177,28 @@
 1298:9	when	keyword.control
 1298:14	'T	type.parameter
 1298:17	:	punctuation.delimiter
-1298:19	bool	type
+1298:19	bool	type.builtin
 1298:24	=	operator
-1298:26	(#	-
+1298:26	(#	punctuation.special
 1298:29	"cgt"	string
 1298:35	x	-
 1298:37	y	-
 1298:39	:	punctuation.delimiter
-1298:41	int	type
-1298:45	#)	-
+1298:41	int	type.builtin
+1298:45	#)	punctuation.special
 1299:9	when	keyword.control
 1299:14	'T	type.parameter
 1299:17	:	punctuation.delimiter
-1299:19	char	type
+1299:19	char	type.builtin
 1299:24	=	operator
-1299:26	(#	-
+1299:26	(#	punctuation.special
 1299:29	"cgt"	string
 1299:35	x	-
 1299:37	y	-
 1299:39	:	punctuation.delimiter
-1299:41	int	type
-1299:45	#)	-
-1301:0	type	keyword
+1299:41	int	type.builtin
+1299:45	#)	punctuation.special
+1301:0	type	keyword.storage.type
 1301:5	L35_DoAssign	type
 1301:17	()	punctuation.bracket
 1301:20	=	operator
@@ -5226,7 +5226,7 @@
 1304:28	(	punctuation.bracket
 1304:29	errorWriter	-
 1304:40	)	punctuation.bracket
-1306:4	type	keyword
+1306:4	type	keyword.storage.type
 1306:9	L36Flags	type
 1306:18	=	operator
 1307:8	|	keyword.control
@@ -5274,12 +5274,12 @@
 1311:42	:	punctuation.delimiter
 1311:44	string	type
 1311:51	| null	type
-1311:58	*	operator
-1311:60	int	type
+1311:58	*	keyword
+1311:60	int	type.builtin
 1311:64	=	operator
 1311:66	find	function
 1311:71	name	-
-1313:4	type	keyword
+1313:4	type	keyword.storage.type
 1313:9	L37Build	type
 1313:17	()	punctuation.bracket
 1313:20	=	operator
@@ -5290,7 +5290,7 @@
 1314:27	[|	punctuation.bracket
 1314:29	|]	punctuation.bracket
 1314:31	:	punctuation.delimiter
-1314:33	string	type
+1314:33	string	type.builtin
 1314:39	[	punctuation.bracket
 1314:40	]	punctuation.bracket
 1314:42	with	keyword.control
@@ -5315,11 +5315,11 @@
 1322:29	{|	punctuation.bracket
 1322:32	A	variable.other.member
 1322:33	:	punctuation.delimiter
-1322:35	int	type
+1322:35	int	type.builtin
 1322:38	;	punctuation.delimiter
 1322:40	B	variable.other.member
 1322:41	:	punctuation.delimiter
-1322:43	string	type
+1322:43	string	type.builtin
 1322:50	|}	punctuation.bracket
 1322:52	)	punctuation.bracket
 1322:54	=	operator
@@ -5360,9 +5360,9 @@
 1328:19	=	operator
 1328:21	t1	-
 1328:24	|?>	operator
-1328:28	List	type
+1328:28	List	namespace
 1328:32	.	punctuation
-1328:33	choose	variable.other.member
+1328:33	choose	function
 1328:40	(	punctuation.bracket
 1328:41	function	keyword
 1328:50	a	variable
@@ -5488,10 +5488,10 @@
 1353:0	// existing pattern-side colouring. Type...	comment.line
 1354:0	// must stay @type; that's the exact fal...	comment.line
 1355:0	// (rather than a bare text match) exist...	comment.line
-1356:0	module	keyword
+1356:0	module	keyword.storage.type
 1356:7	L38_ExpressionColouring	namespace
 1356:31	=	operator
-1357:4	type	keyword
+1357:4	type	keyword.storage.type
 1357:9	Op	type
 1357:11	<	operator
 1357:12	'a	type.parameter
@@ -5575,7 +5575,7 @@
 1378:17	(	punctuation.bracket
 1378:18	c	variable.parameter
 1378:19	:	punctuation.delimiter
-1378:21	char	type
+1378:21	char	type.builtin
 1378:25	)	punctuation.bracket
 1378:27	=	operator
 1378:29	string	function.builtin
@@ -5585,7 +5585,7 @@
 1379:16	(	punctuation.bracket
 1379:17	s	variable.parameter
 1379:18	:	punctuation.delimiter
-1379:20	string	type
+1379:20	string	type.builtin
 1379:26	)	punctuation.bracket
 1379:28	=	operator
 1379:30	int	function.builtin
@@ -5595,7 +5595,7 @@
 1380:18	(	punctuation.bracket
 1380:19	s	variable.parameter
 1380:20	:	punctuation.delimiter
-1380:22	string	type
+1380:22	string	type.builtin
 1380:28	)	punctuation.bracket
 1380:30	=	operator
 1380:32	float32	function.builtin
@@ -5605,7 +5605,7 @@
 1381:16	(	punctuation.bracket
 1381:17	n	variable.parameter
 1381:18	:	punctuation.delimiter
-1381:20	int	type
+1381:20	int	type.builtin
 1381:23	)	punctuation.bracket
 1381:25	=	operator
 1381:27	bigint	function.builtin
@@ -5617,13 +5617,13 @@
 1385:19	(	punctuation.bracket
 1385:20	xs	variable.parameter
 1385:22	:	punctuation.delimiter
-1385:24	int	type
+1385:24	int	type.builtin
 1385:28	list	type
 1385:32	)	punctuation.bracket
 1385:34	=	operator
-1385:36	List	type
+1385:36	List	namespace
 1385:40	.	punctuation
-1385:41	map	variable.other.member
+1385:41	map	function
 1385:45	string	-
 1385:52	xs	-
 1387:4	// Type positions must stay @type, never...	comment.line
@@ -5634,38 +5634,38 @@
 1390:17	(	punctuation.bracket
 1390:18	value	variable.parameter
 1390:23	:	punctuation.delimiter
-1390:25	string	type
+1390:25	string	type.builtin
 1390:31	)	punctuation.bracket
 1390:33	(	punctuation.bracket
 1390:34	count	variable.parameter
 1390:39	:	punctuation.delimiter
-1390:41	int	type
+1390:41	int	type.builtin
 1390:44	)	punctuation.bracket
 1390:46	:	punctuation.delimiter
-1390:48	string	type
+1390:48	string	type.builtin
 1390:55	=	operator
 1390:57	value	-
 1390:63	+	operator
 1390:65	string	function.builtin
 1390:72	count	-
-1391:4	type	keyword
+1391:4	type	keyword.storage.type
 1391:9	Summary	type
 1391:17	=	operator
 1391:19	{	punctuation.bracket
 1391:21	Text	variable.other.member
 1391:25	:	punctuation.delimiter
-1391:27	string	type
+1391:27	string	type.builtin
 1391:33	;	punctuation.delimiter
 1391:35	Count	variable.other.member
 1391:40	:	punctuation.delimiter
-1391:42	int	type
+1391:42	int	type.builtin
 1391:46	}	punctuation.bracket
 1393:0	// === L39: doc-comment injections — XML...	comment.line
 1394:0	// Exercises queries/injections.scm: `//...	comment.line
 1395:0	// into one document (opening/closing ta...	comment.line
 1396:0	// `(** … *)` block doc comments inject ...	comment.line
 1397:0	// grammars installed, the markup below ...	comment.line
-1398:0	module	keyword
+1398:0	module	keyword.storage.type
 1398:7	L39_DocCommentInjections	namespace
 1398:32	=	operator
 1399:4	/// <summary>	comment.line.documentation
@@ -5704,13 +5704,13 @@
 1431:0	// === L40: constructs fixed 2026-09-11/...	comment.line
 1432:0	// Each block below parsed WRONG (or err...	comment.line
 1433:0	// zero errors but a degenerate tree, so...	comment.line
-1434:0	module	keyword
+1434:0	module	keyword.storage.type
 1434:7	L40_RecentFixes	namespace
 1434:23	=	operator
 1435:4	// Attribute on a primary constructor wh...	comment.line
 1436:4	// lexer atomises `()` into the unit tok...	comment.line
 1437:4	// parameter branch. `Obsolete` must col...	comment.line
-1438:4	type	keyword
+1438:4	type	keyword.storage.type
 1438:9	Attributed	type
 1438:20	[<	punctuation.bracket
 1438:22	System	attribute
@@ -5728,7 +5728,7 @@
 1439:17	X	function
 1439:19	=	operator
 1439:21	1	constant.numeric.integer
-1441:4	type	keyword
+1441:4	type	keyword.storage.type
 1441:9	AttributedTight	type
 1441:25	[<	punctuation.bracket
 1441:27	ReflectedDefinition	attribute
@@ -5760,7 +5760,7 @@
 1448:28	failwith	function.builtin
 1448:37	"foo"	string
 1448:43	:	punctuation.delimiter
-1448:45	int	type
+1448:45	int	type.builtin
 1450:4	let	keyword
 1450:8	describeOpt	function
 1450:20	d	variable.parameter
@@ -5768,7 +5768,7 @@
 1451:8	match	keyword.control
 1451:14	d	-
 1451:15	:	punctuation.delimiter
-1451:17	int	type
+1451:17	int	type.builtin
 1451:21	option	type
 1451:28	with	keyword.control
 1451:40	// ascribed scrutinee, no parens	comment.line
@@ -5810,18 +5810,18 @@
 1462:22	=	operator
 1462:24	printfn	function
 1462:32	"x"	string
-1463:4	Console	type
+1463:4	Console	namespace
 1463:11	.	punctuation
-1463:12	WriteLine	variable.other.member
+1463:12	WriteLine	function
 1463:22	"x"	string
 1463:25	;	punctuation.delimiter
-1464:4	type	keyword
+1464:4	type	keyword.storage.type
 1464:9	Marker	type
 1464:16	=	operator
 1464:18	class	keyword
 1464:24	end	keyword
 1466:4	// Verbose module body — `begin`/`end` m...	comment.line
-1467:4	module	keyword
+1467:4	module	keyword.storage.type
 1467:11	Verbose	namespace
 1467:19	=	operator
 1467:21	begin	keyword
@@ -5832,16 +5832,16 @@
 1469:4	end	keyword
 1471:4	// Object construction expression: `inhe...	comment.line
 1472:4	// function being applied to a type name...	comment.line
-1473:4	type	keyword
+1473:4	type	keyword.storage.type
 1473:9	Wrapped	type
 1473:16	(	punctuation.bracket
 1473:17	addr	variable.parameter
 1473:21	:	punctuation.delimiter
-1473:23	nativeint	type
+1473:23	nativeint	type.builtin
 1473:32	,	punctuation.delimiter
 1473:34	len	variable.parameter
 1473:37	:	punctuation.delimiter
-1473:39	int64	type
+1473:39	int64	type.builtin
 1473:44	)	punctuation.bracket
 1473:46	=	operator
 1474:8	inherit	keyword
@@ -5890,7 +5890,7 @@
 1481:26	(	punctuation.bracket
 1481:27	ctx	-
 1481:30	.	punctuation
-1481:31	Contents	variable.other.member
+1481:31	Contents	function.method
 1481:40	g	-
 1481:41	)	punctuation.bracket
 1481:43	with	keyword.control
@@ -5899,13 +5899,13 @@
 1481:62	true	constant.builtin.boolean
 1481:67	}	punctuation.bracket
 1483:4	// Exception declaration carrying an acc...	comment.line
-1484:4	exception	keyword
-1484:14	internal	keyword.control.access
+1484:4	exception	keyword.storage.type
+1484:14	internal	keyword.storage.modifier
 1484:23	Wrapped2	type
 1484:32	of	keyword
-1484:35	int	type
+1484:35	int	type.builtin
 1486:4	// Secondary constructor naming the inst...	comment.line
-1487:4	type	keyword
+1487:4	type	keyword.storage.type
 1487:9	Named	type
 1487:14	()	punctuation.bracket
 1487:17	=	operator
@@ -5913,7 +5913,7 @@
 1488:11	(	punctuation.bracket
 1488:12	seed	variable.parameter
 1488:16	:	punctuation.delimiter
-1488:18	int	type
+1488:18	int	type.builtin
 1488:21	)	punctuation.bracket
 1488:23	as	keyword
 1488:26	this	-
@@ -5967,7 +5967,7 @@
 1501:15	""	string
 1503:4	// Subtype constraint inside a TUPLED pa...	comment.line
 1504:4	// already worked). `IDisposable` must c...	comment.line
-1505:4	type	keyword
+1505:4	type	keyword.storage.type
 1505:9	Builder	type
 1505:16	()	punctuation.bracket
 1505:19	=	operator
@@ -5987,8 +5987,8 @@
 1506:59	binder	variable.parameter
 1506:65	:	punctuation.delimiter
 1506:67	'T	type.parameter
-1506:70	->	keyword.control
-1506:73	int	type
+1506:70	->	keyword
+1506:73	int	type.builtin
 1506:76	)	punctuation.bracket
 1506:78	=	operator
 1507:12	binder	function

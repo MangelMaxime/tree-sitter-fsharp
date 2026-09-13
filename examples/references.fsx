@@ -1510,4 +1510,3 @@ module L40_RecentFixes =
     // used to out-lex the closer as one symbolic_op and swallow the member.
     let freeVars = <@@ 1 @@>.GetFreeVars()
     let quotType = <@ 1 + 2 @>.Type
-

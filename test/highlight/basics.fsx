@@ -11,11 +11,11 @@ let result = items |> List.map describe
 //                          ^ function
 
 type Shape =
-// <- keyword
+// <- keyword.storage.type
 //   ^ type
     | Circle of float
     //  ^ constructor
-    //          ^ type
+    //          ^ type.builtin
     | Point
     //  ^ constructor
 
@@ -40,14 +40,14 @@ let dbg = false
 // <- keyword.directive
 
 module Helpers =
-// <- keyword
+// <- keyword.storage.type
 //     ^ namespace
     let inline private combine (x: int) = x
     // <- keyword
-    //  ^ keyword
-    //         ^ keyword.control.access
+    //  ^ keyword.storage.modifier
+    //         ^ keyword.storage.modifier
     //                          ^ variable.parameter
-    //                              ^ type
+    //                              ^ type.builtin
 
 register ("HelloWorld", helloWorld)
 // <- function

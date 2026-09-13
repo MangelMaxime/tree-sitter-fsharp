@@ -10,13 +10,11 @@
 (try_expression ["try" "with" "finally"] @keyword.exception)
 (match_expression "with" @keyword.conditional)
 
-"open" @keyword.import
-
 ["let" "use" "member" "fun" "function"] @keyword.function
 
-["type" "exception" "inherit" "interface" "class" "struct" "delegate" "enum"] @keyword.type
+["inherit" "interface" "class" "struct" "delegate" "enum"] @keyword.type
 
-["abstract" "static" "inline" "mutable" "override" "rec" "default" "extern"] @keyword.modifier
+"extern" @keyword.modifier
 
 ; Computation-expression builders (`async { }`, `task { }`): nvim-treesitter
 ; files them under @constant.macro, as ionide/tree-sitter-fsharp does. The
