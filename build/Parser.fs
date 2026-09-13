@@ -38,29 +38,11 @@ let defaultPath = Source.ParserPath
 
 let loadAs (grammar: Grammar) (path: string) =
     if not (File.Exists path) then
-        failwith $"No parser at %s{path}. Run `task build` first."
+        failwith $"No parser at %s{path}: run `./build.sh build` first"
 
     new Language(Path.GetFullPath path, $"tree_sitter_%s{grammar.Name}")
 
 let load (path: string) = loadAs Source path
-
-/// Fails when a grammar's parser.so is older than the sources it is compiled from.
-let checkFreshness (grammar: Grammar) =
-    let modified (path: string) = File.GetLastWriteTimeUtc path
-    let grammarJs = Path.Combine(grammar.Directory, "grammar.js")
-    let parserC = Path.Combine(grammar.Directory, "src", "parser.c")
-
-    if modified grammarJs > modified parserC then
-        failwith $"%s{grammarJs} is newer than its src/parser.c. Run `task generate` first."
-
-    if not (File.Exists grammar.ParserPath) then
-        failwith $"No %s{grammar.ParserPath}. Run `task build` first."
-
-    if
-        modified grammar.ParserPath < modified parserC
-        || modified grammar.ParserPath < modified Workspace.src.``scanner.c``
-    then
-        failwith $"%s{grammar.ParserPath} is older than its sources. Run `task build` first."
 
 let descendants (root: Node) =
     seq {

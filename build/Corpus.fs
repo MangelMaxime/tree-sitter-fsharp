@@ -3,7 +3,6 @@ module EasyBuild.Corpus
 
 open System
 open System.IO
-open SimpleExec
 open EasyBuild.Workspace
 
 type Repo =
@@ -61,13 +60,11 @@ let private clone (repo: Repo) =
     let destination = Path.Combine(directory, repo.Name)
     Directory.CreateDirectory destination |> ignore
 
-    let git (arguments: string) =
-        Command.Run("git", arguments, workingDirectory = destination, noEcho = true)
-
-    git "init -q"
-    git $"remote add origin %s{repo.Url}"
-    git $"fetch -q --depth 1 origin %s{repo.Sha}"
-    git "checkout -q FETCH_HEAD"
+    let git = Tools.git destination
+    git [ "init"; "-q" ]
+    git [ "remote"; "add"; "origin"; repo.Url ]
+    git [ "fetch"; "-q"; "--depth"; "1"; "origin"; repo.Sha ]
+    git [ "checkout"; "-q"; "FETCH_HEAD" ]
 
 let ensureClones (repos: Repo list) =
     for repo in repos do

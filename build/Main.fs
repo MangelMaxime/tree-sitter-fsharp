@@ -7,6 +7,8 @@ open EasyBuild.Commands.Expansion
 open EasyBuild.Commands.DeriveQueries
 open EasyBuild.Commands.CheckQueries
 open EasyBuild.Commands.Highlight
+open EasyBuild.Commands.Grammar
+open EasyBuild.Commands.Dev
 
 [<EntryPoint>]
 let main args =
@@ -14,6 +16,61 @@ let main args =
 
     app.Configure(fun config ->
         config.Settings.ApplicationName <- "./build.sh"
+
+        config
+            .AddCommand<GenerateCommand>("generate")
+            .WithDescription("Regenerate src/ and signature/src/ from grammar.js (skipped when unchanged)")
+            .WithExample("generate")
+            .WithExample("generate --force")
+        |> ignore
+
+        config
+            .AddCommand<BuildCommand>("build")
+            .WithDescription("Compile parser.so and signature/parser.so (skipped when unchanged)")
+            .WithExample("build")
+        |> ignore
+
+        config
+            .AddCommand<TestCommand>("test")
+            .WithDescription("Corpus and highlight tests of both grammars")
+            .WithExample("test")
+            .WithExample("test --include \"after a line comment\"")
+            .WithExample("test --signature")
+        |> ignore
+
+        config
+            .AddCommand<TestAllCommand>("test-all")
+            .WithDescription(
+                "Every local gate: corpus, highlight, expansion, query validity, derived queries, snapshot"
+            )
+            .WithExample("test-all")
+        |> ignore
+
+        config.AddBranch(
+            "dev",
+            fun (dev: IConfigurator<CommandSettings>) ->
+                dev.SetDescription "Deploy the grammar and queries to an editor"
+
+                dev
+                    .AddCommand<DevHelixCommand>("helix")
+                    .WithDescription("Build and copy the parsers and queries into the Helix runtime")
+                    .WithExample("dev helix")
+                |> ignore
+
+                dev
+                    .AddCommand<DevZedCommand>("zed")
+                    .WithDescription("Refresh the Zed dev extension in zed/ (then Rebuild it in Zed)")
+                    .WithExample("dev zed")
+                |> ignore
+
+                dev
+                    .AddCommand<DevNvimCommand>("nvim")
+                    .WithDescription("Build the parser and open a file in the repo-local Neovim config")
+                    .WithExample("dev nvim")
+                    .WithExample("dev nvim path/to/file.fsx")
+                |> ignore
+        )
+        |> ignore
 
         config
             .AddCommand<BenchCommand>("bench")
@@ -43,7 +100,7 @@ let main args =
         config
             .AddCommand<DeriveQueriesCommand>("derive-queries")
             .WithDescription(
-                "Regenerate queries/nvim/highlights.scm from the Helix one and check the Zed one"
+                "Regenerate the Neovim, Zed and signature highlight queries from the Helix one"
             )
             .WithExample("derive-queries")
             .WithExample("derive-queries --check")

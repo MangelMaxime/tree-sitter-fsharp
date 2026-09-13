@@ -131,7 +131,7 @@ let private regenerateCorpora () =
     let root = Path.Combine(Corpus.directory, "fsharp")
 
     if not (Directory.Exists root) then
-        failwith "dotnet/fsharp is not cloned yet. Run `task bench` once first."
+        failwith "dotnet/fsharp is not cloned yet. Run `./build.sh bench` once first."
 
     let valid = ResizeArray()
     let syntax = ResizeArray()
@@ -452,7 +452,7 @@ type ScoreCommand() =
                     |> set
 
             if settings.Parser = "" then
-                Parser.checkFreshness Parser.Source
+                Steps.build false false
 
             let parserPath =
                 if settings.Parser = "" then
@@ -494,7 +494,7 @@ type ScoreCommand() =
                 0
             elif settings.Compare then
                 if not (File.Exists baselinePath) then
-                    failwith "No baseline. Run `task score -- --update-baseline` first."
+                    failwith "No baseline. Run `./build.sh score --update-baseline` first."
 
                 gate
                     (JsonSerializer.Deserialize<Scoreboard>(File.ReadAllText baselinePath, json))

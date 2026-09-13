@@ -2,7 +2,7 @@
 
 The files in `test/highlight/` are the specification of the highlighting. Every capture
 decision is pinned by an assertion; `queries/highlights.scm` is adjusted until they pass.
-Neovim and Zed queries derive from the Helix one (`task queries:derive`). Zed maps
+Neovim and Zed queries derive from the Helix one (`./build.sh derive-queries`). Zed maps
 `namespace` to `type` because its bundled themes leave `namespace` at the text colour.
 
 ## How to review
@@ -16,7 +16,7 @@ Neovim and Zed queries derive from the Helix one (`task queries:derive`). Zed ma
 
 An assertion passes when the expected name is one of the captures at that position.
 Helix uses the last capture in source order, so `test/highlight-snapshot.txt` records the
-resolved capture of every token in `examples/references.fsx`; `task highlight:snapshot`
+resolved capture of every token in `examples/references.fsx`; `./build.sh highlight-snapshot`
 regenerates it and the diff is reviewed like any other change.
 
 ## Decisions
@@ -55,7 +55,7 @@ convention below is what the tests pin. `trial` means agreed to try and review i
 
 ## Open questions
 
-Each question names the file and line to look at, in Helix after `task dev:helix` or in Zed
+Each question names the file and line to look at, in Helix after `./build.sh dev helix` or in Zed
 after a rebuild of the dev extension. A throwaway `examples/scratch.fsx` can hold the code to look at.
 
 | # | Question | Where to look |
@@ -84,9 +84,9 @@ The five existing files (`basics`, `literals_comments`, `misc_captures`, `struct
 
 ## Tooling
 
-- `task test` runs the assertions with the corpus.
-- `task highlight:snapshot` writes `test/highlight-snapshot.txt` (resolved capture per
-  token of `examples/references.fsx`); `-- --check` fails CI when it drifts.
-- `task highlight:coverage` lists tokens with no capture over the bench sample, grouped
+- `./build.sh test` runs the assertions with the corpus.
+- `./build.sh highlight-snapshot` writes `test/highlight-snapshot.txt` (resolved capture per
+  token of `examples/references.fsx`); `--check` fails CI when it drifts.
+- `./build.sh highlight-coverage` lists tokens with no capture over the bench sample, grouped
   by context, so a family with a hole is visible before it is reviewed.
-- `task dev:helix` deploys to Helix to see a file in a real theme.
+- `./build.sh dev helix` deploys to Helix to see a file in a real theme.

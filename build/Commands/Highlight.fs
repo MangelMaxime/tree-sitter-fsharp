@@ -79,7 +79,7 @@ let private renderSnapshot () =
     let lines =
         [
             "# Resolved highlight capture of every token in examples/references.fsx."
-            "# Regenerate with `task highlight:snapshot`; `-` is a token with no capture."
+            "# Regenerate with `./build.sh highlight-snapshot`; `-` is a token with no capture."
             for token in tokens tree.RootNode do
                 let text = token.Text.Replace("\n", "\\n")
 
@@ -108,6 +108,7 @@ type HighlightSnapshotCommand() =
     interface ICommandLimiter<SnapshotSettings>
 
     override _.Execute(_, settings, _) =
+        Steps.build false false
         let relative = Path.GetRelativePath(Workspace.``.``, snapshotPath)
         let current = renderSnapshot ()
 
@@ -117,7 +118,7 @@ type HighlightSnapshotCommand() =
                 0
             else
                 AnsiConsole.MarkupLineInterpolated
-                    $"[red]{relative} is out of date[/]: run `task highlight:snapshot` and review the diff"
+                    $"[red]{relative} is out of date[/]: run `./build.sh highlight-snapshot` and review the diff"
 
                 1
         else
@@ -142,6 +143,7 @@ type HighlightCoverageCommand() =
     interface ICommandLimiter<CoverageSettings>
 
     override _.Execute(_, settings, _) =
+        Steps.build false false
         use language = Parser.load Parser.defaultPath
         use query = loadQuery language
         let random = Random 7

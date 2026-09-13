@@ -37,7 +37,7 @@ jobs:
           (cd signature && npx tree-sitter generate)
           after=$(cat src/parser.c src/grammar.json src/node-types.json signature/src/parser.c signature/src/grammar.json signature/src/node-types.json | sha256sum)
           if [ "$before" != "$after" ]; then
-            echo "::error::src/ or signature/src/ is stale - run 'task generate' and commit the result"
+            echo "::error::src/ or signature/src/ is stale - run './build.sh generate' and commit the result"
             exit 1
           fi
 
@@ -71,9 +71,7 @@ jobs:
 
       # The .NET gates below load these libraries in-process.
       - name: Build the parsers
-        run: |
-          npx tree-sitter build --output parser.so
-          npx tree-sitter build --output signature/parser.so signature
+        run: ./build.sh build
 
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
@@ -137,13 +135,8 @@ jobs:
         with:
           path: ~/.cache/fsharp-grammar-bench
           key: bench-${{ hashFiles('scripts/bench-manifest.txt') }}
-      # git checkout does not preserve mtimes, and the tools refuse to run when
-      # grammar.js looks newer than src/parser.c (a stale-parser guard).
-      - run: touch src/parser.c signature/src/parser.c
       - name: Build the parsers
-        run: |
-          npx tree-sitter build --output parser.so
-          npx tree-sitter build --output signature/parser.so signature
+        run: ./build.sh build
       - name: Sweep and compare against the baseline
         run: ./build.sh bench --summary
       - name: Sweep the .fsi files with the signature grammar
@@ -152,7 +145,7 @@ jobs:
         run: ./build.sh score --compare
 
   # Helix and Zed run on Windows too, and MSVC is stricter than gcc about the
-  # scanner. Corpus + highlight tests only; the Python gates run on Linux.
+  # scanner. Corpus + highlight tests only; the .NET gates run on Linux.
   test-windows:
     name: Tests (Windows)
     runs-on: windows-latest

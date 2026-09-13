@@ -1,5 +1,5 @@
 # Resolved highlight capture of every token in examples/references.fsx.
-# Regenerate with `task highlight:snapshot`; `-` is a token with no capture.
+# Regenerate with `./build.sh highlight-snapshot`; `-` is a token with no capture.
 1:0	// =====================================...	comment.line
 2:0	// layout.fsx — offside/layout test harn...	comment.line
 3:0	//	comment.line

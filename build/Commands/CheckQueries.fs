@@ -16,6 +16,7 @@ type CheckQueriesCommand() =
     interface ICommandLimiter<CheckQueriesSettings>
 
     override _.Execute(_, _, _) =
+        Steps.build false false
         use source = Parser.load Parser.defaultPath
         use signature = Parser.loadAs Parser.Signature Parser.Signature.ParserPath
 

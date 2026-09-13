@@ -37,7 +37,8 @@ Zed requires us to install a dev extension.
 
 **Requirements**
 
-- [Task](https://taskfile.dev) and the [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/tree/master/crates/cli)
+- Node.js (`npm ci` installs the pinned tree-sitter CLI) and the .NET SDK version in
+  `global.json`
 - Rust with the `wasm32-wasip2` target (Zed uses it to compile the extension's
   LSP glue):
 
@@ -50,13 +51,14 @@ Zed requires us to install a dev extension.
 ```bash
 git clone https://github.com/MangelMaxime/tree-sitter-fsharp
 cd tree-sitter-fsharp
-task dev:zed
+npm ci
+./build.sh dev zed
 ```
 
 Then in Zed:
 
 1. Command palette → `zed: install dev extension` → select the `zed/` directory.
-2. After changing the grammar or queries: rerun `task dev:zed`.
+2. After changing the grammar or queries: rerun `./build.sh dev zed`.
 3. Hit **Rebuild** on the extension in Zed's Extensions panel.
 
 ### Good to know
@@ -277,7 +279,7 @@ rainbow-brackets = true
 > [!NOTE]
 > **Neovim support is less travelled than Helix and Zed.** `queries/nvim/`
 > holds the Neovim-specific files: `highlights.scm` is generated from the Helix
-> one by `task queries:derive` (Neovim capture names, `#lua-match?`
+> one by `./build.sh derive-queries` (Neovim capture names, `#lua-match?`
 > predicates, plus the refinements in `scripts/nvim-highlights-extra.scm`),
 > and `indents.scm`, `folds.scm` and `textobjects.scm` are written in
 > nvim-treesitter's dialects. `injections`, `locals`, `rainbows` and `tags`
@@ -358,28 +360,27 @@ grammar without touching your own setup. It builds the parser and opens a file
 in an isolated `nvim -u nvim/init.lua` (no plugins, no user config):
 
 ```bash
-task dev:nvim                         # opens examples/references.fsx
-task dev:nvim -- path/to/file.fsx     # opens a specific file
+./build.sh dev nvim                   # opens examples/references.fsx
+./build.sh dev nvim path/to/file.fsx  # opens a specific file
 ```
 
 This is also the fastest loop when working on the Neovim queries: edit a
-`queries/*.scm`, rerun `task dev:nvim`, look.
+`queries/*.scm`, rerun `./build.sh dev nvim`, look.
 
 ## Development workflow
 
-All dev commands live in [`Taskfile.yml`](Taskfile.yml) (cross-platform, Windows
-included) - run `task --list` to see them. You need [Task](https://taskfile.dev),
-Node.js (`npm ci` installs the pinned tree-sitter CLI) and the .NET 10 SDK: the
-test and benchmark tools are an F# project in [`build/`](build/), run through
-`./build.sh <command>` (`build.bat` on Windows; `--help` lists the commands).
+Every dev command is a subcommand of the F# project in [`build/`](build/), run through
+`./build.sh <command>` (`build.bat` on Windows; `--help` lists them). You need Node.js
+(`npm ci` installs the pinned tree-sitter CLI) and the .NET SDK version in `global.json`.
+`generate` and `build` skip their work when the grammar sources did not change (content
+hashes in `.build-cache/`), and every command that loads a parser runs them first.
 
 1. Edit `grammar.js` and/or `src/scanner.c`.
-2. `task generate`.
-3. `task test:all` to confirm the corpus (460+ tests), the expansion fixtures and
-   the queries still pass, then `task bench` for the real-world regression gate
-   (`task bench -- --signature` sweeps the `.fsi` files with the signature grammar).
-4. `task dev:helix` to deploy to Helix (`task dev:zed` for Zed).
-5. Restart Helix and check the highlights.
+2. `./build.sh test-all` to confirm the corpus (460+ tests), the expansion fixtures and
+   the queries still pass, then `./build.sh bench` for the real-world regression gate
+   (`./build.sh bench --signature` sweeps the `.fsi` files with the signature grammar).
+3. `./build.sh dev helix` to deploy to Helix (`./build.sh dev zed` for Zed).
+4. Restart Helix and check the highlights.
 
 For UI-visible changes, render with `tree-sitter highlight`:
 
@@ -398,8 +399,8 @@ derived from `grammar.js` the way tree-sitter-ocaml derives its interface gramma
 inherits the type language, the attributes and the scanner (`signature/src/scanner.c`
 includes `src/scanner.c`), replaces member bodies with member signatures and drops every
 expression rule, so its parser is about a third of the size. `queries/signature/` holds
-the patterns of the Helix queries that compile against it; `task queries:derive` regenerates
-them. `task generate`, `task build` and `task test` cover both grammars.
+the patterns of the Helix queries that compile against it; `./build.sh derive-queries`
+regenerates them. `generate`, `build` and `test` cover both grammars.
 
 ## Testing
 
@@ -465,8 +466,8 @@ the corpus tests can't assert (they compare structure only). The fixtures in
 from a `‸` cursor marker:
 
 ```bash
-task test:expansion                 # run all
-task test:expansion -- -i multiDoc  # filter by substring
+./build.sh expansion              # run all
+./build.sh expansion -i multiDoc  # filter by substring
 ```
 
 ### Benchmark (real-world coverage)
@@ -474,7 +475,7 @@ task test:expansion -- -i multiDoc  # filter by substring
 CI runs this sweep on every push to `main` and every pull request (the `bench` job,
 clones cached by manifest hash) and fails on any file that parses worse than the baseline.
 
-The numbers in *Why this grammar* come from `task bench`: it sweeps
+The numbers in *Why this grammar* come from `./build.sh bench`: it sweeps
 every `.fs`/`.fsx` file of 24 pinned repositories (23 popular projects +
 `dotnet/fsharp`'s `src/`, ~3 900 files) and diffs the per-file error counts
 against the committed baseline in `test/bench/baseline.txt`. Any file that
@@ -482,9 +483,9 @@ parses worse than the baseline fails the run - no grammar change lands
 without passing it.
 
 ```bash
-task bench                       # sweep + regression check (~15 s)
-task bench -- --summary          # add the per-project table
-task bench -- --update-baseline  # accept improvements into the baseline
+./build.sh bench                    # sweep + regression check (~15 s)
+./build.sh bench --summary          # add the per-project table
+./build.sh bench --update-baseline  # accept improvements into the baseline
 ```
 
 First run clones the corpus (~1.5 GB) into `~/.cache/fsharp-grammar-bench`
@@ -492,7 +493,7 @@ First run clones the corpus (~1.5 GB) into `~/.cache/fsharp-grammar-bench`
 
 The sweep loads `parser.so` in-process through the TreeSitter.DotNet binding,
 which parses as UTF-16. Error-site counts on a file that already has errors can
-differ from the CLI's UTF-8 parse, so compare baselines only against `task bench`.
+differ from the CLI's UTF-8 parse, so compare baselines only against `./build.sh bench`.
 
 ## Releases
 

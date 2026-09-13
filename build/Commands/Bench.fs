@@ -71,7 +71,7 @@ let private readBaseline (path: string) =
 let private writeBaseline (path: string) (results: Map<string, Outcome>) (total: int) =
     let lines =
         [
-            "# Parser benchmark baseline - regenerate with: task bench -- --update-baseline"
+            "# Parser benchmark baseline - regenerate with: ./build.sh bench --update-baseline"
             $"# %d{total} files swept; %d{results.Count} with errors; %d{errorNodes results} error nodes"
             for KeyValue(relative, outcome) in results do
                 $"%s{show outcome}\t%s{relative}"
@@ -172,7 +172,7 @@ let private compare (baseline: Map<string, Outcome>) (results: Map<string, Outco
         AnsiConsole.MarkupLine "\n[green]no regressions[/]"
 
         if not repaired.IsEmpty || not improved.IsEmpty then
-            printfn "improvements above: run `task bench -- --update-baseline` to lock them in"
+            printfn "improvements above: run `./build.sh bench --update-baseline` to lock them in"
 
         0
 
@@ -206,7 +206,7 @@ type BenchCommand() =
         let baseline = baselinePath grammar
         let repos = Corpus.manifest ()
         Corpus.ensureClones repos
-        Parser.checkFreshness grammar
+        Steps.build false false
         use language = Parser.loadAs grammar grammar.ParserPath
         Parser.selfTest grammar language
         let files = Corpus.filesWith grammar.Extensions repos
@@ -226,5 +226,5 @@ type BenchCommand() =
             0
         else
             match readBaseline baseline with
-            | None -> failwith "No baseline. Run `task bench -- --update-baseline` first."
+            | None -> failwith "No baseline. Run `./build.sh bench --update-baseline` first."
             | Some baseline -> compare baseline results

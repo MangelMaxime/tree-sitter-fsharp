@@ -8,7 +8,7 @@ not an oversight, and the entries below say which is which.
 
 ## Measuring quality
 
-`task score` reports four axes; a single clean-parse percentage is not a quality
+`./build.sh score` reports four axes; a single clean-parse percentage is not a quality
 measure for a grammar this permissive.
 
 | axis | what it means |
@@ -126,7 +126,7 @@ keyword gate is what makes it safe.
 
 ## Known gap: keywords lexed as identifiers
 
-`task score` reports 20 such sites across the bench corpus (255 on 2026-09-12 before the
+`./build.sh score` reports 20 such sites across the bench corpus (255 on 2026-09-12 before the
 layout work). What is left:
 
 | shape | sites | status |
@@ -187,7 +187,7 @@ before and after.
 
 ## Known gaps in the source grammar (2026-09-13 triage)
 
-Each seen in the pinned repositories; the file counts are from `task bench`.
+Each seen in the pinned repositories; the file counts are from `./build.sh bench`.
 
 - An SRTP call as an application argument, `g (^T : (static member M: ^T -> ^T) x)` (3 files,
   FSharpPlus TypeLevel). The lexer prefers the `^` operator name to the `^T` type parameter after
@@ -203,7 +203,7 @@ Each seen in the pinned repositories; the file counts are from `task bench`.
 
 `signature/grammar.js` derives from the main grammar: it inherits the type language and the
 scanner, replaces member bodies with member signatures, and drops every expression rule. Measured
-with `task bench -- --signature` on the `.fsi` files of the pinned repositories.
+with `./build.sh bench --signature` on the `.fsi` files of the pinned repositories.
 
 Known gaps, each seen in one file:
 

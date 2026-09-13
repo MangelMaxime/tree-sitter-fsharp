@@ -122,6 +122,7 @@ type ExpansionCommand() =
     interface ICommandLimiter<ExpansionSettings>
 
     override _.Execute(_, settings, _) =
+        Steps.build false false
         use language = Parser.load Parser.defaultPath
 
         let fixtures =

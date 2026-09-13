@@ -8,6 +8,8 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="Workspace.fs" />
+        <Compile Include="Tools.fs" />
+        <Compile Include="Steps.fs" />
         <Compile Include="Parser.fs" />
         <Compile Include="Corpus.fs" />
         <Compile Include="Commands/Bench.fs" />
@@ -16,9 +18,12 @@
         <Compile Include="Commands/DeriveQueries.fs" />
         <Compile Include="Commands/CheckQueries.fs" />
         <Compile Include="Commands/Highlight.fs" />
+        <Compile Include="Commands/Grammar.fs" />
+        <Compile Include="Commands/Dev.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="BlackFox.CommandLine" Version="1.0.0" />
         <PackageReference Include="EasyBuild.FileSystemProvider" Version="1.1.0" />
         <PackageReference Include="SimpleExec" Version="13.1.0" />
         <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
