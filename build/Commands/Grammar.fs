@@ -87,8 +87,31 @@ type TestCommand() =
 
     override _.Execute(_, settings, _) = corpusTests settings
 
-/// Every local gate: corpus, highlight assertions, expansion fixtures, query validity,
-/// derived queries and the highlight snapshot.
+/// Every examples/*.fsx must parse without an error node; an empty glob is itself a failure.
+let private examplesParseClean () =
+    let files = Directory.GetFiles(Path.Combine(root, "examples"), "*.fsx")
+
+    if files.Length = 0 then
+        eprintfn "no examples/*.fsx found: this gate would pass vacuously"
+        1
+    else
+        use language = Parser.load Parser.defaultPath
+
+        let failing =
+            files
+            |> Array.filter (fun file -> Parser.errorSites language (File.ReadAllText file) > 0)
+
+        for file in failing do
+            eprintfn $"%s{Path.GetRelativePath(root, file)} has ERROR or MISSING nodes"
+
+        if failing.Length = 0 then
+            printfn $"%d{files.Length} example files parse clean"
+            0
+        else
+            1
+
+/// Every local gate: corpus, highlight assertions, examples, expansion fixtures, query
+/// validity, derived queries and the highlight snapshot.
 type TestAllCommand() =
     inherit Command<EmptySettings>()
     interface ICommandLimiter<EmptySettings>
@@ -99,6 +122,7 @@ type TestAllCommand() =
         let gates: (string * (unit -> int)) list =
             [
                 "corpus", (fun () -> corpusTests (TestSettings()))
+                "examples", examplesParseClean
                 "expansion", (fun () -> run (ExpansionCommand()) context (ExpansionSettings()))
                 "check-queries", (fun () -> run (CheckQueriesCommand()) context (CheckQueriesSettings()))
                 "derive-queries --check",
