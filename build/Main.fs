@@ -6,6 +6,7 @@ open EasyBuild.Commands.Score
 open EasyBuild.Commands.Expansion
 open EasyBuild.Commands.DeriveQueries
 open EasyBuild.Commands.CheckQueries
+open EasyBuild.Commands.Highlight
 
 [<EntryPoint>]
 let main args =
@@ -52,6 +53,20 @@ let main args =
             .AddCommand<CheckQueriesCommand>("check-queries")
             .WithDescription("Compile every .scm in queries/ against the current grammar")
             .WithExample("check-queries")
+        |> ignore
+
+        config
+            .AddCommand<HighlightSnapshotCommand>("highlight-snapshot")
+            .WithDescription("Write the resolved highlight capture of every token of examples/references.fsx")
+            .WithExample("highlight-snapshot")
+            .WithExample("highlight-snapshot --check")
+        |> ignore
+
+        config
+            .AddCommand<HighlightCoverageCommand>("highlight-coverage")
+            .WithDescription("List the tokens that get no highlight capture over a sample of the bench")
+            .WithExample("highlight-coverage")
+            .WithExample("highlight-coverage --files 100 --top 40")
         |> ignore
     )
 

@@ -173,6 +173,7 @@ tasks:
       - dotnet run --project build -- expansion
       - dotnet run --project build -- check-queries
       - dotnet run --project build -- derive-queries --check
+      - dotnet run --project build -- highlight-snapshot --check
 
   test:expansion:
     desc: Helix expand-selection fixtures (test/expansion). Filter with -- -i NAME
@@ -188,6 +189,18 @@ tasks:
       # the other 12 can reference a node that no longer exists and stay silent
       # until an editor loads them.
       - dotnet run --project build -- check-queries
+
+  highlight:snapshot:
+    desc: Write test/highlight/snapshot.txt (resolved capture per token of examples/references.fsx). -- --check to verify
+    deps: [build]
+    cmds:
+      - dotnet run --project build -- highlight-snapshot {{.CLI_ARGS}}
+
+  highlight:coverage:
+    desc: List tokens with no highlight capture over a sample of the bench (needs the clones)
+    deps: [build]
+    cmds:
+      - dotnet run --project build -- highlight-coverage {{.CLI_ARGS}}
 
   queries:derive:
     desc: Regenerate queries/nvim/highlights.scm from the Helix one and check the Zed one

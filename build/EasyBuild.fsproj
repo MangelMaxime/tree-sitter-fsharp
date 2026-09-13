@@ -15,6 +15,7 @@
         <Compile Include="Commands/Expansion.fs" />
         <Compile Include="Commands/DeriveQueries.fs" />
         <Compile Include="Commands/CheckQueries.fs" />
+        <Compile Include="Commands/Highlight.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
