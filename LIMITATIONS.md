@@ -8,8 +8,8 @@ not an oversight, and the entries below say which is which.
 
 ## Measuring quality
 
-`./scripts/score.py` reports four axes; a single clean-parse percentage is not a quality
-measure for a grammar this permissive. Run `task score`.
+`task score` reports four axes; a single clean-parse percentage is not a quality
+measure for a grammar this permissive.
 
 | axis | what it means |
 |---|---|

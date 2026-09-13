@@ -252,7 +252,7 @@ rainbow-brackets = true
 > [!NOTE]
 > **Neovim support is less travelled than Helix and Zed.** `queries/nvim/`
 > holds the Neovim-specific files: `highlights.scm` is generated from the Helix
-> one by `scripts/derive-queries.py` (Neovim capture names, `#lua-match?`
+> one by `task queries:derive` (Neovim capture names, `#lua-match?`
 > predicates, plus the refinements in `scripts/nvim-highlights-extra.scm`),
 > and `indents.scm`, `folds.scm` and `textobjects.scm` are written in
 > nvim-treesitter's dialects. `injections`, `locals`, `rainbows` and `tags`
@@ -343,14 +343,17 @@ This is also the fastest loop when working on the Neovim queries: edit a
 ## Development workflow
 
 All dev commands live in [`Taskfile.yml`](Taskfile.yml) (cross-platform, Windows
-included) - run `task --list` to see them.
+included) - run `task --list` to see them. You need [Task](https://taskfile.dev),
+Node.js (`npm ci` installs the pinned tree-sitter CLI) and the .NET 10 SDK: the
+test and benchmark tools are an F# project in [`build/`](build/), run through
+`dotnet run --project build -- <command>` (`--help` lists the commands).
 
 1. Edit `grammar.js` and/or `src/scanner.c`.
 2. `task generate`.
-3. `task test` to confirm the corpus (460+ tests) still passes.
-4. `npx tree-sitter parse examples/layout.fsx | grep -c ERROR` - should be zero.
-5. `task dev:helix` to deploy to Helix (`task dev:zed` for Zed).
-6. Restart Helix and check the highlights.
+3. `task test:all` to confirm the corpus (460+ tests), the expansion fixtures and
+   the queries still pass, then `task bench` for the real-world regression gate.
+4. `task dev:helix` to deploy to Helix (`task dev:zed` for Zed).
+5. Restart Helix and check the highlights.
 
 For UI-visible changes, render with `tree-sitter highlight`:
 
@@ -426,8 +429,8 @@ the corpus tests can't assert (they compare structure only). The fixtures in
 from a `‸` cursor marker:
 
 ```bash
-python3 scripts/test-expansion.py             # run all
-python3 scripts/test-expansion.py -i multiDoc # filter by substring
+task test:expansion                 # run all
+task test:expansion -- -i multiDoc  # filter by substring
 ```
 
 ### Benchmark (real-world coverage)
@@ -435,7 +438,7 @@ python3 scripts/test-expansion.py -i multiDoc # filter by substring
 CI runs this sweep on every push to `main` and every pull request (the `bench` job,
 clones cached by manifest hash) and fails on any file that parses worse than the baseline.
 
-The numbers in *Why this grammar* come from `scripts/bench.py`: it sweeps
+The numbers in *Why this grammar* come from `task bench`: it sweeps
 every `.fs`/`.fsx` file of 24 pinned repositories (23 popular projects +
 `dotnet/fsharp`'s `src/`, ~3 900 files) and diffs the per-file error counts
 against the committed baseline in `test/bench/baseline.txt`. Any file that
@@ -443,14 +446,17 @@ parses worse than the baseline fails the run - no grammar change lands
 without passing it.
 
 ```bash
-./scripts/bench.py                    # sweep + regression check (~4 min)
-./scripts/bench.py --summary          # add the per-project table
-./scripts/bench.py --update-baseline  # accept improvements into the baseline
+task bench                       # sweep + regression check (~15 s)
+task bench -- --summary          # add the per-project table
+task bench -- --update-baseline  # accept improvements into the baseline
 ```
 
 First run clones the corpus (~1.5 GB) into `~/.cache/fsharp-grammar-bench`
-(override with `$FSHARP_BENCH_DIR`). Too heavy for CI by design - run it
-locally before merging grammar or scanner changes.
+(override with `$FSHARP_BENCH_DIR`).
+
+The sweep loads `parser.so` in-process through the TreeSitter.DotNet binding,
+which parses as UTF-16. Error-site counts on a file that already has errors can
+differ from the CLI's UTF-8 parse, so compare baselines only against `task bench`.
 
 ## Releases
 

@@ -133,12 +133,19 @@ tasks:
       - tree-sitter test {{.CLI_ARGS}}
 
   test:all:
-    desc: Every local gate - corpus, highlight, node extents, query validity
+    desc: Every local gate - corpus, highlight, node extents, query validity, derived queries
     deps: [build]
     cmds:
       - tree-sitter test
-      - ./scripts/test-expansion.py
-      - task: check:queries
+      - dotnet run --project build -- expansion
+      - dotnet run --project build -- check-queries
+      - dotnet run --project build -- derive-queries --check
+
+  test:expansion:
+    desc: Helix expand-selection fixtures (test/expansion). Filter with -- -i NAME
+    deps: [build]
+    cmds:
+      - dotnet run --project build -- expansion {{.CLI_ARGS}}
 
   check:queries:
     desc: Compile every .scm against the current grammar
@@ -147,25 +154,21 @@ tasks:
       # Only highlights.scm and locals.scm are exercised by `tree-sitter test`;
       # the other 12 can reference a node that no longer exists and stay silent
       # until an editor loads them.
-      - |
-        status=0
-        for q in queries/*.scm queries/zed/*.scm queries/nvim/*.scm; do
-          [ -f "$q" ] || continue
-          if ! tree-sitter query "$q" examples/references.fsx > /dev/null 2>&1; then
-            echo "INVALID: $q"
-            tree-sitter query "$q" examples/references.fsx 2>&1 | head -5
-            status=1
-          fi
-        done
-        [ $status -eq 0 ] && echo "all queries compile against the grammar"
-        exit $status
+      - dotnet run --project build -- check-queries
+
+  queries:derive:
+    desc: Regenerate queries/nvim/highlights.scm from the Helix one and check the Zed one
+    cmds:
+      - dotnet run --project build -- derive-queries {{.CLI_ARGS}}
 
   bench:
-    desc: Real-world regression sweep (24 pinned repos, ~4 min)
+    desc: Real-world regression sweep (24 pinned repos, ~15 s once cloned)
+    deps: [build]
     cmds:
-      - ./scripts/bench.py {{.CLI_ARGS}}
+      - dotnet run --project build -- bench {{.CLI_ARGS}}
 
   score:
     desc: Four-axis scoreboard (coverage, rejection, degeneracy, highlight)
+    deps: [build]
     cmds:
-      - uv run scripts/score.py {{.CLI_ARGS}}
+      - dotnet run --project build -- score {{.CLI_ARGS}}

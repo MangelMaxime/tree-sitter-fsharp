@@ -2,7 +2,8 @@
 target/
 
 # Node artifacts
-build/
+/build/bin/
+/build/obj/
 prebuilds/
 node_modules/
 
@@ -12,11 +13,6 @@ node_modules/
 # Go artifacts
 _obj/
 
-# Python artifacts
-.venv/
-dist/
-*.egg-info
-*.whl
 
 # C artifacts
 *.a
@@ -70,5 +66,3 @@ tmp/
 
 # Task fingerprint cache
 /.task/
-__pycache__/
-*.pyc

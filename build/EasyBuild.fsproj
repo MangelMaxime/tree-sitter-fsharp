@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Workspace.fs" />
+        <Compile Include="Parser.fs" />
+        <Compile Include="Corpus.fs" />
+        <Compile Include="Commands/Bench.fs" />
+        <Compile Include="Commands/Score.fs" />
+        <Compile Include="Commands/Expansion.fs" />
+        <Compile Include="Commands/DeriveQueries.fs" />
+        <Compile Include="Commands/CheckQueries.fs" />
+        <Compile Include="Main.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="EasyBuild.FileSystemProvider" Version="1.1.0" />
+        <PackageReference Include="SimpleExec" Version="13.1.0" />
+        <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
+        <PackageReference Include="TreeSitter.DotNet" Version="1.3.0" />
+    </ItemGroup>
+</Project>

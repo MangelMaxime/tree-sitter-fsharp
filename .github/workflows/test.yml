@@ -21,6 +21,10 @@ jobs:
       - name: Install tree-sitter CLI (locked version)
         run: npm ci
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
       # grammar.js / scanner.c edited but src/ not regenerated → fail early,
       # before testing stale artifacts. Deterministic: the CLI version comes
       # from package-lock.json, the same one `npx tree-sitter` uses locally.
@@ -61,30 +65,25 @@ jobs:
           done
           exit $status
 
+      # The .NET gates below load this library in-process.
+      - name: Build the parser
+        run: npx tree-sitter build --output parser.so
+
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
-        run: ./scripts/test-expansion.py
+        run: dotnet run --project build -- expansion
 
       # `tree-sitter test` exercises highlights.scm and locals.scm only; the
       # other Helix, Zed and Neovim queries can name a node that no longer
       # exists and stay silent until an editor loads them.
       - name: Every query compiles
-        run: |
-          status=0
-          for q in queries/*.scm queries/zed/*.scm queries/nvim/*.scm; do
-            if ! npx tree-sitter query "$q" examples/references.fsx > /dev/null 2>&1; then
-              echo "::error::$q does not compile against the grammar"
-              npx tree-sitter query "$q" examples/references.fsx 2>&1 | head -5
-              status=1
-            fi
-          done
-          exit $status
+        run: dotnet run --project build -- check-queries
 
       # queries/nvim/highlights.scm is generated from the Helix file, and
       # queries/zed/highlights.scm must contain the same patterns under Zed's
       # capture names; a rule added to one and forgotten in the other fails here.
       - name: Derived highlight queries are in sync
-        run: python3 scripts/derive-queries.py --check
+        run: dotnet run --project build -- derive-queries --check
 
   # The scanner is 2,000 lines of hand-written C; a crash or hang there takes
   # the editor down with it. Always fuzzed: the run is a minute, and a grammar
@@ -105,10 +104,10 @@ jobs:
           # pair the generated parser with a library of a different ABI one day.
           tree-sitter-version: v0.26.8
 
-  # The real-world regression gate: scripts/bench.py sweeps the 24 pinned repos
-  # in scripts/bench-manifest.txt and fails on any file that parses worse than
-  # test/bench/baseline.txt. Until now it only ran when someone remembered to.
-  # The clones (~1.5 GB) are cached by manifest hash, so a run is a few minutes.
+  # The real-world regression gates: `bench` sweeps the 24 pinned repos in
+  # scripts/bench-manifest.txt and fails on any file that parses worse than
+  # test/bench/baseline.txt; `score --compare` gates the four axes of
+  # test/score/baseline.json. The clones (~1.5 GB) are cached by manifest hash.
   bench:
     name: Real-world bench
     runs-on: ubuntu-latest
@@ -120,16 +119,23 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
       - name: Cache the pinned repos
         uses: actions/cache@v4
         with:
           path: ~/.cache/fsharp-grammar-bench
           key: bench-${{ hashFiles('scripts/bench-manifest.txt') }}
-      # git checkout does not preserve mtimes, and bench.py refuses to run when
+      # git checkout does not preserve mtimes, and the tools refuse to run when
       # grammar.js looks newer than src/parser.c (a stale-parser guard).
       - run: touch src/parser.c
+      - name: Build the parser
+        run: npx tree-sitter build --output parser.so
       - name: Sweep and compare against the baseline
-        run: ./scripts/bench.py --summary
+        run: dotnet run --project build -- bench --summary
+      - name: Score and compare against the baseline
+        run: dotnet run --project build -- score --compare
 
   # Helix and Zed run on Windows too, and MSVC is stricter than gcc about the
   # scanner. Corpus + highlight tests only; the Python gates run on Linux.
