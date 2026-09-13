@@ -90,6 +90,8 @@ static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == 
 typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
 
 #define MAXD 512
+
+// State that lives for the whole parse and is serialized with the parse tree.
 typedef struct {
     Ctx stk[MAXD];
     uint16_t n;
@@ -99,24 +101,27 @@ typedef struct {
     // Column of an `in` that just closed an arm-list and may still close the let
     // value around it. -1 when none.
     int32_t in_claim_col;
-    // Inputs of the main next_line_indent call: stop at a line-start block comment,
-    // and whether a doc-attachment gate is valid at the layout top column.
-    bool region_stop;
-    bool doc_gate_possible;
-    uint32_t top_col_for_docs;
-    // Outputs of next_line_indent: what it skipped on its way to the next real line,
-    // the indent of the first skipped `///` line, and whether a stopped block
-    // comment is the `(**` doc form.
-    bool skipped_doc_lines;
-    bool skipped_line_comments;
-    bool skipped_directive;
-    bool skipped_alt_directive;
-    uint32_t doc_indent;
-    bool comment_doc;
-    // The word after skipped doc lines (try_and_docs) and the last word read by the
-    // mid-line dispatch, for the checks that run after them in the same scan.
-    char post_doc_word[10];
-    char midline_word[10];
+    // State of the current scan only, zeroed at the start of every scan.
+    struct {
+        // Inputs of the main next_line_indent call: stop at a line-start block comment,
+        // and whether a doc-attachment gate is valid at the layout top column.
+        bool region_stop;
+        bool doc_gate_possible;
+        uint32_t top_col_for_docs;
+        // Outputs of next_line_indent: what it skipped on its way to the next real line,
+        // the indent of the first skipped `///` line, and whether a stopped block
+        // comment is the `(**` doc form.
+        bool skipped_doc_lines;
+        bool skipped_line_comments;
+        bool skipped_directive;
+        bool skipped_alt_directive;
+        uint32_t doc_indent;
+        bool comment_doc;
+        // The word after skipped doc lines (try_and_docs) and the last word read by the
+        // mid-line dispatch, for the checks that run after them in the same scan.
+        char post_doc_word[10];
+        char midline_word[10];
+    } scan;
 } Scanner;
 
 // --- Lexer idioms -----------------------------------------------------------
@@ -350,10 +355,10 @@ static bool line_geometry(uint32_t *col, int32_t *first, uint32_t indent, int32_
 // comments and `#if/#elif/#else/#endif` lines, which are extras transparent to
 // the offside rule.
 static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t *first) {
-    s->skipped_doc_lines = false;
-    s->skipped_line_comments = false;
-    s->skipped_directive = false;
-    s->skipped_alt_directive = false;
+    s->scan.skipped_doc_lines = false;
+    s->scan.skipped_line_comments = false;
+    s->scan.skipped_directive = false;
+    s->scan.skipped_alt_directive = false;
     bool marked_line_start = false;
     skip_line(lexer);
     if (lexer->lookahead == 0) return false;
@@ -370,15 +375,15 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             // case/and-clause node STARTS at its docs (expand-selection
             // extents). The scan RESUMES from here afterwards - the mid-line
             // doc-resume dispatch in the scan body handles that position.
-            if (s->region_stop && s->doc_gate_possible && indent >= s->top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
+            if (s->scan.region_stop && s->scan.doc_gate_possible && indent >= s->scan.top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
                 if (lexer->lookahead == '/') {
-                    if (!s->skipped_doc_lines) s->doc_indent = indent;        // first doc line
-                    s->skipped_doc_lines = true;                             // a `///` doc line
+                    if (!s->scan.skipped_doc_lines) s->scan.doc_indent = indent;        // first doc line
+                    s->scan.skipped_doc_lines = true;                             // a `///` doc line
                 }
-                s->skipped_line_comments = true;
+                s->scan.skipped_line_comments = true;
                 skip_line(lexer);
                 if (lexer->lookahead == 0) return false;
                 continue;
@@ -386,9 +391,9 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             return line_geometry(col, first, indent, '/');
         }
         if (lexer->lookahead == '(') {
-            lexer->advance(lexer, !s->region_stop);
+            lexer->advance(lexer, !s->scan.region_stop);
             if (lexer->lookahead != '*') { return line_geometry(col, first, indent, '('); }
-            if (s->region_stop) {
+            if (s->scan.region_stop) {
                 // Line-start block comment, MAIN boundary call. Consume it with
                 // advance(false) - the token (if emitted) starts at the `(`; for
                 // any OTHER outcome those advances are harmless (zero-width
@@ -397,7 +402,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                 if (lexer->lookahead == ')') {         // `(*)` multiply-op value line
                     return line_geometry(col, first, indent, '(');
                 }
-                s->comment_doc = (lexer->lookahead == '*');
+                s->scan.comment_doc = (lexer->lookahead == '*');
                 if (!skip_comment_body(lexer, false)) return false;
                 skip_hspace(lexer);
                 // Further block comments on the same line (`(* a *) (* b *)`).
@@ -459,8 +464,8 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                 strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
                 strcmp(w, "line") == 0) {
-                if (w[0] == 'i' || w[0] == 'e') s->skipped_directive = true;
-                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->skipped_alt_directive = true;
+                if (w[0] == 'i' || w[0] == 'e') s->scan.skipped_directive = true;
+                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->scan.skipped_alt_directive = true;
                 skip_line(lexer);
                 if (lexer->lookahead == 0) return false;
                 continue;
@@ -704,9 +709,9 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
 // \n`#else`\n`let f x =`\n`#endif`\n`    body`) and the body belongs to the LAST
 // branch. The caller declines the open, leaving the body `optional(...)` empty.
 static bool split_branch_body(Scanner *s, TSLexer *lexer, uint32_t *body_col) {
-    s->skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
+    s->scan.skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
     *body_col = peek_body_col(s, lexer);
-    return s->skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
+    return s->scan.skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
 }
 
 // Consume one or more consecutive `[<...>]` attributes, leaving the lexer at the
@@ -1080,7 +1085,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     return true;
 }
 
-// Dispatch for `///` doc lines at a layout boundary (s->skipped_doc_lines):
+// Dispatch for `///` doc lines at a layout boundary (s->scan.skipped_doc_lines):
 // the post-doc word decides where the docs belong (a `|` case, an `and`
 // clause, a member, or the next declaration). The lexer sits AT the first char
 // after next_line_indent. Reads the word destructively - every taken branch
@@ -1089,8 +1094,8 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
 // Call LAST.
 static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
                          int32_t first, uint32_t col, Ctx *top) {
-    s->post_doc_word[0] = '\0';
-    if (!s->skipped_doc_lines) return false;
+    s->scan.post_doc_word[0] = '\0';
+    if (!s->scan.skipped_doc_lines) return false;
     // Docs followed by a `|` case - union/enum case attachment.
     if (valid[CASE_DOCS_OPEN] && first == '|') {
         lexer->result_symbol = CASE_DOCS_OPEN; return true;
@@ -1103,7 +1108,7 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
             w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead;
         }
         w[n] = '\0';
-        { size_t i = 0; for (; w[i] && i < 9; i++) s->post_doc_word[i] = w[i]; s->post_doc_word[i] = '\0'; }
+        { size_t i = 0; for (; w[i] && i < 9; i++) s->scan.post_doc_word[i] = w[i]; s->scan.post_doc_word[i] = '\0'; }
         // docs + `and` - the and-clause attachment marker.
         if (valid[AND_DOCS_OPEN] && !strcmp(w, "and")) {
             lexer->result_symbol = AND_DOCS_OPEN; return true;
@@ -1697,7 +1702,7 @@ static Step mid_word(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top, in
         // get_column walks back to the line start (O(line length)): compute the
         // word's column only where a close records it, never per token.
         #define MID_COL() ((int32_t)lexer->get_column(lexer) - (int32_t)n)
-        memcpy(s->midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
+        memcpy(s->scan.midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
         if (top && valid[LAYOUT_END]) {
             // `else`/`elif` close only an INLINE body: a same-line `else`
             // after an INDENTED then-body belongs to an INNER if on this
@@ -1930,7 +1935,7 @@ static Step mid_doc_resume(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *t
         if (lexer->lookahead == '/') {
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
-                s->skipped_doc_lines = true;
+                s->scan.skipped_doc_lines = true;
                 // consume the rest of this doc line, then any further
                 // doc-only / blank lines
                 for (;;) {
@@ -1974,7 +1979,7 @@ static Step mid_ctor_tuple_gate(Scanner *s, TSLexer *lexer, const bool *valid, i
             lexer->advance(lexer, true);
         }
         w0[w0n] = '\0';
-        const char *first_word = w0n ? w0 : s->midline_word;   // word-branch may have eaten it
+        const char *first_word = w0n ? w0 : s->scan.midline_word;   // word-branch may have eaten it
         skip_hspace(lexer);
         // `let AesKey key, AesIV iv = ...`: a constructor applied to bare
         // argument names, then `,`. Not when the first word was a binding
@@ -2250,7 +2255,7 @@ static Step boundary_layout(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *
     // the close; the doc lexes as a standalone statement (the wrapper
     // fork dies at the close that follows), then the dedent re-fires.
     if (valid[LAYOUT_END] && col < top->col &&
-        s->skipped_doc_lines && s->doc_indent >= top->col) return DECLINED;
+        s->scan.skipped_doc_lines && s->scan.doc_indent >= top->col) return DECLINED;
     // A `|` case LEFT of a bare first case is still a case of this type
     // (`type E =`\n`      A = 0`\n`    | B = 1`); types never nest inside
     // match arms, so a dedented `|` under a type body is never an arm.
@@ -2274,7 +2279,7 @@ static Step boundary_layout(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *
     // End the first one here (zero-width) so the second parses as a
     // declaration instead of being absorbed as parameters. Checked before
     // the peeks below, which consume the line's first word.
-    if (valid[PREPROC_BREAK] && s->skipped_directive && decl_starter(lexer, first)) {
+    if (valid[PREPROC_BREAK] && s->scan.skipped_directive && decl_starter(lexer, first)) {
         return emit(lexer, PREPROC_BREAK);
     }
     // A leading `|` arm marker AT the body column: FSC permits
@@ -2341,7 +2346,7 @@ static Step boundary_layout(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *
     // is actually on the table - otherwise the probes further down would
     // see a lexer parked past the line's first word and always miss.
     if (valid[LAYOUT_SEMI] && col == top->col &&
-        !(s->skipped_doc_lines && word_is_decl_kw(s->post_doc_word))) {
+        !(s->scan.skipped_doc_lines && word_is_decl_kw(s->scan.post_doc_word))) {
         // S_DECL: never separate before a declaration keyword - the line is a
         // new `_token`, not a `sequence_expression` continuation of the prior
         // bare-expression statement.
@@ -2414,15 +2419,15 @@ static Step scan_line_boundary(Scanner *s, TSLexer *lexer, const bool *valid, Ct
     }
 
     uint32_t col; int32_t first = 0;
-    s->region_stop = true;
-    s->doc_gate_possible = valid[CASE_DOCS_OPEN] || valid[AND_DOCS_OPEN];
-    s->top_col_for_docs = top ? top->col : 0;
+    s->scan.region_stop = true;
+    s->scan.doc_gate_possible = valid[CASE_DOCS_OPEN] || valid[AND_DOCS_OPEN];
+    s->scan.top_col_for_docs = top ? top->col : 0;
     bool nli = next_line_indent(s, lexer, &col, &first);
-    s->region_stop = false;
+    s->scan.region_stop = false;
     if (!nli) {                                             // EOF after trailing blanks
         // Dangling `///` docs at EOF inside this body: let them lex as a
         // standalone statement before the body closes (see the dedent twin).
-        if (s->skipped_doc_lines && top && layoutish(top->sort) && s->doc_indent >= top->col) return DECLINED;
+        if (s->scan.skipped_doc_lines && top && layoutish(top->sort) && s->scan.doc_indent >= top->col) return DECLINED;
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { return close_top(s, lexer, BRACKET_CLOSE); }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { return close_top(s, lexer, MATCH_END); }
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { return close_top(s, lexer, LAYOUT_END); }
@@ -2436,8 +2441,8 @@ static Step scan_line_boundary(Scanner *s, TSLexer *lexer, const bool *valid, Ct
         // block comment now would absorb their text (no comment node -> no
         // highlight). Decline: the internal lexer lexes them as line_comment
         // extras, and a later scan starts right at the `(*`.
-        if (s->skipped_line_comments) return DECLINED;
-        lexer->result_symbol = (s->comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
+        if (s->scan.skipped_line_comments) return DECLINED;
+        lexer->result_symbol = (s->scan.comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
                              : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
         return EMITTED;
     }
@@ -2479,6 +2484,7 @@ static Step scan_line_boundary(Scanner *s, TSLexer *lexer, const bool *valid, Ct
 
 static bool scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
+    memset(&s->scan, 0, sizeof s->scan);
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
     if (valid[ERROR_SENTINEL]) return false;      // parse-error recovery: stay out of tree-sitter's way
 
