@@ -1213,8 +1213,12 @@
       "type": "CHOICE",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "attribute"
+          "type": "PREC_DYNAMIC",
+          "value": -1,
+          "content": {
+            "type": "SYMBOL",
+            "name": "attribute"
+          }
         },
         {
           "type": "SYMBOL",
@@ -7392,11 +7396,15 @@
               "type": "CHOICE",
               "members": [
                 {
-                  "type": "FIELD",
-                  "name": "abbrev",
+                  "type": "PREC_DYNAMIC",
+                  "value": 1,
                   "content": {
-                    "type": "SYMBOL",
-                    "name": "long_identifier"
+                    "type": "FIELD",
+                    "name": "abbrev",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "long_identifier"
+                    }
                   }
                 },
                 {

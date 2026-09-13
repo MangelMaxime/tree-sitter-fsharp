@@ -646,7 +646,8 @@ export default grammar({
         // (detaches `type ... and ...`, breaks primary_constructor). Doc comments
         // stay extras-only.
         _decl_or_comment: $ => choice(
-            $.attribute,
+            // A `//` comment before `[<Attr>] let` otherwise makes the attribute a standalone row.
+            prec.dynamic(-1, $.attribute),
             $.let_binding,
             $.do_stmt,
         ),
@@ -1975,7 +1976,8 @@ export default grammar({
         _abstract_tail: $ => prec.right(seq(optional($.type_parameter_list), ":", $.type_expression, optional($.auto_property_accessors))),
 
         _module_rhs: $ => seq("=", optional(choice(
-            field('abbrev', $.long_identifier),
+            // A `//` comment before `module M = X` otherwise leaves X as a bare expression.
+            prec.dynamic(1, field('abbrev', $.long_identifier)),
             seq("begin", repeat($._token), "end"),
             seq($._block_open, repeat($._token), $._layout_end),
         ))),

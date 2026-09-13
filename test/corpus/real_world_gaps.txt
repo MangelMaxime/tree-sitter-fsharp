@@ -535,3 +535,55 @@ let f () =
               (identifier))))
         (long_identifier
           (identifier))))))
+
+================================================================================
+Attribute after a line comment stays on its let
+================================================================================
+
+let a = 1
+// note
+[<Literal>]
+let MaxSize = 10
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    body: (int_literal))
+  (line_comment)
+  (let_binding
+    (attribute
+      (attribute_target
+        name: (long_identifier
+          (identifier))))
+    name: (identifier)
+    body: (int_literal)))
+
+================================================================================
+Module abbreviation after a line comment
+================================================================================
+
+let twice x = x * 2
+// c
+module Abbrev = System.Text.RegularExpressions
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    name: (identifier)
+    parameters: (parameter
+      (identifier))
+    body: (binary_expression
+      left: (long_identifier
+        (identifier))
+      right: (int_literal)))
+  (line_comment)
+  (module_decl
+    name: (long_identifier
+      (identifier))
+    abbrev: (long_identifier
+      (identifier)
+      (identifier)
+      (identifier))))
