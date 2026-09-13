@@ -13,7 +13,7 @@ let main args =
     let app = CommandApp()
 
     app.Configure(fun config ->
-        config.Settings.ApplicationName <- "dotnet run --project build --"
+        config.Settings.ApplicationName <- "./build.sh"
 
         config
             .AddCommand<BenchCommand>("bench")

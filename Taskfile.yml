@@ -170,16 +170,16 @@ tasks:
     cmds:
       - tree-sitter test
       - task: test:signature
-      - dotnet run --project build -- expansion
-      - dotnet run --project build -- check-queries
-      - dotnet run --project build -- derive-queries --check
-      - dotnet run --project build -- highlight-snapshot --check
+      - ./build.sh expansion
+      - ./build.sh check-queries
+      - ./build.sh derive-queries --check
+      - ./build.sh highlight-snapshot --check
 
   test:expansion:
     desc: Helix expand-selection fixtures (test/expansion). Filter with -- -i NAME
     deps: [build]
     cmds:
-      - dotnet run --project build -- expansion {{.CLI_ARGS}}
+      - ./build.sh expansion {{.CLI_ARGS}}
 
   check:queries:
     desc: Compile every .scm against the current grammar
@@ -188,33 +188,33 @@ tasks:
       # Only highlights.scm and locals.scm are exercised by `tree-sitter test`;
       # the other 12 can reference a node that no longer exists and stay silent
       # until an editor loads them.
-      - dotnet run --project build -- check-queries
+      - ./build.sh check-queries
 
   highlight:snapshot:
     desc: Write test/highlight-snapshot.txt (resolved capture per token of examples/references.fsx). -- --check to verify
     deps: [build]
     cmds:
-      - dotnet run --project build -- highlight-snapshot {{.CLI_ARGS}}
+      - ./build.sh highlight-snapshot {{.CLI_ARGS}}
 
   highlight:coverage:
     desc: List tokens with no highlight capture over a sample of the bench (needs the clones)
     deps: [build]
     cmds:
-      - dotnet run --project build -- highlight-coverage {{.CLI_ARGS}}
+      - ./build.sh highlight-coverage {{.CLI_ARGS}}
 
   queries:derive:
     desc: Regenerate the Neovim, Zed and signature highlight queries from the Helix one
     cmds:
-      - dotnet run --project build -- derive-queries {{.CLI_ARGS}}
+      - ./build.sh derive-queries {{.CLI_ARGS}}
 
   bench:
     desc: Real-world regression sweep (24 pinned repos, ~15 s once cloned). -- --signature sweeps the .fsi files
     deps: [build]
     cmds:
-      - dotnet run --project build -- bench {{.CLI_ARGS}}
+      - ./build.sh bench {{.CLI_ARGS}}
 
   score:
     desc: Four-axis scoreboard (coverage, rejection, degeneracy, highlight)
     deps: [build]
     cmds:
-      - dotnet run --project build -- score {{.CLI_ARGS}}
+      - ./build.sh score {{.CLI_ARGS}}

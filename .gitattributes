@@ -1,4 +1,5 @@
 * text=auto eol=lf
+*.bat text eol=crlf
 
 # Generated source files
 src/*.json linguist-generated

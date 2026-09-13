@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          global-json-file: global.json
 
       # grammar.js / scanner.c edited but src/ not regenerated → fail early,
       # before testing stale artifacts. Deterministic: the CLI version comes
@@ -77,23 +77,23 @@ jobs:
 
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
-        run: dotnet run --project build -- expansion
+        run: ./build.sh expansion
 
       # `tree-sitter test` exercises highlights.scm and locals.scm only; the
       # other Helix, Zed and Neovim queries can name a node that no longer
       # exists and stay silent until an editor loads them.
       - name: Every query compiles
-        run: dotnet run --project build -- check-queries
+        run: ./build.sh check-queries
 
       # queries/nvim/highlights.scm and queries/zed/highlights.scm are generated
       # from the Helix file; an edit made to a generated file fails here.
       - name: Derived highlight queries are in sync
-        run: dotnet run --project build -- derive-queries --check
+        run: ./build.sh derive-queries --check
 
       # test/highlight-snapshot.txt is the resolved capture of every token of the
       # gallery file; a query change that moves a colour shows up as a diff there.
       - name: Highlight snapshot is up to date
-        run: dotnet run --project build -- highlight-snapshot --check
+        run: ./build.sh highlight-snapshot --check
 
   # The scanner is 2,000 lines of hand-written C; a crash or hang there takes
   # the editor down with it. Always fuzzed: the run is a minute, and a grammar
@@ -131,7 +131,7 @@ jobs:
       - run: npm ci
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          global-json-file: global.json
       - name: Cache the pinned repos
         uses: actions/cache@v4
         with:
@@ -145,11 +145,11 @@ jobs:
           npx tree-sitter build --output parser.so
           npx tree-sitter build --output signature/parser.so signature
       - name: Sweep and compare against the baseline
-        run: dotnet run --project build -- bench --summary
+        run: ./build.sh bench --summary
       - name: Sweep the .fsi files with the signature grammar
-        run: dotnet run --project build -- bench --signature --summary
+        run: ./build.sh bench --signature --summary
       - name: Score and compare against the baseline
-        run: dotnet run --project build -- score --compare
+        run: ./build.sh score --compare
 
   # Helix and Zed run on Windows too, and MSVC is stricter than gcc about the
   # scanner. Corpus + highlight tests only; the Python gates run on Linux.

@@ -371,7 +371,7 @@ All dev commands live in [`Taskfile.yml`](Taskfile.yml) (cross-platform, Windows
 included) - run `task --list` to see them. You need [Task](https://taskfile.dev),
 Node.js (`npm ci` installs the pinned tree-sitter CLI) and the .NET 10 SDK: the
 test and benchmark tools are an F# project in [`build/`](build/), run through
-`dotnet run --project build -- <command>` (`--help` lists the commands).
+`./build.sh <command>` (`build.bat` on Windows; `--help` lists the commands).
 
 1. Edit `grammar.js` and/or `src/scanner.c`.
 2. `task generate`.
