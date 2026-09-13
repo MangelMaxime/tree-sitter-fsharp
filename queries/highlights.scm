@@ -31,7 +31,10 @@
   "delegate"
   "struct"
   "class"
+  "fixed"
 ] @keyword
+
+(namespace_decl "global" @namespace)
 
 [
   "private"
@@ -55,6 +58,9 @@
 ; like the tuple-type `*` → @operator.
 (type_intersection "&" @operator)
 (optional_named_arg "?" @operator)
+(tuple_param "?" @operator)
+(parameter "?" @operator)
+(unary_expression ["%" "%%"] @operator)
 (deref_expression "!" @operator)
 (prefix_bang_expression operator: (bang_op) @operator)
 ; `!`-led custom operator as a value / name (`(!!)`, `(!%)`) — colour it like
@@ -138,6 +144,7 @@
   "|}"
   "[<"
   ">]"
+  ".["
 ] @punctuation.bracket
 
 (typed_quotation "<@" @punctuation.special)
@@ -419,6 +426,7 @@
 (measure_power_type (long_identifier (identifier) @type))
 (measure_expression (long_identifier (identifier) @type))
 (type_check_pattern (long_identifier (identifier) @type))
+(type_check_pattern (identifier) @variable)
 
 ; In an explicit type-argument application (`Map.empty<string, _>`),
 ; the `_` is the inference placeholder, not a real type. Re-capture
@@ -699,6 +707,34 @@
 ((application_expression
    . (long_identifier . (identifier) @function .))
  (#match? @function "^[a-z_]"))
+
+;  A bare capitalised name used as a value (`None`, `ValueNone`, `Aligned`) is a
+; union case or constructor with no arguments; the applied form is the rule above.
+; Listed by expression parent so a type name in a type position is untouched.
+([
+   (match_arm (long_identifier . (identifier) @constructor .))
+   (tuple_expression (long_identifier . (identifier) @constructor .))
+   (binary_expression (long_identifier . (identifier) @constructor .))
+   (if_expression (long_identifier . (identifier) @constructor .))
+   (list_expression (long_identifier . (identifier) @constructor .))
+   (array_expression (long_identifier . (identifier) @constructor .))
+   (parenthesized_expression (long_identifier . (identifier) @constructor .))
+   (sequence_expression (long_identifier . (identifier) @constructor .))
+   (let_binding (long_identifier . (identifier) @constructor .))
+   (let_decl_indented (long_identifier . (identifier) @constructor .))
+   (let_expression (long_identifier . (identifier) @constructor .))
+   (ce_result_expr (long_identifier . (identifier) @constructor .))
+   (match_expression (long_identifier . (identifier) @constructor .))
+   (member_defn (long_identifier . (identifier) @constructor .))
+   (lambda_expression (long_identifier . (identifier) @constructor .))
+   (application_expression (long_identifier . (identifier) @constructor .))
+   (bracket_index_expression (long_identifier . (identifier) @constructor .))
+   (index_expression (long_identifier . (identifier) @constructor .))
+   (record_expression (long_identifier . (identifier) @constructor .))
+   (anonymous_record_expression (long_identifier . (identifier) @constructor .))
+   (struct_tuple_expression (long_identifier . (identifier) @constructor .))
+   (record_field value: (long_identifier . (identifier) @constructor .))
+ ] (#match? @constructor "^[A-Z]"))
 
 ; Type name in new expressions (not wrapped in type_expression so needs its own capture)
 (new_expression (long_identifier) @type)
