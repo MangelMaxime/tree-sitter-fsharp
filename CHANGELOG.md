@@ -8,7 +8,7 @@ updaters:
   - package.json:
       file: package.json
   # tree-sitter generate embeds the version in src/parser.c; CI rejects a stale src/.
-  - command: "npx tree-sitter generate grammar.js"
+  - command: "./build.sh generate --force"
 ---
 
 # Changelog
