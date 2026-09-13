@@ -19,6 +19,16 @@
 //     close per scan call; tree-sitter re-invokes at the same
 //     (mark_end-restored) position.
 //
+// Layout of this file:
+//   * Sym / Sort / Ctx / Scanner: the tokens, the context sorts and the state.
+//     `Scanner.scan` is zeroed at the start of every scan; only the stack and
+//     the two claim columns outlive a scan.
+//   * Lexer idioms and peek helpers (`next_line_indent`, `peek_body_col`, the
+//     `try_*` probes). A probe that advances the lexer is "destructive": its
+//     caller must decide right after it, never fall through to another probe.
+//   * Scan phases (`scan_*`, `mid_*`, `boundary_*`) in the order they run, and
+//     `scanner_scan` which strings them together. See "Scan phases".
+//
 // Token enum MUST match the `externals:` order in grammar.js.
 // ============================================================================
 typedef enum {
@@ -343,11 +353,51 @@ static bool word_is_decl_kw(const char *w) {
            !strcmp(w, "val") || !strcmp(w, "interface") || !strcmp(w, "new");
 }
 
+// `first` of a line that holds only a block comment (see next_line_indent).
+#define FIRST_COMMENT_LINE 2
+
 // Report a line's geometry: its indent and first significant char (`first` is optional).
 static bool line_geometry(uint32_t *col, int32_t *first, uint32_t indent, int32_t ch) {
     if (first) *first = ch;
     *col = indent;
     return true;
+}
+
+// What a `#`-led line is to the offside rule.
+typedef enum {
+    DIRECTIVE_SKIPPED,    // `#if`-family, `#nowarn`/`#warnon`, `#line`, `# 14 "f.fs"`: trivia, consumed to the newline
+    DIRECTIVE_STATEMENT,  // `#load`/`#r`/...: a statement of its own, the lexer sits after the `#`
+} DirectiveKind;
+
+// At a line-start `#`. `#if`-family, `#nowarn`/`#warnon` and `#line` lines are
+// skipped like comment lines so they never dedent-close an open body (e.g.
+// `#nowarn` between union cases, Argu style); the grammar consumes the directive
+// tokens where it allows `preproc_directive`. NOT `#load`/`#r`: those are
+// top-level statements that RELY on the dedent-close firing at their line. BOTH
+// `#if` and `#else` branches parse as real code (Fable-style dual-path projects
+// carry full-sized #else branches). Known cost: keyword splices
+// (`#if A`\n`let`\n`#else`\n`use`\n`#endif`, FParsec) don't parse.
+static DirectiveKind skip_directive_line(Scanner *s, TSLexer *lexer) {
+    lexer->advance(lexer, true);
+    skip_hspace(lexer);
+    char w[8]; size_t wi = 0;
+    while (wi < 7 && is_lower(lexer->lookahead)) { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
+    w[wi] = '\0';
+    if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
+        strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
+        strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
+        strcmp(w, "line") == 0) {
+        if (w[0] == 'i' || w[0] == 'e') s->scan.skipped_directive = true;
+        if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->scan.skipped_alt_directive = true;
+        skip_line(lexer);
+        return DIRECTIVE_SKIPPED;
+    }
+    // `# 14 "pars.fs"` - fsyacc/fslex line directive.
+    if (wi == 0) {
+        skip_hspace(lexer);
+        if (is_digit(lexer->lookahead)) { skip_line(lexer); return DIRECTIVE_SKIPPED; }
+    }
+    return DIRECTIVE_STATEMENT;
 }
 
 // Compute the indent + first significant char of the NEXT non-blank, non-comment
@@ -422,7 +472,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                     // (extras are transparent; closes fire on re-scan with
                     // post-comment geometry). Handles NESTING - the reason the
                     // internal regex fallback can't do this one.
-                    return line_geometry(col, first, indent, 2);
+                    return line_geometry(col, first, indent, FIRST_COMMENT_LINE);
                 }
                 // Comment-LED line (`(* 4 *) 7`, aligned arrays): geometry first
                 // - col is the COMMENT's start indent, first the real char; the
@@ -446,41 +496,10 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
         }
         if (lexer->lookahead == 0) return false;
         if (lexer->lookahead == '#') {
-            lexer->advance(lexer, true);
-            skip_hspace(lexer);
-            char w[8]; size_t wi = 0;
-            while (wi < 7 && is_lower(lexer->lookahead)) { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
-            w[wi] = '\0';
-            // `#if`-family, `#nowarn`/`#warnon` and `#line` lines are skipped
-            // like comment lines so they never dedent-close an open body (e.g.
-            // `#nowarn` between union cases, Argu style); the grammar consumes
-            // the directive tokens where it allows `preproc_directive`. NOT
-            // `#load`/`#r`: those are top-level statements that RELY on the
-            // dedent-close firing at their line. BOTH `#if` and `#else` branches
-            // parse as real code (Fable-style dual-path projects carry
-            // full-sized #else branches). Known cost: keyword splices
-            // (`#if A`\n`let`\n`#else`\n`use`\n`#endif`, FParsec) don't parse.
-            if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
-                strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
-                strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
-                strcmp(w, "line") == 0) {
-                if (w[0] == 'i' || w[0] == 'e') s->scan.skipped_directive = true;
-                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->scan.skipped_alt_directive = true;
-                skip_line(lexer);
-                if (lexer->lookahead == 0) return false;
-                continue;
+            switch (skip_directive_line(s, lexer)) {
+                case DIRECTIVE_SKIPPED: if (lexer->lookahead == 0) return false; continue;
+                case DIRECTIVE_STATEMENT: return line_geometry(col, first, indent, '#');
             }
-            // `# 14 "pars.fs"` - fsyacc/fslex line directive: trivia, skip the line.
-            if (wi == 0) {
-                int32_t dl = lexer->lookahead;
-                while (dl == ' ' || dl == '\t') { lexer->advance(lexer, true); dl = lexer->lookahead; }
-                if (is_digit(dl)) {
-                    skip_line(lexer);
-                    if (lexer->lookahead == 0) return false;
-                    continue;
-                }
-            }
-            return line_geometry(col, first, indent, '#');
         }
         return line_geometry(col, first, indent, lexer->lookahead);
     }
@@ -552,6 +571,10 @@ static bool is_opchar(int32_t c) {
            c == '/' || c == '<' || c == '=' || c == '>' || c == '?' || c == '@' || c == '^' ||
            c == '|' || c == '~' || c == '$' || c == ':';
 }
+
+// A `|` followed by one of these starts an infix operator (`|>`, `||`, `|?>`, `||>`, `|@`);
+// a match-arm `|` is followed by whitespace or a pattern char instead.
+static bool is_bar_op_tail(int32_t c) { return is_opchar(c) && c != ':'; }
 
 // Consume one identifier segment at the lookahead - a plain ident
 // (`Foo`/`foo'`/`x9`) or a ``quoted name``. Caller ensures the first char is an
@@ -1644,10 +1667,7 @@ static Step mid_closers(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top,
         lexer->advance(lexer, true);
         int32_t c1 = lexer->lookahead;
         if (is_close_bracket(c1)) closer = true;
-        else if (c1 != '>' && c1 != '|' && c1 != '?' && c1 != '@' && c1 != '!' &&
-                 c1 != '%' && c1 != '&' && c1 != '*' && c1 != '+' && c1 != '-' &&
-                 c1 != '.' && c1 != '/' && c1 != '<' && c1 != '=' && c1 != '^' &&
-                 c1 != '~' && c1 != '$' &&   // `|?>`/`||>`-style custom ops are INFIX, not an arm `|`
+        else if (!is_bar_op_tail(c1) &&
                  top && layoutish(top->sort) && !top->par && valid[LAYOUT_END] && has_match_ctx(s)) {
             // A bare same-line `|` is the next match arm; close the inline
             // arm body first (`function | 0 -> "a" | _ -> "b"`). Gated on an
@@ -2120,23 +2140,14 @@ if (infix_continues) {
         // `|` + any operator char = a custom `|`-led infix operator
         // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, ...). A match-arm
         // `|` is followed by whitespace or a pattern char instead.
-        if (c0 == '|')      infix = (c1 == '>' || c1 == '|' || c1 == '?' ||
-                                     c1 == '@' || c1 == '!' || c1 == '%' ||
-                                     c1 == '&' || c1 == '*' || c1 == '+' ||
-                                     c1 == '-' || c1 == '.' || c1 == '/' ||
-                                     c1 == '<' || c1 == '=' || c1 == '^' ||
-                                     c1 == '~' || c1 == '$');
+        if (c0 == '|')      infix = is_bar_op_tail(c1);
         else if (c0 == '&') infix = (c1 == '&');                        // &&
         // `::` `:>` `:?`, and a bare `: T` ascription on its own line
         // (`{ A = 1 }`\n`: R`): no statement starts with `:`.
         else if (c0 == ':') infix = true;
         // `?=>!`-style operators; `?ident` is an optional named argument
         // (that line is a new statement / element).
-        else if (c0 == '?') infix = (c1 == '!' || c1 == '%' || c1 == '&' || c1 == '*' ||
-                                     c1 == '+' || c1 == '-' || c1 == '.' || c1 == '/' ||
-                                     c1 == '<' || c1 == '=' || c1 == '>' || c1 == '?' ||
-                                     c1 == '@' || c1 == '^' || c1 == '|' || c1 == '~' ||
-                                     c1 == '$' || c1 == ':');
+        else if (c0 == '?') infix = is_opchar(c1);
         else if (c0 == '/') infix = (c1 != '/');                       // `//` = COMMENT, not an operator
         else                infix = true;                              // = < > * % ^
         if (infix && top->sort == S_EXPR && !top->par && col + oplen + 1 < top->col) infix = false;
@@ -2433,7 +2444,7 @@ static Step scan_line_boundary(Scanner *s, TSLexer *lexer, const bool *valid, Ct
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { return close_top(s, lexer, LAYOUT_END); }
         return DECLINED;
     }
-    if (first == 2) {
+    if (first == FIRST_COMMENT_LINE) {
         // Line-start comment-ONLY line - next_line_indent consumed the whole
         // comment with advance(false) and mark_end'ed at its `*)`.
         if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return DECLINED;
@@ -2459,11 +2470,7 @@ static Step scan_line_boundary(Scanner *s, TSLexer *lexer, const bool *valid, Ct
     if (bar_arm) {
         lexer->advance(lexer, true);
         bar_c1 = lexer->lookahead;
-        if (bar_c1 == '>' || bar_c1 == '|' || bar_c1 == '?' || bar_c1 == '@' ||
-            bar_c1 == '!' || bar_c1 == '%' || bar_c1 == '&' || bar_c1 == '*' ||
-            bar_c1 == '+' || bar_c1 == '-' || bar_c1 == '.' || bar_c1 == '/' ||
-            bar_c1 == '<' || bar_c1 == '=' || bar_c1 == '^' || bar_c1 == '~' ||
-            bar_c1 == '$') bar_arm = false;
+        if (is_bar_op_tail(bar_c1)) bar_arm = false;
     }
 
     // `///` docs followed by `and` - gate the and-clause doc slot. FIRST: by
