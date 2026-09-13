@@ -89,7 +89,34 @@ static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == 
 typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
 
 #define MAXD 512
-typedef struct { Ctx stk[MAXD]; uint16_t n; } Scanner;
+typedef struct {
+    Ctx stk[MAXD];
+    uint16_t n;
+    // Column of an `else`/`elif` that already closed a then-body, so the same token
+    // does not close the enclosing then-body too. -1 when none.
+    int32_t else_claim_col;
+    // Column of an `in` that just closed an arm-list and may still close the let
+    // value around it. -1 when none.
+    int32_t in_claim_col;
+    // Inputs of the main next_line_indent call: stop at a line-start block comment,
+    // and whether a doc-attachment gate is valid at the layout top column.
+    bool region_stop;
+    bool doc_gate_possible;
+    uint32_t top_col_for_docs;
+    // Outputs of next_line_indent: what it skipped on its way to the next real line,
+    // the indent of the first skipped `///` line, and whether a stopped block
+    // comment is the `(**` doc form.
+    bool skipped_doc_lines;
+    bool skipped_line_comments;
+    bool skipped_directive;
+    bool skipped_alt_directive;
+    uint32_t doc_indent;
+    bool comment_doc;
+    // The word after skipped doc lines (try_and_docs) and the last word read by the
+    // mid-line dispatch, for the checks that run after them in the same scan.
+    char post_doc_word[10];
+    char midline_word[10];
+} Scanner;
 
 static bool skip_bracket_attrs(TSLexer *lexer);
 // `let x = v in …` on ONE line: true when a bare `in` (outside brackets and
@@ -134,12 +161,6 @@ static bool line_has_in_keyword(TSLexer *lexer) {
     }
     return false;
 }
-// Column of an `else`/`elif` that already closed a then-body: the same token
-// must not close the enclosing then-body too (the inner `if` owns it).
-static int32_t g_else_claim_col = -1;
-// Column of an `in` that just closed an arm-list: the same `in` may close the
-// let value around it.
-static int32_t g_in_claim_col = -1;
 
 // `[?]ident ws* :` ahead, with the `:` not starting `::` `:>` `:?` `:=`: the
 // start of a labelled type element. Consumes lookahead; callers only run it
@@ -209,7 +230,11 @@ static bool has_match_ctx(Scanner *s) {
     return false;
 }
 
-void *tree_sitter_fsharp_external_scanner_create(void) { return calloc(1, sizeof(Scanner)); }
+void *tree_sitter_fsharp_external_scanner_create(void) {
+    Scanner *s = calloc(1, sizeof(Scanner));
+    if (s) { s->else_claim_col = -1; s->in_claim_col = -1; }
+    return s;
+}
 void tree_sitter_fsharp_external_scanner_destroy(void *p) { free(p); }
 
 unsigned tree_sitter_fsharp_external_scanner_serialize(void *p, char *buf) {
@@ -297,49 +322,6 @@ static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
     return true;
 }
 
-// When set (main line-boundary call only), next_line_indent STOPS at a
-// line-start block comment (sentinel *first = 2) so the boundary path can
-// emit it as one token. Peek callers (body-col probes, open helpers) leave
-// it false and get plain skipping geometry.
-static bool g_region_stop = false;
-// Set per-scan before the MAIN next_line_indent call: a doc-attachment gate
-// (CASE_DOCS_OPEN / AND_DOCS_OPEN) is valid, so the doc-line baseline anchor
-// is worth taking. Ordinary closes must NOT anchor at the docs (it drags the
-// CLOSED node's extent forward to the next declaration's doc block).
-static bool g_doc_gate_possible = false;
-// Indent of the FIRST skipped `///` line (valid when g_skipped_doc_lines).
-static uint32_t g_doc_indent = 0;
-// The layout-stack top column at the time of the MAIN call: docs INDENTED AT
-// OR PAST it can decorate a case/and at that level (mark-worthy); docs LEFT of
-// it belong to a declaration after a dedent-close, which must keep its tight
-// old-baseline anchor.
-static uint32_t g_top_col_for_docs = 0;
-static bool g_comment_doc = false;   // set by the stop-mode comment scan: `(**` doc form
-
-// Set when next_line_indent skips one or more `///` doc-comment lines on its
-// way to the next real line — transient (read within the same scan only).
-static bool g_skipped_doc_lines = false;
-// Set when next_line_indent skips one or more `//`-led comment lines (plain or
-// doc) on its way to the next real line. Those lines are advanced with skip=true
-// (padding), so any REAL-WIDTH token this scan emits would swallow their text
-// instead of letting the internal lexer make comment nodes out of them.
-static bool g_skipped_line_comments = false;
-// Set when next_line_indent skips one or more `#if`/`#elif`/`#else`/`#endif`
-// lines on its way to the next real line. Both branches of a conditional parse
-// as real code, so a directive line may sit between two ALTERNATIVE spellings of
-// the same declaration (`#if X`⏎`static member inline f<'T>`⏎`#else`⏎`static
-// member f<'T>`⏎`#endif`⏎`() = …`) — PREPROC_BREAK ends the first one there.
-static bool g_skipped_directive = false;
-// As above, but only for `#else`/`#elif` — the start of an ALTERNATIVE branch.
-static bool g_skipped_alt_directive = false;
-// The word read by the docs probe (try_and_docs) right after skipped doc
-// lines — used by the LAYOUT_SEMI check to suppress a sequence separator
-// before `/// docs⏎ <decl keyword>` (the docs belong to a DECLARATION; a
-// separator would let the decl nest inside the previous statement's body).
-static char g_post_doc_word[10] = {0};
-
-static char g_midline_word[10];   // last word read by the mid-line word dispatch
-
 static bool word_is_decl_kw(const char *w) {
     return !strcmp(w, "let") || !strcmp(w, "type") || !strcmp(w, "open") ||
            !strcmp(w, "module") || !strcmp(w, "exception") || !strcmp(w, "member") ||
@@ -347,11 +329,11 @@ static bool word_is_decl_kw(const char *w) {
            !strcmp(w, "val") || !strcmp(w, "interface") || !strcmp(w, "new");
 }
 
-static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
-    g_skipped_doc_lines = false;
-    g_skipped_line_comments = false;
-    g_skipped_directive = false;
-    g_skipped_alt_directive = false;
+static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t *first) {
+    s->skipped_doc_lines = false;
+    s->skipped_line_comments = false;
+    s->skipped_directive = false;
+    s->skipped_alt_directive = false;
     bool marked_line_start = false;
     while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
         lexer->advance(lexer, true);
@@ -369,15 +351,15 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             // case/and-clause node STARTS at its docs (expand-selection
             // extents). The scan RESUMES from here afterwards — the mid-line
             // doc-resume dispatch in the scan body handles that position.
-            if (g_region_stop && g_doc_gate_possible && indent >= g_top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
+            if (s->region_stop && s->doc_gate_possible && indent >= s->top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
                 if (lexer->lookahead == '/') {
-                    if (!g_skipped_doc_lines) g_doc_indent = indent;        // first doc line
-                    g_skipped_doc_lines = true;                             // a `///` doc line
+                    if (!s->skipped_doc_lines) s->doc_indent = indent;        // first doc line
+                    s->skipped_doc_lines = true;                             // a `///` doc line
                 }
-                g_skipped_line_comments = true;
+                s->skipped_line_comments = true;
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                     lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
@@ -386,9 +368,9 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
             if (first) *first = '/'; *col = indent; return true;
         }
         if (lexer->lookahead == '(') {
-            lexer->advance(lexer, !g_region_stop);
+            lexer->advance(lexer, !s->region_stop);
             if (lexer->lookahead != '*') { if (first) *first = '('; *col = indent; return true; }
-            if (g_region_stop) {
+            if (s->region_stop) {
                 // Line-start block comment, MAIN boundary call. Consume it with
                 // advance(false) — the token (if emitted) starts at the `(`; for
                 // any OTHER outcome those advances are harmless (zero-width
@@ -397,7 +379,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 if (lexer->lookahead == ')') {         // `(*)` multiply-op value line
                     if (first) *first = '('; *col = indent; return true;
                 }
-                g_comment_doc = (lexer->lookahead == '*');
+                s->comment_doc = (lexer->lookahead == '*');
                 if (!skip_comment_body(lexer, false)) return false;
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                 // Further block comments on the same line (`(* a *) (* b *)`).
@@ -468,8 +450,8 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
                 strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
                 strcmp(w, "line") == 0) {
-                if (w[0] == 'i' || w[0] == 'e') g_skipped_directive = true;
-                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) g_skipped_alt_directive = true;
+                if (w[0] == 'i' || w[0] == 'e') s->skipped_directive = true;
+                if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->skipped_alt_directive = true;
                 while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
                 if (lexer->lookahead == 0) return false;
                 continue;
@@ -494,7 +476,7 @@ static bool next_line_indent(TSLexer *lexer, uint32_t *col, int32_t *first) {
 // if at a newline the body is on the next line (use next_line_indent), else it
 // is inline on the current line (use get_column). This collapses F#'s old
 // inline-vs-own-line distinction into one decision.
-static uint32_t peek_body_col(TSLexer *lexer) {
+static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
     uint32_t col = lexer->get_column(lexer);
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
     // A trailing comment after the opener keyword (`match x with // …`,
@@ -503,7 +485,7 @@ static uint32_t peek_body_col(TSLexer *lexer) {
     // comment's column as the body column.
     if (lexer->lookahead == '/') {
         lexer->advance(lexer, true);
-        if (lexer->lookahead == '/') { uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0; }
+        if (lexer->lookahead == '/') { uint32_t nl; return next_line_indent(s, lexer, &nl, NULL) ? nl : 0; }
         return col;  // a lone `/` is inline (operator), body sits at its column
     }
     if (lexer->lookahead == '(') {
@@ -521,13 +503,13 @@ static uint32_t peek_body_col(TSLexer *lexer) {
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
                 return col;                       // inline body after the comment
-            uint32_t nl; return next_line_indent(lexer, &nl, NULL) ? nl : 0;
+            uint32_t nl; return next_line_indent(s, lexer, &nl, NULL) ? nl : 0;
         }
         return col;  // `(` inline (parenthesised pattern / expression)
     }
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         uint32_t nl;
-        if (next_line_indent(lexer, &nl, NULL)) return nl;
+        if (next_line_indent(s, lexer, &nl, NULL)) return nl;
         return 0;
     }
     return col;
@@ -719,10 +701,10 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
 // `=` closed the `#if` branch of a declaration written twice (`#if X`⏎`let f x =`
 // ⏎`#else`⏎`let f x =`⏎`#endif`⏎`    body`) and the body belongs to the LAST
 // branch. The caller declines the open, leaving the body `optional(…)` empty.
-static bool split_branch_body(TSLexer *lexer, uint32_t *body_col) {
-    g_skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
-    *body_col = peek_body_col(lexer);
-    return g_skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
+static bool split_branch_body(Scanner *s, TSLexer *lexer, uint32_t *body_col) {
+    s->skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
+    *body_col = peek_body_col(s, lexer);
+    return s->skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
 }
 
 // Consume one or more consecutive `[<…>]` attributes, leaving the lexer at the
@@ -1106,20 +1088,20 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
 }
 
 // Probe for AND_DOCS_OPEN: at a line boundary where next_line_indent SKIPPED
-// `///` doc lines (g_skipped_doc_lines) and the next real line starts with the
+// `///` doc lines (s->skipped_doc_lines) and the next real line starts with the
 // word `and`, emit the zero-width marker that lets the docs shift into the
 // and-clause slot (`_and_docs`). The lexer sits AT the first char after
 // next_line_indent; reading the word only consumes peeked lookahead (the
 // marker is zero-width — mark_end stays at the baseline). Call LAST.
-// Dispatch for `///` doc lines at a layout boundary (g_skipped_doc_lines):
+// Dispatch for `///` doc lines at a layout boundary (s->skipped_doc_lines):
 // the post-doc word decides where the docs belong. Reads the word
 // destructively — every taken branch RETURNS a token, and the lone
 // fall-through (no branch applies) only loses position for checks that
 // re-derive it themselves.
 static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
                          int32_t first, uint32_t col, Ctx *top) {
-    g_post_doc_word[0] = '\0';
-    if (!g_skipped_doc_lines) return false;
+    s->post_doc_word[0] = '\0';
+    if (!s->skipped_doc_lines) return false;
     // Docs followed by a `|` case — union/enum case attachment.
     if (valid[CASE_DOCS_OPEN] && first == '|') {
         lexer->result_symbol = CASE_DOCS_OPEN; return true;
@@ -1133,7 +1115,7 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
             w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead;
         }
         w[n] = '\0';
-        { size_t i = 0; for (; w[i] && i < 9; i++) g_post_doc_word[i] = w[i]; g_post_doc_word[i] = '\0'; }
+        { size_t i = 0; for (; w[i] && i < 9; i++) s->post_doc_word[i] = w[i]; s->post_doc_word[i] = '\0'; }
         // docs + `and` — the and-clause attachment marker.
         if (valid[AND_DOCS_OPEN] && !strcmp(w, "and")) {
             lexer->result_symbol = AND_DOCS_OPEN; return true;
@@ -1276,7 +1258,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // A split declaration's `#if` branch ends at its own `=`: emit the break
         // (the grammar then takes the body-less path) instead of opening a body
         // that would swallow the `#else` branch's declaration.
-        if (split_branch_body(lexer, &bc)) {
+        if (split_branch_body(s, lexer, &bc)) {
             if (!valid[PREPROC_BREAK]) return false;
             lexer->result_symbol = PREPROC_BREAK; return true;
         }
@@ -1298,7 +1280,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // indents past the `for`, so this never suppresses a genuine body). Dedicated
     // (not LAYOUT_OPEN) so only for-do bodies get this rule.
     if (valid[FOR_OPEN]) {
-        uint32_t bc = peek_body_col(lexer);
+        uint32_t bc = peek_body_col(s, lexer);
         if (top && bc <= top->col) {
             // No indented body — query-CE for-clause. Emit the enclosing
             // statement separator so the following `where`/`select`/`join`/… is a
@@ -1315,7 +1297,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
-        push(s, S_EXPR, peek_body_col(lexer));
+        push(s, S_EXPR, peek_body_col(s, lexer));
         if (inl && s->n) s->stk[s->n - 1].inl = 1;
         lexer->result_symbol = EXPR_OPEN;   return true;
     }
@@ -1323,19 +1305,19 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
-        push(s, S_EXPR, peek_body_col(lexer));
+        push(s, S_EXPR, peek_body_col(s, lexer));
         if (s->n) { s->stk[s->n - 1].thn = 1; if (inl) s->stk[s->n - 1].inl = 1; }
-        g_else_claim_col = -1;
+        s->else_claim_col = -1;
         lexer->result_symbol = THEN_OPEN;   return true;
     }
     if (valid[LAZY_OPEN])   {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
             lexer->lookahead != '/'  && lexer->lookahead != 0) return false;   // inline body → plain branch
-        push(s, S_EXPR, peek_body_col(lexer));
+        push(s, S_EXPR, peek_body_col(s, lexer));
         lexer->result_symbol = LAZY_OPEN;   return true;
     }
-    if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
+    if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(s, lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
     if (valid[ELSE_OPEN]) {
         // Final-else body. An INLINE `else if` (same line) flattens to an elif clause —
         // DON'T open a nested else-body; return false so the grammar's flat elif matches
@@ -1345,7 +1327,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // (`else⏎ if c then x⏎ match …`) — so suppress ONLY for the same-line form.
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         bool nl_before = (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == '/');
-        uint32_t col = peek_body_col(lexer);  // positions lexer at the body's first char
+        uint32_t col = peek_body_col(s, lexer);  // positions lexer at the body's first char
         // `else`⏎`if …` at the enclosing body's own column is a flat else-if
         // chain too (LargeConditionals: 200 levels would overflow the stack).
         bool flat_col = nl_before && top && col <= top->col;
@@ -1361,10 +1343,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         push(s, S_EXPR, col);
         if (!nl_before && s->n) s->stk[s->n - 1].inl = 1;
-        g_else_claim_col = -1;
+        s->else_claim_col = -1;
         lexer->result_symbol = ELSE_OPEN; return true;
     }
-    if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
+    if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(s, lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
 
     // Lexical trailing-dot float (`1.`, `20.`). Placed AFTER the peek_body_col
     // opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) — running it before them would
@@ -1391,7 +1373,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col;
-            if (next_line_indent(lexer, &col, NULL)) { push(s, S_DECL, col); lexer->result_symbol = BLOCK_OPEN; return true; }
+            if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_DECL, col); lexer->result_symbol = BLOCK_OPEN; return true; }
         }
         return false; // inline body — let the grammar's inline alternative match
     }
@@ -1401,7 +1383,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col;
-            if (next_line_indent(lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
+            if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
         }
         return false; // inline type body (record/alias/inline DU) — let it match
     }
@@ -1410,7 +1392,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col; int32_t bfirst = 0;
-            if (next_line_indent(lexer, &col, &bfirst) && top && col > top->col && bfirst != '}' && bfirst != '|') {
+            if (next_line_indent(s, lexer, &col, &bfirst) && top && col > top->col && bfirst != '}' && bfirst != '|') {
                 push(s, S_EXPR, col); lexer->result_symbol = FIELD_BLOCK_OPEN; return true;
             }
         }
@@ -1424,7 +1406,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             uint32_t col; int32_t bfirst = 0;
             // Only a `let`/`use`-led operand needs the block; anything else
             // continues the operator line as before.
-            if (next_line_indent(lexer, &col, &bfirst) && top && col > top->col && (bfirst == 'l' || bfirst == 'u')) {
+            if (next_line_indent(s, lexer, &col, &bfirst) && top && col > top->col && (bfirst == 'l' || bfirst == 'u')) {
                 char w[12]; read_word(lexer, w, sizeof w);
                 if (!strcmp(w, "let") || !strcmp(w, "use")) {
                     push(s, S_EXPR, col); s->stk[s->n - 1].inf = 1; lexer->result_symbol = INFIX_BLOCK_OPEN; return true;
@@ -1440,7 +1422,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t c0 = lexer->lookahead;
         if (c0 == '\n' || c0 == '\r') {
             uint32_t col; int32_t bfirst = 0;
-            if (next_line_indent(lexer, &col, &bfirst) && bfirst != ')' && !is_opchar(bfirst)) {
+            if (next_line_indent(s, lexer, &col, &bfirst) && bfirst != ')' && !is_opchar(bfirst)) {
                 push(s, S_EXPR, col); s->stk[s->n - 1].par = 1; lexer->result_symbol = PAREN_BLOCK_OPEN; return true;
             }
             return false;
@@ -1464,7 +1446,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // char CLOSES the bracket (`Html.div [`⏎`⏎`]` — empty across blank
             // lines): there is no element to anchor a context.
             uint32_t col; int32_t bfirst = 0;
-            if (next_line_indent(lexer, &col, &bfirst)) {
+            if (next_line_indent(s, lexer, &col, &bfirst)) {
                 if (bfirst == ']' || bfirst == '}' || bfirst == '|') return false;
                 push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true;
             }
@@ -1484,7 +1466,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             lexer->advance(lexer, true);
             if (lexer->lookahead == '/') {
                 uint32_t col; int32_t bfirst = 0;
-                if (!next_line_indent(lexer, &col, &bfirst)) return false;
+                if (!next_line_indent(s, lexer, &col, &bfirst)) return false;
                 if (bfirst == ']' || bfirst == '}' || bfirst == '|') return false;
                 push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true;
             }
@@ -1513,7 +1495,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead == ']' || lexer->lookahead == '}' || lexer->lookahead == '|' || lexer->lookahead == 0) return false;
                 if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
                     uint32_t col;
-                    if (next_line_indent(lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
+                    if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_BRACKET, col); lexer->result_symbol = BRACKET_OPEN; return true; }
                     return false;
                 }
             }
@@ -1531,7 +1513,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         uint32_t col = lexer->get_column(lexer);
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
-            if (!next_line_indent(lexer, &col, NULL)) return false;
+            if (!next_line_indent(s, lexer, &col, NULL)) return false;
         }
         bool ok = false;
         if (is_name_start(lexer->lookahead)) {
@@ -1564,7 +1546,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             nl = true;
-            if (!next_line_indent(lexer, &col, NULL)) return false;
+            if (!next_line_indent(s, lexer, &col, NULL)) return false;
         }
         // A field may lead with `///` doc lines (`{ /// docs⏎  Field: T … }`):
         // skip them (to the NEXT line's content) so the field-shape check
@@ -1576,7 +1558,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             lexer->advance(lexer, true);
             if (lexer->lookahead != '/') return false;   // `//` plain comment: bail (rare inside `{`)
             while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
-            uint32_t c2; if (!next_line_indent(lexer, &c2, NULL)) return false;
+            uint32_t c2; if (!next_line_indent(s, lexer, &c2, NULL)) return false;
             col = c2;   // the FIELD's column, not the doc's (`{ /// doc⏎    Field: T`)
             nl = true;
         }
@@ -1734,7 +1716,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // get_column walks back to the line start (O(line length)): compute the
                 // word's column only where a close records it, never per token.
                 #define MID_COL() ((int32_t)lexer->get_column(lexer) - (int32_t)n)
-                memcpy(g_midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
+                memcpy(s->midline_word, w, n + 1);   // the CTOR_TUPLE_GATE tail below resumes past it (no strcpy: not in the Wasm libc subset)
                 if (top && valid[LAYOUT_END]) {
                     // `else`/`elif` close only an INLINE body: a same-line `else`
                     // after an INDENTED then-body belongs to an INNER if on this
@@ -1757,9 +1739,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // enclosing bodies once the owner has closed.
                     bool thn_below = false;
                     for (int i = (int)s->n - 2; i >= 0 && !thn_below; i--) thn_below = s->stk[i].thn != 0;
-                    if (top->sort == S_EXPR && (else_kw ? ((top->thn != 0 || (top->inl && thn_below)) && g_else_claim_col != MID_COL())
+                    if (top->sort == S_EXPR && (else_kw ? ((top->thn != 0 || (top->inl && thn_below)) && s->else_claim_col != MID_COL())
                                                 : (!strcmp(w, "in") || !strcmp(w, "end")))) {
-                        if (else_kw && top->thn) g_else_claim_col = MID_COL();
+                        if (else_kw && top->thn) s->else_claim_col = MID_COL();
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     // `in` after an inline match-arm body (`let f t = match t with
@@ -1777,9 +1759,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // ends the arm-list, then (same position) the let value it sits in.
                     if (!strcmp(w, "in")) {
                         if (top->sort == S_MATCH && valid[MATCH_END]) {
-                            g_in_claim_col = MID_COL(); s->n--; lexer->result_symbol = MATCH_END; return true;
+                            s->in_claim_col = MID_COL(); s->n--; lexer->result_symbol = MATCH_END; return true;
                         }
-                        if (layoutish(top->sort) && !top->inl && valid[LAYOUT_END] && g_in_claim_col == MID_COL()) {
+                        if (layoutish(top->sort) && !top->inl && valid[LAYOUT_END] && s->in_claim_col == MID_COL()) {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
                         }
                     }
@@ -1833,7 +1815,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // The arm list itself closes at a mid-line `in`/`end` once its
                 // last arm body has closed (`… | B -> 2 in f 1`).
                 if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
-                    if (!strcmp(w, "in")) g_in_claim_col = MID_COL();
+                    if (!strcmp(w, "in")) s->in_claim_col = MID_COL();
                     s->n--; lexer->result_symbol = MATCH_END; return true;
                 }
                 if (valid[ELEMENT_DSL_OPEN] && element_dsl_parens_brace(lexer)) {
@@ -1889,7 +1871,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                     if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
                         uint32_t ncol; int32_t nfirst = 0;
-                        if (!next_line_indent(lexer, &ncol, &nfirst) || ncol < top->col) {
+                        if (!next_line_indent(s, lexer, &ncol, &nfirst) || ncol < top->col) {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
                         }
                     }
@@ -1913,7 +1895,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (lexer->lookahead == 0) { lexer->result_symbol = DECL_SEMI; return true; }
                     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
                         uint32_t ncol; int32_t nfirst = 0;
-                        if (!next_line_indent(lexer, &ncol, &nfirst) || decl_starter(lexer, nfirst)) {
+                        if (!next_line_indent(s, lexer, &ncol, &nfirst) || decl_starter(lexer, nfirst)) {
                             lexer->result_symbol = DECL_SEMI; return true;
                         }
                     }
@@ -1937,7 +1919,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                     if (a == '\n' || a == '\r' || a == 0) {
                         uint32_t ncol; int32_t nfirst = 0;
-                        if (next_line_indent(lexer, &ncol, &nfirst) &&
+                        if (next_line_indent(s, lexer, &ncol, &nfirst) &&
                             (is_close_bracket(nfirst) || nfirst == '}' || nfirst == ']')) {
                             s->n--; lexer->result_symbol = BRACKET_CLOSE; return true;
                         }
@@ -1956,7 +1938,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead == '/') {
                     lexer->advance(lexer, true);
                     if (lexer->lookahead == '/') {
-                        g_skipped_doc_lines = true;
+                        s->skipped_doc_lines = true;
                         // consume the rest of this doc line, then any further
                         // doc-only / blank lines
                         for (;;) {
@@ -1998,7 +1980,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     lexer->advance(lexer, true);
                 }
                 w0[w0n] = '\0';
-                const char *first_word = w0n ? w0 : g_midline_word;   // word-branch may have eaten it
+                const char *first_word = w0n ? w0 : s->midline_word;   // word-branch may have eaten it
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                 // `let AesKey key, AesIV iv = …`: a constructor applied to bare
                 // argument names, then `,`. Not when the first word was a binding
@@ -2087,15 +2069,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     }
 
     uint32_t col; int32_t first = 0;
-    g_region_stop = true;
-    g_doc_gate_possible = valid[CASE_DOCS_OPEN] || valid[AND_DOCS_OPEN];
-    g_top_col_for_docs = top ? top->col : 0;
-    bool nli = next_line_indent(lexer, &col, &first);
-    g_region_stop = false;
+    s->region_stop = true;
+    s->doc_gate_possible = valid[CASE_DOCS_OPEN] || valid[AND_DOCS_OPEN];
+    s->top_col_for_docs = top ? top->col : 0;
+    bool nli = next_line_indent(s, lexer, &col, &first);
+    s->region_stop = false;
     if (!nli) {                                             // EOF after trailing blanks
         // Dangling `///` docs at EOF inside this body: let them lex as a
         // standalone statement before the body closes (see the dedent twin).
-        if (g_skipped_doc_lines && top && layoutish(top->sort) && g_doc_indent >= top->col) return false;
+        if (s->skipped_doc_lines && top && layoutish(top->sort) && s->doc_indent >= top->col) return false;
         if (valid[BRACKET_CLOSE] && top && top->sort == S_BRACKET) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
         if (valid[MATCH_END]    && top && top->sort == S_MATCH)    { s->n--; lexer->result_symbol = MATCH_END;    return true; }
         if (valid[LAYOUT_END]   && top && layoutish(top->sort))   { s->n--; lexer->result_symbol = LAYOUT_END;   return true; }
@@ -2109,8 +2091,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // block comment now would absorb their text (no comment node -> no
         // highlight). Decline: the internal lexer lexes them as line_comment
         // extras, and a later scan starts right at the `(*`.
-        if (g_skipped_line_comments) return false;
-        lexer->result_symbol = (g_comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
+        if (s->skipped_line_comments) return false;
+        lexer->result_symbol = (s->comment_doc && valid[BLOCK_DOC_COMMENT]) ? BLOCK_DOC_COMMENT
                              : (valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT);
         return true;
     }
@@ -2320,7 +2302,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // the close; the doc lexes as a standalone statement (the wrapper
             // fork dies at the close that follows), then the dedent re-fires.
             if (valid[LAYOUT_END] && col < top->col &&
-                g_skipped_doc_lines && g_doc_indent >= top->col) return false;
+                s->skipped_doc_lines && s->doc_indent >= top->col) return false;
             // A `|` case LEFT of a bare first case is still a case of this type
             // (`type E =`⏎`      A = 0`⏎`    | B = 1`); types never nest inside
             // match arms, so a dedented `|` under a type body is never an arm.
@@ -2334,7 +2316,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (valid[LAYOUT_END] && col < top->col) {
                 if (top->sort == S_EXPR && top->thn && first == 'e') {
                     char w[12]; read_word(lexer, w, sizeof w);
-                    if (!strcmp(w, "else") || !strcmp(w, "elif")) g_else_claim_col = (int32_t)col;
+                    if (!strcmp(w, "else") || !strcmp(w, "elif")) s->else_claim_col = (int32_t)col;
                 }
                 s->n--; lexer->result_symbol = LAYOUT_END; return true;
             }
@@ -2344,7 +2326,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // End the first one here (zero-width) so the second parses as a
             // declaration instead of being absorbed as parameters. Checked before
             // the peeks below, which consume the line's first word.
-            if (valid[PREPROC_BREAK] && g_skipped_directive && decl_starter(lexer, first)) {
+            if (valid[PREPROC_BREAK] && s->skipped_directive && decl_starter(lexer, first)) {
                 lexer->result_symbol = PREPROC_BREAK; return true;
             }
             // A leading `|` arm marker AT the body column: FSC permits
@@ -2413,7 +2395,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // is actually on the table — otherwise the probes further down would
             // see a lexer parked past the line's first word and always miss.
             if (valid[LAYOUT_SEMI] && col == top->col &&
-                !(g_skipped_doc_lines && word_is_decl_kw(g_post_doc_word))) {
+                !(s->skipped_doc_lines && word_is_decl_kw(s->post_doc_word))) {
                 // S_DECL: never separate before a declaration keyword — the line is a
                 // new `_token`, not a `sequence_expression` continuation of the prior
                 // bare-expression statement.
@@ -2434,15 +2416,15 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // `else` at a then-body's own column ends the body unless the
                     // body is itself an `if` (which then owns the `else`).
                     if ((!strcmp(w, "else") || !strcmp(w, "elif")) && top->sort == S_EXPR && top->thn &&
-                        g_else_claim_col != (int32_t)col && valid[LAYOUT_END]) {
-                        g_else_claim_col = (int32_t)col;
+                        s->else_claim_col != (int32_t)col && valid[LAYOUT_END]) {
+                        s->else_claim_col = (int32_t)col;
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
-                    if (!semi_blocked_word(w)) { g_else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
+                    if (!semi_blocked_word(w)) { s->else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
                     return false;
                 }
                 if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
-                if (!semi_blocked(lexer, first)) { g_else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
+                if (!semi_blocked(lexer, first)) { s->else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
                 return false;   // peeks consumed the lookahead — no further probing
             }
             // …and RIGHT of it (a continuation-indented `with`). Nothing after
