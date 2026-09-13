@@ -66,7 +66,7 @@ let private loadQuery (language: Language) =
     language.CreateQuery(File.ReadAllText Workspace.queries.``highlights.scm``)
 
 let private snapshotPath =
-    Path.Combine(Workspace.test.highlight.``.``, "snapshot.txt")
+    Path.Combine(Workspace.test.``.``, "highlight-snapshot.txt")
 
 let private renderSnapshot () =
     use language = Parser.load Parser.defaultPath

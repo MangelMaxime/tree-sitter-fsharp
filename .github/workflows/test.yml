@@ -85,13 +85,12 @@ jobs:
       - name: Every query compiles
         run: dotnet run --project build -- check-queries
 
-      # queries/nvim/highlights.scm is generated from the Helix file, and
-      # queries/zed/highlights.scm must contain the same patterns under Zed's
-      # capture names; a rule added to one and forgotten in the other fails here.
+      # queries/nvim/highlights.scm and queries/zed/highlights.scm are generated
+      # from the Helix file; an edit made to a generated file fails here.
       - name: Derived highlight queries are in sync
         run: dotnet run --project build -- derive-queries --check
 
-      # test/highlight/snapshot.txt is the resolved capture of every token of the
+      # test/highlight-snapshot.txt is the resolved capture of every token of the
       # gallery file; a query change that moves a colour shows up as a diff there.
       - name: Highlight snapshot is up to date
         run: dotnet run --project build -- highlight-snapshot --check

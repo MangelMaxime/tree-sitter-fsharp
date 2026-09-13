@@ -191,7 +191,7 @@ tasks:
       - dotnet run --project build -- check-queries
 
   highlight:snapshot:
-    desc: Write test/highlight/snapshot.txt (resolved capture per token of examples/references.fsx). -- --check to verify
+    desc: Write test/highlight-snapshot.txt (resolved capture per token of examples/references.fsx). -- --check to verify
     deps: [build]
     cmds:
       - dotnet run --project build -- highlight-snapshot {{.CLI_ARGS}}
@@ -203,7 +203,7 @@ tasks:
       - dotnet run --project build -- highlight-coverage {{.CLI_ARGS}}
 
   queries:derive:
-    desc: Regenerate queries/nvim/highlights.scm from the Helix one and check the Zed one
+    desc: Regenerate the Neovim, Zed and signature highlight queries from the Helix one
     cmds:
       - dotnet run --project build -- derive-queries {{.CLI_ARGS}}
 

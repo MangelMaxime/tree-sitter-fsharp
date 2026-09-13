@@ -24,7 +24,7 @@ See everything at once in [`examples/layout.fsx`](examples/layout.fsx).
 | Editor                            | Status          | Queries                                                                    |
 | --------------------------------- | --------------- | -------------------------------------------------------------------------- |
 | [Helix](#helix)                   | ✅ Supported    | Full set (highlights, injections, locals, textobjects, indents, rainbows)  |
-| [Zed](#zed)                       | ✅ Supported    | Dedicated queries in `queries/zed/` |
+| [Zed](#zed)                       | ✅ Supported    | `queries/zed/` (highlights derived from Helix) |
 | [Neovim](#neovim)                 | ✅ Supported    | `queries/nvim/` (highlights derived from Helix, indents, folds, textobjects) |
 
 PRs for editor-specific queries are welcome.
