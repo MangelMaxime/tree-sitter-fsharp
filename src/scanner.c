@@ -119,12 +119,27 @@ typedef struct {
     char midline_word[10];
 } Scanner;
 
+
+// --- Lexer idioms -----------------------------------------------------------
+static inline bool at_line_end(int32_t c) { return c == '\n' || c == '\r' || c == 0; }
+static inline bool is_lower(int32_t c) { return c >= 'a' && c <= 'z'; }
+static inline bool is_alpha(int32_t c) { return is_lower(c) || (c >= 'A' && c <= 'Z'); }
+static inline bool is_digit(int32_t c) { return c >= '0' && c <= '9'; }
+static inline bool is_ident_char(int32_t c) { return is_alpha(c) || is_digit(c) || c == '_' || c == '\''; }
+static inline bool is_name_start(int32_t c) { return is_alpha(c) || c == '_' || c == '`'; }
+// Spaces and tabs.
+static inline void skip_hspace(TSLexer *lexer) { while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true); }
+// Spaces, tabs and newlines.
+static inline void skip_space(TSLexer *lexer) { while (lexer->lookahead == ' ' || lexer->lookahead == '\t' || lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true); }
+// The rest of the current line, stopping at the newline.
+static inline void skip_line(TSLexer *lexer) { while (!at_line_end(lexer->lookahead)) lexer->advance(lexer, true); }
+
 static bool skip_bracket_attrs(TSLexer *lexer);
 // `let x = v in ...` on ONE line: true when a bare `in` (outside brackets and
 // strings) follows on the rest of the line. Consumes lookahead.
 static bool line_has_in_keyword(TSLexer *lexer) {
     int depth = 0; int32_t prev = ' ';
-    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+    while (!at_line_end(lexer->lookahead)) {
         int32_t c = lexer->lookahead;
         if (c == '"') {
             lexer->advance(lexer, true);
@@ -142,7 +157,7 @@ static bool line_has_in_keyword(TSLexer *lexer) {
             if (lexer->lookahead == 'n') {
                 lexer->advance(lexer, true);
                 int32_t a = lexer->lookahead;
-                if (a == ' ' || a == '\t' || a == '\n' || a == '\r' || a == 0) return true;
+                if (a == ' ' || a == '\t' || at_line_end(a)) return true;
             }
             prev = 'i'; continue;
         }
@@ -168,10 +183,10 @@ static bool line_has_in_keyword(TSLexer *lexer) {
 // where nothing else needs the word afterwards.
 static bool try_label_gate(TSLexer *lexer) {
     // The boundary path's infix probe may already have consumed a leading `?`.
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    skip_hspace(lexer);
     if (lexer->lookahead == '?') {
         lexer->advance(lexer, true);
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
     }
     int32_t a = lexer->lookahead;
     if (a == '`') {
@@ -188,15 +203,14 @@ static bool try_label_gate(TSLexer *lexer) {
             lexer->advance(lexer, true);
         }
     } else {
-        if (!((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_')) return false;
+        if (!(is_alpha(a) || a == '_')) return false;
         while (1) {
             int32_t ch = lexer->lookahead;
-            if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-                (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+            if (is_ident_char(ch)) lexer->advance(lexer, true);
             else break;
         }
     }
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    skip_hspace(lexer);
     if (lexer->lookahead != ':') return false;
     lexer->advance(lexer, true);
     int32_t n = lexer->lookahead;
@@ -211,14 +225,13 @@ static bool try_label_attr(TSLexer *lexer) {
     if (!skip_bracket_attrs(lexer)) return false;
     if (lexer->lookahead == '?') lexer->advance(lexer, true);
     int32_t a = lexer->lookahead;
-    if (!((a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') || a == '_')) return false;
+    if (!(is_alpha(a) || a == '_')) return false;
     while (1) {
         int32_t ch = lexer->lookahead;
-        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+        if (is_ident_char(ch)) lexer->advance(lexer, true);
         else break;
     }
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    skip_hspace(lexer);
     if (lexer->lookahead == ':') { lexer->result_symbol = LABEL_ATTR; return true; }
     return false;
 }
@@ -231,14 +244,14 @@ static bool has_match_ctx(Scanner *s) {
     return false;
 }
 
-void *tree_sitter_fsharp_external_scanner_create(void) {
+static void *scanner_create(void) {
     Scanner *s = calloc(1, sizeof(Scanner));
     if (s) { s->else_claim_col = -1; s->in_claim_col = -1; }
     return s;
 }
-void tree_sitter_fsharp_external_scanner_destroy(void *p) { free(p); }
+static void scanner_destroy(void *p) { free(p); }
 
-unsigned tree_sitter_fsharp_external_scanner_serialize(void *p, char *buf) {
+static unsigned scanner_serialize(void *p, char *buf) {
     Scanner *s = p;
     unsigned size = sizeof(uint16_t) + (unsigned)s->n * sizeof(Ctx);
     if (size > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) return 0;
@@ -246,7 +259,7 @@ unsigned tree_sitter_fsharp_external_scanner_serialize(void *p, char *buf) {
     memcpy(buf + sizeof(uint16_t), s->stk, (size_t)s->n * sizeof(Ctx));
     return size;
 }
-void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, unsigned len) {
+static void scanner_deserialize(void *p, const char *buf, unsigned len) {
     Scanner *s = p; s->n = 0;
     if (len == 0) return;
     memcpy(&s->n, buf, sizeof(uint16_t));
@@ -336,8 +349,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
     s->skipped_directive = false;
     s->skipped_alt_directive = false;
     bool marked_line_start = false;
-    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-        lexer->advance(lexer, true);
+    skip_line(lexer);
     if (lexer->lookahead == 0) return false;
     while (true) {
         if (lexer->lookahead == '\r') lexer->advance(lexer, true);
@@ -361,8 +373,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                     s->skipped_doc_lines = true;                             // a `///` doc line
                 }
                 s->skipped_line_comments = true;
-                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-                    lexer->advance(lexer, true);
+                skip_line(lexer);
                 if (lexer->lookahead == 0) return false;
                 continue;
             }
@@ -382,16 +393,16 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                 }
                 s->comment_doc = (lexer->lookahead == '*');
                 if (!skip_comment_body(lexer, false)) return false;
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
                 // Further block comments on the same line (`(* a *) (* b *)`).
                 while (lexer->lookahead == '(') {
                     lexer->advance(lexer, false);
                     if (lexer->lookahead != '*') { if (first) *first = '('; *col = indent; return true; }
                     lexer->advance(lexer, false);
                     if (!skip_comment_body(lexer, false)) return false;
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    skip_hspace(lexer);
                 }
-                if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
+                if (at_line_end(lexer->lookahead)) {
                     lexer->mark_end(lexer);            // full comment span (+trailing ws)
                     // mark_end ONLY here: in the comment-LED branch below the
                     // baseline must stay at the scan start, or the next
@@ -417,8 +428,8 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             // element (`(* 4 *) 7`, PriorityQueue-style aligned arrays). The
             // line then counts: its column is the COMMENT's start indent (where
             // the element visually begins) and `first` is the first real char.
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-            if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) {
+            skip_hspace(lexer);
+            if (!at_line_end(lexer->lookahead)) {
                 if (first) *first = lexer->lookahead;
                 *col = indent;
                 return true;
@@ -429,9 +440,9 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
         if (lexer->lookahead == 0) return false;
         if (lexer->lookahead == '#') {
             lexer->advance(lexer, true);
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            skip_hspace(lexer);
             char w[8]; size_t wi = 0;
-            while (wi < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
+            while (wi < 7 && is_lower(lexer->lookahead)) { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
             w[wi] = '\0';
             // `#if`-family, `#nowarn`/`#warnon` and `#line` lines are skipped
             // like comment lines so they never dedent-close an open body (e.g.
@@ -448,7 +459,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                 strcmp(w, "line") == 0) {
                 if (w[0] == 'i' || w[0] == 'e') s->skipped_directive = true;
                 if (strcmp(w, "else") == 0 || strcmp(w, "elif") == 0) s->skipped_alt_directive = true;
-                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                skip_line(lexer);
                 if (lexer->lookahead == 0) return false;
                 continue;
             }
@@ -456,8 +467,8 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             if (wi == 0) {
                 int32_t dl = lexer->lookahead;
                 while (dl == ' ' || dl == '\t') { lexer->advance(lexer, true); dl = lexer->lookahead; }
-                if (dl >= '0' && dl <= '9') {
-                    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+                if (is_digit(dl)) {
+                    skip_line(lexer);
                     if (lexer->lookahead == 0) return false;
                     continue;
                 }
@@ -496,8 +507,8 @@ static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') return col;  // `(*)` = the multiply operator value, not a comment - inline body at the `(`
             if (!skip_comment_body(lexer, true)) return 0;
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-            if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
+            skip_hspace(lexer);
+            if (!at_line_end(lexer->lookahead))
                 return col;                       // inline body after the comment
             uint32_t nl; return next_line_indent(s, lexer, &nl, NULL) ? nl : 0;
         }
@@ -514,14 +525,14 @@ static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
 // Match a trailing-dot float literal (`1.`, `20.`) at the current position.
 // Lexical, independent of layout.
 static bool scan_trailing_dot_float(TSLexer *lexer) {
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    skip_hspace(lexer);
     if (lexer->lookahead < '0' || lexer->lookahead > '9') return false;
     lexer->advance(lexer, false);
-    while ((lexer->lookahead >= '0' && lexer->lookahead <= '9') || lexer->lookahead == '_') lexer->advance(lexer, false);
+    while (is_digit(lexer->lookahead) || lexer->lookahead == '_') lexer->advance(lexer, false);
     if (lexer->lookahead != '.') return false;
     lexer->advance(lexer, false);
     int32_t after = lexer->lookahead;
-    if (after == '.' || (after >= '0' && after <= '9') || after == 'e' || after == 'E') return false;
+    if (after == '.' || is_digit(after) || after == 'e' || after == 'E') return false;
     lexer->mark_end(lexer);
     lexer->result_symbol = FLOAT_TRAILING_DOT;
     return true;
@@ -552,14 +563,9 @@ static void peek_name_segment(TSLexer *lexer) {
     }
     while (1) {
         int32_t ch = lexer->lookahead;
-        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') lexer->advance(lexer, true);
+        if (is_ident_char(ch)) lexer->advance(lexer, true);
         else break;
     }
-}
-
-static bool is_name_start(int32_t c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '`';
 }
 
 // Like peek_name_segment but copies the (plain-identifier) segment into buf,
@@ -571,8 +577,7 @@ static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
     if (lexer->lookahead == '`') { if (cap > 1) { buf[0] = '`'; buf[1] = 0; } else if (cap > 0) buf[0] = 0; peek_name_segment(lexer); return; }
     while (1) {
         int32_t ch = lexer->lookahead;
-        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') {
+        if (is_ident_char(ch)) {
             if (n < cap - 1) buf[n++] = (char)ch;
             lexer->advance(lexer, true);
         } else break;
@@ -584,8 +589,7 @@ static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
 // NUL-terminated), consuming it.
 static void read_word(TSLexer *lexer, char *w, size_t cap) {
     size_t n = 0; int32_t look = lexer->lookahead;
-    while (n + 1 < cap && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
-                           (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+    while (n + 1 < cap && (is_ident_char(look))) {
         w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
     }
     w[n] = '\0';
@@ -608,7 +612,7 @@ static bool semi_blocked_word(const char *w) {
 
 static bool semi_blocked(TSLexer *lexer, int32_t first) {
     if (first == ')' || first == ']' || first == '}' || first == '|' || first == ',') return true;
-    if (first >= 'a' && first <= 'z') {
+    if (is_lower(first)) {
         char w[12]; read_word(lexer, w, sizeof w);
         return semi_blocked_word(w);
     }
@@ -727,8 +731,7 @@ static bool skip_bracket_attrs(TSLexer *lexer) {
             if (c == '>') { lexer->advance(lexer, true); if (lexer->lookahead == ']') { lexer->advance(lexer, true); break; } continue; }
             lexer->advance(lexer, true);
         }
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        skip_space(lexer);
         if (lexer->lookahead == '[') {               // another `[<...>]`?
             lexer->advance(lexer, true);
             if (lexer->lookahead == '<') { lexer->advance(lexer, true); continue; }
@@ -858,8 +861,7 @@ static bool edsl_skip_name(TSLexer *lexer) {
     if (!is_name_start(lexer->lookahead)) return false;
     for (;;) {
         int32_t ch = lexer->lookahead;
-        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
+        if (is_ident_char(ch)) { lexer->advance(lexer, true); continue; }
         break;
     }
     return true;
@@ -874,7 +876,7 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         lexer->advance(lexer, true);
         if (!edsl_skip_name(lexer)) return false;
     }
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+    skip_hspace(lexer);
     // The builder argument is either a parenthesised group (`div(attrs)`) or a
     // single string literal (`stage "x"` / `pipeline "Build"`, Fun.Build-style).
     if (lexer->lookahead == '(') {
@@ -899,23 +901,21 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
     // `foo(a, b)`\n`{ record }` isn't read as one DSL); otherwise a fluent
     // `.method( ... )` chain link may continue (those CAN sit on their own lines).
     for (;;) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '{') {
             // Only an element-DSL if the brace holds a CE body - NOT a record /
             // object-expr / copy-update. Otherwise `f "msg" { x with ... }` /
             // `f "s" { name = 1 }` must stay application(f, "msg", record/copy-update).
             lexer->advance(lexer, true);                  // past `{`
             if (lexer->lookahead == '|') return false;    // `{|` anon record
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            skip_space(lexer);
             return ce_brace_content_is_ce_body(lexer);
         }
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        skip_space(lexer);
         if (lexer->lookahead != '.') return false;        // not a chain link -> not a DSL
         lexer->advance(lexer, true);
         if (!edsl_skip_name(lexer)) return false;
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead != '(') return false;        // method must be CALLED
         if (!edsl_skip_balanced_parens(lexer)) return false;
     }
@@ -935,8 +935,7 @@ static bool element_dsl_ahead(TSLexer *lexer) {
     if (!is_name_start(lexer->lookahead)) return false;
     for (;;) {
         int32_t ch = lexer->lookahead;
-        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_' || ch == '\'') { lexer->advance(lexer, true); continue; }
+        if (is_ident_char(ch)) { lexer->advance(lexer, true); continue; }
         break;
     }
     return element_dsl_parens_brace(lexer);
@@ -968,13 +967,11 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     // at the `/`, which is not a name start and would classify as a CE body.
     // A `/`- or `(`-led NON-comment stays CE (same verdict as the checks below).
     for (;;) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        skip_space(lexer);
         if (lexer->lookahead == '/') {
             lexer->advance(lexer, true);
             if (lexer->lookahead != '/') return true;      // `/` operator expression
-            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-                lexer->advance(lexer, true);
+            skip_line(lexer);
             continue;
         }
         if (lexer->lookahead == '(') {
@@ -993,7 +990,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
                     else if (e == ')') pdepth--;
                     lexer->advance(lexer, true);
                 }
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
                 if (is_name_start(lexer->lookahead)) {
                     char wp[8] = {0};
                     peek_name_capture(lexer, wp, sizeof(wp));
@@ -1027,7 +1024,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     // Otherwise scan the leading expression: `=`/`:` (record field) or a later `with`
     // (copy-update) => NOT a CE; anything else => CE bare-expression body.
     for (int guard = 0; guard < 64; guard++) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         int32_t d = lexer->lookahead;
         if (d == '=') return false;                 // record field `name = ...`
         if (d == ':') {                             // `:` field type, but `::` is cons (CE)
@@ -1068,8 +1065,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             continue;                               // application arg / next path segment
         }
         if (d == '\n' || d == '\r') {             // `{ base`\n`  with ...`: copy-update on the next line
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            skip_space(lexer);
             if (is_name_start(lexer->lookahead)) {
                 char w[8] = {0};
                 peek_name_capture(lexer, w, sizeof(w));
@@ -1099,10 +1095,9 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
     }
 
     // Word-led dispatch (`and` / decl keywords / member words).
-    if (first >= 'a' && first <= 'z') {
+    if (is_lower(first)) {
         char w[10]; size_t n = 0; int32_t lk = lexer->lookahead;
-        while (n < 9 && ((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
-                         (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'')) {
+        while (n < 9 && (is_ident_char(lk))) {
             w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead;
         }
         w[n] = '\0';
@@ -1128,10 +1123,9 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
     if (first == '[' && top && top->sort == S_TYPEBODY && col <= top->col &&
         (valid[LAYOUT_END] || valid[LAYOUT_SEMI])) {
         if (!skip_bracket_attrs(lexer)) return false;
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+        skip_space(lexer);
         char w[10]; size_t n = 0; int32_t lk = lexer->lookahead;
-        while (n < 9 && lk >= 'a' && lk <= 'z') { w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
+        while (n < 9 && is_lower(lk)) { w[n++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
         w[n] = '\0';
         if (valid[LAYOUT_END] &&
             (!strcmp(w, "type") || !strcmp(w, "open") ||
@@ -1152,13 +1146,12 @@ static bool try_ce_brace(TSLexer *lexer, const bool *valid, int32_t first) {
     if (first != '{' || !valid[CE_BRACE_OPEN]) return false;
     lexer->advance(lexer, true);                  // past `{`
     if (lexer->lookahead == '|') return false;    // `{|` anonymous record
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-           lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+    skip_space(lexer);
     if (ce_brace_content_is_ce_body(lexer)) { lexer->result_symbol = CE_BRACE_OPEN; return true; }
     return false;
 }
 
-bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
+static bool scanner_scan(void *p, TSLexer *lexer, const bool *valid) {
     Scanner *s = p;
     lexer->mark_end(lexer);                       // zero-width baseline; re-marked only by real (FLOAT) tokens
     if (valid[ERROR_SENTINEL]) return false;      // parse-error recovery: stay out of tree-sitter's way
@@ -1198,13 +1191,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // PLAIN ctor `type T (x) =` keeps its ordinary ungated path.
         bool seen_row = false;
         for (;;) {
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            skip_space(lexer);
             if (lexer->lookahead == '/') {
                 lexer->advance(lexer, true);
                 if (lexer->lookahead != '/') return false;
-                while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-                    lexer->advance(lexer, true);
+                skip_line(lexer);
                 seen_row = true;
                 continue;
             }
@@ -1220,13 +1211,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // `type T [<ParamObject; Emit("$0")>]\n private (...)`.
         if (lexer->lookahead == 'p' || lexer->lookahead == 'i') {
             char aw[10]; size_t an = 0;
-            while (an < 9 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
+            while (an < 9 && is_lower(lexer->lookahead)) {
                 aw[an++] = (char)lexer->lookahead; lexer->advance(lexer, true);
             }
             aw[an] = '\0';
             if (strcmp(aw, "private") && strcmp(aw, "internal") && strcmp(aw, "public")) return false;
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                   lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+            skip_space(lexer);
         }
         if (lexer->lookahead == '(') { lexer->result_symbol = CTOR_ATTR; return true; }
         return false;
@@ -1243,7 +1233,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
         uint32_t bc;
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
         // A split declaration's `#if` branch ends at its own `=`: emit the break
@@ -1285,7 +1275,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         push(s, S_LAYOUT, bc); lexer->result_symbol = FOR_OPEN; return true;
     }
     if (valid[EXPR_OPEN])   {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
         push(s, S_EXPR, peek_body_col(s, lexer));
@@ -1293,7 +1283,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         lexer->result_symbol = EXPR_OPEN;   return true;
     }
     if (valid[THEN_OPEN])   {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                    lexer->lookahead != '/'  && lexer->lookahead != 0;
         push(s, S_EXPR, peek_body_col(s, lexer));
@@ -1302,7 +1292,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         lexer->result_symbol = THEN_OPEN;   return true;
     }
     if (valid[LAZY_OPEN])   {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
             lexer->lookahead != '/'  && lexer->lookahead != 0) return false;   // inline body -> plain branch
         push(s, S_EXPR, peek_body_col(s, lexer));
@@ -1316,7 +1306,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // would over-close at a later `elif`). But a NEWLINE-led else-body whose first
         // statement happens to be `if` is a REAL body - it may have more statements after
         // (`else\n if c then x\n match ...`) - so suppress ONLY for the same-line form.
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         bool nl_before = (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == '/');
         uint32_t col = peek_body_col(s, lexer);  // positions lexer at the body's first char
         // `else`\n`if ...` at the enclosing body's own column is a flat else-if
@@ -1327,8 +1317,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (lexer->lookahead == 'f') {
                 lexer->advance(lexer, true);
                 int32_t a = lexer->lookahead;
-                bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
-                            (a >= '0' && a <= '9') || a == '_' || a == '\'';
+                bool word = is_ident_char(a);
                 if (!word) return false;  // inline `else if ...` -> flat elif clause
             }
         }
@@ -1348,8 +1337,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // element `[|1.|]` mis-lex as `1` + `.|`. A digit can never start one of those
     // (they fire on a newline / a field-shape peek), so checking float first is safe.
     if (valid[FLOAT_TRAILING_DOT]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-        if (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+        skip_hspace(lexer);
+        if (is_digit(lexer->lookahead)) {
             if (scan_trailing_dot_float(lexer)) return true;
             return false;
         }
@@ -1361,7 +1350,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // so the grammar's inline alternative matches. Newline-gated like BRACKET_OPEN,
     // but pushes S_LAYOUT (dedent-close via LAYOUT_END).
     if (valid[BLOCK_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col;
             if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_DECL, col); lexer->result_symbol = BLOCK_OPEN; return true; }
@@ -1371,7 +1360,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // TYPE_OPEN: like BLOCK_OPEN but the context is S_TYPEBODY so a `with`
     // augmentation at the body column closes it (see the S_TYPEBODY boundary case).
     if (valid[TYPE_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col;
             if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
@@ -1380,7 +1369,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     }
     // FIELD_BLOCK_OPEN: a record field value that starts on the next line.
     if (valid[FIELD_BLOCK_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col; int32_t bfirst = 0;
             if (next_line_indent(s, lexer, &col, &bfirst) && top && col > top->col && bfirst != '}' && bfirst != '|') {
@@ -1392,7 +1381,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // INFIX_BLOCK_OPEN: the right operand of a line-ending `&&`/`||` starts on
     // a deeper line.
     if (valid[INFIX_BLOCK_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             uint32_t col; int32_t bfirst = 0;
             // Only a `let`/`use`-led operand needs the block; anything else
@@ -1409,7 +1398,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
     // for an empty `(`\n`)` (that is the `unit` token).
     if (valid[PAREN_BLOCK_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         int32_t c0 = lexer->lookahead;
         if (c0 == '\n' || c0 == '\r') {
             uint32_t col; int32_t bfirst = 0;
@@ -1431,7 +1420,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         push(s, S_EXPR, inline_col); s->stk[s->n - 1].par = 1; lexer->result_symbol = PAREN_BLOCK_OPEN; return true;
     }
     if (valid[BRACKET_OPEN]) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             // Block form: body on the next line(s). Decline when the next real
             // char CLOSES the bracket (`Html.div [`\n`\n`]` - empty across blank
@@ -1482,7 +1471,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (lexer->lookahead == '*') {
                 lexer->advance(lexer, true);
                 if (!skip_comment_body(lexer, true)) return false;
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
                 if (lexer->lookahead == ']' || lexer->lookahead == '}' || lexer->lookahead == '|' || lexer->lookahead == 0) return false;
                 if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
                     uint32_t col;
@@ -1509,12 +1498,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         bool ok = false;
         if (is_name_start(lexer->lookahead)) {
             peek_name_segment(lexer);
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            skip_hspace(lexer);
             while (lexer->lookahead == '.') {              // qualified field name
                 lexer->advance(lexer, true);
                 if (!is_name_start(lexer->lookahead)) break;
                 peek_name_segment(lexer);
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
             }
             if (lexer->lookahead == '=') {                 // `=` (not `==`/`=>`) -> named field
                 lexer->advance(lexer, true);
@@ -1548,7 +1537,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (lexer->lookahead != '/') return false;   // a field can't start with `/`
             lexer->advance(lexer, true);
             if (lexer->lookahead != '/') return false;   // `//` plain comment: bail (rare inside `{`)
-            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
+            skip_line(lexer);
             uint32_t c2; if (!next_line_indent(s, lexer, &c2, NULL)) return false;
             col = c2;   // the FIELD's column, not the doc's (`{ /// doc\n    Field: T`)
             nl = true;
@@ -1569,7 +1558,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // `{ inherit Base(...) [; field = ...] }` - object construction. The base
             // call is not an `=`/`:` field, so the check below would miss it.
             if (!strcmp(w0, "inherit")) { push(s, S_BRACKET, col); lexer->result_symbol = RECORD_OPEN; return true; }
-            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+            skip_hspace(lexer);
             // A leading field modifier (`mutable foo: ...`): a second identifier
             // word sits before the `:`. Skip it so the `=`/`:` check sees the
             // field, not the modifier. Copy-update (`x with ...`) / object-expr
@@ -1577,7 +1566,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // still fall through.
             if (is_name_start(lexer->lookahead)) {
                 peek_name_segment(lexer);
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
             }
             // A qualified field name (`FunctionDef.Name = ...`) - consume `.seg`
             // chains so the `=`/`:` check below still fires. A copy-update base
@@ -1587,7 +1576,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 if (!is_name_start(lexer->lookahead)) break;
                 peek_name_segment(lexer);
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
             }
             // `ti (* comment *) : int` - a block comment before the separator.
             while (lexer->lookahead == '(') {
@@ -1596,7 +1585,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);
                 if (lexer->lookahead == ')') break;      // `(*)` operator value
                 if (!skip_comment_body(lexer, true)) return false;
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
             }
             int32_t sep = lexer->lookahead;
             if (sep == '=' || sep == ':') ok = true;   // record_field / record_type_field
@@ -1620,9 +1609,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // Fire one close per call (gated by valid + the top sort); tree-sitter
     // re-invokes for multi-level (arm body, then arm-list, then `)`).
     {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+        skip_hspace(lexer);
         int32_t c = lexer->lookahead;
-        if (c != '\n' && c != '\r' && c != 0) {
+        if (!at_line_end(c)) {
             // Attribute on a labelled (member-sig) param: `[<ParamArray>] xs: obj[]`.
             // Emit a zero-width LABEL_ATTR only when `[<...>]+` is followed by
             // `ident:` (or `?ident:`). Done HERE (mid-line, gated on `c == '['`) so a
@@ -1686,14 +1675,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // then-branch has closed and the grammar expects the `else`, an
             // ENCLOSING S_EXPR (a `let_decl_indented` value wrapping a
             // parenthesised `(if ... else ...)`) is not closed as well.
-            if (valid[LABEL_GATE] && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '?' || c == '`')) {
+            if (valid[LABEL_GATE] && (is_alpha(c) || c == '_' || c == '?' || c == '`')) {
                 if (try_label_gate(lexer)) return true;
                 return false;
             }
-            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            if (is_alpha(c)) {
                 char w[10]; size_t n = 0; int32_t look = lexer->lookahead;
-                while (n < 9 && ((look >= 'a' && look <= 'z') || (look >= 'A' && look <= 'Z') ||
-                                 (look >= '0' && look <= '9') || look == '_' || look == '\'')) {
+                while (n < 9 && (is_ident_char(look))) {
                     w[n++] = (char)look; lexer->advance(lexer, true); look = lexer->lookahead;
                 }
                 w[n] = '\0';
@@ -1765,7 +1753,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // chain (`when ^t: null and ^t: struct`), which can sit inside
                     // a still-open (or stale, post-recovery) inline context.
                     if (!strcmp(w, "and") && layoutish(top->sort) && top->inl) {
-                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        skip_hspace(lexer);
                         int32_t a = lexer->lookahead;
                         if (a != '\'' && a != '^' && a != '(') {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
@@ -1819,8 +1807,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, true);            // past `{`
                 // `{|` is an anonymous-record opener, never a CE body `{`.
                 if (lexer->lookahead != '|') {
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-                           lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
+                    skip_space(lexer);
                     if (ce_brace_content_is_ce_body(lexer)) { lexer->result_symbol = CE_BRACE_OPEN; return true; }
                 }
             }
@@ -1837,7 +1824,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, false);           // consume `;`
                 if (lexer->lookahead != ';') {          // leave `;;` to the extras
                     lexer->mark_end(lexer);             // token = just the `;`
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    skip_hspace(lexer);
                     // Same-line closer right after the `;`: the inline body ends
                     // here (`f (fun () -> g (); )`, `[a; if c then x else y; ]`).
                     // valid[LAYOUT_END] already excludes `(a; )` inside a body
@@ -1852,7 +1839,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         if (closer) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                         if (a == '|') return false;     // lookahead consumed; not a closer
                     }
-                    if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == 0) {
+                    if (at_line_end(lexer->lookahead)) {
                         uint32_t ncol; int32_t nfirst = 0;
                         if (!next_line_indent(s, lexer, &ncol, &nfirst) || ncol < top->col) {
                             s->n--; lexer->result_symbol = LAYOUT_END; return true;
@@ -1873,7 +1860,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, false);           // consume `;`
                 if (lexer->lookahead != ';') {          // leave `;;` to fsi_terminator
                     lexer->mark_end(lexer);             // token = just the `;`
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    skip_hspace(lexer);
                     // A `;` that ends the file is a terminator too.
                     if (lexer->lookahead == 0) { lexer->result_symbol = DECL_SEMI; return true; }
                     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1895,12 +1882,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 lexer->advance(lexer, false);           // consume `;`
                 if (lexer->lookahead != ';') {          // leave `;;` to the extras
                     lexer->mark_end(lexer);             // token = just the `;`
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                    skip_hspace(lexer);
                     int32_t a = lexer->lookahead;
                     if (is_close_bracket(a) || a == '}' || a == ']') {
                         s->n--; lexer->result_symbol = BRACKET_CLOSE; return true;
                     }
-                    if (a == '\n' || a == '\r' || a == 0) {
+                    if (at_line_end(a)) {
                         uint32_t ncol; int32_t nfirst = 0;
                         if (next_line_indent(s, lexer, &ncol, &nfirst) &&
                             (is_close_bracket(nfirst) || nfirst == '}' || nfirst == ']')) {
@@ -1925,8 +1912,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         // consume the rest of this doc line, then any further
                         // doc-only / blank lines
                         for (;;) {
-                            while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
-                                lexer->advance(lexer, true);
+                            skip_line(lexer);
                             if (lexer->lookahead == 0) return false;
                             if (lexer->lookahead == '\r') lexer->advance(lexer, true);
                             if (lexer->lookahead == '\n') lexer->advance(lexer, true);
@@ -1952,11 +1938,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // this consumption-safe tail the word-branch above may have eaten
             // the first <=9 identifier chars; resume from wherever we are.
             if (valid[CTOR_TUPLE_GATE] &&
-                ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')) {
+                (is_alpha(c) || c == '_')) {
                 char w0[10]; size_t w0n = 0;
-                while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                       (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
-                       (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                while (is_alpha(lexer->lookahead) ||
+                       is_digit(lexer->lookahead) ||
                        lexer->lookahead == '_' || lexer->lookahead == '\'' ||
                        lexer->lookahead == '.') {
                     if (w0n < 9) w0[w0n++] = (char)lexer->lookahead;
@@ -1964,21 +1949,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 w0[w0n] = '\0';
                 const char *first_word = w0n ? w0 : s->midline_word;   // word-branch may have eaten it
-                while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                skip_hspace(lexer);
                 // `let AesKey key, AesIV iv = ...`: a constructor applied to bare
                 // argument names, then `,`. Not when the first word was a binding
                 // modifier (`let mutable a, b = ...`, `let private a, b = ...`).
                 if (!strcmp(first_word, "mutable") || !strcmp(first_word, "inline") || !strcmp(first_word, "rec") ||
                     !strcmp(first_word, "private") || !strcmp(first_word, "internal") || !strcmp(first_word, "public")) return false;
-                if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                    (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
-                    while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                           (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
-                        while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                               (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
-                               (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                if (is_alpha(lexer->lookahead) || lexer->lookahead == '_') {
+                    while (is_alpha(lexer->lookahead) || lexer->lookahead == '_') {
+                        while (is_alpha(lexer->lookahead) ||
+                               is_digit(lexer->lookahead) ||
                                lexer->lookahead == '_' || lexer->lookahead == '\'') lexer->advance(lexer, true);
-                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        skip_hspace(lexer);
                     }
                     if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
                     return false;
@@ -1986,14 +1968,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead == '(') {
                     lexer->advance(lexer, true);
                     // `let Ctor(field = pat) ...`: a named-field deconstruction.
-                    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-                    if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                        (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
-                        while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
-                               (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
-                               (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+                    skip_hspace(lexer);
+                    if (is_alpha(lexer->lookahead) || lexer->lookahead == '_') {
+                        while (is_alpha(lexer->lookahead) ||
+                               is_digit(lexer->lookahead) ||
                                lexer->lookahead == '_' || lexer->lookahead == '\'') lexer->advance(lexer, true);
-                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        skip_hspace(lexer);
                         if (lexer->lookahead == '=') {
                             lexer->advance(lexer, true);
                             if (lexer->lookahead != '=') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
@@ -2017,7 +1997,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         lexer->advance(lexer, true);
                     }
                     if (ok) {
-                        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
+                        skip_hspace(lexer);
                         if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
                         // `let Ctor(a, _) as name = ...`
                         if (lexer->lookahead == 'a') {
@@ -2219,7 +2199,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (valid[BRACKET_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = BRACKET_SEMI; return true; }
             // A DEEPER line led by a statement keyword is still a new element
             // (`[ yield a`\n`    for x in xs do ...`): no expression continues with it.
-            if (valid[BRACKET_SEMI] && col > top->col && first >= 'a' && first <= 'z') {
+            if (valid[BRACKET_SEMI] && col > top->col && is_lower(first)) {
                 char w[12]; read_word(lexer, w, sizeof w);
                 if (!strcmp(w, "yield") || !strcmp(w, "for") || !strcmp(w, "let") || !strcmp(w, "use") ||
                     !strcmp(w, "match") || !strcmp(w, "while") || !strcmp(w, "return") || !strcmp(w, "try") ||
@@ -2234,7 +2214,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // Own-line `1.` element: the mid-line float probe is unreachable
             // from the boundary path, so run it here (digit-led, nothing above
             // consumed the lookahead).
-            if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
+            if (valid[FLOAT_TRAILING_DOT] && is_digit(first) && scan_trailing_dot_float(lexer)) return true;
             return false;
         case S_MATCH:
             // `|]` / `|}` on its own line: the array / anon-record closer, never
@@ -2266,7 +2246,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (first == '[') {
                     lexer->advance(lexer, true);
                     ok = (lexer->lookahead == '<');
-                } else if (first >= 'a' && first <= 'z') {
+                } else if (is_lower(first)) {
                     char w[12]; read_word(lexer, w, sizeof w);
                     ok = !strcmp(w, "member") || !strcmp(w, "static") || !strcmp(w, "override") ||
                          !strcmp(w, "default") || !strcmp(w, "abstract") || !strcmp(w, "interface") ||
@@ -2340,8 +2320,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (lexer->lookahead == 't') { lexer->advance(lexer, true);
                 if (lexer->lookahead == 'h') { lexer->advance(lexer, true);
                     int32_t a = lexer->lookahead;
-                    bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
-                                (a >= '0' && a <= '9') || a == '_' || a == '\'';
+                    bool word = is_ident_char(a);
                     if (!word) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                 }}}
             }
@@ -2353,15 +2332,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // `type` too: a non-indented DU (`| A` at column 0) followed by the
             // next `type` decl - with or without an attribute row before it.
             if (top->sort == S_TYPEBODY && valid[LAYOUT_END] && col == top->col &&
-                ((first >= 'a' && first <= 'z') || first == '[')) {
+                (is_lower(first) || first == '[')) {
                 bool ok = true;
                 if (first == '[') ok = skip_bracket_attrs(lexer);
                 if (ok) {
                     char w[12]; size_t wn = 0; int32_t lk = lexer->lookahead;
-                    while (wn < 11 && lk >= 'a' && lk <= 'z') { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
+                    while (wn < 11 && is_lower(lk)) { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
                     w[wn] = '\0';
-                    bool boundary = !((lk >= 'a' && lk <= 'z') || (lk >= 'A' && lk <= 'Z') ||
-                                      (lk >= '0' && lk <= '9') || lk == '_' || lk == '\'');
+                    bool boundary = !(is_ident_char(lk));
                     if (boundary && (!strcmp(w, "open") || !strcmp(w, "module") ||
                                      !strcmp(w, "namespace") || !strcmp(w, "exception") ||
                                      !strcmp(w, "type"))) {
@@ -2380,7 +2358,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 // bare-expression statement.
                 // Both tests need the line's first word; read it ONCE (each
                 // helper consumes it, so chaining them made the second see "").
-                if (first >= 'a' && first <= 'z') {
+                if (is_lower(first)) {
                     char w[12]; read_word(lexer, w, sizeof w);
                     // `with`/`finally` AT the try body's column ends the body
                     // (`try Map.find x g`\n`    with _ -> ...`, body col = `Map`).
@@ -2419,7 +2397,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // start, so run it here. `[` cannot start either probe below.
             if (first == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
             if (valid[LABEL_GATE] && col > top->col &&
-                ((first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z') || first == '_' || first == '?' || first == '`')) {
+                (is_alpha(first) || first == '_' || first == '?' || first == '`')) {
                 if (try_label_gate(lexer)) return true;
                 return false;
             }
@@ -2433,8 +2411,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (try_ce_brace(lexer, valid, first)) return true;
             // Own-line `10.` continuation argument (`Expect.equal x`\n`    10.`\n
             // `    "msg"`): same as the S_BRACKET tail above.
-            if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
+            if (valid[FLOAT_TRAILING_DOT] && is_digit(first) && scan_trailing_dot_float(lexer)) return true;
             return false;
     }
     return false;
 }
+
+// The signature grammar includes this file and exports the same scanner under
+// its own name.
+#ifndef TS_SHARED_SCANNER
+void *tree_sitter_fsharp_external_scanner_create(void) { return scanner_create(); }
+void tree_sitter_fsharp_external_scanner_destroy(void *p) { scanner_destroy(p); }
+unsigned tree_sitter_fsharp_external_scanner_serialize(void *p, char *buf) { return scanner_serialize(p, buf); }
+void tree_sitter_fsharp_external_scanner_deserialize(void *p, const char *buf, unsigned len) { scanner_deserialize(p, buf, len); }
+bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const bool *valid) { return scanner_scan(p, lexer, valid); }
+#endif
