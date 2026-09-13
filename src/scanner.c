@@ -4,19 +4,20 @@
 #include <string.h>
 
 // ============================================================================
-// Uniform-layout external scanner for F# (rewrite — see LAYOUT_REWRITE.md).
+// Uniform-layout external scanner for F#.
 //
-// Model (from tree-sitter-haskell, validated by spike/poc):
+// Model (after tree-sitter-haskell):
 //   * OPENS are GRAMMAR-driven: the grammar emits a zero-width open token right
 //     after the layout keyword (`=` / `then` / `->` / `do` / `with` / `[` / `{`).
 //     The scanner reacts by pushing a context at the body's first-token column.
 //     It does NOT guess which construct opens.
 //   * CLOSES / SEPARATORS are SCANNER-driven by column comparison, but GATED on
-//     `valid(...)` — true when the grammar expects that token OR on parse-error
+//     `valid(...)` - true when the grammar expects that token OR on parse-error
 //     recovery (all-symbols-valid). The scanner decides only WHETHER to close at
 //     this indent, never WHICH construct.
-//   * One context stack, three sorts. Multi-level dedent = one close per scan
-//     call; tree-sitter re-invokes at the same (mark_end-restored) position.
+//   * One context stack of sorts (see Sort below). Multi-level dedent = one
+//     close per scan call; tree-sitter re-invokes at the same
+//     (mark_end-restored) position.
 //
 // Token enum MUST match the `externals:` order in grammar.js.
 // ============================================================================
@@ -30,34 +31,34 @@ typedef enum {
     BRACKET_OPEN,       // [ / [| / { block body on its own line(s)
     BRACKET_SEMI,       // newline-aligned element/field separator
     BRACKET_CLOSE,      // ] / |] / } closing a block bracket
-    RECORD_OPEN,        // `{` record body — peeks `ident =`/`ident :`; suppressed for new/copy-update
+    RECORD_OPEN,        // `{` record body - peeks `ident =`/`ident :`; suppressed for new/copy-update
     BLOCK_OPEN,         // newline-gated layout open for MODULE bodies (S_LAYOUT, closes via LAYOUT_END)
-    TYPE_OPEN,          // newline-gated layout open for TYPE bodies (S_TYPEBODY — also closes before `with`)
-    EXPR_OPEN,          // expression body (then/elif body, lambda, let-in value) — S_EXPR
-    ELSE_OPEN,          // final-else body — S_EXPR, but SUPPRESSED when next token is `if`
+    TYPE_OPEN,          // newline-gated layout open for TYPE bodies (S_TYPEBODY - also closes before `with`)
+    EXPR_OPEN,          // expression body (then/elif body, lambda, let-in value) - S_EXPR
+    ELSE_OPEN,          // final-else body - S_EXPR, but SUPPRESSED when next token is `if`
                         //   (`else if` flattens to an elif clause, no nested else-body)
     FLOAT_TRAILING_DOT, // lexical: `1.` trailing-dot float (unrelated to layout)
-    INTERP_STRING_TEXT,   // text chunk in $"…"   (external so // isn't a comment)
-    INTERP_VERBATIM_TEXT, // text chunk in $@"…" / @$"…"
-    INTERP_TRIPLE_TEXT,   // text chunk in $"""…"""
-    FOR_OPEN,             // `for … do` body open; suppressed for query-CE operators
-    CTOR_ATTR,            // zero-width: attribute on a primary ctor — only when `[<…>]+ (` follows
-    TRY_OPEN,             // try/finally body open (S_TRY) — closes before `with`/`finally`
-    LABEL_ATTR,           // zero-width: attribute on a labelled param — only when `[<…>]+ ident:` follows
-    ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder — only when `ident ( … ) {` follows
-    AND_DOCS_OPEN,        // zero-width: `///` doc lines followed by the word `and` — docs attach to the and-clause
-    CASE_DOCS_OPEN,       // zero-width: `///` doc lines followed by `|` — docs attach to the union/enum case
-    PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = …)` — S_BRACKET context for newline fields
-    CE_BRACE_OPEN,        // the `{` of a computation_expression body — consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
-    BLOCK_COMMENT,        // `(* … *)` NESTED (regex can't nest)
-    BLOCK_DOC_COMMENT,    // `(** … *)` doc form
-    THEN_OPEN,            // then/elif body open — S_EXPR with thn=1 (mid-line `else` may close it)
-    LAZY_OPEN,            // lazy block-body open — S_EXPR, declines INLINE bodies
-    CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` — only when `ident ( … ) ,` follows
-    PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature — ends the member before the next branch's declaration line
-    DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line — consumed as trivia (extras) so the sequence can end
-    MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`⏎`    member …`) — pushes S_TYPEBODY
-    LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) — a labelled type element (`x: int -> …`)
+    INTERP_STRING_TEXT,   // text chunk in $"..."   (external so // isn't a comment)
+    INTERP_VERBATIM_TEXT, // text chunk in $@"..." / @$"..."
+    INTERP_TRIPLE_TEXT,   // text chunk in $"""..."""
+    FOR_OPEN,             // `for ... do` body open; suppressed for query-CE operators
+    CTOR_ATTR,            // zero-width: attribute on a primary ctor - only when `[<...>]+ (` follows
+    TRY_OPEN,             // try/finally body open (S_TRY) - closes before `with`/`finally`
+    LABEL_ATTR,           // zero-width: attribute on a labelled param - only when `[<...>]+ ident:` follows
+    ELEMENT_DSL_OPEN,     // zero-width: Oxpecker element-DSL builder - only when `ident ( ... ) {` follows
+    AND_DOCS_OPEN,        // zero-width: `///` doc lines followed by the word `and` - docs attach to the and-clause
+    CASE_DOCS_OPEN,       // zero-width: `///` doc lines followed by `|` - docs attach to the union/enum case
+    PAREN_FIELD_OPEN,     // named-field-pattern body open `Foo(ident = ...)` - S_BRACKET context for newline fields
+    CE_BRACE_OPEN,        // the `{` of a computation_expression body - consumed+emitted ONLY when brace content is a CE body (not record/object/copy-update)
+    BLOCK_COMMENT,        // `(* ... *)` NESTED (regex can't nest)
+    BLOCK_DOC_COMMENT,    // `(** ... *)` doc form
+    THEN_OPEN,            // then/elif body open - S_EXPR with thn=1 (mid-line `else` may close it)
+    LAZY_OPEN,            // lazy block-body open - S_EXPR, declines INLINE bodies
+    CTOR_TUPLE_GATE,      // zero-width: `let Ctor(a, b), rest` - only when `ident ( ... ) ,` follows
+    PREPROC_BREAK,        // zero-width: a `#if`-family directive line splits a signature - ends the member before the next branch's declaration line
+    DECL_SEMI,            // a statement-terminating `;` directly before a DECLARATION line - consumed as trivia (extras) so the sequence can end
+    MEMBERS_OPEN,         // zero-width: members indented below a SAME-LINE type body (`type DU = | A`\n`    member ...`) - pushes S_TYPEBODY
+    LABEL_GATE,           // zero-width: `ident :` ahead (not `::` `:>` `:?` `:=`) - a labelled type element (`x: int -> ...`)
     PAREN_BLOCK_OPEN,     // zero-width: `(` followed by a newline - pushes S_EXPR at the body column, closed by `)`
     INFIX_BLOCK_OPEN,     // zero-width: `&&`/`||` then a newline and a deeper line - pushes S_EXPR at that column
     FIELD_BLOCK_OPEN,     // zero-width: record field `=` then a newline - pushes S_EXPR at the value column
@@ -65,22 +66,22 @@ typedef enum {
 
 // Sorts (all dedent-close via LAYOUT_END except as noted):
 //   S_LAYOUT   generic decl body (let/member/module body)
-//   S_TYPEBODY type body — ALSO closes before a `with` augmentation at body col
-//   S_EXPR     expression body (then/elif/else/lambda/let-in value) — ALSO closes
+//   S_TYPEBODY type body - ALSO closes before a `with` augmentation at body col
+//   S_EXPR     expression body (then/elif/else/lambda/let-in value) - ALSO closes
 //              before an inline `else`/`elif`/`in`. Crucially a DECL body
-//              (S_LAYOUT) does NOT, so `module M =⏎ let f = if a then 1 else 0⏎
+//              (S_LAYOUT) does NOT, so `module M =\n let f = if a then 1 else 0\n
 //              let g` closes only the then-body at `else`, not the module body.
 //   S_MATCH    arm-list (closes on dedent below arm col; no semicolons)
-//   S_BRACKET  [ / [| / { … explicit-close
-//   S_DECL     module/source declaration body — like S_LAYOUT, but a
+//   S_BRACKET  [ / [| / { ... explicit-close
+//   S_DECL     module/source declaration body - like S_LAYOUT, but a
 //              `_layout_semi` is NEVER emitted before a declaration keyword
-//              (`let`/`type`/`module`/…). A module body is `repeat(_token)`, so a
+//              (`let`/`type`/`module`/...). A module body is `repeat(_token)`, so a
 //              bare-expression `_token` must not extend into the next declaration
-//              as a `sequence_expression` (`ignore x⏎ let y = …` is two decls,
-//              whereas a function body — S_LAYOUT — DOES sequence `let` as let-in).
-//   S_TRY      try / finally body — like S_EXPR, but ALSO closes before an inline
+//              as a `sequence_expression` (`ignore x\n let y = ...` is two decls,
+//              whereas a function body - S_LAYOUT - DOES sequence `let` as let-in).
+//   S_TRY      try / finally body - like S_EXPR, but ALSO closes before an inline
 //              `with`/`finally` (a dedicated sort so the close is try-specific and
-//              doesn't fire for a `match … with` inside an enclosing expr body).
+//              doesn't fire for a `match ... with` inside an enclosing expr body).
 typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY } Sort;
 
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
@@ -119,7 +120,7 @@ typedef struct {
 } Scanner;
 
 static bool skip_bracket_attrs(TSLexer *lexer);
-// `let x = v in …` on ONE line: true when a bare `in` (outside brackets and
+// `let x = v in ...` on ONE line: true when a bare `in` (outside brackets and
 // strings) follows on the rest of the line. Consumes lookahead.
 static bool line_has_in_keyword(TSLexer *lexer) {
     int depth = 0; int32_t prev = ' ';
@@ -203,7 +204,7 @@ static bool try_label_gate(TSLexer *lexer) {
     lexer->result_symbol = LABEL_GATE; return true;
 }
 
-// `[<…>]+ ident:` / `[<…>]+ ?ident:` ahead: an attribute on a LABELLED
+// `[<...>]+ ident:` / `[<...>]+ ?ident:` ahead: an attribute on a LABELLED
 // (member-signature / delegate) parameter. Consumes lookahead; the caller
 // must not probe further on a miss.
 static bool try_label_attr(TSLexer *lexer) {
@@ -224,7 +225,7 @@ static bool try_label_attr(TSLexer *lexer) {
 
 // Is there a match/try/function arm-list (S_MATCH) anywhere on the stack? Used to
 // tell a real match-arm `|` (close the inline arm body first) from a UNION case
-// separator `type X = A | B` (no arm-list — must NOT close the enclosing body).
+// separator `type X = A | B` (no arm-list - must NOT close the enclosing body).
 static bool has_match_ctx(Scanner *s) {
     for (int i = (int)s->n - 1; i >= 0; i--) if (s->stk[i].sort == S_MATCH) return true;
     return false;
@@ -256,19 +257,10 @@ static void push(Scanner *s, uint8_t sort, uint32_t col) {
     if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = (uint16_t)col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->n++; }
 }
 
-// Compute the indent + first significant char of the NEXT non-blank, non-comment
-// line. Returns false at EOF. Reused verbatim from the old scanner (handles `//`
-// line comments, `(* *)` nested block comments, and `#if/#elif/#else/#endif`
-// conditional-compilation lines which are extras transparent to the offside rule).
-// Consume a block comment from just AFTER its `(*` (already advanced with
-// advance(false), so the token starts at the `(`) through the MATCHING `*)`
-// (nesting-aware) and emit BLOCK_COMMENT / BLOCK_DOC_COMMENT. External because
-// a token regex cannot nest. Returns false on EOF (unterminated) or when
-// neither symbol is valid — the reset internal lexer takes over.
 // Skip the body of a block comment whose `(*` is already consumed, through
 // its matching `*)`. Nested comments and string literals inside the comment
 // are honoured as FSC does (`(* the "*)" token *)` does not end at the quoted
-// `*)`; `@"…"` has no escapes; `'"'` is a char). false on EOF.
+// `*)`; `@"..."` has no escapes; `'"'` is a char). false on EOF.
 static bool skip_comment_body(TSLexer *lexer, bool skip) {
     int depth = 1; int32_t prev = 0;
     while (depth > 0) {
@@ -301,13 +293,18 @@ static bool skip_comment_body(TSLexer *lexer, bool skip) {
     return true;
 }
 
+// Consume a block comment from just AFTER its `(*` (already advanced with
+// advance(false), so the token starts at the `(`) through the MATCHING `*)`
+// (nesting-aware) and emit BLOCK_COMMENT / BLOCK_DOC_COMMENT. External because
+// a token regex cannot nest. Returns false on EOF (unterminated) or when
+// neither symbol is valid - the reset internal lexer takes over.
 static bool finish_block_comment(TSLexer *lexer, const bool *valid) {
     if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
     if (lexer->lookahead == ')') return false;   // `(*)` = the multiply operator value, not a comment
     bool doc = false;
-    if (lexer->lookahead == '*') {                 // `(**` — doc form…
+    if (lexer->lookahead == '*') {                 // `(**` - doc form...
         lexer->advance(lexer, false);
-        if (lexer->lookahead == ')') {             // …unless `(**)`: EMPTY normal comment
+        if (lexer->lookahead == ')') {             // ...unless `(**)`: EMPTY normal comment
             lexer->advance(lexer, false);
             lexer->mark_end(lexer);
             lexer->result_symbol = valid[BLOCK_COMMENT] ? BLOCK_COMMENT : BLOCK_DOC_COMMENT;
@@ -329,6 +326,10 @@ static bool word_is_decl_kw(const char *w) {
            !strcmp(w, "val") || !strcmp(w, "interface") || !strcmp(w, "new");
 }
 
+// Compute the indent + first significant char of the NEXT non-blank, non-comment
+// line. Returns false at EOF. Skips `//` line comments, `(* *)` nested block
+// comments and `#if/#elif/#else/#endif` lines, which are extras transparent to
+// the offside rule.
 static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t *first) {
     s->skipped_doc_lines = false;
     s->skipped_line_comments = false;
@@ -349,7 +350,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             // comment/doc line's start. Tokens this scan emits (CASE/AND doc
             // gates, closes) then anchor AT the `///` block, so a documented
             // case/and-clause node STARTS at its docs (expand-selection
-            // extents). The scan RESUMES from here afterwards — the mid-line
+            // extents). The scan RESUMES from here afterwards - the mid-line
             // doc-resume dispatch in the scan body handles that position.
             if (s->region_stop && s->doc_gate_possible && indent >= s->top_col_for_docs && !marked_line_start) { lexer->mark_end(lexer); marked_line_start = true; }
             lexer->advance(lexer, true);
@@ -372,7 +373,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             if (lexer->lookahead != '*') { if (first) *first = '('; *col = indent; return true; }
             if (s->region_stop) {
                 // Line-start block comment, MAIN boundary call. Consume it with
-                // advance(false) — the token (if emitted) starts at the `(`; for
+                // advance(false) - the token (if emitted) starts at the `(`; for
                 // any OTHER outcome those advances are harmless (zero-width
                 // layout tokens never re-mark past the baseline).
                 lexer->advance(lexer, false);          // the `*`
@@ -397,12 +398,12 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                     // zero-width close/semi would SWALLOW the comment text.
                     // Comment-ONLY line: emit it as ONE token BEFORE any close
                     // (extras are transparent; closes fire on re-scan with
-                    // post-comment geometry). Handles NESTING — the reason the
+                    // post-comment geometry). Handles NESTING - the reason the
                     // internal regex fallback can't do this one.
                     if (first) *first = 2; *col = indent; return true;
                 }
                 // Comment-LED line (`(* 4 *) 7`, aligned arrays): geometry first
-                // — col is the COMMENT's start indent, first the real char; the
+                // - col is the COMMENT's start indent, first the real char; the
                 // comment itself lexes via the internal-regex fallback later.
                 // (KNOWN GAP: a NESTED comment here truncates in the fallback.)
                 if (first) *first = lexer->lookahead;
@@ -412,7 +413,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             lexer->advance(lexer, true);
             if (lexer->lookahead == ')') { if (first) *first = '('; *col = indent; return true; }  // `(*)`
             if (!skip_comment_body(lexer, true)) return false;
-            // CONTENT may follow the comment on the same line — a comment-LED
+            // CONTENT may follow the comment on the same line - a comment-LED
             // element (`(* 4 *) 7`, PriorityQueue-style aligned arrays). The
             // line then counts: its column is the COMMENT's start indent (where
             // the element visually begins) and `first` is the first real char.
@@ -432,20 +433,15 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
             char w[8]; size_t wi = 0;
             while (wi < 7 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') { w[wi++] = (char)lexer->lookahead; lexer->advance(lexer, true); }
             w[wi] = '\0';
-            // `#nowarn`/`#warnon` are skipped like the `#if` family so they
-            // don't dedent-close an open body when interspersed (e.g. between
-            // union cases, Argu style); the directive tokens themselves are
-            // consumed by the grammar where it allows `preproc_directive`.
-            // NOT `#load`/`#r`: those are top-level statements that RELY on
-            // the dedent-close firing at their line.
-            // `#if`-family / `#nowarn` / `#line` lines are skipped like
-            // comment lines so they never dedent-close an open body.
-            // `#elif`/`#else`: BOTH branches parse as real code (user choice:
-            // Fable-style dual-path projects carry full-sized #else branches
-            // that deserve real highlighting). The directive LINE is skipped
-            // for geometry, exactly like the `#if` family below. Known cost:
-            // exotic keyword-splices (`#if A⏎let⏎#else⏎use⏎#endif`, FParsec)
-            // don't parse — rare and accepted.
+            // `#if`-family, `#nowarn`/`#warnon` and `#line` lines are skipped
+            // like comment lines so they never dedent-close an open body (e.g.
+            // `#nowarn` between union cases, Argu style); the grammar consumes
+            // the directive tokens where it allows `preproc_directive`. NOT
+            // `#load`/`#r`: those are top-level statements that RELY on the
+            // dedent-close firing at their line. BOTH `#if` and `#else` branches
+            // parse as real code (Fable-style dual-path projects carry
+            // full-sized #else branches). Known cost: keyword splices
+            // (`#if A`\n`let`\n`#else`\n`use`\n`#endif`, FParsec) don't parse.
             if (strcmp(w, "if") == 0 || strcmp(w, "endif") == 0 ||
                 strcmp(w, "elif") == 0 || strcmp(w, "else") == 0 ||
                 strcmp(w, "nowarn") == 0 || strcmp(w, "warnon") == 0 ||
@@ -456,7 +452,7 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
                 if (lexer->lookahead == 0) return false;
                 continue;
             }
-            // `# 14 "pars.fs"` — fsyacc/fslex line directive: trivia, skip the line.
+            // `# 14 "pars.fs"` - fsyacc/fslex line directive: trivia, skip the line.
             if (wi == 0) {
                 int32_t dl = lexer->lookahead;
                 while (dl == ' ' || dl == '\t') { lexer->advance(lexer, true); dl = lexer->lookahead; }
@@ -479,8 +475,8 @@ static bool next_line_indent(Scanner *s, TSLexer *lexer, uint32_t *col, int32_t 
 static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
     uint32_t col = lexer->get_column(lexer);
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
-    // A trailing comment after the opener keyword (`match x with // …`,
-    // `let x = (* … *)`) means the body/arms start on a later line — defer to
+    // A trailing comment after the opener keyword (`match x with // ...`,
+    // `let x = (* ... *)`) means the body/arms start on a later line - defer to
     // next_line_indent (which skips comment-only lines) instead of taking the
     // comment's column as the body column.
     if (lexer->lookahead == '/') {
@@ -493,12 +489,12 @@ static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
         if (lexer->lookahead == '*') {
             // Block comment. CONTENT may follow it on the SAME line
             // (`| A -> (* tailcall *) f res`, FCS DiagnosticsLogger style):
-            // skip the comment (depth-aware) and check — inline content keeps
+            // skip the comment (depth-aware) and check - inline content keeps
             // the comment's start column as the body column (mirrors
             // next_line_indent's comment-led-element rule); otherwise the body
             // is on a later line.
             lexer->advance(lexer, true);
-            if (lexer->lookahead == ')') return col;  // `(*)` = the multiply operator value, not a comment — inline body at the `(`
+            if (lexer->lookahead == ')') return col;  // `(*)` = the multiply operator value, not a comment - inline body at the `(`
             if (!skip_comment_body(lexer, true)) return 0;
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0)
@@ -516,7 +512,7 @@ static uint32_t peek_body_col(Scanner *s, TSLexer *lexer) {
 }
 
 // Match a trailing-dot float literal (`1.`, `20.`) at the current position.
-// (Verbatim from the old scanner — lexical, independent of layout.)
+// Lexical, independent of layout.
 static bool scan_trailing_dot_float(TSLexer *lexer) {
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
     if (lexer->lookahead < '0' || lexer->lookahead > '9') return false;
@@ -539,10 +535,10 @@ static bool is_opchar(int32_t c) {
            c == '|' || c == '~' || c == '$' || c == ':';
 }
 
-// Consume one identifier segment at the lookahead — a plain ident
+// Consume one identifier segment at the lookahead - a plain ident
 // (`Foo`/`foo'`/`x9`) or a ``quoted name``. Caller ensures the first char is an
 // identifier start. Used by the RECORD_OPEN field peek so a qualified field name
-// (`FunctionDef.Name = …`) is recognised as a field, not a copy-update base.
+// (`FunctionDef.Name = ...`) is recognised as a field, not a copy-update base.
 static void peek_name_segment(TSLexer *lexer) {
     if (lexer->lookahead == '`') {                // ``quoted name``
         lexer->advance(lexer, true);
@@ -569,7 +565,7 @@ static bool is_name_start(int32_t c) {
 // Like peek_name_segment but copies the (plain-identifier) segment into buf,
 // NUL-terminated and truncated to cap. A backtick segment yields "`" (which
 // never matches a plain keyword). Lets the RECORD_OPEN peek tell an object
-// expression (`{ new … }`) from a copy-update base on its own line.
+// expression (`{ new ... }`) from a copy-update base on its own line.
 static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
     int n = 0;
     if (lexer->lookahead == '`') { if (cap > 1) { buf[0] = '`'; buf[1] = 0; } else if (cap > 0) buf[0] = 0; peek_name_segment(lexer); return; }
@@ -584,14 +580,6 @@ static void peek_name_capture(TSLexer *lexer, char *buf, int cap) {
     if (cap > 0) buf[n < cap ? n : cap - 1] = 0;
 }
 
-// A line whose first significant char/word does NOT start a new statement, so a
-// LAYOUT_SEMI before it would be wrong (it continues the current construct):
-//   * closing delimiters `)` `]` `}` and `|` (match arm / `|>` pipe);
-//   * a leading `,` — a tuple / argument-list separator (`f(⏎ a⏎ , b)`), never a
-//     statement start;
-//   * continuation keywords of an enclosing if/try/let (`else`/`elif`/`then`/
-//     `with`/`finally`/`in`/`and`).
-// `first` is the leading char (from next_line_indent, where lookahead==first).
 // Read the identifier-shaped word at the lexer position into w (cap bytes,
 // NUL-terminated), consuming it.
 static void read_word(TSLexer *lexer, char *w, size_t cap) {
@@ -603,6 +591,14 @@ static void read_word(TSLexer *lexer, char *w, size_t cap) {
     w[n] = '\0';
 }
 
+// A line whose first significant char/word does NOT start a new statement, so a
+// LAYOUT_SEMI before it would be wrong (it continues the current construct):
+//   * closing delimiters `)` `]` `}` and `|` (match arm / `|>` pipe);
+//   * a leading `,` - a tuple / argument-list separator (`f(`\n` a`\n` , b)`), never a
+//     statement start;
+//   * continuation keywords of an enclosing if/try/let (`else`/`elif`/`then`/
+//     `with`/`finally`/`in`/`and`).
+// `first` is the leading char (from next_line_indent, where lookahead==first).
 static bool semi_blocked_word(const char *w) {
     return !strcmp(w, "else") || !strcmp(w, "elif") || !strcmp(w, "then") ||
            !strcmp(w, "with") || !strcmp(w, "finally") || !strcmp(w, "in") || !strcmp(w, "and") ||
@@ -623,11 +619,11 @@ static bool semi_blocked(TSLexer *lexer, int32_t first) {
 // consuming) at the next structural token: `{` interpolation, closing quote, or
 // `%` printf/percent. Doubled braces `{{`/`}}` and (per kind) escapes/quotes are
 // part of the text. `mark_end` is advanced only over confirmed text, so an
-// over-peeked terminator is excluded from the token. Returns true iff ≥1 char of
+// over-peeked terminator is excluded from the token. Returns true iff >=1 char of
 // text was consumed; on false the caller returns false and tree-sitter lexes the
 // structural token itself (resuming from the pre-scan position).
 //
-// Done in the external scanner — which runs BEFORE extra-skipping — so a leading
+// Done in the external scanner - which runs BEFORE extra-skipping - so a leading
 // `//` is consumed as text instead of being lexed as a `line_comment` extra.
 typedef enum { TX_STRING, TX_VERBATIM, TX_TRIPLE } TextKind;
 
@@ -658,7 +654,7 @@ static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
             }
             consumed = true; lexer->mark_end(lexer); continue;       // lone " text
         }
-        if (c == '\\' && kind == TX_STRING) {           // escape: \\ , \n , \uXXXX … (lenient)
+        if (c == '\\' && kind == TX_STRING) {           // escape: \\ , \n , \uXXXX ... (lenient)
             lexer->advance(lexer, false);
             if (lexer->lookahead != 0) lexer->advance(lexer, false);
             consumed = true; lexer->mark_end(lexer); continue;
@@ -670,7 +666,7 @@ static bool scan_interp_text(TSLexer *lexer, TextKind kind) {
 }
 
 // In an S_DECL (module/source) body, a line beginning with one of these keywords
-// starts a fresh declaration `_token` — never a continuation of the previous
+// starts a fresh declaration `_token` - never a continuation of the previous
 // bare-expression statement. Blocking LAYOUT_SEMI before them stops the previous
 // `_token` from absorbing the declaration into a `sequence_expression` (which then
 // fails when, e.g., the `let` has no continuation). `first` is the leading char.
@@ -684,11 +680,11 @@ static bool decl_starter_word(const char *w) {
 }
 
 static bool decl_starter(TSLexer *lexer, int32_t first) {
-    // `[<Attr>]` on its own line — an attribute row always decorates the NEXT
+    // `[<Attr>]` on its own line - an attribute row always decorates the NEXT
     // declaration, never continues the previous statement. (A bare `[` is a list
     // literal, which IS a statement.)
     if (first == '[') { lexer->advance(lexer, true); return lexer->lookahead == '<'; }
-    // `#load` / `#r` / `#nowarn` / … — a directive is its own `_token`.
+    // `#load` / `#r` / `#nowarn` / ... - a directive is its own `_token`.
     // (`#if`/`#elif`/`#else`/`#endif` lines are skipped by next_line_indent.)
     if (first == '#') return true;
     if (first < 'a' || first > 'z') return false;
@@ -698,16 +694,16 @@ static bool decl_starter(TSLexer *lexer, int32_t first) {
 
 // Body column for a layout open, plus the split-branch verdict: the body we are
 // about to open sits behind a `#else`/`#elif` and starts a DECLARATION, so this
-// `=` closed the `#if` branch of a declaration written twice (`#if X`⏎`let f x =`
-// ⏎`#else`⏎`let f x =`⏎`#endif`⏎`    body`) and the body belongs to the LAST
-// branch. The caller declines the open, leaving the body `optional(…)` empty.
+// `=` closed the `#if` branch of a declaration written twice (`#if X`\n`let f x =`
+// \n`#else`\n`let f x =`\n`#endif`\n`    body`) and the body belongs to the LAST
+// branch. The caller declines the open, leaving the body `optional(...)` empty.
 static bool split_branch_body(Scanner *s, TSLexer *lexer, uint32_t *body_col) {
     s->skipped_alt_directive = false;              // peek_body_col skips the reset for an INLINE body
     *body_col = peek_body_col(s, lexer);
     return s->skipped_alt_directive && decl_starter(lexer, lexer->lookahead);
 }
 
-// Consume one or more consecutive `[<…>]` attributes, leaving the lexer at the
+// Consume one or more consecutive `[<...>]` attributes, leaving the lexer at the
 // first non-whitespace char AFTER them. Skips strings (which may contain `>]`).
 // Returns false if not actually at `[<`. Used by the CTOR_ATTR / LABEL_ATTR peeks.
 static bool skip_bracket_attrs(TSLexer *lexer) {
@@ -733,7 +729,7 @@ static bool skip_bracket_attrs(TSLexer *lexer) {
         }
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
-        if (lexer->lookahead == '[') {               // another `[<…>]`?
+        if (lexer->lookahead == '[') {               // another `[<...>]`?
             lexer->advance(lexer, true);
             if (lexer->lookahead == '<') { lexer->advance(lexer, true); continue; }
             return false;
@@ -743,14 +739,14 @@ static bool skip_bracket_attrs(TSLexer *lexer) {
     return true;
 }
 
-// Skip a `"`-initiated string at the opening quote: triple `"""…"""` or regular
-// `"…"` (with `\"` escape). Lexer ends just past the closing quote(s).
+// Skip a `"`-initiated string at the opening quote: triple `"""..."""` or regular
+// `"..."` (with `\"` escape). Lexer ends just past the closing quote(s).
 static void edsl_skip_dquote(TSLexer *lexer) {
     lexer->advance(lexer, true);                          // opening "
     if (lexer->lookahead == '"') {
         lexer->advance(lexer, true);
         if (lexer->lookahead != '"') return;             // empty "" string
-        lexer->advance(lexer, true);                     // triple """ … """
+        lexer->advance(lexer, true);                     // triple """ ... """
         int q = 0;
         while (lexer->lookahead != 0) {
             if (lexer->lookahead == '"') { q++; lexer->advance(lexer, true); if (q == 3) break; }
@@ -765,7 +761,7 @@ static void edsl_skip_dquote(TSLexer *lexer) {
     if (lexer->lookahead == '"') lexer->advance(lexer, true);
 }
 
-// Skip a verbatim `@"…"` body at the opening quote; `""` is an escaped quote.
+// Skip a verbatim `@"..."` body at the opening quote; `""` is an escaped quote.
 static void edsl_skip_verbatim(TSLexer *lexer) {
     lexer->advance(lexer, true);                          // opening "
     while (lexer->lookahead != 0) {
@@ -778,11 +774,11 @@ static void edsl_skip_verbatim(TSLexer *lexer) {
     }
 }
 
-// Consume a balanced `( … )` group with the lexer positioned at the opening `(`.
-// Args MAY span lines (`div(class'="a"⏎ , id="b")`), so every string/comment form
-// is skipped to keep the paren depth exact — a `)`, `{` or `"` inside a string
+// Consume a balanced `( ... )` group with the lexer positioned at the opening `(`.
+// Args MAY span lines (`div(class'="a"\n , id="b")`), so every string/comment form
+// is skipped to keep the paren depth exact - a `)`, `{` or `"` inside a string
 // must not miscount (this is what made an earlier newline-allowing version
-// mis-fire on an emoticon `:^)` inside a triple string in a multi-line `(fun … )`
+// mis-fire on an emoticon `:^)` inside a triple string in a multi-line `(fun ... )`
 // arg). Returns false on EOF / runaway.
 static bool edsl_skip_balanced_parens(TSLexer *lexer) {
     int depth = 0, guard = 0;
@@ -791,13 +787,13 @@ static bool edsl_skip_balanced_parens(TSLexer *lexer) {
         int32_t c = lexer->lookahead;
         if (c == 0) return false;
         if (c == '"') { edsl_skip_dquote(lexer); continue; }
-        if (c == '@') {                                  // @"verbatim" / @$"…"
+        if (c == '@') {                                  // @"verbatim" / @$"..."
             lexer->advance(lexer, true);
             if (lexer->lookahead == '$') lexer->advance(lexer, true);
             if (lexer->lookahead == '"') edsl_skip_verbatim(lexer);
             continue;
         }
-        if (c == '$') {                                  // $"interp" / $@"…" / $"""…"""
+        if (c == '$') {                                  // $"interp" / $@"..." / $"""..."""
             lexer->advance(lexer, true);
             if (lexer->lookahead == '@') { lexer->advance(lexer, true); if (lexer->lookahead == '"') edsl_skip_verbatim(lexer); }
             else if (lexer->lookahead == '"') edsl_skip_dquote(lexer);
@@ -810,7 +806,7 @@ static bool edsl_skip_balanced_parens(TSLexer *lexer) {
         }
         if (c == '(') {
             lexer->advance(lexer, true);
-            if (lexer->lookahead == '*') {               // (* block comment *) — not a paren
+            if (lexer->lookahead == '*') {               // (* block comment *) - not a paren
                 lexer->advance(lexer, true);
                 int32_t prev = 0;
                 while (lexer->lookahead != 0) {
@@ -828,7 +824,7 @@ static bool edsl_skip_balanced_parens(TSLexer *lexer) {
     }
 }
 
-// Skip the rest of a brace-balanced `{| … |}` anonymous-record argument — the caller
+// Skip the rest of a brace-balanced `{| ... |}` anonymous-record argument - the caller
 // has ALREADY consumed the opening `{` (depth starts at 1). Counts `{`/`}` (so
 // `{|`/`|}` and nested records balance) and skips strings/comments. Used for the
 // Oxpecker.Solid component DSL arg form `Component {| props |} { children }`.
@@ -869,19 +865,10 @@ static bool edsl_skip_name(TSLexer *lexer) {
     return true;
 }
 
-// Lookahead for the Oxpecker element-DSL head: the CE builder is an APPLICATION,
-// optionally extended by a fluent method chain —
-//   `div() {`  ·  `div(attrs) {`  ·  `div(attrs).hxTarget("#x").hxSwap("y") {`
-// (chain links may sit on their own lines). The lexer is positioned at the
-// builder's first char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH
-// token so the over-advance is discarded and the real tokens are re-lexed. This
-// scanner-side lookahead is what lets the parser tell `div() { … }` (element DSL)
-// from `a()`⏎`b()` (two applications): the LR table can't peek past the args/chain
-// Forward decl: classify the content after a `{` as a CE body vs record/object/copy-update.
 static bool ce_brace_content_is_ce_body(TSLexer *lexer);
 
-// for the `{`. Tail of element_dsl_ahead: the caller has consumed the first name
-// segment; check the optional `.seg` qualification, then `( … )( .m( … ) )* {`.
+// Tail of element_dsl_ahead: the caller has consumed the first name segment;
+// check the optional `.seg` qualification, then `( ... )( .m( ... ) )* {`.
 static bool element_dsl_parens_brace(TSLexer *lexer) {
     while (lexer->lookahead == '.') {                     // qualified `A.B.div`
         lexer->advance(lexer, true);
@@ -899,7 +886,7 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         if (lexer->lookahead != '"') return false;
         edsl_skip_verbatim(lexer);                        // @"verbatim"
     } else if (lexer->lookahead == '{') {
-        // Oxpecker.Solid component: `Component {| props |} { children }` — the
+        // Oxpecker.Solid component: `Component {| props |} { children }` - the
         // builder argument is an anonymous record. Require `{|` (not a plain `{`,
         // which would be the body).
         lexer->advance(lexer, true);
@@ -909,13 +896,13 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         return false;
     }
     // After each arg: the body `{` must be SAME-line (only spaces/tabs between, so
-    // `foo(a, b)`⏎`{ record }` isn't read as one DSL); otherwise a fluent
-    // `.method( … )` chain link may continue (those CAN sit on their own lines).
+    // `foo(a, b)`\n`{ record }` isn't read as one DSL); otherwise a fluent
+    // `.method( ... )` chain link may continue (those CAN sit on their own lines).
     for (;;) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '{') {
-            // Only an element-DSL if the brace holds a CE body — NOT a record /
-            // object-expr / copy-update. Otherwise `f "msg" { x with … }` /
+            // Only an element-DSL if the brace holds a CE body - NOT a record /
+            // object-expr / copy-update. Otherwise `f "msg" { x with ... }` /
             // `f "s" { name = 1 }` must stay application(f, "msg", record/copy-update).
             lexer->advance(lexer, true);                  // past `{`
             if (lexer->lookahead == '|') return false;    // `{|` anon record
@@ -925,7 +912,7 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
         }
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
-        if (lexer->lookahead != '.') return false;        // not a chain link → not a DSL
+        if (lexer->lookahead != '.') return false;        // not a chain link -> not a DSL
         lexer->advance(lexer, true);
         if (!edsl_skip_name(lexer)) return false;
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
@@ -934,8 +921,16 @@ static bool element_dsl_parens_brace(TSLexer *lexer) {
     }
 }
 
-// Full element-DSL head probe (lexer at the builder's first char): read the first
-// name segment, then defer to element_dsl_parens_brace.
+// Lookahead for the Oxpecker element-DSL head: the CE builder is an APPLICATION,
+// optionally extended by a fluent method chain -
+//   `div() {`, `div(attrs) {`, `div(attrs).hxTarget("#x").hxSwap("y") {`
+// (chain links may sit on their own lines). The lexer is positioned at the
+// builder's first char. Advances DESTRUCTIVELY; the caller emits a ZERO-WIDTH
+// token so the over-advance is discarded and the real tokens are re-lexed. This
+// lookahead is what lets the parser tell `div() { ... }` (element DSL) from
+// `a()`\n`b()` (two applications): the LR table can't peek past the args/chain
+// for the `{`. Reads the first name segment, then defers to
+// element_dsl_parens_brace.
 static bool element_dsl_ahead(TSLexer *lexer) {
     if (!is_name_start(lexer->lookahead)) return false;
     for (;;) {
@@ -958,18 +953,18 @@ static inline bool try_element_dsl(TSLexer *lexer, const bool *valid) {
 
 // Classify the content right after a `{` (lexer positioned at the first non-ws char)
 // as a computation-expression BODY (true) vs a record / object-expression / copy-update
-// (false). Used to decide whether to emit CE_BRACE_OPEN so `head { … }` forks to a CE
-// vs application(head, record/object). Destructive peek — only ever called right before a
+// (false). Used to decide whether to emit CE_BRACE_OPEN so `head { ... }` forks to a CE
+// vs application(head, record/object). Destructive peek - only ever called right before a
 // `return false` (on no-match) or a zero-width `return true`, so the advances are
 // discarded by the caller's mark_end baseline.
 //
-//   CE body   → true:  `return …`, `let x = …`, `yield …`, `if …`, `for …`, `x`,
-//                       `f x`, `x :: xs`, `(…)`, `[ … ]`, `1`, …  (and empty `{}`)
-//   record    → false: `ident = …`  /  `ident : ty`  (NOT `::`)
-//   object    → false: `new …`
-//   copy-update → false: `base with …`
+//   CE body   -> true:  `return ...`, `let x = ...`, `yield ...`, `if ...`, `for ...`, `x`,
+//                       `f x`, `x :: xs`, `(...)`, `[ ... ]`, `1`, ...  (and empty `{}`)
+//   record    -> false: `ident = ...`  /  `ident : ty`  (NOT `::`)
+//   object    -> false: `new ...`
+//   copy-update -> false: `base with ...`
 static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
-    // Look past leading trivia first: with `{ // note`⏎`A = 1 }` the callers stop
+    // Look past leading trivia first: with `{ // note`\n`A = 1 }` the callers stop
     // at the `/`, which is not a name start and would classify as a CE body.
     // A `/`- or `(`-led NON-comment stays CE (same verdict as the checks below).
     for (;;) {
@@ -985,7 +980,7 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
         if (lexer->lookahead == '(') {
             lexer->advance(lexer, true);
             if (lexer->lookahead != '*') {
-                // `{ (expr) with F = … }` — copy-update over a parenthesised base.
+                // `{ (expr) with F = ... }` - copy-update over a parenthesised base.
                 // Skip the balanced group; a following `with` decides copy-update,
                 // anything else falls through to the CE reading below.
                 int pdepth = 1, pguard = 0;
@@ -1015,33 +1010,33 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     }
     int32_t c = lexer->lookahead;
     if (c == '}') return true;                 // empty CE body `{ }`
-    if (c == '!') {                            // `{ !cell with … }`: deref'd copy-update base
+    if (c == '!') {                            // `{ !cell with ... }`: deref'd copy-update base
         lexer->advance(lexer, true);
         c = lexer->lookahead;
     }
-    if (!is_name_start(c)) return true;        // literal / paren / bracket / operator → CE expr
+    if (!is_name_start(c)) return true;        // literal / paren / bracket / operator -> CE expr
     char w0[12] = {0};
     peek_name_capture(lexer, w0, sizeof(w0));
-    if (!strcmp(w0, "new")) return false;      // object expression `{ new T … }`
-    if (!strcmp(w0, "inherit")) return false;  // object construction `{ inherit T(…) … }`
-    // CE statement keywords (reserved → can never be a record field name). `let!`,
+    if (!strcmp(w0, "new")) return false;      // object expression `{ new T ... }`
+    if (!strcmp(w0, "inherit")) return false;  // object construction `{ inherit T(...) ... }`
+    // CE statement keywords (reserved -> can never be a record field name). `let!`,
     // `use!`, `do!`, `match!`, `yield!`, `return!` share the base word read here.
     static const char *kw[] = {"let","use","do","return","yield","if","for","while",
                                "match","try","fun","function","lazy","assert", NULL};
     for (int i = 0; kw[i]; i++) if (!strcmp(w0, kw[i])) return true;
     // Otherwise scan the leading expression: `=`/`:` (record field) or a later `with`
-    // (copy-update) ⇒ NOT a CE; anything else ⇒ CE bare-expression body.
+    // (copy-update) => NOT a CE; anything else => CE bare-expression body.
     for (int guard = 0; guard < 64; guard++) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         int32_t d = lexer->lookahead;
-        if (d == '=') return false;                 // record field `name = …`
+        if (d == '=') return false;                 // record field `name = ...`
         if (d == ':') {                             // `:` field type, but `::` is cons (CE)
             lexer->advance(lexer, true);
-            return lexer->lookahead == ':';         // `::` → CE ; `:` → record field
+            return lexer->lookahead == ':';         // `::` -> CE ; `:` -> record field
         }
         if (d == '.') { lexer->advance(lexer, true); continue; }   // qualified name / member access
         // A bracketed/parenthesised APPLICATION ARGUMENT before a possible
-        // `with` (`{ createEx [] doQuery with X = h }` — copy-update whose base
+        // `with` (`{ createEx [] doQuery with X = h }` - copy-update whose base
         // is an application): skip the balanced group and keep scanning.
         if (d == '[' || d == '(') {
             int32_t open = d, close = (d == '[') ? ']' : ')';
@@ -1069,10 +1064,10 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
         if (is_name_start(d)) {
             char w[8] = {0};
             peek_name_capture(lexer, w, sizeof(w));
-            if (!strcmp(w, "with")) return false;   // copy-update `base with …`
+            if (!strcmp(w, "with")) return false;   // copy-update `base with ...`
             continue;                               // application arg / next path segment
         }
-        if (d == '\n' || d == '\r') {             // `{ base`⏎`  with …`: copy-update on the next line
+        if (d == '\n' || d == '\r') {             // `{ base`\n`  with ...`: copy-update on the next line
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                    lexer->lookahead == '\n' || lexer->lookahead == '\r') lexer->advance(lexer, true);
             if (is_name_start(lexer->lookahead)) {
@@ -1082,27 +1077,23 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
             }
             return true;
         }
-        return true;                                // `}`/`;`/`(`/`[`/literal/op → CE
+        return true;                                // `}`/`;`/`(`/`[`/literal/op -> CE
     }
     return true;
 }
 
-// Probe for AND_DOCS_OPEN: at a line boundary where next_line_indent SKIPPED
-// `///` doc lines (s->skipped_doc_lines) and the next real line starts with the
-// word `and`, emit the zero-width marker that lets the docs shift into the
-// and-clause slot (`_and_docs`). The lexer sits AT the first char after
-// next_line_indent; reading the word only consumes peeked lookahead (the
-// marker is zero-width — mark_end stays at the baseline). Call LAST.
 // Dispatch for `///` doc lines at a layout boundary (s->skipped_doc_lines):
-// the post-doc word decides where the docs belong. Reads the word
-// destructively — every taken branch RETURNS a token, and the lone
-// fall-through (no branch applies) only loses position for checks that
-// re-derive it themselves.
+// the post-doc word decides where the docs belong (a `|` case, an `and`
+// clause, a member, or the next declaration). The lexer sits AT the first char
+// after next_line_indent. Reads the word destructively - every taken branch
+// RETURNS a zero-width token (mark_end stays at the baseline), and the lone
+// fall-through only loses position for checks that re-derive it themselves.
+// Call LAST.
 static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
                          int32_t first, uint32_t col, Ctx *top) {
     s->post_doc_word[0] = '\0';
     if (!s->skipped_doc_lines) return false;
-    // Docs followed by a `|` case — union/enum case attachment.
+    // Docs followed by a `|` case - union/enum case attachment.
     if (valid[CASE_DOCS_OPEN] && first == '|') {
         lexer->result_symbol = CASE_DOCS_OPEN; return true;
     }
@@ -1116,13 +1107,13 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
         }
         w[n] = '\0';
         { size_t i = 0; for (; w[i] && i < 9; i++) s->post_doc_word[i] = w[i]; s->post_doc_word[i] = '\0'; }
-        // docs + `and` — the and-clause attachment marker.
+        // docs + `and` - the and-clause attachment marker.
         if (valid[AND_DOCS_OPEN] && !strcmp(w, "and")) {
             lexer->result_symbol = AND_DOCS_OPEN; return true;
         }
         // Inside a TYPE body at the body column, docs + a DECL keyword mean
-        // the body ends here and the docs decorate the NEXT declaration —
-        // close the body BEFORE the docs (`type V =⏎| A⏎⏎/// d⏎[<A>]⏎type W`).
+        // the body ends here and the docs decorate the NEXT declaration -
+        // close the body BEFORE the docs (`type V =\n| A\n\n/// d\n[<A>]\ntype W`).
         // NOT `let`: class bodies legitimately contain let-members.
         if (top && top->sort == S_TYPEBODY && valid[LAYOUT_END] && col <= top->col &&
             (!strcmp(w, "type") || !strcmp(w, "open") ||
@@ -1133,7 +1124,7 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
     }
     // docs + `[<` attribute: could decorate a MEMBER (body continues) or the
     // NEXT declaration (body ends). At the body column inside a TYPE body the
-    // attribute alone is ambiguous — peek PAST the attr group to the word.
+    // attribute alone is ambiguous - peek PAST the attr group to the word.
     if (first == '[' && top && top->sort == S_TYPEBODY && col <= top->col &&
         (valid[LAYOUT_END] || valid[LAYOUT_SEMI])) {
         if (!skip_bracket_attrs(lexer)) return false;
@@ -1153,10 +1144,10 @@ static bool try_and_docs(Scanner *s, TSLexer *lexer, const bool *valid,
 }
 
 // Probe a LEADING `{` (lookahead == first == '{') for the CE-body
-// classification — the line-boundary twin of the mid-line CE_BRACE_OPEN
-// dispatch, for a builder whose `{` sits on the NEXT line (`seq`⏎`    {`).
+// classification - the line-boundary twin of the mid-line CE_BRACE_OPEN
+// dispatch, for a builder whose `{` sits on the NEXT line (`seq`\n`    {`).
 // Zero-width (mark_end stays at the baseline): advances only peek. Call it
-// LAST before `return false` — it consumes lookahead even on a miss.
+// LAST before `return false` - it consumes lookahead even on a miss.
 static bool try_ce_brace(TSLexer *lexer, const bool *valid, int32_t first) {
     if (first != '{' || !valid[CE_BRACE_OPEN]) return false;
     lexer->advance(lexer, true);                  // past `{`
@@ -1185,25 +1176,25 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // The source file itself is a declaration body at column 0. Without this
     // implicit context, top-level statements had NO layout context, so no
     // `_layout_semi` ever separated them and consecutive bare expressions
-    // (`register ("A", a)`⏎`register ("B", b)`) glued into one curried
-    // application_expression. S_DECL is the right sort: a `let`/`type`/… line
+    // (`register ("A", a)`\n`register ("B", b)`) glued into one curried
+    // application_expression. S_DECL is the right sort: a `let`/`type`/... line
     // still starts a fresh `_token` instead of extending the previous statement.
-    // Never popped in practice — a dedent below column 0 is impossible and
+    // Never popped in practice - a dedent below column 0 is impossible and
     // `_layout_end` is not valid at source-file scope.
     if (s->n == 0) push(s, S_DECL, 0);
     Ctx *top = &s->stk[s->n - 1];
 
     // CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
-    // a type name. Look ahead past one or more `[<…>]` attributes; emit ONLY when a
+    // a type name. Look ahead past one or more `[<...>]` attributes; emit ONLY when a
     // `(` (the constructor params) follows. This distinguishes a ctor attribute
-    // (`type T [<ParamObject>] (…)`) from a standalone attribute on the NEXT
-    // declaration (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]`
+    // (`type T [<ParamObject>] (...)`) from a standalone attribute on the NEXT
+    // declaration (`[<Measure>] type cm`\n`[<Measure>] type kg`, where `[<Measure>]`
     // is followed by `type`). Zero-width, so the attributes/`(` are re-lexed after.
     if (valid[CTOR_ATTR]) {
         // Any mix of `[<attr>]` rows, `///` doc lines and `//` comments may
-        // precede a primary ctor's `(` (`type StringSyntaxAttribute⏎ ///<param
-        // …>⏎ (syntax: string, …) =` — Feliz StringSyntax; `[<ParamObject>] //
-        // …⏎ (params) =` — Feliz POJO). Require at least ONE such row so a
+        // precede a primary ctor's `(` (`type StringSyntaxAttribute\n ///<param
+        // ...>\n (syntax: string, ...) =` - Feliz StringSyntax; `[<ParamObject>] //
+        // ...\n (params) =` - Feliz POJO). Require at least ONE such row so a
         // PLAIN ctor `type T (x) =` keeps its ordinary ungated path.
         bool seen_row = false;
         for (;;) {
@@ -1226,7 +1217,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         if (!seen_row) return false;
         // Optional access modifier between the attrs and the `(`:
-        // `type T [<ParamObject; Emit("$0")>]⏎ private (…)`.
+        // `type T [<ParamObject; Emit("$0")>]\n private (...)`.
         if (lexer->lookahead == 'p' || lexer->lookahead == 'i') {
             char aw[10]; size_t an = 0;
             while (an < 9 && lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
@@ -1244,11 +1235,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // ---- Grammar-driven OPENS (zero-width; push a context) --------------------
     // Checked BEFORE the float probe: these only peek (and restore position via
     // mark_end on return), whereas `scan_trailing_dot_float` advances over digits
-    // DESTRUCTIVELY even on failure — running it first would corrupt the body
-    // column for an inline body like `let a = 1` (peek would see the newline → 0).
+    // DESTRUCTIVELY even on failure - running it first would corrupt the body
+    // column for an inline body like `let a = 1` (peek would see the newline -> 0).
     // When RECORD_OPEN is also valid we're right after a `{`; the RECORD_OPEN
-    // block below owns that decision (field → record; own-line base → layout;
-    // same-line `new`/`x with` → fall through to object-expr/copy-update). So the
+    // block below owns that decision (field -> record; own-line base -> layout;
+    // same-line `new`/`x with` -> fall through to object-expr/copy-update). So the
     // generic LAYOUT_OPEN must NOT pre-empt it.
     if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
         uint32_t bc;
@@ -1262,7 +1253,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (!valid[PREPROC_BREAK]) return false;
             lexer->result_symbol = PREPROC_BREAK; return true;
         }
-        // Where a CE statement `let` and an expression `let … in` both apply
+        // Where a CE statement `let` and an expression `let ... in` both apply
         // (CE bodies), an inline value followed by ` in` is the expression form.
         if (inl && valid[EXPR_OPEN] && top && top->sort == S_BRACKET && line_has_in_keyword(lexer)) {
             push(s, S_EXPR, bc); s->stk[s->n - 1].inl = 1;
@@ -1272,9 +1263,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         if (inl && s->n) s->stk[s->n - 1].inl = 1;
         lexer->result_symbol = LAYOUT_OPEN; return true;
     }
-    // FOR_OPEN: the body of a `for … do`. Like LAYOUT_OPEN but SUPPRESSED when the
-    // body would not indent past the enclosing context — that's a query-CE
-    // `for x in xs do`⏎`where …`/`select …`, where the operators sit at the CE
+    // FOR_OPEN: the body of a `for ... do`. Like LAYOUT_OPEN but SUPPRESSED when the
+    // body would not indent past the enclosing context - that's a query-CE
+    // `for x in xs do`\n`where ...`/`select ...`, where the operators sit at the CE
     // column, not in an indented loop body. Suppressing keeps the for body empty so
     // the operators stay `query_operator` CE siblings (a real loop body always
     // indents past the `for`, so this never suppresses a genuine body). Dedicated
@@ -1282,8 +1273,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[FOR_OPEN]) {
         uint32_t bc = peek_body_col(s, lexer);
         if (top && bc <= top->col) {
-            // No indented body — query-CE for-clause. Emit the enclosing
-            // statement separator so the following `where`/`select`/`join`/… is a
+            // No indented body - query-CE for-clause. Emit the enclosing
+            // statement separator so the following `where`/`select`/`join`/... is a
             // SIBLING `query_operator`, not absorbed as an application argument of
             // the empty-body `for`. (peek_body_col advanced, but the separator is
             // zero-width at the mark_end baseline, so over-advance is discarded.)
@@ -1313,22 +1304,22 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[LAZY_OPEN])   {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
-            lexer->lookahead != '/'  && lexer->lookahead != 0) return false;   // inline body → plain branch
+            lexer->lookahead != '/'  && lexer->lookahead != 0) return false;   // inline body -> plain branch
         push(s, S_EXPR, peek_body_col(s, lexer));
         lexer->result_symbol = LAZY_OPEN;   return true;
     }
     if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(s, lexer)); lexer->result_symbol = TRY_OPEN;    return true; }
     if (valid[ELSE_OPEN]) {
-        // Final-else body. An INLINE `else if` (same line) flattens to an elif clause —
+        // Final-else body. An INLINE `else if` (same line) flattens to an elif clause -
         // DON'T open a nested else-body; return false so the grammar's flat elif matches
         // (its elif/else stay at the chain level instead of nesting an if whose layout
         // would over-close at a later `elif`). But a NEWLINE-led else-body whose first
-        // statement happens to be `if` is a REAL body — it may have more statements after
-        // (`else⏎ if c then x⏎ match …`) — so suppress ONLY for the same-line form.
+        // statement happens to be `if` is a REAL body - it may have more statements after
+        // (`else\n if c then x\n match ...`) - so suppress ONLY for the same-line form.
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         bool nl_before = (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->lookahead == '/');
         uint32_t col = peek_body_col(s, lexer);  // positions lexer at the body's first char
-        // `else`⏎`if …` at the enclosing body's own column is a flat else-if
+        // `else`\n`if ...` at the enclosing body's own column is a flat else-if
         // chain too (LargeConditionals: 200 levels would overflow the stack).
         bool flat_col = nl_before && top && col <= top->col;
         if ((!nl_before || flat_col) && lexer->lookahead == 'i') {
@@ -1338,7 +1329,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 int32_t a = lexer->lookahead;
                 bool word = (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z') ||
                             (a >= '0' && a <= '9') || a == '_' || a == '\'';
-                if (!word) return false;  // inline `else if …` → flat elif clause
+                if (!word) return false;  // inline `else if ...` -> flat elif clause
             }
         }
         push(s, S_EXPR, col);
@@ -1349,7 +1340,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(s, lexer)); lexer->result_symbol = MATCH_OPEN;  return true; }
 
     // Lexical trailing-dot float (`1.`, `20.`). Placed AFTER the peek_body_col
-    // opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) — running it before them would
+    // opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) - running it before them would
     // destructively advance over the digits of an inline body like `let a = 1` and
     // corrupt the body column. But it MUST come BEFORE the newline-gated opens
     // (BLOCK/TYPE/BRACKET) and RECORD_OPEN: those `return false` for an inline body,
@@ -1365,8 +1356,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     }
 
     // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
-    // NEXT line (`type X =⏎ members`, `module M =⏎ decls`). For an inline body
-    // (`type X = {…}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
+    // NEXT line (`type X =\n members`, `module M =\n decls`). For an inline body
+    // (`type X = {...}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
     // so the grammar's inline alternative matches. Newline-gated like BRACKET_OPEN,
     // but pushes S_LAYOUT (dedent-close via LAYOUT_END).
     if (valid[BLOCK_OPEN]) {
@@ -1375,7 +1366,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             uint32_t col;
             if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_DECL, col); lexer->result_symbol = BLOCK_OPEN; return true; }
         }
-        return false; // inline body — let the grammar's inline alternative match
+        return false; // inline body - let the grammar's inline alternative match
     }
     // TYPE_OPEN: like BLOCK_OPEN but the context is S_TYPEBODY so a `with`
     // augmentation at the body column closes it (see the S_TYPEBODY boundary case).
@@ -1385,7 +1376,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             uint32_t col;
             if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_TYPEBODY, col); lexer->result_symbol = TYPE_OPEN; return true; }
         }
-        return false; // inline type body (record/alias/inline DU) — let it match
+        return false; // inline type body (record/alias/inline DU) - let it match
     }
     // FIELD_BLOCK_OPEN: a record field value that starts on the next line.
     if (valid[FIELD_BLOCK_OPEN]) {
@@ -1416,7 +1407,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         return false;
     }
     // PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
-    // for an empty `(`⏎`)` (that is the `unit` token).
+    // for an empty `(`\n`)` (that is the `unit` token).
     if (valid[PAREN_BLOCK_OPEN]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         int32_t c0 = lexer->lookahead;
@@ -1443,7 +1434,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
             // Block form: body on the next line(s). Decline when the next real
-            // char CLOSES the bracket (`Html.div [`⏎`⏎`]` — empty across blank
+            // char CLOSES the bracket (`Html.div [`\n`\n`]` - empty across blank
             // lines): there is no element to anchor a context.
             uint32_t col; int32_t bfirst = 0;
             if (next_line_indent(s, lexer, &col, &bfirst)) {
@@ -1458,8 +1449,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t inline_first = lexer->lookahead;
         // A trailing LINE COMMENT is not an element: the rest of the line is
         // comment text, so the real content (if any) starts on a later line.
-        // Defer to the block form — next_line_indent skips comment-only lines,
-        // so `[| //a`⏎`//b`⏎`|]` reads as an EMPTY array (anchoring a context on
+        // Defer to the block form - next_line_indent skips comment-only lines,
+        // so `[| //a`\n`//b`\n`|]` reads as an EMPTY array (anchoring a context on
         // the comment left a stray zero-width ERROR), and elements below get a
         // context at THEIR column, not the comment's.
         if (inline_first == '/') {
@@ -1472,10 +1463,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
         }
         // Same-line content after a CE/bracket `{`: an element-DSL builder here
-        // (`div() { span() {…} }`) needs its marker — the mid-line block below is
+        // (`div() { span() {...} }`) needs its marker - the mid-line block below is
         // unreachable once we return. (Spaces/tabs already skipped above.)
         if (try_element_dsl(lexer, valid)) return true;
-        // Inline-FIRST content (`[ yield a`⏎`  yield! b ]`, `seq { x`⏎`  y }`).
+        // Inline-FIRST content (`[ yield a`\n`  yield! b ]`, `seq { x`\n`  y }`).
         // Open the context at the first element's column so newline-aligned
         // continuation elements still get a `_bracket_semi` separator (otherwise
         // they'd merge into the first element as an application). Skip when the
@@ -1483,7 +1474,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         // leading `|`/`}`/`]`), which has no element to anchor a context.
         if (inline_first == ']' || inline_first == '}' || inline_first == '|' || inline_first == 0) return false;
         // A leading BLOCK COMMENT is not an element: skip it (depth-aware) and
-        // re-decide — `[(* no attributes *)]` (FCS) is an EMPTY list, comment
+        // re-decide - `[(* no attributes *)]` (FCS) is an EMPTY list, comment
         // then newline defers to the block form, real content anchors at the
         // comment's column (comment-led element convention).
         if (inline_first == '(') {
@@ -1504,7 +1495,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         lexer->result_symbol = BRACKET_OPEN; return true;
     }
 
-    // PAREN_FIELD_OPEN: the body of a named-field pattern `Foo(ident = …)` — a
+    // PAREN_FIELD_OPEN: the body of a named-field pattern `Foo(ident = ...)` - a
     // dedicated open (valid ONLY in named_field_pattern) so newline-aligned fields
     // get an S_BRACKET separator. Peek `ident(.seg)* =` (the `=` distinguishes a
     // named field from a tuple-arg `Foo(a, b)`); capture the field column. Like
@@ -1525,7 +1516,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 peek_name_segment(lexer);
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             }
-            if (lexer->lookahead == '=') {                 // `=` (not `==`/`=>`) → named field
+            if (lexer->lookahead == '=') {                 // `=` (not `==`/`=>`) -> named field
                 lexer->advance(lexer, true);
                 if (lexer->lookahead != '=' && lexer->lookahead != '>') ok = true;
             }
@@ -1537,9 +1528,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // RECORD_OPEN: a `{` record body whose first field starts here (same line as
     // `{`, or the next line). Peeks to confirm a field shape (`ident =` for a
     // record_field, `ident :` for a record_type_field) and captures the field
-    // column. SUPPRESSED (return false → fall through) for `{ new … }` (object
-    // expression) and `{ base with … }` (copy-update), whose first word is NOT
-    // followed by `=`/`:` — letting the grammar's other `{`-branches match.
+    // column. SUPPRESSED (return false -> fall through) for `{ new ... }` (object
+    // expression) and `{ base with ... }` (copy-update), whose first word is NOT
+    // followed by `=`/`:` - letting the grammar's other `{`-branches match.
     if (valid[RECORD_OPEN]) {
         uint32_t col = lexer->get_column(lexer);
         bool nl = false;
@@ -1548,9 +1539,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             nl = true;
             if (!next_line_indent(s, lexer, &col, NULL)) return false;
         }
-        // A field may lead with `///` doc lines (`{ /// docs⏎  Field: T … }`):
+        // A field may lead with `///` doc lines (`{ /// docs\n  Field: T ... }`):
         // skip them (to the NEXT line's content) so the field-shape check
-        // still fires; `col` stays at the doc's column — where fields align.
+        // still fires; `col` stays at the doc's column - where fields align.
         while (lexer->lookahead == '/' ) {
             // only a /// doc line: peek two more slashes
             lexer->advance(lexer, true);
@@ -1559,14 +1550,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (lexer->lookahead != '/') return false;   // `//` plain comment: bail (rare inside `{`)
             while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && lexer->lookahead != 0) lexer->advance(lexer, true);
             uint32_t c2; if (!next_line_indent(s, lexer, &c2, NULL)) return false;
-            col = c2;   // the FIELD's column, not the doc's (`{ /// doc⏎    Field: T`)
+            col = c2;   // the FIELD's column, not the doc's (`{ /// doc\n    Field: T`)
             nl = true;
         }
         int32_t c = lexer->lookahead;
         bool ok = false;
         char w0[8] = {0};
-        // A field may lead with `[<…>]` attribute(s) — common in offside record
-        // TYPE bodies (`{ [<JsonProperty("@id")>]⏎ Id : string … }`). Skip them
+        // A field may lead with `[<...>]` attribute(s) - common in offside record
+        // TYPE bodies (`{ [<JsonProperty("@id")>]\n Id : string ... }`). Skip them
         // so the `ident =`/`:` field-shape check below still fires; `col` stays at
         // the attribute's `[`, which is where every field of the body aligns.
         if (c == '[') {
@@ -1575,22 +1566,22 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         }
         if (is_name_start(c)) {
             peek_name_capture(lexer, w0, sizeof(w0));
-            // `{ inherit Base(…) [; field = …] }` — object construction. The base
+            // `{ inherit Base(...) [; field = ...] }` - object construction. The base
             // call is not an `=`/`:` field, so the check below would miss it.
             if (!strcmp(w0, "inherit")) { push(s, S_BRACKET, col); lexer->result_symbol = RECORD_OPEN; return true; }
             while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-            // A leading field modifier (`mutable foo: …`): a second identifier
+            // A leading field modifier (`mutable foo: ...`): a second identifier
             // word sits before the `:`. Skip it so the `=`/`:` check sees the
-            // field, not the modifier. Copy-update (`x with …`) / object-expr
-            // (`new T …`) have a second word too but no trailing `=`/`:`, so they
+            // field, not the modifier. Copy-update (`x with ...`) / object-expr
+            // (`new T ...`) have a second word too but no trailing `=`/`:`, so they
             // still fall through.
             if (is_name_start(lexer->lookahead)) {
                 peek_name_segment(lexer);
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             }
-            // A qualified field name (`FunctionDef.Name = …`) — consume `.seg`
+            // A qualified field name (`FunctionDef.Name = ...`) - consume `.seg`
             // chains so the `=`/`:` check below still fires. A copy-update base
-            // (`Foo.bar with …`) is followed by `with`, not `=`/`:`, so it still
+            // (`Foo.bar with ...`) is followed by `with`, not `=`/`:`, so it still
             // falls through.
             while (lexer->lookahead == '.') {
                 lexer->advance(lexer, true);
@@ -1598,7 +1589,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 peek_name_segment(lexer);
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
             }
-            // `ti (* comment *) : int` — a block comment before the separator.
+            // `ti (* comment *) : int` - a block comment before the separator.
             while (lexer->lookahead == '(') {
                 lexer->advance(lexer, true);
                 if (lexer->lookahead != '*') break;      // `(`: an application base, not a field
@@ -1611,11 +1602,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (sep == '=' || sep == ':') ok = true;   // record_field / record_type_field
         }
         if (ok) { push(s, S_BRACKET, col); lexer->result_symbol = RECORD_OPEN; return true; }
-        // Not a field. If the base is on its OWN line after `{` (`{⏎ base with ⏎
+        // Not a field. If the base is on its OWN line after `{` (`{\n base with \n
         // field }` copy-update), open a layout at the base's column. Otherwise
-        // (same-line `{ new …}` / `{ x with …}`) fall through so object-expression
+        // (same-line `{ new ...}` / `{ x with ...}`) fall through so object-expression
         // / inline copy-update match. An object expression on its own line
-        // (`{⏎ new IFoo with …}`) must ALSO fall through — its `new` is a literal
+        // (`{\n new IFoo with ...}`) must ALSO fall through - its `new` is a literal
         // token with no layout open, so suppress LAYOUT_OPEN when the first word
         // is `new`.
         if (nl && valid[LAYOUT_OPEN] && strcmp(w0, "new") != 0) { push(s, S_LAYOUT, col); lexer->result_symbol = LAYOUT_OPEN; return true; }
@@ -1625,7 +1616,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // ---- Mid-line closes ------------------------------------------------------
     // An inline body / arm-list / block bracket can close on the SAME line before
     // a closing delimiter `)` `]` `}` (and `|]`/`|}`):
-    //   (fun x -> body)   (match v with … | _ -> k)   [ … ]   { … }
+    //   (fun x -> body)   (match v with ... | _ -> k)   [ ... ]   { ... }
     // Fire one close per call (gated by valid + the top sort); tree-sitter
     // re-invokes for multi-level (arm body, then arm-list, then `)`).
     {
@@ -1633,10 +1624,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         int32_t c = lexer->lookahead;
         if (c != '\n' && c != '\r' && c != 0) {
             // Attribute on a labelled (member-sig) param: `[<ParamArray>] xs: obj[]`.
-            // Emit a zero-width LABEL_ATTR only when `[<…>]+` is followed by
+            // Emit a zero-width LABEL_ATTR only when `[<...>]+` is followed by
             // `ident:` (or `?ident:`). Done HERE (mid-line, gated on `c == '['`) so a
             // non-match falls through to the closer logic / `return false` exactly as
-            // before — it never pre-empts the layout opens above.
+            // before - it never pre-empts the layout opens above.
             if (c == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
             // An infix right-operand block ends before a same-line `->` (guard arrow).
             if (c == '-' && top && top->sort == S_EXPR && top->inf && valid[LAYOUT_END]) {
@@ -1657,7 +1648,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 else if (c1 != '>' && c1 != '|' && c1 != '?' && c1 != '@' && c1 != '!' &&
                          c1 != '%' && c1 != '&' && c1 != '*' && c1 != '+' && c1 != '-' &&
                          c1 != '.' && c1 != '/' && c1 != '<' && c1 != '=' && c1 != '^' &&
-                         c1 != '~' && c1 != '$' &&   // `|?>`/`||>`-style custom ops are INFIX, not an arm `|` (fix-3's boundary rule, mid-line flavor)
+                         c1 != '~' && c1 != '$' &&   // `|?>`/`||>`-style custom ops are INFIX, not an arm `|`
                          top && layoutish(top->sort) && !top->par && valid[LAYOUT_END] && has_match_ctx(s)) {
                     // A bare same-line `|` is the next match arm; close the inline
                     // arm body first (`function | 0 -> "a" | _ -> "b"`). Gated on an
@@ -1671,37 +1662,30 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (top->sort == S_MATCH   && valid[MATCH_END])     { s->n--; lexer->result_symbol = MATCH_END;     return true; }
                 if (top->sort == S_BRACKET && valid[BRACKET_CLOSE]) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
             }
+            // Word-led mid-line dispatch. A leading word can be a continuation
+            // keyword that closes an inline body, a labelled type element
+            // (`x: int -> ...`), or an Oxpecker element-DSL builder applied to
+            // `( ... ) {`. All start at `c`, so read the leading word ONCE and
+            // dispatch - reading it twice would advance past it and corrupt the
+            // second probe. Order: LABEL_GATE first (a miss is only possible where
+            // no other word-led token applies), then the continuation closes,
+            // then ELEMENT_DSL_OPEN (co-valid at a `with`/`in` position, where the
+            // body-close must win).
             // A same-line continuation keyword ends an inline layout body so it
             // attaches to the enclosing construct rather than being absorbed:
-            //   `let … = e in body`  ·  `if c then a else b`  ·  `if c then a elif …`
-            //   `try e with …` / `… finally …`.
-            // Gated on valid[LAYOUT_END] (true only when a layout body is open and
-            // complete) — so the `in` of `for x in xs` (no open body) is unaffected.
-            // Only an EXPRESSION body (S_EXPR) closes before an inline `else`/
-            // `elif`/`in` — and it's the INNERMOST one, so exactly the then-branch
-            // (or let-in value) closes; the enclosing DECL body (S_LAYOUT module/
-            // let) does NOT, which stops the over-close that ate the module body in
-            // `module M =⏎ let f = if a then 1 else 0⏎ let g`. Gated on
-            // valid[LAYOUT_END]: once the then-branch has closed and the grammar
-            // is ready for the `else`, LAYOUT_END is no longer valid, so an
-            // ENCLOSING S_EXPR (e.g. a `let_decl_indented` value wrapping a
-            // parenthesised `(if … else …)`) is NOT also closed — which would
-            // otherwise orphan the inner `else`.
-            // Word-led mid-line dispatch. A leading word can be a continuation
-            // keyword that closes an inline body, OR an Oxpecker element-DSL builder
-            // applied to `( … ) {`. Both start at `c`, so read the leading word
-            // ONCE and dispatch — reading it twice would advance past it and
-            // corrupt the second probe.
-            //   - S_EXPR closes before an inline `else`/`elif`/`in`.
-            //   - S_TRY closes before an inline `with`/`finally` (dedicated sort, so
-            //     this never fires for a `match … with` inside an S_EXPR body).
-            //   - ELEMENT_DSL_OPEN fires when `<word>(.seg)* ( … ) {` follows.
-            // Continuation closes are tried FIRST: at a `with`/`in` position
-            // ELEMENT_DSL_OPEN can be co-valid (the body could continue as an
-            // application) and the body-close must win.
-            // Labelled type element (`x: int -> …` in a member signature / union
-            // field). Probed FIRST: it needs the word, and a miss is only possible
-            // where no other word-led token applies.
+            //   `let ... = e in body`, `if c then a else b`, `if c then a elif ...`,
+            //   `try e with ...` / `... finally ...`.
+            // Only the INNERMOST expression body (S_EXPR) closes before an inline
+            // `else`/`elif`/`in`, so exactly the then-branch (or let-in value)
+            // closes; a DECL body (S_LAYOUT) does not, which keeps `module M =`\n
+            // ` let f = if a then 1 else 0`\n` let g` intact. S_TRY closes before an
+            // inline `with`/`finally` (a dedicated sort, so this never fires for a
+            // `match ... with` inside an S_EXPR body). Everything is gated on
+            // valid[LAYOUT_END], true only while a layout body is open and
+            // complete: the `in` of `for x in xs` is unaffected, and once the
+            // then-branch has closed and the grammar expects the `else`, an
+            // ENCLOSING S_EXPR (a `let_decl_indented` value wrapping a
+            // parenthesised `(if ... else ...)`) is not closed as well.
             if (valid[LABEL_GATE] && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '?' || c == '`')) {
                 if (try_label_gate(lexer)) return true;
                 return false;
@@ -1720,7 +1704,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (top && valid[LAYOUT_END]) {
                     // `else`/`elif` close only an INLINE body: a same-line `else`
                     // after an INDENTED then-body belongs to an INNER if on this
-                    // line (`if a then⏎    if p then x else y` — dangling else;
+                    // line (`if a then\n    if p then x else y` - dangling else;
                     // the greedy close handed it to the OUTER if and stranded the
                     // outer `else` line, TaggedCollections/FCS style). `in`/`end`
                     // keep the unconditional close.
@@ -1749,13 +1733,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     // only end here (a `for x in` is incomplete, so LAYOUT_END is
                     // not valid there).
                     // Only an ARM body (S_MATCH directly below): a `let! a = e in
-                    // …` value inside a CE is also an inline S_LAYOUT, and its
+                    // ...` value inside a CE is also an inline S_LAYOUT, and its
                     // `in` belongs to the grammar.
                     if (!strcmp(w, "in") && top->sort == S_LAYOUT && top->inl &&
                         s->n >= 2 && s->stk[s->n - 2].sort == S_MATCH) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
-                    // `let x =`⏎`    match … with`⏎`    | _ -> v in`⏎`body`: the `in`
+                    // `let x =`\n`    match ... with`\n`    | _ -> v in`\n`body`: the `in`
                     // ends the arm-list, then (same position) the let value it sits in.
                     if (!strcmp(w, "in")) {
                         if (top->sort == S_MATCH && valid[MATCH_END]) {
@@ -1775,7 +1759,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                     // A mid-line `and` after an INLINE body starts the next
                     // binding / accessor (`let a = 1 and b = 2`, `with get () = x
-                    // and set v = …`). Without this the body absorbed `and …` as
+                    // and set v = ...`). Without this the body absorbed `and ...` as
                     // an application and `and` lexed as an identifier.
                     // Not when a type variable or `(` follows: that is a constraint
                     // chain (`when ^t: null and ^t: struct`), which can sit inside
@@ -1789,14 +1773,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                         return false;
                     }
                     // KNOWN GAP: a mid-line `with` after a NEXT-LINE record type
-                    // body (`type M =⏎  { fields } with⏎  member …`, FSharpPlus
-                    // NonEmptyMap). Closing S_TYPEBODY here was tried 2026-06-10
-                    // and mis-fired on 23 bench files (interface_impl /
-                    // member-accessor `with` forms share the state) — reverted.
-                    // The same-line `= { … } with` form parses.
+                    // body (`type M =`\n`  { fields } with`\n`  member ...`, FSharpPlus
+                    // NonEmptyMap). Closing S_TYPEBODY here mis-fires on 23 bench
+                    // files (interface_impl / member-accessor `with` forms share
+                    // the state). The same-line `= { ... } with` form parses.
                     // `finally` is owned EXCLUSIVELY by try/finally (unlike
                     // `with`), so when an S_TRY is open SOMEWHERE below, every
-                    // inner inline body must close first — one per invocation —
+                    // inner inline body must close first - one per invocation -
                     // until the S_TRY branch above fires:
                     //   `seq { try for e in c () do yield e finally comp () }`
                     // closes the for-body here, then the try-body above.
@@ -1813,7 +1796,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     }
                 }
                 // The arm list itself closes at a mid-line `in`/`end` once its
-                // last arm body has closed (`… | B -> 2 in f 1`).
+                // last arm body has closed (`... | B -> 2 in f 1`).
                 if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
                     if (!strcmp(w, "in")) s->in_claim_col = MID_COL();
                     s->n--; lexer->result_symbol = MATCH_END; return true;
@@ -1823,11 +1806,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
             }
             // CE_BRACE_OPEN (zero-width): the `{` of a computation_expression body.
-            // Emitted ONLY when the brace content is a CE body — NOT a record field
-            // (`ident =`/`ident :`), NOT an object expression (`new …`), NOT a
-            // copy-update (`base with …`). Lets `head { new … }` / `head { f = … }`
+            // Emitted ONLY when the brace content is a CE body - NOT a record field
+            // (`ident =`/`ident :`), NOT an object expression (`new ...`), NOT a
+            // copy-update (`base with ...`). Lets `head { new ... }` / `head { f = ... }`
             // divert to application(head, object_expression/record) while
-            // `head { return … }` / `async { … }` stay a computation_expression.
+            // `head { return ... }` / `async { ... }` stay a computation_expression.
             // Zero-width (mark_end still at baseline): the advances below only PEEK;
             // on a match tree-sitter then lexes the literal `{`, on no-match we fall
             // through to `return false` and the literal `{` is lexed for the
@@ -1842,14 +1825,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
             }
             // A TRAILING `;` at end-of-line in a layout body that is about to
-            // close by dedent/EOF: consume it INTO the LAYOUT_END (`let f () =⏎
-            // g ()⏎ a;` — NuGetV3 style). Once the body is a sequence the
+            // close by dedent/EOF: consume it INTO the LAYOUT_END (`let f () =\n
+            // g ()\n a;` - NuGetV3 style). Once the body is a sequence the
             // grammar has no slot for the `;` (a grammar-level optional never
-            // fires — the `;` shift commits to the separator reading), so the
+            // fires - the `;` shift commits to the separator reading), so the
             // terminator must disappear here. Only when the line truly ends
             // after the `;` (an inline `a; b` keeps its literal separator) and
-            // only on a real dedent — an equal-column next line is a SIBLING
-            // statement (`module M =⏎ f x;⏎ g y;`), handled by the `";"` _token.
+            // only on a real dedent - an equal-column next line is a SIBLING
+            // statement (`module M =\n f x;\n g y;`), handled by the `";"` _token.
             if (c == ';' && valid[LAYOUT_END] && top && layoutish(top->sort)) {
                 lexer->advance(lexer, false);           // consume `;`
                 if (lexer->lookahead != ';') {          // leave `;;` to the extras
@@ -1904,7 +1887,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
             // Same disease, BRACKET flavor: a trailing `;` right before the
             // closing delimiter of a CE / list / array body (`seq { yield x; }`,
-            // `yield 1;`⏎`}`) — the grammar's own trailing-`;` optional never
+            // `yield 1;`\n`}`) - the grammar's own trailing-`;` optional never
             // fires (the `;` shift commits to extending the LAST STATEMENT's
             // expression into a sequence), so consume the `;` INTO the
             // BRACKET_CLOSE. Same-line (`; }`) and next-line-closer forms.
@@ -1928,7 +1911,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;                           // not trailing: literal `;`
             }
             // DOC-RESUME dispatch: a previous zero-width token (a close, or an
-            // earlier gate) was anchored AT this `///` line — the scan resumes
+            // earlier gate) was anchored AT this `///` line - the scan resumes
             // mid-line ON the docs. Skip the doc block (+ blank lines), compute
             // the post-doc line's first/col, and run the same dispatch the
             // boundary path uses (CASE/AND gates, typebody-close-at-docs). On
@@ -1964,10 +1947,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;
             }
             // CTOR_TUPLE_GATE (zero-width): at a let-binding NAME position,
-            // `ident(.ident)* ( … ) ,` means `let Ctor(a, b), rest = …` — a
+            // `ident(.ident)* ( ... ) ,` means `let Ctor(a, b), rest = ...` - a
             // tuple DECONSTRUCTION (fn defs never have `,` after params). At
             // this consumption-safe tail the word-branch above may have eaten
-            // the first ≤9 identifier chars; resume from wherever we are.
+            // the first <=9 identifier chars; resume from wherever we are.
             if (valid[CTOR_TUPLE_GATE] &&
                 ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')) {
                 char w0[10]; size_t w0n = 0;
@@ -1982,9 +1965,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 w0[w0n] = '\0';
                 const char *first_word = w0n ? w0 : s->midline_word;   // word-branch may have eaten it
                 while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
-                // `let AesKey key, AesIV iv = …`: a constructor applied to bare
+                // `let AesKey key, AesIV iv = ...`: a constructor applied to bare
                 // argument names, then `,`. Not when the first word was a binding
-                // modifier (`let mutable a, b = …`, `let private a, b = …`).
+                // modifier (`let mutable a, b = ...`, `let private a, b = ...`).
                 if (!strcmp(first_word, "mutable") || !strcmp(first_word, "inline") || !strcmp(first_word, "rec") ||
                     !strcmp(first_word, "private") || !strcmp(first_word, "internal") || !strcmp(first_word, "public")) return false;
                 if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
@@ -2002,7 +1985,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 if (lexer->lookahead == '(') {
                     lexer->advance(lexer, true);
-                    // `let Ctor(field = pat) …`: a named-field deconstruction.
+                    // `let Ctor(field = pat) ...`: a named-field deconstruction.
                     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                     if ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
                         (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') || lexer->lookahead == '_') {
@@ -2036,7 +2019,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                     if (ok) {
                         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') lexer->advance(lexer, true);
                         if (lexer->lookahead == ',') { lexer->result_symbol = CTOR_TUPLE_GATE; return true; }
-                        // `let Ctor(a, _) as name = …`
+                        // `let Ctor(a, _) as name = ...`
                         if (lexer->lookahead == 'a') {
                             lexer->advance(lexer, true);
                             if (lexer->lookahead == 's') {
@@ -2084,10 +2067,10 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         return false;
     }
     if (first == 2) {
-        // Line-start comment-ONLY line — next_line_indent consumed the whole
+        // Line-start comment-ONLY line - next_line_indent consumed the whole
         // comment with advance(false) and mark_end'ed at its `*)`.
         if (!valid[BLOCK_COMMENT] && !valid[BLOCK_DOC_COMMENT]) return false;
-        // `// …` lines on the way here were skipped as PADDING; emitting the
+        // `// ...` lines on the way here were skipped as PADDING; emitting the
         // block comment now would absorb their text (no comment node -> no
         // highlight). Decline: the internal lexer lexes them as line_comment
         // extras, and a later scan starts right at the `(*`.
@@ -2101,7 +2084,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     // already advanced), so treat `|` as an arm marker; the bracket cases are
     // handled by BRACKET_CLOSE above/below via valid-gating.
     bool bar_arm = (first == '|');
-    // `|>` `||` `|?>` … — a `|`-led OPERATOR is never an arm marker; peek the
+    // `|>` `||` `|?>` ... - a `|`-led OPERATOR is never an arm marker; peek the
     // char after the `|` once, here, so BOTH the infix check below and the
     // S_MATCH close (`|>` at exactly the arm column pipes the WHOLE match) see
     // the same classification. `|]`/`|}` stay arm-ish (bracket closers handle).
@@ -2116,7 +2099,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             bar_c1 == '$') bar_arm = false;
     }
 
-    // `///` docs followed by `and` — gate the and-clause doc slot. FIRST: by
+    // `///` docs followed by `and` - gate the and-clause doc slot. FIRST: by
     // the time the per-sort logic runs, semi/decl-starter branches treat `and`
     // specially and the grammar may reduce the preceding decl, dropping the
     // docs to the standalone net. Strictly gated (valid + docs-were-skipped +
@@ -2125,33 +2108,29 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
     if (try_and_docs(s, lexer, valid, first, col, top)) return true;
 
     // A leading infix operator continues the previous expression (F#'s
-    // leading-operator rule) — UNLESS it DEDENTS below an EXPRESSION body
+    // leading-operator rule) - UNLESS it dedents below an EXPRESSION body
     // (S_EXPR: then/elif/else/lambda/let-in value) or below a match ARM column
     // (S_MATCH), in which case that body/arm-list must close first and
     // re-invocation continues the OUTER chain. This pipes the whole if in
-    // `if c then a else b⏎ |> f`, and the whole match in `|> match … with⏎
-    // | arm -> …⏎ |> next` (Chocolatey pipeline style) — without the S_MATCH
+    // `if c then a else b`\n` |> f`, and the whole match in `|> match ... with`\n
+    // `| arm -> ...`\n`|> next` (Chocolatey pipeline style) - without the S_MATCH
     // case the dedented `|>` extended the LAST ARM's body, and continuation
-    // ARGUMENT lines after it then mis-lexed as new arm patterns. A decl body
-    // (S_LAYOUT) keeps the previous behaviour.
-    // S_EXPR/S_MATCH: any dedent closes first. S_LAYOUT (arm/decl bodies):
-    // FSC grants infix tokens limited offside GRACE (token length + 1), so a
-    // mildly-dedented op still continues the body — but one dedented WELL below
-    // (`|>` at the pipeline col under a match arm body, Chocolatey style) is
-    // offside and must close the body/arm-list first.
-    // S_EXPR: FSC grants an infix token offside grace of its length + 1, so
-    // `let v =    a`⏎`           ||| b` continues while `>> g` four columns
-    // left of a lambda body closes it. Measured inside the block below; the
-    // `+`/`-`/`@`/`.` leads keep the strict rule (expr_strict).
+    // ARGUMENT lines after it then mis-lexed as new arm patterns.
+    // FSC grants an infix token an offside GRACE of its length + 1, so a mildly
+    // dedented operator still continues the body (`let v =    a`\n`           ||| b`)
+    // while one dedented WELL below (`|>` at the pipeline column under a match
+    // arm body, `>> g` four columns left of a lambda body) is offside and closes
+    // first. Measured inside the block below; the `+`/`-`/`@`/`.` leads keep the
+    // strict rule (expr_strict).
     bool expr_strict = (top->sort == S_EXPR && col < top->col);
     bool infix_continues = 
-                           // ≤ for S_MATCH: an op AT the arm column can't be an
-                           // arm — the arm-list must END so the op continues the
-                           // whole match (`| false -> b⏎|> g` at the arm col).
+                           // <= for S_MATCH: an op AT the arm column can't be an
+                           // arm - the arm-list must END so the op continues the
+                           // whole match (`| false -> b\n|> g` at the arm col).
                            !(top->sort == S_MATCH && col <= top->col) &&
                            !(top->sort == S_LAYOUT && col + 4 < top->col);
 
-    // `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/… arithmetic, `::` cons.
+    // `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/... arithmetic, `::` cons.
     // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
     // only doubled. Other unary-capable leads (`!` `~`) are excluded.
     if (infix_continues) {
@@ -2168,7 +2147,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
             bool infix = false;
             // `|` + any operator char = a custom `|`-led infix operator
-            // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, …). A match-arm
+            // continuation (`|>`, `||`, `|?>`, `||>`, `|@`, ...). A match-arm
             // `|` is followed by whitespace or a pattern char instead.
             if (c0 == '|')      infix = (c1 == '>' || c1 == '|' || c1 == '?' ||
                                          c1 == '@' || c1 == '!' || c1 == '%' ||
@@ -2178,7 +2157,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                                          c1 == '~' || c1 == '$');
             else if (c0 == '&') infix = (c1 == '&');                        // &&
             // `::` `:>` `:?`, and a bare `: T` ascription on its own line
-            // (`{ A = 1 }`⏎`: R`): no statement starts with `:`.
+            // (`{ A = 1 }`\n`: R`): no statement starts with `:`.
             else if (c0 == ':') infix = true;
             // `?=>!`-style operators; `?ident` is an optional named argument
             // (that line is a new statement / element).
@@ -2193,12 +2172,12 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (infix) return false;
         }
 
-        // Leading `+`/`-`/`@` — also continuation, but only in a layout body (a
+        // Leading `+`/`-`/`@` - also continuation, but only in a layout body (a
         // bracket / match arm-list keeps newline-as-element/arm separator). They
         // are unary/prefix-capable. Excluded forms: `->` (lambda/match arrow),
-        // `@"…"` (verbatim string), `@>` / `@@>` (code-quotation close).
+        // `@"..."` (verbatim string), `@>` / `@@>` (code-quotation close).
         // `@@` followed by anything but `>` is the custom path-concat operator
-        // (FAKE's `dir @@ file` written leading) — a continuation.
+        // (FAKE's `dir @@ file` written leading) - a continuation.
         if (!expr_strict && layoutish(top->sort) && (first == '+' || first == '-' || first == '@')) {
             lexer->advance(lexer, true);
             int32_t c1 = lexer->lookahead;
@@ -2213,21 +2192,21 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             if (first == '@') {
                 if (c1 != '"' && c1 != '>' && c1 != '@') return false;
                 // `@>` / `@@>` at the BODY column closes a multi-line quotation
-                // (`<@`⏎`    body`⏎`@>`): no separator, no close — the token
+                // (`<@`\n`    body`\n`@>`): no separator, no close - the token
                 // belongs to the still-open quotation expression. A DEDENTED
                 // closer falls through so the layout close fires first.
                 if (c1 == '>' && col == top->col) return false;
                 if (c1 == '@') {
                     lexer->advance(lexer, true);
-                    if (lexer->lookahead != '>') return false;   // `@@…` operator, not `@@>`
-                    if (col == top->col) return false;           // `@@>` at body col — see above
+                    if (lexer->lookahead != '>') return false;   // `@@...` operator, not `@@>`
+                    if (col == top->col) return false;           // `@@>` at body col - see above
                 }
             }
         }
 
         // A leading `.` is always a continuation: a fluent member chain on its
-        // own line (`builder⏎ .Method()`), a `.`-led custom operator (`.>>.`,
-        // FParsec style), or a `..` range — no F# statement can START with `.`.
+        // own line (`builder\n .Method()`), a `.`-led custom operator (`.>>.`,
+        // FParsec style), or a `..` range - no F# statement can START with `.`.
         if (!expr_strict && layoutish(top->sort) && first == '.') return false;
     }
 
@@ -2235,11 +2214,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
         case S_BRACKET:
             if (valid[BRACKET_CLOSE] && (is_close_bracket(first) || first == '|')) { s->n--; lexer->result_symbol = BRACKET_CLOSE; return true; }
             // Same blocker as LAYOUT_SEMI: a CE statement separator must not fire
-            // before `else`/`elif`/… — otherwise `if c then return a`⏎`else …`
-            // inside a CE detaches the else (banked-fix #3, in the new model).
+            // before `else`/`elif`/... - otherwise `if c then return a`\n`else ...`
+            // inside a CE detaches the else.
             if (valid[BRACKET_SEMI] && col == top->col && !semi_blocked(lexer, first)) { lexer->result_symbol = BRACKET_SEMI; return true; }
             // A DEEPER line led by a statement keyword is still a new element
-            // (`[ yield a`⏎`    for x in xs do …`): no expression continues with it.
+            // (`[ yield a`\n`    for x in xs do ...`): no expression continues with it.
             if (valid[BRACKET_SEMI] && col > top->col && first >= 'a' && first <= 'z') {
                 char w[12]; read_word(lexer, w, sizeof w);
                 if (!strcmp(w, "yield") || !strcmp(w, "for") || !strcmp(w, "let") || !strcmp(w, "use") ||
@@ -2248,7 +2227,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;
             }
             // First element of a `{`-block body that is itself an element DSL
-            // (`div() {⏎ span() {…}`): the mid-line block is unreachable from the
+            // (`div() {\n span() {...}`): the mid-line block is unreachable from the
             // line-boundary path, so probe here (after the separator above, so a
             // SUBSEQUENT element gets its separator first then this on re-invoke).
             if (try_element_dsl(lexer, valid)) return true;
@@ -2259,14 +2238,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             return false;
         case S_MATCH:
             // `|]` / `|}` on its own line: the array / anon-record closer, never
-            // an arm (`[|`⏎`    match v with`⏎`    | A -> 1`⏎`    |]`).
+            // an arm (`[|`\n`    match v with`\n`    | A -> 1`\n`    |]`).
             if (valid[MATCH_END] && first == '|' && (bar_c1 == ']' || bar_c1 == '}')) { s->n--; lexer->result_symbol = MATCH_END; return true; }
             // Close the arm-list when a line dedents below the arm column, or sits
             // at the arm column but does NOT start a new `|` arm. EXCEPTION: a
             // `|` exactly TWO columns left of the arm column is a continuation
-            // arm whose PATTERN aligns with the (inline) first arm's pattern —
+            // arm whose PATTERN aligns with the (inline) first arm's pattern -
             // Hopac house style:
-            //   … >>= function Cons (_, i) -> push xM i x
+            //   ... >>= function Cons (_, i) -> push xM i x
             //                | Nil -> imp ()
             if (valid[MATCH_END] && (col < top->col || (col == top->col && !bar_arm)) &&
                 !(bar_arm && col + 2 == top->col)) { s->n--; lexer->result_symbol = MATCH_END; return true; }
@@ -2281,7 +2260,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             // opens an S_TYPEBODY at its column, so the members become children
             // of the type instead of an application chain headed by `member`.
             // Decided HERE (boundary path) so a miss keeps the ordinary
-            // close/separator handling below (`type A = B`⏎`and C = D`).
+            // close/separator handling below (`type A = B`\n`and C = D`).
             if (valid[MEMBERS_OPEN] && col > top->col) {
                 bool ok = false;
                 if (first == '[') {
@@ -2297,18 +2276,18 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;   // lookahead consumed: a continuation line after an inline type body
             }
             // DANGLING DOC: skipped `///` lines sit AT/INSIDE this body, but
-            // the line after them dedents — the docs belong to THIS body (a
+            // the line after them dedents - the docs belong to THIS body (a
             // floating doc statement), not to the dedented declaration. Hold
             // the close; the doc lexes as a standalone statement (the wrapper
             // fork dies at the close that follows), then the dedent re-fires.
             if (valid[LAYOUT_END] && col < top->col &&
                 s->skipped_doc_lines && s->doc_indent >= top->col) return false;
             // A `|` case LEFT of a bare first case is still a case of this type
-            // (`type E =`⏎`      A = 0`⏎`    | B = 1`); types never nest inside
+            // (`type E =`\n`      A = 0`\n`    | B = 1`); types never nest inside
             // match arms, so a dedented `|` under a type body is never an arm.
             if (valid[LAYOUT_END] && col < top->col && top->sort == S_TYPEBODY && bar_arm) return false;
             // A `(` block closes only at a closer: a dedented line inside it is a
-            // continuation (`when (match x with`⏎`  | A -> …`, `(f a`⏎`  +> g)`).
+            // continuation (`when (match x with`\n`  | A -> ...`, `(f a`\n`  +> g)`).
             // A dedented declaration keyword is recovery for an unclosed `(`.
             if (top->par && col < top->col && first != ')' && !is_close_bracket(first) &&
                 !decl_starter(lexer, first)) return false;
@@ -2331,11 +2310,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
             // A leading `|` arm marker AT the body column: FSC permits
             // continuation arms MORE indented than their match (`| _ -> ()` at
-            // col 8, match arms at col 4 — FCS PostInferenceChecks style). The
+            // col 8, match arms at col 4 - FCS PostInferenceChecks style). The
             // body must close so the over-indented arm reaches the enclosing
             // match. Gated on such a match existing further left, and NOT
             // S_TYPEBODY (DU cases legitimately lead with `|` at the body col).
-            // `<=`: an arm body opened AT the arm column (`| p ->`⏎`| body` with
+            // `<=`: an arm body opened AT the arm column (`| p ->`\n`| body` with
             // the body undented to the `|`, LexFilter.fs) ends at the next arm.
             if (valid[LAYOUT_END] && bar_arm && col == top->col && top->sort != S_TYPEBODY) {
                 for (int i = (int)s->n - 2; i >= 0; i--) {
@@ -2346,14 +2325,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
             }
             // A leading close delimiter `)`/`]`/`}` ends the enclosing construct,
-            // so an open layout body must close first — even at == body col, where
+            // so an open layout body must close first - even at == body col, where
             // neither the dedent above nor a separator (semi_blocked on closers)
             // fires. E.g. a lambda body whose `)` is on its own line:
-            //   `g (fun c ->⏎        x⏎        )` (the `)` aligned with `x`).
+            //   `g (fun c ->\n        x\n        )` (the `)` aligned with `x`).
             if (valid[LAYOUT_END] && (first == ')' || is_close_bracket(first))) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
             // A `with` type-augmentation aligned AT the body column closes the
             // TYPE body (S_TYPEBODY only) so the augmentation attaches:
-            //   type D =⏎    | A⏎    | B⏎    with⏎        member …
+            //   type D =\n    | A\n    | B\n    with\n        member ...
             // A module body (S_LAYOUT) at == col must NOT close before `with`.
             if (top->sort == S_TYPEBODY && valid[LAYOUT_END] && col == top->col && first == 'w') {
                 lexer->advance(lexer, true);            // 'w'
@@ -2368,7 +2347,7 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
             // A module-only keyword (`open`/`module`/`namespace`/`exception`)
             // aligned AT the type-body column closes the type body. A NON-indented
-            // DU (`type T =⏎| A⏎| B⏎open …`) puts the body at the module column, so
+            // DU (`type T =\n| A\n| B\nopen ...`) puts the body at the module column, so
             // a dedent never fires; without this, the union field type
             // over-consumes the following `open Foo` as a postfix type.
             // `type` too: a non-indented DU (`| A` at column 0) followed by the
@@ -2392,11 +2371,11 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
             }
             // Separator decision. Both word peeks below (decl_starter,
             // semi_blocked) CONSUME lookahead, so they run only when a separator
-            // is actually on the table — otherwise the probes further down would
+            // is actually on the table - otherwise the probes further down would
             // see a lexer parked past the line's first word and always miss.
             if (valid[LAYOUT_SEMI] && col == top->col &&
                 !(s->skipped_doc_lines && word_is_decl_kw(s->post_doc_word))) {
-                // S_DECL: never separate before a declaration keyword — the line is a
+                // S_DECL: never separate before a declaration keyword - the line is a
                 // new `_token`, not a `sequence_expression` continuation of the prior
                 // bare-expression statement.
                 // Both tests need the line's first word; read it ONCE (each
@@ -2404,13 +2383,13 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (first >= 'a' && first <= 'z') {
                     char w[12]; read_word(lexer, w, sizeof w);
                     // `with`/`finally` AT the try body's column ends the body
-                    // (`try Map.find x g`⏎`    with _ -> …`, body col = `Map`).
+                    // (`try Map.find x g`\n`    with _ -> ...`, body col = `Map`).
                     if (top->sort == S_TRY && valid[LAYOUT_END] &&
                         (!strcmp(w, "with") || !strcmp(w, "finally"))) {
                         s->n--; lexer->result_symbol = LAYOUT_END; return true;
                     }
                     if (top->sort == S_DECL && decl_starter_word(w)) return false;
-                    // `new (...) as this =`⏎`    body`⏎`    then`⏎`    effects`: the
+                    // `new (...) as this =`\n`    body`\n`    then`\n`    effects`: the
                     // constructor body ends at a `then` at its own column.
                     if (!strcmp(w, "then") && valid[LAYOUT_END]) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                     // `else` at a then-body's own column ends the body unless the
@@ -2425,9 +2404,9 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 }
                 if (top->sort == S_DECL && decl_starter(lexer, first)) return false;
                 if (!semi_blocked(lexer, first)) { s->else_claim_col = -1; lexer->result_symbol = LAYOUT_SEMI; return true; }
-                return false;   // peeks consumed the lookahead — no further probing
+                return false;   // peeks consumed the lookahead - no further probing
             }
-            // …and RIGHT of it (a continuation-indented `with`). Nothing after
+            // ...and RIGHT of it (a continuation-indented `with`). Nothing after
             // this point applies to a `with`/`finally`-led line, so consuming
             // the word on a miss is harmless.
             if (top->sort == S_TRY && valid[LAYOUT_END] && (first == 'w' || first == 'f')) {
@@ -2435,8 +2414,8 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 if (!strcmp(w, "with") || !strcmp(w, "finally")) { s->n--; lexer->result_symbol = LAYOUT_END; return true; }
                 return false;
             }
-            // Attributed labelled param on its own line (`delegate of`⏎
-            // `[<Out>] data: byte[] * …`): the mid-line probe never sees a line
+            // Attributed labelled param on its own line (`delegate of`\n
+            // `[<Out>] data: byte[] * ...`): the mid-line probe never sees a line
             // start, so run it here. `[` cannot start either probe below.
             if (first == '[' && valid[LABEL_ATTR] && try_label_attr(lexer)) return true;
             if (valid[LABEL_GATE] && col > top->col &&
@@ -2445,14 +2424,14 @@ bool tree_sitter_fsharp_external_scanner_scan(void *p, TSLexer *lexer, const boo
                 return false;
             }
             // Element DSL as the first statement of an indented let/expr body
-            // (`let page =⏎ div() {…}`): probe after the separator above.
+            // (`let page =\n div() {...}`): probe after the separator above.
             if (try_element_dsl(lexer, valid)) return true;
-            // CE body `{` on its OWN line below the builder (`seq`⏎`    {`⏎
-            // `        yield …` — FAKE/WiX style): the mid-line CE_BRACE_OPEN
+            // CE body `{` on its OWN line below the builder (`seq`\n`    {`\n
+            // `        yield ...` - FAKE/WiX style): the mid-line CE_BRACE_OPEN
             // dispatch is unreachable from here, so classify the brace content
             // now. Records / object expressions keep the literal `{` (no token).
             if (try_ce_brace(lexer, valid, first)) return true;
-            // Own-line `10.` continuation argument (`Expect.equal x`⏎`    10.`⏎
+            // Own-line `10.` continuation argument (`Expect.equal x`\n`    10.`\n
             // `    "msg"`): same as the S_BRACKET tail above.
             if (valid[FLOAT_TRAILING_DOT] && first >= '0' && first <= '9' && scan_trailing_dot_float(lexer)) return true;
             return false;

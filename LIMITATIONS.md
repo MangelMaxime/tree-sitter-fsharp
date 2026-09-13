@@ -94,11 +94,17 @@ Removing it from `extras` is a bad trade.
 `#if <anything>` line is skippable in any state. Tightening it must still accept the ~49 of
 430 distinct corpus conditions that carry a trailing `//` or `(* *)` comment.
 
-## Known gap: a non-CE `for` with a multi-statement body
+## Resolved: a non-CE `for` with a multi-statement body
 
-Parses as a single chained application instead of a `sequence_expression`. A separate
-`_ce_for_clause` rule aliased to `for_expression` did not work - tree-sitter prefers the
-longest match, so the body-present form wins even with high precedence on the body-less one.
+```fsharp
+for x in xs do
+    printfn "a"
+    printfn "b"
+```
+
+The body is a layout opened by the `_for_open` scanner token, so the statements sequence.
+The token is withheld when the next line sits at the enclosing CE column, which keeps a
+query `for x in xs do` followed by `where`/`select` body-less.
 
 ## Known gap: dotted chains of 3+ segments
 

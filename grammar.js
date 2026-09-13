@@ -8,7 +8,7 @@
 // @ts-check
 
 // Type-level precedences (only used inside type expressions). Strict total
-// order — each tier wraps the next.
+// order - each tier wraps the next.
 const TYPE_PREC = {
     FUNCTION: 1,   // int -> string             (right-assoc, lowest)
     TUPLE:    2,   // int * string
@@ -19,13 +19,13 @@ const TYPE_PREC = {
 // Expression-level precedences. Values are listed low-to-high; equalities
 // between names at the same value are deliberate and documented below.
 const PREC = {
-    // Tier 1 — body-greedy / lowest-binding. Anything here is intentionally
+    // Tier 1 - body-greedy / lowest-binding. Anything here is intentionally
     // weaker than the operators below so that bodies expand to consume as
     // much of the trailing expression chain as possible.
     SEQ_EXPR:       1,   // virtual-semi sequence  (must be loosest)
     PIPE_EXPR:      1,   // |>, <|, >>, <<
-    FUN_EXPR:       1,   // `fun x -> …` — low so `->` body expands greedily
-    LET_EXPR:       1,   // `let x = … in …`     — same reason
+    FUN_EXPR:       1,   // `fun x -> ...` - low so `->` body expands greedily
+    LET_EXPR:       1,   // `let x = ... in ...`     - same reason
     TUPLE_EXPR:     1,   // below BOOL_OR so `||` binds tighter than `,`
 
     BOOL_OR:        2,   // ||
@@ -34,31 +34,31 @@ const PREC = {
     ADDITIVE:       5,   // + -
     MULTIPLICATIVE: 6,   // * / %
 
-    // Tier 7+ — declaration / control flow / application binding.
-    LET_DECL:       7,   // `let f x = …` (top-level binding)
+    // Tier 7+ - declaration / control flow / application binding.
+    LET_DECL:       7,   // `let f x = ...` (top-level binding)
     MATCH_EXPR:     8,   // match / try-with / function
     IF_EXPR:        14,  // if / elif / else / for / while
     PREFIX_EXPR:    15,  // unary `not` / `~~~` / `-` / `&` / `lazy` / `assert`
-    CE_EXPR:        15,  // `builder { … }` — below APP_EXPR so `f { … }` is application
-    APP_EXPR:       16,  // `f x` — application binds tighter than CE / prefix
+    CE_EXPR:        15,  // `builder { ... }` - below APP_EXPR so `f { ... }` is application
+    APP_EXPR:       16,  // `f x` - application binds tighter than CE / prefix
     LARROW:         16,  // `expr <- expr`  (mutation, similar binding)
 
-    // Tier 19+ — atomic / postfix access. Tightest binding.
+    // Tier 19+ - atomic / postfix access. Tightest binding.
     DOT:            19,  // `a.b.c` long_identifier chain
     INDEX_EXPR:     20,  // `arr.[i]`
-    PAREN_EXPR:     21,  // `(expr)` / `begin … end` / quotations
+    PAREN_EXPR:     21,  // `(expr)` / `begin ... end` / quotations
     TYPED_EXPR:     22,  // `(expr : ty)`
     DOTDOT_SLICE:   23,  // `expr..` and `..expr` inside index args
-    NEW_OBJ:        24,  // `new T(…)`
+    NEW_OBJ:        24,  // `new T(...)`
 };
 
-// Optional prefix on every decoratable declaration — zero or more attributes
-// (`[<…>]`). Used at the top of `let_binding`, `module_decl`, `member_defn`,
+// Optional prefix on every decoratable declaration - zero or more attributes
+// (`[<...>]`). Used at the top of `let_binding`, `module_decl`, `member_defn`,
 // `abstract_member_defn`, `exception_decl`, `secondary_constructor`.
 //
 // Doc comments (`///` / `(** *)`) are deliberately NOT here: as a regular token
 // a doc was grabbed as a sibling decl and ended the enclosing rule early (e.g.
-// detaching a documented type's `and` clause). They stay EXTRAS-ONLY — still in
+// detaching a documented type's `and` clause). They stay EXTRAS-ONLY - still in
 // the tree, but never terminating a rule. Cost: a leading `///` doesn't nest in
 // its decl, so `maf`/`mat` won't select it (attributes still nest).
 function decoration($) {
@@ -68,9 +68,9 @@ function decoration($) {
     return seq(repeat($.xml_doc_comment), repeat($.attribute));
 }
 
-// "Indented or inline" field list — a record-like body that's either:
-//   - multi-line: `_body_indent` (scanner pushes the field column) + fields
-//     separated by `_virtual_semi` (or explicit `;`) + `_body_dedent`;
+// "Indented or inline" field list - a record-like body that is either:
+//   - multi-line: `_record_open` (scanner pushes the field column) + fields
+//     separated by `_bracket_semi` (or explicit `;`) + `_bracket_close`;
 //   - single-line: explicit `;` only.
 // Used by both `_record_fields` (record / anonymous-record EXPRESSIONS,
 // containing `record_field`s) and `record_type_defn`'s body (record TYPE
@@ -82,7 +82,7 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
         // Block / newline-aligned form, covering both `{ F1\n F2 }` (`{` on the
         // first field's line) and `{\n F1\n F2\n}`. `_record_open` peeks for a
         // field (`ident =`/`ident :`), captures its column, and is SUPPRESSED for
-        // `{ new …}` (object expr) and `{ base with …}` (copy-update) — so those
+        // `{ new ...}` (object expr) and `{ base with ...}` (copy-update) - so those
         // grammar branches match instead. Fields separate by `_bracket_semi` (a
         // dedicated token a nested sequence can't steal) or explicit `;`; the
         // body pops on `_bracket_close` at `}`.
@@ -92,13 +92,13 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
             // No prec.dynamic on the separator: `_bracket_semi` is a dedicated
             // token an application value can't absorb, so it already stops a field
             // value from swallowing the next field. A prec above the field's
-            // application would WRONGLY end the value at its head (`X = abs 3` →
+            // application would WRONGLY end the value at its head (`X = abs 3` ->
             // `X = abs`, dropping the arg).
             repeat(seq(choice(";", $._bracket_semi), field)),
             optional(choice(";", $._bracket_semi)),
             $._bracket_close,
         ),
-        // `{ F1; F2; F3 }` — single line, explicit `;` separators only (used when
+        // `{ F1; F2; F3 }` - single line, explicit `;` separators only (used when
         // `_record_open` doesn't fire, e.g. inside a copy-update's field list).
         seq(
             field,
@@ -108,11 +108,10 @@ function indentedOrInlineFieldList($, field, sepPrec, opts) {
     );
 }
 
-// Keywords that can never be a bare identifier in F#. Populated incrementally,
-// each batch gated on `task test` + `./scripts/bench.py` + `scripts/score.py`.
-// Ordering is by measured risk: how many corpus files currently hold the word in
-// an `identifier` node. Contextual words that ARE legal identifiers (`not`,
-// `base`, `global`, `fixed`, `void`, and the query operators) stay out.
+// Keywords that can never be a bare identifier in F#. Every addition is gated on
+// `task test`, `task bench` and `task score`. Contextual words that ARE legal
+// identifiers (`not`, `base`, `global`, `fixed`, `void`, and the query operators)
+// stay out.
 const GLOBAL_RESERVED = [
     // batch A - never appear as an identifier anywhere in the bench corpus
     'abstract', 'delegate', 'downcast', 'downto',
@@ -123,27 +122,17 @@ const GLOBAL_RESERVED = [
     'internal', 'module', 'mutable', 'namespace', 'new', 'or',
     'public', 'rec', 'static', 'to', 'val', 'when',
     'then', 'elif', 'else', 'if',
-    // Batch C was ATTEMPTED IN FULL and reverted 2026-09-11 - the lever is
-    // exhausted here. Every remaining keyword is either inert or costly:
-    //   fun open override while - each cost a valid bench file, all inside a
-    //     `#if` branch where the keyword degrades to an identifier today
-    //   class end type - each break `type Marker = class end` after a
-    //     `;`-terminated expression (FsCheck Examples.fs); all three parse in
-    //     isolation, so the cause is accumulated context, not the construct
-    //   of private - measured ZERO gain (recall and degeneracy both unmoved)
-    //     while costing 7 valid dotnet/fsharp files
-    // The safe keywords are safe precisely because they are never misused, so
-    // reserving them changes nothing; the recall gains live in the risky tail.
-    // NOT reserved: `member`. It is correct in principle - `member` can never
-    // be an identifier - but reserving it turns 13 dotnet/fsharp files from
-    // "error-free but wrongly parsed" into error regions, because a type whose
-    // body is on the `=` line (`type DU = | A` / `type R = { X: int }`) has no
-    // slot for the members indented below it; they currently parse as an
-    // application chain headed by `member`. For a highlighting grammar an ERROR
-    // region is worse than one mis-coloured token, so this waits on the
-    // same-line-body fix. Adding `_type_open` to `_type_decl_body_or_class` is
-    // NOT that fix - it corrupts the layout stack (644 failing, 555 regressions).
-    // Deliberately NOT reserved, each cost a valid dotnet/fsharp file:
+    // Not reserved, each measured to cost valid bench or dotnet/fsharp files:
+    //   fun open override while - inside a `#if` branch the keyword degrades to
+    //     an identifier today
+    //   class end type - `type Marker = class end` after a `;`-terminated
+    //     expression breaks (FsCheck Examples.fs); the cause is accumulated
+    //     context, each construct parses in isolation
+    //   of private - zero gain on recall and degeneracy, 7 files lost
+    //   member - a type whose body is on the `=` line (`type DU = | A`) parsed
+    //     its indented members as an application chain headed by `member`, so
+    //     reserving it turned 13 error-free files into ERROR regions.
+    //     `_members_open` now covers that shape: re-measure before reserving.
     //   lazy   - `e: lazy<int>` is a TYPE name (tuplewithlazy01.fs)
     //   extern - heads extern_decl's C-style form (InExternDecl.fs)
     //   begin  - verbose syntax `do a then begin b end` (Sequential 03.fs)
@@ -154,7 +143,7 @@ export default grammar({
 
     word: $ => $.identifier,
 
-    // Supertypes — hidden choice rules promoted to queryable categories in
+    // Supertypes - hidden choice rules promoted to queryable categories in
     // node-types.json. Purely additive: the tree shape is unchanged (the
     // concrete subtype still appears; the supertype stays hidden), but queries
     // can now match `(_expression)` / `(_simple_expression)` / `(_literal)`
@@ -166,7 +155,7 @@ export default grammar({
         $._literal,
     ],
 
-    // Reserved word sets. `global` is intentionally empty — every keyword the
+    // Reserved word sets. `global` is intentionally empty - every keyword the
     // grammar uses is a string literal in some rule, and the parser only ever
     // accepts those positions. Since this is a syntax-highlighter-focused
     // grammar, accepting nonsense like `let else = 1` (which the F# compiler
@@ -174,9 +163,9 @@ export default grammar({
     // F# keyword.
     //
     // `query_ce` is activated only inside `computation_expression` bodies (via
-    // `reserved('query_ce', …)`) so query custom operators like `where`/`select`
+    // `reserved('query_ce', ...)`) so query custom operators like `where`/`select`
     // become their own tokens there while staying plain identifiers everywhere
-    // else (e.g. `List.where`, `let take n = …`).
+    // else (e.g. `List.where`, `let take n = ...`).
     reserved: {
         global: _ => GLOBAL_RESERVED,
         // `reserved(name, rule)` REPLACES the active set for that subtree rather
@@ -200,36 +189,36 @@ export default grammar({
         $._bracket_open,      // [ / [| / { block body on its own line(s)
         $._bracket_semi,      // newline-aligned element/field separator
         $._bracket_close,     // ] / |] / } closing a block bracket
-        $._record_open,       // `{` record body — peeks `ident =`/`ident :`; not new/copy-update
+        $._record_open,       // `{` record body - peeks `ident =`/`ident :`; not new/copy-update
         $._block_open,        // newline-gated layout open for MODULE bodies (closes via _layout_end)
         $._type_open,         // newline-gated layout open for TYPE bodies (also closes before `with`)
         $._expr_open,         // expression body (then/elif body, lambda, let-in value); closes before else/elif/in
-        $._else_open,         // final-else body; suppressed when next token is `if` (→ flat else-if)
+        $._else_open,         // final-else body; suppressed when next token is `if` (-> flat else-if)
         $._float_trailing_dot,
         // Interpolated-string TEXT chunks. External (not token.immediate) so the
-        // scanner consumes them BEFORE tree-sitter's extra-skipping — otherwise a
-        // leading `//` (e.g. `$"//# sourceMappingURL={…}"`) is lexed as a
+        // scanner consumes them BEFORE tree-sitter's extra-skipping - otherwise a
+        // leading `//` (e.g. `$"//# sourceMappingURL={...}"`) is lexed as a
         // `line_comment` extra and corrupts the string. See scan_interp_text().
         $._interp_string_text,
         $._interp_verbatim_text,
         $._interp_triple_text,
-        $._for_open,          // `for … do` body open (suppressed before query-CE operators)
-        $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (…)`) — only when `[<…>]+ (` follows
-        $._try_open,          // try/finally body open (S_TRY) — closes before `with`/`finally`
-        $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) — only when `[<…>]+ ident:` follows
-        $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(…) { … }`) — only when `ident ( … ) {` follows
-        $._and_docs_open,     // zero-width gate: `///` docs followed by `and` — docs attach to the and-clause (scanner peeks past the doc lines)
-        $._case_docs_open,    // zero-width gate: `///` docs followed by a `|` case — docs attach to the union/enum case
-        $._paren_field_open,  // named-field-pattern body open `Foo(ident = …)` — opens an S_BRACKET context for newline-aligned fields
-        $._ce_brace_open,     // the `{` of a computation_expression body — emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new … }`/`head { f = … }` divert to application+object/record
-        $.block_comment,      // `(* … *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
-        $.block_doc_comment,  // `(** … *)` doc form (same scan; classified by the 3rd char)
-        $._then_open,         // then/elif body open — like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
-        $._lazy_open,         // lazy block-body open — like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
-        $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = …` — only when `ident ( … ) ,` follows (fn defs never have `,` after params)
+        $._for_open,          // `for ... do` body open (suppressed before query-CE operators)
+        $._ctor_attr,         // zero-width gate: an attribute on a primary ctor (`type T [<ParamObject>] (...)`) - only when `[<...>]+ (` follows
+        $._try_open,          // try/finally body open (S_TRY) - closes before `with`/`finally`
+        $._label_attr,        // zero-width gate: attribute on a labelled param (`[<ParamArray>] xs: obj[]`) - only when `[<...>]+ ident:` follows
+        $._element_dsl_open,  // zero-width gate: Oxpecker element-DSL builder (`div(...) { ... }`) - only when `ident ( ... ) {` follows
+        $._and_docs_open,     // zero-width gate: `///` docs followed by `and` - docs attach to the and-clause (scanner peeks past the doc lines)
+        $._case_docs_open,    // zero-width gate: `///` docs followed by a `|` case - docs attach to the union/enum case
+        $._paren_field_open,  // named-field-pattern body open `Foo(ident = ...)` - opens an S_BRACKET context for newline-aligned fields
+        $._ce_brace_open,     // the `{` of a computation_expression body - emitted (consuming `{`) ONLY when the brace content is a CE body (not record/object/copy-update), so `head { new ... }`/`head { f = ... }` divert to application+object/record
+        $.block_comment,      // `(* ... *)` with NESTING (regex can't nest; `(*)` stays the multiply operator)
+        $.block_doc_comment,  // `(** ... *)` doc form (same scan; classified by the 3rd char)
+        $._then_open,         // then/elif body open - like _expr_open but flagged: ONLY these bodies close at a mid-line `else`
+        $._lazy_open,         // lazy block-body open - like _expr_open but DECLINES inline bodies (`lazy x` stays the plain branch)
+        $._ctor_tuple_gate,   // zero-width gate: `let Ctor(a, b), rest = ...` - only when `ident ( ... ) ,` follows (fn defs never have `,` after params)
         $._preproc_break,     // zero-width: a `#if`-family directive line separates this declaration from a line that starts a new one
-        $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION — consumed as trivia so the sequence can end (see scanner)
-        $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`⏎`    member …`)
+        $._decl_semi,         // a statement-ending `;` whose next line starts a DECLARATION - consumed as trivia so the sequence can end (see scanner)
+        $._members_open,      // zero-width: members INDENTED below a same-line type body (`type DU = | A`\n`    member ...`)
         $._label_gate,        // zero-width: `ident :` (not `::` `:>` `:?` `:=`) ahead - a labelled type element starts here
         $._paren_block_open,  // zero-width: `(` followed by a newline - the body is a layout block closed by `)`
         $._infix_block_open,  // zero-width: `&&` / `||` at the end of a line with a deeper next line - the right operand is a layout block
@@ -238,7 +227,7 @@ export default grammar({
 
     extras: $ => [/\s+/, $.xml_doc_comment, $.line_comment, $.block_comment, $.block_doc_comment,
         $.line_directive,
-        // `;;` is the FSI / script interaction terminator — pure punctuation with no
+        // `;;` is the FSI / script interaction terminator - pure punctuation with no
         // semantic content, so it's skippable anywhere (like a comment). Longer-match
         // beats the single `;` separator, and a bare `; ;` never occurs in valid F#.
         $.fsi_terminator,
@@ -248,7 +237,7 @@ export default grammar({
         // The scanner emits this only when a declaration keyword follows, so the
         // `;` never reaches `sequence_expression` (which would shift it and then
         // demand an expression). An extra needs no grammar slot, which is the
-        // point — LR(1) cannot see past the `;` to decide.
+        // point - LR(1) cannot see past the `;` to decide.
         $._decl_semi,
         // Conditional-compilation directives are skippable anywhere (see
         // preproc_if). BOTH branches of `#if/#else` parse as REAL code (the
@@ -271,23 +260,22 @@ export default grammar({
         // sequence_expression prefers the one-statement reading when one does.
         [$.sequence_expression, $._token],
         // A leading `///` doc: decoration of the FOLLOWING declaration
-        // (preferred — the standalone _token alternative carries
+        // (preferred - the standalone _token alternative carries
         // prec.dynamic(-1)) vs a standalone doc statement (survives alone at
         // end-of-scope / before un-slotted constructs).
         [$.module_decl, $.type_decl, $.type_extension, $.let_binding, $.exception_decl, $.val_field, $._token],
-        // …and the class-body twin of the same fork (incl. type bodies where a
+        // ...and the class-body twin of the same fork (incl. type bodies where a
         // doc could open a union/enum case OR a member).
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.let_binding],
         [$._class_body_member, $.secondary_constructor, $.member_defn, $.abstract_member_defn, $.interface_impl, $.val_field, $.record_type_defn, $.let_binding],
         // KEEP despite the generator's "unnecessary conflicts" warning: the
         // checker reports the core rules under their ALIAS display names
-        // (let_binding, member_defn, …) and then fails to recognise this set
-        // as covering them. Removing it is a build ERROR (try it: `type X =
-        // [<attr>] member …` becomes an unresolved conflict). Verified
-        // 2026-06-11, tree-sitter-cli 0.26.x.
+        // (let_binding, member_defn, ...) and then fails to recognise this set
+        // as covering them. Removing it is a build ERROR: `type X =
+        // [<attr>] member ...` becomes an unresolved conflict.
         [$._decl_or_comment, $._secondary_ctor_core, $._member_defn_core, $._abstract_member_core, $._val_field_core, $._let_binding_core],
-        // `static member X :` — a return-type-annotated method (`… : int = 1`)
-        // or a bodiless signature (`… : int`). GLR explores both; the signature
+        // `static member X :` - a return-type-annotated method (`... : int = 1`)
+        // or a bodiless signature (`... : int`). GLR explores both; the signature
         // branch carries prec.dynamic(-1) so the `=` form wins when it survives.
         // After a value expression, a bare identifier could extend it (postfix_type /
         // application_expression argument) or name the next record field.
@@ -304,20 +292,20 @@ export default grammar({
         // After `module M =`, the identifier is either a module abbreviation target
         // or the first declaration of a nested module body.
         [$._module_rhs],
-        // Attribute / doc-comment prefix: at top level the same `[<…>]` or `///`
+        // Attribute / doc-comment prefix: at top level the same `[<...>]` or `///`
         // token could be a standalone `_decl_or_comment` child OR the start of
         // a decl's decoration prefix. GLR explores both; we bias toward
         // attachment via `prec.dynamic` on the decl branch.
         [$._decl_or_comment, $._let_binding_core, $._module_decl_core, $._exception_decl_core, $._val_field_core],
-        // Same situation inside a class/type body — `[<…>]` or `///` could be
+        // Same situation inside a class/type body - `[<...>]` or `///` could be
         // a standalone `_class_body_member` (via `_decl_or_comment`) or the
         // start of any decoratable member's prefix.
         [$._decl_or_comment, $.let_binding, $.member_defn, $.abstract_member_defn, $.secondary_constructor, $.val_field],
         // `expr <` may begin a `type_application_expression`
         // (`Map.empty<string, int>`) or a `<` comparison in
         // `binary_expression`. GLR explores both; type_application only
-        // succeeds when `<…>` contains `type_expression , type_expression
-        // … >`, otherwise binary wins.
+        // succeeds when `<...>` contains `type_expression , type_expression
+        // ... >`, otherwise binary wins.
         [$.type_application_expression, $._expression],
         [$.type_application_expression, $._simple_expression],
         // `( x` opening a pattern could be a plain tuple_pattern (first element a
@@ -329,17 +317,17 @@ export default grammar({
         // also a plain type (`x: int list` - the postfix race). GLR explores both;
         // the enclosing construct selects the right one.
         [$.labelled_type, $.type_expression],
-        // `#Foo<int>` — the `<` could extend `Foo` into a `generic_type` inside the
+        // `#Foo<int>` - the `<` could extend `Foo` into a `generic_type` inside the
         // flexible type, or (after `#Foo`) start a comparison. GLR explores both;
         // in a type position the generic form wins.
         [$.flexible_type, $.generic_type],
-        // `( _ …` in a param list: the `_` could be a lambda pattern element or a
-        // `tuple_param` wildcard (OOP/member param, `member _.M(_: int, …)`).
+        // `( _ ...` in a param list: the `_` could be a lambda pattern element or a
+        // `tuple_param` wildcard (OOP/member param, `member _.M(_: int, ...)`).
         [$.tuple_param, $.pattern],
         [$.tuple_param, $.destructure_parameter],
         // A function-type RETURN can be a nullable `T | null`; in a DU case
         // (`type X = A of int -> 'a | B`) the `|` could instead start the next union
-        // case. GLR explores both — `null` after `|` → nullable, otherwise the type
+        // case. GLR explores both - `null` after `|` -> nullable, otherwise the type
         // ends and `|` is the case separator.
     ],
 
@@ -347,7 +335,7 @@ export default grammar({
     rules: {
         source_file: $ => repeat($._token),
 
-        // `;;` — FSI / script interaction terminator. An `extra` (skippable anywhere),
+        // `;;` - FSI / script interaction terminator. An `extra` (skippable anywhere),
         // so it doesn't need a slot in every statement/expression position. `token`
         // makes it a single 2-char lexeme that out-prioritises the `;` separator.
         fsi_terminator: _ => token(";;"),
@@ -362,9 +350,9 @@ export default grammar({
         ),
 
         // module Foo.Bar                    (file-level / abbreviated module)
-        // module [private|internal] Foo =   (nested module — body indented under,
-        //                                    consumed as children via _body_indent)
-        // module M = Lib                    (module abbreviation — target captured as abbrev field)
+        // module [private|internal] Foo =   (nested module - body indented under,
+        //                                    consumed as children via _block_open)
+        // module M = Lib                    (module abbreviation - target captured as abbrev field)
         // module M = Lib.Math.Integer       (qualified abbreviation target)
         //
         // After `=` we choose between an abbreviation target (inline
@@ -377,7 +365,7 @@ export default grammar({
         _module_decl_core: $ => seq(
             repeat($.attribute),
             "module",
-            // `module [<AutoOpen>]SeqTOperations =` — attributes may sit BETWEEN
+            // `module [<AutoOpen>]SeqTOperations =` - attributes may sit BETWEEN
             // the keyword and the name (FSharpPlus style).
             repeat($.attribute),
             optional($.access_modifier),
@@ -394,13 +382,13 @@ export default grammar({
             "[<",
             $.attribute_target,
             repeat(seq(";", $.attribute_target)),
-            optional(";"),       // `[<Benchmark(…); BenchmarkCategory("GET");>]` — trailing `;`
+            optional(";"),       // `[<Benchmark(...); BenchmarkCategory("GET");>]` - trailing `;`
             ">]",
         ),
 
         attribute_target: $ => seq(
             // Optional target specifier: `[<return: Struct>]`, `[<assembly:
-            // AssemblyVersion(…)>]`, `[<param: …>]`. `return`/`module`/`type` are
+            // AssemblyVersion(...)>]`, `[<param: ...>]`. `return`/`module`/`type` are
             // keyword tokens; the rest lex as plain identifiers.
             optional(seq(
                 field('target', choice($.identifier, "return", "module", "type")),
@@ -408,21 +396,21 @@ export default grammar({
             )),
             field('name', $.long_identifier),
             optional(choice(
-                // `[<Foo(args)>]` — parenthesised constructor arguments. The `( )`
+                // `[<Foo(args)>]` - parenthesised constructor arguments. The `( )`
                 // boundary lets these be ARBITRARY expressions (named args `X=y`,
-                // arithmetic, arrays, `typeof<…>`, several comma-separated args).
+                // arithmetic, arrays, `typeof<...>`, several comma-separated args).
                 seq(
                     "(",
                     optional(seq($._attr_paren_arg, repeat(seq(",", $._attr_paren_arg)))),
                     ")",
                 ),
-                // `[<Direct @"…">]` / `[<Foo "x">]` — bare single-argument form
+                // `[<Direct @"...">]` / `[<Foo "x">]` - bare single-argument form
                 field('argument', $._attribute_arg),
             )),
         ),
 
         // A parenthesised-attribute argument: any expression, or an ascribed
-        // one — `DefaultParameterValue(null: string | null)` (F# 9 nullness,
+        // one - `DefaultParameterValue(null: string | null)` (F# 9 nullness,
         // FCS DependencyProvider). The ascription type may be nullable.
         _attr_paren_arg: $ => choice(
             $._expression,
@@ -447,7 +435,7 @@ export default grammar({
 
 
         // Body of a `type ... =` or `and ... =` declaration. Shared by type_decl and
-        // type_and_decl. Class/interface bodies aren't included here — their members
+        // type_and_decl. Class/interface bodies aren't included here - their members
         // appear as flat top-level _token siblings after the type header.
         //   type Point = { X: int; Y: int }
         //   type Shape = | Circle of float | Rectangle of float * float
@@ -465,7 +453,7 @@ export default grammar({
             // `[<Measure>] type hertz = / second` - a reciprocal measure. Only
             // here: inside measure_expression it would compete with juxtaposition.
             field('alias', alias(seq("/", $.measure_expression), $.measure_expression)),
-            // `type ``[,]``<'T> = (# "!0[0 ...,0 ...]" #)` — IL array type
+            // `type ``[,]``<'T> = (# "!0[0 ...,0 ...]" #)` - IL array type
             // definitions (FSharp.Core prim-types-prelude only).
             field('alias', $.inline_il_expression),
             prec.dynamic(1, field('alias', $.type_expression)),
@@ -477,15 +465,15 @@ export default grammar({
 
         // `=` is optional: `[<Measure>] type kg` and empty class/interface bodies have none.
         // After `=`, the body takes one of two shapes:
-        //   • Inline (same line): a `_type_decl_body` — record `{…}`, union/enum
-        //     `| Case`, alias, etc. — parses directly without any body-indent token.
-        //   • Indented (own line at deeper column): `_body_indent` fires, and the
+        //   - Inline (same line): a `_type_decl_body` - record `{...}`, union/enum
+        //     `| Case`, alias, etc. - parses directly without any body-indent token.
+        //   - Indented (own line at deeper column): `_type_open` fires, and the
         //     content inside is EITHER the same `_type_decl_body` (for record /
         //     union / enum / etc. wrapping at the type-body column) OR a sequence
-        //     of class-body members (`member this.X = …`, `val`, etc.).
+        //     of class-body members (`member this.X = ...`, `val`, etc.).
         //
         // This makes class/extension members CHILDREN of `type_decl` rather than
-        // `_token` siblings — fixes expand-selection (member → type → file) and
+        // `_token` siblings - fixes expand-selection (member -> type -> file) and
         // gives "Enter after a member" the correct indent (the member's own column).
         type_decl: $ => choice(
             seq(repeat1($.xml_doc_comment), field('decl', alias($._type_decl_core, $.type_decl))),
@@ -497,43 +485,43 @@ export default grammar({
         _type_head: $ => prec.right(seq(
             "type",
             repeat($.attribute),
-            // `type private Foo = …` — visibility of the TYPE itself, before
+            // `type private Foo = ...` - visibility of the TYPE itself, before
             // the name. Distinct from the slot below (which controls
             // visibility of the primary CONSTRUCTOR).
             optional($.access_modifier),
-            // ML-style prefix type parameters: `type 'T set = …`,
-            // `type ('a, 'b) pair = …`. Alternative to the postfix `<…>` list.
+            // ML-style prefix type parameters: `type 'T set = ...`,
+            // `type ('a, 'b) pair = ...`. Alternative to the postfix `<...>` list.
             optional($.prefix_type_parameters),
             field('name', $.identifier),
             optional($.type_parameter_list),
-            // `type Foo<'T> when 'T: comparison = …` — constraints may also sit
-            // OUTSIDE the `<…>` list, between it and `=`.
+            // `type Foo<'T> when 'T: comparison = ...` - constraints may also sit
+            // OUTSIDE the `<...>` list, between it and `=`.
             optional($._when_constraints),
-            // `type Foo private (...)` — F# allows an access modifier between
+            // `type Foo private (...)` - F# allows an access modifier between
             // the type-parameter list and the primary constructor (controls
             // who can call the constructor, not visibility of the type).
             // Group with primary_constructor so the `(` lookahead sees a
             // single optional alternative (high prec) rather than two
-            // independent optionals — helps when extras (comments) sit
+            // independent optionals - helps when extras (comments) sit
             // between the name and the constructor.
-            // KNOWN GAP: `type X⏎ /// <param …>⏎ (ctor) =` — docs between the
+            // KNOWN GAP: `type X`\n`/// <param ...>`\n`(ctor) =` - docs between the
             // name and the primary constructor do NOT attach (and the ctor
-            // mis-parses): three gating mechanisms were tried 2026-06-11 (un-
-            // gated slot, scanner marker, split alternatives) — the marker is
-            // never offered in the name-tail state. 2 vendored files affected.
+            // mis-parses). An ungated slot, a scanner marker and split
+            // alternatives were all tried: the marker is never offered in the
+            // name-tail state.
             optional(prec(20, seq(
                 optional($.access_modifier),
                 $.primary_constructor,
             ))),
-            // `as this` — names the constructed instance so the body can refer
+            // `as this` - names the constructed instance so the body can refer
             // back to it. Identifier is conventionally `this` but any name is
             // legal (`as self`, etc.).
             optional(seq("as", field('self', $.identifier))),
         )),
 
-        // Augmentation `with member …` can ONLY follow when `=` is present.
+        // Augmentation `with member ...` can ONLY follow when `=` is present.
         // Without `=`, the `with` belongs to `type_extension` instead
-        // (`type Foo with …` — extending an already-declared type).
+        // (`type Foo with ...` - extending an already-declared type).
         _type_rhs: $ => prec.right(seq(
             "=",
             optional($._type_decl_body_or_class),
@@ -568,15 +556,15 @@ export default grammar({
             optional(seq("as", field('self', $.identifier))),
         )),
 
-        // Trailing `with member …` after a type definition body — F#'s
+        // Trailing `with member ...` after a type definition body - F#'s
         // "type augmentation" form, adding members at the point of declaration:
         //   type Point = { X: int; Y: int } with
-        //       member this.Magnitude = …
+        //       member this.Magnitude = ...
         // The members become children of `type_decl` (same as the regular class
-        // body). Two body shapes: INDENTED on the next line(s) (`_body_indent`),
+        // body). Two body shapes: INDENTED on the next line(s) (`_layout_open`),
         // or INLINE on the same line as `with` (`type Index = Index of string with
-        // interface IIndex with member …`). Distinct from `type_extension`
-        // (`type Foo with …` with no `=`), which augments from outside.
+        // interface IIndex with member ...`). Distinct from `type_extension`
+        // (`type Foo with ...` with no `=`), which augments from outside.
         _type_augmentation: $ => prec.right(seq(
             "with",
             optional(choice(
@@ -585,8 +573,8 @@ export default grammar({
             )),
         )),
 
-        // Intrinsic or external type extension. The body — extension members —
-        // follows the `with` and is wrapped by `_body_indent`/`_body_dedent` so
+        // Intrinsic or external type extension. The body - extension members -
+        // follows the `with` and is wrapped by `_layout_open`/`_layout_end` so
         // members are children of `type_extension`, not siblings.
         //   type Foo with             type Foo<'T> with             type System.String with
         type_extension: $ => choice(
@@ -597,7 +585,7 @@ export default grammar({
         _type_extension_core: $ => seq(
             "type",
             repeat($.attribute),
-            // `type internal Foo with …` — an accessibility modifier is legal on
+            // `type internal Foo with ...` - an accessibility modifier is legal on
             // an extension just as on `type`/`and` declarations (FAKE house style).
             optional($.access_modifier),
             field('name', $.type_extension_name),
@@ -606,14 +594,14 @@ export default grammar({
             optional($._class_body_block),
         ),
 
-        // Body of `type Foo = …` (or `and Foo = …`): inline `_type_decl_body`
+        // Body of `type Foo = ...` (or `and Foo = ...`): inline `_type_decl_body`
         // when on the same line as `=`, or an indented wrap when on a new line.
         // Inside the indented wrap, the body content is EITHER another
         // `_type_decl_body` (for record/union/enum/alias whose first significant
         // token sits at the body column) or a sequence of class-body members.
         _type_decl_body_or_class: $ => choice(
             // A same-line body may be followed by INDENTED members
-            // (`type DU = | A`⏎`    member this.F = 1`). `_members_open` is a
+            // (`type DU = | A`\n`    member this.F = 1`). `_members_open` is a
             // scanner gate: emitted only when the next line indents past the
             // enclosing context AND starts with a member keyword (or `[<`) -
             // an ungated `_type_open` here corrupted the layout stack.
@@ -622,12 +610,12 @@ export default grammar({
                 $._type_open,
                 choice(
                     // Record / union / enum / etc. body, OPTIONALLY followed
-                    // by augmentation members in the same indented block —
+                    // by augmentation members in the same indented block -
                     // with or without a `with` keyword. Valid F#:
-                    //   type Project =            type NonEmptyMap<…> =
-                    //       | A                       private { Value: Map<…> } with
-                    //       | B                       member this.Item k = …
-                    //       static member ofString s = …
+                    //   type Project =            type NonEmptyMap<...> =
+                    //       | A                       private { Value: Map<...> } with
+                    //       | B                       member this.Item k = ...
+                    //       static member ofString s = ...
                     // The mid-line `with` after the body's `}` is consumed HERE,
                     // inside the typebody layout (no close needed); the
                     // augmentation-below-at-type-col form (`with` on its own
@@ -639,7 +627,7 @@ export default grammar({
                 $._layout_end,
             ),
             // INLINE single-member body: `type Lift = static member inline
-            // Invoke (x) = …` (FSharpPlus MonadTrans) — no layout open fires
+            // Invoke (x) = ...` (FSharpPlus MonadTrans) - no layout open fires
             // when the member sits on the `=` line itself.
             $._class_body_member,
         ),
@@ -648,12 +636,12 @@ export default grammar({
         // and `_class_body_member` (type body). Both contexts allow attributes
         // and top-level value declarations (let/do). Tree-sitter inlines
         // hidden rules in choice positions, so the parent's children still
-        // appear directly as `attribute`, `let_binding`, etc. — no extra
+        // appear directly as `attribute`, `let_binding`, etc. - no extra
         // wrapping node.
         //
-        // No comment forms here, INCLUDING doc comments — see `decoration()`:
+        // No comment forms here, INCLUDING doc comments - see `decoration()`:
         // a comment as a regular token terminates the enclosing rule early
-        // (detaches `type … and …`, breaks primary_constructor). Doc comments
+        // (detaches `type ... and ...`, breaks primary_constructor). Doc comments
         // stay extras-only.
         _decl_or_comment: $ => choice(
             $.attribute,
@@ -680,7 +668,7 @@ export default grammar({
             $.identifier,                                          // simple: Foo
         ),
 
-        // Parenthesised comma-separated parameter group — OOP/tuple calling convention.
+        // Parenthesised comma-separated parameter group - OOP/tuple calling convention.
         // Used in primary constructors, secondary constructors, and method members.
         // Each element may be optional (?name) and/or typed (name: type).
         tuple_params: $ => seq(
@@ -696,15 +684,12 @@ export default grammar({
             ")",
         ),
 
-        // Primary constructor for class types: `type T()` or `type Dog(name: string, …)`.
-        // The `unit` branch handles `type T()` — the lexer atomises `()` into the unit
-        // token, so we accept it here rather than splitting it back into `(` `)`.
-        // Primary constructor for class types: `type T()` / `type Dog(name, …)`,
-        // and `type T [<ParamObject; Emit>] (…)` (Fable interop — attributes on the
+        // Primary constructor for class types: `type T()` / `type Dog(name, ...)`,
+        // and `type T [<ParamObject; Emit>] (...)` (Fable interop - attributes on the
         // ctor). The attribute form is gated by the scanner token `_ctor_attr`,
-        // emitted ONLY when `[<…>]+` is immediately followed by `(`. That avoids
+        // emitted ONLY when `[<...>]+` is immediately followed by `(`. That avoids
         // mis-grabbing a standalone attribute on the NEXT declaration
-        // (`[<Measure>] type cm`⏎`[<Measure>] type kg`, where `[<Measure>]` is
+        // (`[<Measure>] type cm`\n`[<Measure>] type kg`, where `[<Measure>]` is
         // followed by `type`, not `(`).
         primary_constructor: $ => prec(20, choice(
             // `type T [<Obsolete>] () =` - an attributed ctor whose parameter
@@ -715,10 +700,10 @@ export default grammar({
                 $.unit,
             ),
             seq(
-                // `type T [<ParamObject; Emit("$0")>]⏎ private (…)` — an access
+                // `type T [<ParamObject; Emit("$0")>]\n private (...)` - an access
                 // modifier may follow the ctor attributes (Fable interop).
-                // The gated group may be docs-only, attrs-only, or both —
-                // the scanner requires ≥1 doc/attr row before the `(`.
+                // The gated group may be docs-only, attrs-only, or both -
+                // the scanner requires >=1 doc/attr row before the `(`.
                 optional(seq($._ctor_attr, repeat($.xml_doc_comment), repeat($.attribute), optional($.access_modifier))),
                 "(",
                 $.tuple_param,
@@ -734,18 +719,18 @@ export default grammar({
             choice(
                 $.identifier,
                 $.wildcard_pattern,
-                // `(AesKey key: T, iv)` — a single-case union / active-pattern
+                // `(AesKey key: T, iv)` - a single-case union / active-pattern
                 // deconstruction carrying a type, as a tuple-param element.
                 prec.right(seq($.long_identifier, repeat1($._tuple_elem_pattern))),
-                // `(s, (r, x): int * float)` — a parenthesised tuple pattern as a
+                // `(s, (r, x): int * float)` - a parenthesised tuple pattern as a
                 // tuple-param element, optionally type-annotated (handled by the
                 // trailing `: type` below).
                 $.tuple_pattern,
             ),
-            // `value: string | null` — nullable is unambiguous here (params are
+            // `value: string | null` - nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.
             // The optional constraint clause covers `(x: ^t when ^t: null and
-            // ^t: struct, _mthd: Default1)` — the FSharpPlus Control/* idiom:
+            // ^t: struct, _mthd: Default1)` - the FSharpPlus Control/* idiom:
             // a `when` after a param's type can only be a constraint here.
             optional(seq(":", $.type_expression,
                 optional(choice($._when_constraints, seq(":>", $.type_expression))))),
@@ -763,7 +748,7 @@ export default grammar({
                 repeat($.attribute),
                 optional($.access_modifier),
                 "new",
-                // `new x = …` — an unparenthesised single param.
+                // `new x = ...` - an unparenthesised single param.
                 field('parameters', choice($.tuple_params, $.identifier)),
                 optional(seq("as", field('self', $.identifier))),
                 $._ctor_rhs,
@@ -781,15 +766,15 @@ export default grammar({
         // `: TypeExpr` return-type annotation. Shared by let_binding, let_and_binding,
         // let_decl_indented, let_expression Branch B, _method_body, and auto-properties.
         //
-        // F# allows a trailing `when …` constraints clause after the return
-        // type — used in inline SRTP functions to attach member constraints
-        // outside an explicit `<…>` type-parameter list, e.g.
+        // F# allows a trailing `when ...` constraints clause after the return
+        // type - used in inline SRTP functions to attach member constraints
+        // outside an explicit `<...>` type-parameter list, e.g.
         //   let inline replace (a: ^a) : ^b
         //       when (CFunctor or ^b) : (static member replace: ^a * ^b -> ^b)
-        //       = …
+        //       = ...
         _return_type_annot: $ => seq(
             ":",
-            repeat($.attribute),    // `let f(x) : [<A>] int = …`
+            repeat($.attribute),    // `let f(x) : [<A>] int = ...`
             field('return_type', $.type_expression),
             optional(seq(
                 "when",
@@ -798,10 +783,10 @@ export default grammar({
             )),
         ),
 
-        // `member/override/default [inline] [access] self.Name[<'T,…>]` —
+        // `member/override/default [inline] [access] self.Name[<'T,...>]` -
         // shared by method and property forms. Optional `type_parameter_list`
         // lets generic methods like `member this.Map<'T>(x: 'T) = x` parse.
-        // `access_modifier` (`member inline internal _.P () = …`) controls
+        // `access_modifier` (`member inline internal _.P () = ...`) controls
         // the member's visibility independently of the type's.
         _instance_member_prefix: $ => seq(
             choice("member", "override", "default"),
@@ -809,27 +794,27 @@ export default grammar({
             optional($.access_modifier),
             field('self', $.member_self_ident),
             ".",
-            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `member _.(|A|B|) x = …`
+            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `member _.(|A|B|) x = ...`
             optional($.type_parameter_list),
         ),
 
-        // `static member [inline] Name[<'T,…>]` — shared by method and property
+        // `static member [inline] Name[<'T,...>]` - shared by method and property
         // forms. F# accepts `inline` between `member` and the name (the typical
         // placement, e.g. `static member inline Add x y = x + y`).
         //
         // `operator_name` is accepted as the name so operator overloads like
-        // `static member (>) (a, b) = …` parse as members instead of
+        // `static member (>) (a, b) = ...` parse as members instead of
         // generating cascading errors that break downstream highlighting.
         _static_member_prefix: $ => seq(
             "static",
             "member",
             optional("inline"),
             optional($.access_modifier),
-            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `static member (|A|B|) x = …`
+            field('name', choice($.identifier, $.operator_name, $.active_pattern_name)),   // `static member (|A|B|) x = ...`
             optional($.type_parameter_list),
         ),
 
-        // `params [:return-type] = expr` — shared by instance and static method members.
+        // `params [:return-type] = expr` - shared by instance and static method members.
         // Body optional so mid-edit `member this.Foo() =` still produces a real
         // `member_defn` node (no MISSING-identifier recovery), giving Helix's
         // indent walk something concrete to anchor `@extend` against. prec.right
@@ -848,20 +833,20 @@ export default grammar({
                     // `member X =` (mid-edit, no body yet) parseable.
                     optional(choice(
                         $._layout_body,
-                        // Branch written out to its own `=` (`#if X`⏎`static member
-                        // inline f (…) =`⏎`#else`⏎`static member f (…) =`⏎`#endif`⏎
+                        // Branch written out to its own `=` (`#if X`\n`static member
+                        // inline f (...) =`\n`#else`\n`static member f (...) =`\n`#endif`\n
                         // `    body`): the body belongs to the LAST branch.
                         $._preproc_break,
                     )),
                 ),
-                // `#if A`⏎`static member inline f<'T>`⏎`#else`⏎`static member f<'T>`⏎
-                // `#endif`⏎`() = …` — both branches are the SAME member, so the first
+                // `#if A`\n`static member inline f<'T>`\n`#else`\n`static member f<'T>`\n
+                // `#endif`\n`() = ...` - both branches are the SAME member, so the first
                 // one has no `=` of its own. The scanner only emits the break when a
                 // directive line is followed by a declaration keyword.
                 $._preproc_break,
         )),
 
-        // `with get/set accessor [and get/set accessor]` — shared by property forms.
+        // `with get/set accessor [and get/set accessor]` - shared by property forms.
         _accessor_body: $ => prec.right(seq(
             "with",
             $.property_accessor,
@@ -875,8 +860,8 @@ export default grammar({
         //   override this.ToString() = expr
         //   member this.Prop with get() = e [and set(v) = e]
         //   [static] member val AutoProp = expr [with get [, set]]
-        // `prec.dynamic(1, …)` on every branch biases toward attaching leading
-        // `[<…>]` and `///` to the member rather than leaving them as
+        // `prec.dynamic(1, ...)` on every branch biases toward attaching leading
+        // `[<...>]` and `///` to the member rather than leaving them as
         // standalone `_class_body_member` siblings (which is the competing
         // reading at the choice point).
         member_defn: $ => choice(
@@ -901,7 +886,7 @@ export default grammar({
                 repeat($.attribute),
                 $._static_member_prefix, $._accessor_body,
             )),
-            // Auto-property — instance/static differ only by the `static` prefix;
+            // Auto-property - instance/static differ only by the `static` prefix;
             // `override val` / `default val` implement an abstract auto-property.
             prec.dynamic(1, prec.right(seq(
                 repeat($.attribute),
@@ -911,7 +896,7 @@ export default grammar({
                     "default",
                 ),
                 "val",
-                optional($.access_modifier),   // `member val public N = …`
+                optional($.access_modifier),   // `member val public N = ...`
                 field('name', $.identifier),
                 $._member_val_rhs,
             ))),
@@ -921,9 +906,9 @@ export default grammar({
 
         // get() = expr  or  set(v) = expr  (inside a property definition).
         // `inline` may precede the accessor keyword
-        // (`with inline get () = …` / `and inline set v = …`).
+        // (`with inline get () = ...` / `and inline set v = ...`).
         // A return-type annotation is allowed after the parameters
-        // (`with get (count : int) : string = …`).
+        // (`with get (count : int) : string = ...`).
         property_accessor: $ => seq(
             optional("inline"),
             choice("get", "set"),
@@ -940,10 +925,10 @@ export default grammar({
 
         member_self_ident: $ => $.identifier,
 
-        // abstract member Name: TypeExpr                     — method or read-only property
-        // abstract member Prop: int with get, set             — read-write property
-        // abstract member F<'T>: 'T -> 'T                     — generic method
-        // Reuses `auto_property_accessors` for the `with get [, set]` clause —
+        // abstract member Name: TypeExpr                     - method or read-only property
+        // abstract member Prop: int with get, set             - read-write property
+        // abstract member F<'T>: 'T -> 'T                     - generic method
+        // Reuses `auto_property_accessors` for the `with get [, set]` clause -
         // the syntax is identical to the one on member-val auto-properties.
         abstract_member_defn: $ => choice(
             seq(repeat1($.xml_doc_comment), field('decl', alias($._abstract_member_core, $.abstract_member_defn))),
@@ -960,7 +945,7 @@ export default grammar({
         ))),
 
         // inherit BaseClass(arg1, arg2) [as super]
-        // Optional `as super` names the base instance — `super` is the
+        // Optional `as super` names the base instance - `super` is the
         // conventional identifier, but any name is legal. The bound name
         // shadows the built-in `base` keyword inside overrides:
         //   inherit Dog(name) as super
@@ -970,17 +955,17 @@ export default grammar({
             field('base', $.type_expression),
             optional($._paren_args),
             optional(seq("as", field('alias', $.identifier))),
-            // `inherit Base(x) with`⏎`    member …` — indented members only; the
-            // inline form (`inherit B() with member …`) costs ~600 parser states.
+            // `inherit Base(x) with`\n`    member ...` - indented members only; the
+            // inline form (`inherit B() with member ...`) costs ~600 parser states.
         )),
 
         // interface IFoo with                interface IBar with
-        //     member this.A = …                  member _.B = …
+        //     member this.A = ...                  member _.B = ...
         //
-        // Same `_body_indent`/`_body_dedent` pattern as `type_extension`: the
+        // Same `_layout_open`/`_layout_end` pattern as `type_extension`: the
         // member impls following `with` become children of the `interface_impl`
-        // node, so expand-selection walks identifier → member_defn →
-        // interface_impl → enclosing class/object_expression.
+        // node, so expand-selection walks identifier -> member_defn ->
+        // interface_impl -> enclosing class/object_expression.
         interface_impl: $ => choice(
             seq(repeat1($.xml_doc_comment), field('decl', alias($._interface_impl_core, $.interface_impl))),
             $._interface_impl_core,
@@ -990,7 +975,7 @@ export default grammar({
             "interface",
             field('type', $.type_expression),
             // `with` members: INDENTED on the next line(s), or INLINE on the same
-            // line (`interface IIndex with member this.X = …`).
+            // line (`interface IIndex with member this.X = ...`).
             optional(seq(
                 "with",
                 optional($._with_members),
@@ -1000,7 +985,7 @@ export default grammar({
         // do expr  (class initializer or module-level side effect)
         // static do runs once at type initialization time
         // Layout body so `[static] do expr` closes at the next member/statement
-        // instead of absorbing it (e.g. `static do printfn …` before members).
+        // instead of absorbing it (e.g. `static do printfn ...` before members).
         do_stmt: $ => prec(3, seq(optional("static"), "do", $._indented_or_inline_body)),
 
         // Explicit field in a class:
@@ -1013,7 +998,7 @@ export default grammar({
         ),
 
         // Also the signature-file form at module level (`val f: int -> int`,
-        // `val inline (>>=): …`, `val x<'T>: 'T when 'T: comparison`) and the
+        // `val inline (>>=): ...`, `val x<'T>: 'T when 'T: comparison`) and the
         // `[<Literal>] val X: int = 3` / `val listeners = new E<_>()` initialised
         // forms.
         _val_field_core: $ => seq(
@@ -1030,21 +1015,21 @@ export default grammar({
         // Layout-bounded initialiser (same opener as `member val`, closes at the
         // next member and before an inline `with`).
 
-        // `optional(access_modifier)`: `type X = private | A | B` — a private (or
+        // `optional(access_modifier)`: `type X = private | A | B` - a private (or
         // internal) union representation, the F# smart-constructor pattern.
         // F# allows the FIRST case to omit its `|`: `type X = A | B | C`. That bare
-        // first case (no `|`, no attributes — `union_case_bare`, aliased to
+        // first case (no `|`, no attributes - `union_case_bare`, aliased to
         // `union_case` so queries see one node type) is followed by the usual
-        // `|`-prefixed cases. The `| A | B` and multi-line `| A`⏎`| B` forms go
+        // `|`-prefixed cases. The `| A | B` and multi-line `| A`\n`| B` forms go
         // straight through `repeat1($.union_case)`. A bare first case is kept
         // attribute-LESS so it can't be confused with an attributed type member.
         // prec.right: a `#nowarn`-style directive right after the last case is
-        // absorbed into the union body (greedy) rather than ending it — either
+        // absorbed into the union body (greedy) rather than ending it - either
         // reading is fine for highlighting, the parser just has to pick one.
         union_type_defn: $ => prec.right(seq(
             optional($.access_modifier),
             choice(
-                // `| A | B` and multi-line `| A`⏎`| B` (leading-pipe form).
+                // `| A | B` and multi-line `| A`\n`| B` (leading-pipe form).
                 // `#nowarn`/`#warnon` directives may sit BETWEEN cases
                 // (Argu tests wrap obsolete cases in warning suppressions).
                 repeat1(choice($.union_case, $.preproc_directive)),
@@ -1056,7 +1041,7 @@ export default grammar({
                     alias($.union_case_bare, $.union_case),
                     repeat1($.union_case),
                 ),
-                // Bare first case WITH fields: `A of B` — a valid SINGLE-case
+                // Bare first case WITH fields: `A of B` - a valid SINGLE-case
                 // union (no following `|` needed). `prec.dynamic` makes it win
                 // over the alias (`type_expression`), which would otherwise also
                 // match `A of B`.
@@ -1067,18 +1052,12 @@ export default grammar({
             ),
         )),
 
-        // NO static prec.right here (unlike union_case below): with it, an
-        // ALIAS `type A = int` followed by a line comment deterministically
-        // shifts the comment into this rule's repeat — committing to the
-        // bare-union reading, which then dies at the next decl and strands the
-        // comment in an ERROR. The declared conflict lets GLR fork instead:
-        // the union version dies unless a `|`-case actually follows.
-        // NO `repeat($.line_comment)` here (unlike union_case below): with a
-        // shiftable comment, an ALIAS `type A = int // c` (or with the comment
-        // on the next line) commits to the bare-union reading and strands the
-        // comment in an ERROR when no `|`-case follows. Without the shift the
-        // comment is a plain extra; `A // c⏎| B` still parses (the `|` case
-        // list continues after the skipped extra).
+        // No static prec.right and no `repeat($.line_comment)` here (unlike
+        // union_case below): with a shiftable comment, an ALIAS `type A = int // c`
+        // (or with the comment on the next line) commits to the bare-union reading
+        // and strands the comment in an ERROR when no `|`-case follows. Without the
+        // shift the comment is a plain extra, the declared conflict lets GLR fork,
+        // and `A // c`\n`| B` still parses (the case list continues after the extra).
         union_case_bare: $ => seq(
             field('name', $.identifier),
         ),
@@ -1100,10 +1079,10 @@ export default grammar({
         // `prec.right` resolves the shift/reduce conflict in favour of
         // absorbing the comment.
         union_case: $ => prec.right(choice(
-            // Doc block GATED by the scanner (docs + `|` ahead) — ungated, a
-            // doc after the LAST case shifts into a phantom next case (tried
-            // and reverted twice; conflict declarations don't help because the
-            // doc-shift state lacks the sibling items). The gate token is
+            // Doc block GATED by the scanner (docs + `|` ahead) - ungated, a
+            // doc after the LAST case shifts into a phantom next case (conflict
+            // declarations do not help: the doc-shift state lacks the sibling
+            // items). The gate token is
             // anchored AT the doc line (scanner moves the zero-width baseline)
             // so the node's extent starts at the docs.
             seq($._case_docs_open, repeat1($.xml_doc_comment), field('decl', alias($._union_case_core, $.union_case))),
@@ -1112,14 +1091,14 @@ export default grammar({
 
         _union_case_core: $ => prec.right(seq(
             "|",
-            repeat($.attribute),   // `| [<DefaultValue>] X` — attribute on a DU case
+            repeat($.attribute),   // `| [<DefaultValue>] X` - attribute on a DU case
             field('name', $.identifier),
             optional(choice(
                 seq("of", choice(
                     $.union_case_named_fields,
                     field('fields', $.type_expression),
                 )),
-                // `| Some : Value:'T -> 'T option` — full-signature case form
+                // `| Some : Value:'T -> 'T option` - full-signature case form
                 // (FSharp.Core prim-types, GADT-style declarations).
                 seq(":", field('fields', $.type_expression)),
             )),
@@ -1147,7 +1126,7 @@ export default grammar({
             ))),
         )),
 
-        // Type allowed inside a named union field — excludes tuple_type so that `*`
+        // Type allowed inside a named union field - excludes tuple_type so that `*`
         // between fields is never mistaken for a tuple separator inside the previous
         // field's annotation.
         _union_field_type: $ => choice(
@@ -1157,17 +1136,17 @@ export default grammar({
             $.struct_anonymous_record_type,
         ),
 
-        // `name: T` / `?name: T` — a labelled element in a member/abstract
+        // `name: T` / `?name: T` - a labelled element in a member/abstract
         // signature tuple, e.g. `abstract M: Context * selector: string *
         // ?noMangle: bool -> Ret`. It's an alternative of `type_expression` so the
         // surrounding `*`/`->` structure (and type highlighting) is reused; the
         // element type itself excludes `function_type`/`tuple_type` so the
         // signature's `->` and `*` aren't absorbed into the label.
         labelled_type: $ => seq(
-            // `[<ParamArray>] xs: obj[]` — attribute on a labelled (member-sig)
+            // `[<ParamArray>] xs: obj[]` - attribute on a labelled (member-sig)
             // parameter. Gated by `_label_attr` (emitted by the scanner only when
-            // `[<…>]+ ident:` follows) so it stays a distinct token from a
-            // member-decoration `[<…>]` and creates no type-body conflict. The
+            // `[<...>]+ ident:` follows) so it stays a distinct token from a
+            // member-decoration `[<...>]` and creates no type-body conflict. The
             // plain form is gated by `_label_gate` (`ident :` ahead) so the LR
             // states never fork on a bare identifier in type positions.
             choice(seq($._label_attr, repeat1($.attribute)), $._label_gate),
@@ -1181,7 +1160,7 @@ export default grammar({
                 $.flexible_type,        // `source: #TypedArray`
                 // (nullable `value: string | null` not added here: labelled_type
                 // is shared with union NAMED fields, where `|` is the case
-                // separator — use `value: (string | null)` in member sigs.)
+                // separator - use `value: (string | null)` in member sigs.)
             )),
         ),
 
@@ -1193,16 +1172,16 @@ export default grammar({
             seq(alias($._enum_case_bare, $.enum_case), repeat($.enum_case)),
         ),
 
-        // type Point3D = struct val x: float … end — block-style bodies hold the
-        // same class-body members as `type Foo() = …` (no _body_indent needed
+        // type Point3D = struct val x: float ... end - block-style bodies hold the
+        // same class-body members as `type Foo() = ...` (no layout open needed
         // since `struct`/`class`/`interface` is the open and `end` is the close).
         struct_type_defn: $ => seq("struct", repeat(seq($._class_body_member, optional(";"))), "end"),
 
-        // type Foo() = class member … end  — explicit class block.
+        // type Foo() = class member ... end  - explicit class block.
         class_type_defn: $ => seq("class", repeat(seq($._class_body_member, optional(";"))), "end"),
 
-        // type IFoo = interface abstract … end  — explicit interface block.
-        // Distinguished from interface_impl (which sits in class bodies as `interface T with …`)
+        // type IFoo = interface abstract ... end  - explicit interface block.
+        // Distinguished from interface_impl (which sits in class bodies as `interface T with ...`)
         // by the trailing `end`; ambiguity at the leading `interface` is explored via GLR.
         interface_type_defn: $ => seq("interface", repeat($._class_body_member), "end"),
 
@@ -1226,7 +1205,7 @@ export default grammar({
             repeat($.attribute),
             field('name', $.identifier),
             "=",
-            // `(1uL <<< 9)` — computed flag values (FCS WellKnownAttribs style).
+            // `(1uL <<< 9)` - computed flag values (FCS WellKnownAttribs style).
             field('value', choice($.int_literal, $.negative_literal, $.char_literal, $.parenthesized_expression)),
         ),
         _enum_case_bare: $ => seq(
@@ -1244,16 +1223,16 @@ export default grammar({
             "|}",
         ),
 
-        // Body of `type Foo = { … }`. Two forms (indented or inline) via the
-        // `indentedOrInlineFieldList` helper — the indented form prevents a
+        // Body of `type Foo = { ... }`. Two forms (indented or inline) via the
+        // `indentedOrInlineFieldList` helper - the indented form prevents a
         // field's type from greedily absorbing the next field's name across
         // a newline (e.g. `unit -> unit` followed by `A : 'A` was parsed as
         // `unit -> (unit A)` via postfix_type, erroring on the trailing `:`).
         record_type_defn: $ => seq(
-            // `type X =⏎  /// doc⏎  { Field … }` — docs between `=` and the
+            // `type X =\n  /// doc\n  { Field ... }` - docs between `=` and the
             // `{` attach to the record definition.
             repeat($.xml_doc_comment),
-            // `type X = private { … }` — private record representation.
+            // `type X = private { ... }` - private record representation.
             optional($.access_modifier),
             "{",
             indentedOrInlineFieldList($, $.record_type_field, TYPE_PREC.POSTFIX + 1, { sameLineBraceForm: true }),
@@ -1268,7 +1247,7 @@ export default grammar({
         ),
 
         _record_field_core: $ => prec(TYPE_PREC.POSTFIX, seq(
-            repeat($.attribute),           // `[<JsonRequired>] Age: int` — attribute on a record field
+            repeat($.attribute),           // `[<JsonRequired>] Age: int` - attribute on a record field
             optional("mutable"),
             field('name', $.identifier),
             ":",
@@ -1299,19 +1278,19 @@ export default grammar({
             $.typed_expression,
             $.application_expression,
             $.binary_expression,
-            // `Map.empty<string, _>` — explicit type-argument application
+            // `Map.empty<string, _>` - explicit type-argument application
             // on a value/function. Same lexical shape as binary `<` `>`
             // comparisons, so static prec(PAREN_EXPR) biases this form
-            // when the `<…>` contains type-expressions with a comma.
+            // when the `<...>` contains type-expressions with a comma.
             $.type_application_expression,
             $.unary_expression,
             $.deref_expression,
             $.prefix_bang_expression,
-            // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value (`snd >> M.(|Foo|) >> g`).
+            // `(|Foo|)` / `Module.(|Foo|)` - active pattern as a value (`snd >> M.(|Foo|) >> g`).
             $.active_pattern_expression,
-            // `(+) 1 2`, `(=) x y` — operator name applied to arguments.
+            // `(+) 1 2`, `(=) x y` - operator name applied to arguments.
             $.operator_application,
-            // `(+)`, `(>>)` — a bare operator as a first-class value (`let add =
+            // `(+)`, `(>>)` - a bare operator as a first-class value (`let add =
             // (+)`, `(+) >> id`). The applied form above wins when args follow.
             $._operator_value,
             // `Unchecked.(+)` standalone / as an application head
@@ -1334,7 +1313,7 @@ export default grammar({
             // `use_expression` is the expression-position form of `use x = e`; it's
             // structurally identical to `use_binding` (the declaration form) but kept
             // a separate rule because the two live in different parse contexts
-            // (expression vs `_token`/`_ce_statement`) with different precedence —
+            // (expression vs `_token`/`_ce_statement`) with different precedence -
             // merging the rules creates an `_expression` vs `_token` conflict. Alias
             // its OUTPUT to `use_binding` so the tree (and queries) see one node type.
             alias($.use_expression, $.use_binding),
@@ -1357,7 +1336,7 @@ export default grammar({
             $.new_expression,
             $.object_expression,
             $.object_construction_expression,
-            // CE result forms — also valid in if/match branches inside CEs
+            // CE result forms - also valid in if/match branches inside CEs
             $.ce_result_expr,
             $.struct_tuple_expression,
             $.typed_quotation,
@@ -1368,34 +1347,25 @@ export default grammar({
             $.sequence_expression,
         ),
 
-        // F#'s implicit sequence — multiple expressions at the same indent inside
-        // a body (function, if/then/else, for, while, lambda, …). The scanner
-        // emits a zero-width `_virtual_semi` between expressions when a newline
-        // crosses an offside-rule boundary; GLR exploration sorts out sequences
-        // vs continuations.
-        // Statement sequencing: newline-aligned (`_virtual_semi`, the scanner's
-        // implicit sequence operator) OR an explicit `;` (`expr1; expr2`, e.g.
-        // `visitor.Touch p; p`). `_virtual_semi` is never emitted inside brackets
-        // (the scanner uses `_bracket_sep` there), so it can't clash with
-        // list/array separators — but the literal `;` can, hence the higher
-        // static precedence on the list/array `;` separators (see below) so
-        // `[ a; b ]` stays two ELEMENTS, not one `(a; b)` sequence element.
-        // Second branch: `stmt;` — a TRAILING `;` as a statement terminator
+        // F#'s implicit sequence: statements at the same indent inside a layout
+        // body, separated by the scanner's zero-width `_layout_semi`, or by an
+        // explicit `;` (`visitor.Touch p; p`). `_layout_semi` is never emitted
+        // inside brackets (the scanner uses `_bracket_semi` there), so only the
+        // literal `;` can clash with list/array separators - hence the higher
+        // static precedence on those separators, so `[ a; b ]` stays two ELEMENTS.
+        // Second branch: `stmt;` - a TRAILING `;` as a statement terminator
         // (`f x =! g y;`, the unquote test style). prec(-1) so every separator
-        // reading wins: a list/array `;` (static prec on those separators) and
-        // the sequence's own `; expr` continuation both shift instead of
-        // reducing this. After a newline-separated sequence (`a`⏎`b;`) the
-        // left-assoc first branch nests this as its LAST element, so the
-        // trailing form composes without an optional on the main branch.
+        // reading wins: a list/array `;` and the sequence's own `; expr`
+        // continuation both shift instead of reducing this. After a
+        // newline-separated sequence (`a`\n`b;`) the left-assoc first branch nests
+        // this as its LAST element, so the trailing form needs no optional.
         // prec.dynamic(1): a `;` after an expression STATEMENT forks (see the
         // [$.sequence_expression, $._token] conflict) between continuing this
-        // sequence (`a; b` — one statement) and ending the statement with the
-        // `;` as a standalone terminator `_token` (`f x =! g y;`, unquote
-        // style). When an expression follows, both survive — prefer the
-        // sequence; when none does (newline/EOF), this path dies and the
-        // terminator reading parses cleanly.
-        // (A trailing `;` after the sequence's LAST statement in a layout body —
-        // `let f () =⏎ g ()⏎ a;` — is consumed by the SCANNER into the closing
+        // sequence and ending the statement with the `;` as a standalone
+        // terminator `_token`. When an expression follows, both survive and the
+        // sequence wins; when none does (newline/EOF), only the terminator parses.
+        // (A trailing `;` after the LAST statement of a layout body -
+        // `let f () =`\n` g ()`\n` a;` - is consumed by the SCANNER into the closing
         // `_layout_end`: a grammar-level `optional(";")` here never fires, the
         // `;` shift always commits to the separator reading first.)
         sequence_expression: $ => prec.dynamic(1, prec.left(PREC.SEQ_EXPR, seq(
@@ -1414,7 +1384,7 @@ export default grammar({
             ")",
         )),
 
-        // <@ expr @>   — typed quotation (Expr<'T>). The compound `;@>` closer
+        // <@ expr @>   - typed quotation (Expr<'T>). The compound `;@>` closer
         // absorbs a trailing statement terminator (`<@ 1; 2; 3; @>`, unquote
         // tests): a grammar-level optional can never catch it (the lone `;`
         // shifts into the nested sequence repeat first), but the LONGER
@@ -1426,24 +1396,24 @@ export default grammar({
             choice(alias(token(prec(1, "@>")), "@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
-        // <@@ expr @@>  — untyped quotation (Expr)
+        // <@@ expr @@>  - untyped quotation (Expr)
         untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
             choice(alias(token(prec(1, "@@>")), "@@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
-        // ?identifier — optional named argument reference  f(?name = Some value)
+        // ?identifier - optional named argument reference  f(?name = Some value)
         optional_named_arg: $ => seq("?", $.identifier),
 
-        // &expr — address-of / byref argument  someFunc(&mutableVal)
+        // &expr - address-of / byref argument  someFunc(&mutableVal)
         // The operand is `_simple_expression` (like `deref_expression`'s) so
         // `&x` binds tighter than application and works as an application
-        // ARGUMENT (`seekReadInt32Adv &addr` — byref-heavy reader code).
+        // ARGUMENT (`seekReadInt32Adv &addr` - byref-heavy reader code).
         address_of_expression: $ => prec(PREC.PREFIX_EXPR, seq("&", $._prefix_operand)),
 
-        // sizeof<'T>  typeof<'T>  typedefof<'T> — type-level intrinsics.
+        // sizeof<'T>  typeof<'T>  typedefof<'T> - type-level intrinsics.
         // The keyword is fused with its REQUIRED adjacent `<` into a single
         // token so the bare words stay usable as plain identifiers everywhere
-        // else (`let typeof = …`, `f (a, typeof, …)` — common in Fable). With
+        // else (`let typeof = ...`, `f (a, typeof, ...)` - common in Fable). With
         // them as standalone string keywords the lexer (keyword-extraction on)
         // emits the keyword in any expression slot and dead-ends when no `<`
         // follows. Requiring no-space `typeof<` disambiguates from a variable
@@ -1457,14 +1427,14 @@ export default grammar({
             ">",
         ),
 
-        // `Map.empty<string, int>`  `f<int>` — explicit type-argument
+        // `Map.empty<string, int>`  `f<int>` - explicit type-argument
         // application on a value/function. Same lexical shape as a `<` / `>`
         // comparison chain, so the declared `[type_application_expression,
         // _expression]` / `_simple_expression` conflicts let GLR explore both
-        // and commit to this form when the `<…>` is actually closed by a
+        // and commit to this form when the `<...>` is actually closed by a
         // matching `>` enclosing type-expressions.
         //
-        // SINGLE type-argument IS supported (`f<int>`, `f<'T>`) — the arg list
+        // SINGLE type-argument IS supported (`f<int>`, `f<'T>`) - the arg list
         // is `type_expression (, type_expression)*`, i.e. one-or-more, commas
         // optional. A plain comparison like `x < y` has no closing `>`, so the
         // binary reading wins; `x < y && y > z` likewise stays binary.
@@ -1472,7 +1442,7 @@ export default grammar({
         // Accepted tradeoff: because the lexer can't see whitespace, a spaced
         // `a < b > c` is read as generic application `a<b> c`, not `(a < b) > c`.
         // prec.dynamic(1): when both readings survive to the end of a layout
-        // body (`if a <> f<_> then`⏎ statements), the comparison reading used
+        // body (`if a <> f<_> then`\n statements), the comparison reading used
         // to win and swallow the body (ilnativeres.fs, 58 keyword sites).
         // (Real F# disambiguates these by spacing; we can't, and generic
         // application is the more useful reading for a highlighter.)
@@ -1484,7 +1454,7 @@ export default grammar({
             ">",
         )),
 
-        // `(`⏎`    stmt`⏎`    stmt`⏎`)`: a multi-line body is a layout block (the
+        // `(`\n`    stmt`\n`    stmt`\n`)`: a multi-line body is a layout block (the
         // scanner opens it only when a newline follows the `(`), so newline-aligned
         // statements sequence instead of chaining into one application.
         parenthesized_expression: $ => seq("(", choice(
@@ -1492,7 +1462,7 @@ export default grammar({
             $._expression,
         ), ")"),
 
-        // Inline IL: `(# "IL.opcode" arg* [: type] #)` — a low-level intrinsic
+        // Inline IL: `(# "IL.opcode" arg* [: type] #)` - a low-level intrinsic
         // (e.g. `(# "" x : 'b #)` for an unsafe cast). `(#`/`#)` are glued tokens
         // so they don't collide with a parenthesised flexible type `(#Foo)`.
         inline_il_expression: $ => seq(
@@ -1505,7 +1475,7 @@ export default grammar({
             token(prec(2, "#)")),
         ),
 
-        // (expr : type)  — inline type annotation, always parenthesised.
+        // (expr : type)  - inline type annotation, always parenthesised.
         // Disambiguated from parenthesized_expression by the ":" after the expression.
         typed_expression: $ => seq("(", $._expression, ":", $.type_expression, ")"),
 
@@ -1517,10 +1487,10 @@ export default grammar({
             $._simple_expression,
         )),
 
-        // `(+) 1 2`, `(=) (P.Id uid) y` — an operator NAME applied to arguments.
+        // `(+) 1 2`, `(=) (P.Id uid) y` - an operator NAME applied to arguments.
         // Kept a DEDICATED rule (rather than letting `operator_name` be a general
-        // application head) so `application_expression` — and the SRTP member
-        // constraints that share the heavily-overloaded `(` — are untouched.
+        // application head) so `application_expression` - and the SRTP member
+        // constraints that share the heavily-overloaded `(` - are untouched.
         // `operator_name` is otherwise only reachable as an application argument
         // (via `_simple_expression`), so an applied operator had no parse.
         operator_application: $ => prec.left(PREC.APP_EXPR, seq(
@@ -1535,23 +1505,23 @@ export default grammar({
         _operator_value: $ => prec(-1, alias($._value_operator_name, $.operator_name)),
 
         // Operator-name set for the APPLIED form. Excludes the bare `^` / `&` /
-        // `|` (which collide with SRTP `(^T …)` / byref `(& …)` / anon-record
-        // `(| …)` openers that also start with `(` + that char) — those are rare
+        // `|` (which collide with SRTP `(^T ...)` / byref `(& ...)` / anon-record
+        // `(| ...)` openers that also start with `(` + that char) - those are rare
         // as applied operators and not worth the parse ambiguity.
         _value_operator_name: $ => seq(
             "(",
             choice($.symbolic_op, $.bang_op, "+", "-", "*", "/", "%", "=", "<", ">",
                 "$", "?",      // single-char custom ops: `($)` apply, `(?)` dynamic lookup
-                "~~~"),        // `(~~~) x y` — see operator_name
+                "~~~"),        // `(~~~) x y` - see operator_name
             ")",
         ),
 
         _simple_expression: $ => choice(
             $.parenthesized_expression,
-            // `S (^X: (static member F: ^X -> ^X) x)` — an SRTP call as an
+            // `S (^X: (static member F: ^X -> ^X) x)` - an SRTP call as an
             // application argument (FSharpPlus TypeLevel style).
             $.srtp_call_expression,
-            // `f &addr` — address-of / byref argument.
+            // `f &addr` - address-of / byref argument.
             $.address_of_expression,
             $.deref_expression,
             $.prefix_bang_expression,
@@ -1562,7 +1532,7 @@ export default grammar({
             $.record_expression,
             $.anonymous_record_expression,
             $.struct_anonymous_record_expression,
-            // `f struct (a, b)` — struct tuple as an application ARGUMENT
+            // `f struct (a, b)` - struct tuple as an application ARGUMENT
             // (must sit beside the struct-anon wrapper: once `struct` is
             // shiftable here via one rule, the other must be too).
             $.struct_tuple_expression,
@@ -1581,28 +1551,27 @@ export default grammar({
             $.unit,
             $.null_literal,
             $.long_identifier,
-            // `Map.empty<string, int>` — generic type-argument application.
+            // `Map.empty<string, int>` - generic type-argument application.
             $.type_application_expression,
-            // `(+)`, `(>>=)`, `(!//!)` — operator as a first-class function value.
+            // `(+)`, `(>>=)`, `(!//!)` - operator as a first-class function value.
             // Used as application heads (`(+) 1 2`) or arguments (`x (!//!) y`).
             $.operator_name,
-            // `(|Foo|)` / `Module.(|Foo|)` — active pattern as a value.
+            // `(|Foo|)` / `Module.(|Foo|)` - active pattern as a value.
             $.active_pattern_expression,
-            // `Unchecked.(+)` — qualified operator as a value.
+            // `Unchecked.(+)` - qualified operator as a value.
             $.qualified_operator_expression,
             // `not` as a first-class function value (`not >> g`, `f not`).
             $.not_function,
             $.object_expression,
             $.object_construction_expression,
-            // Accept `async { … }` / `task { … }` etc. as application arguments.
+            // Accept `async { ... }` / `task { ... }` etc. as application arguments.
             // Without this, a body that sequences a CE after another statement
-            // (`printfn "a"; async { … } |> ignore`) hits a parse error because
-            // `{ return … }` doesn't fit as a record_expression. Including
+            // (`printfn "a"; async { ... } |> ignore`) hits a parse error because
+            // `{ return ... }` doesn't fit as a record_expression. Including
             // computation_expression here lets the parser fall back to a chained
-            // application (semantically wrong but free of ERROR) — the proper
-            // fix is sequence-expression support, tracked separately.
+            // application (semantically wrong but free of ERROR).
             $.computation_expression,
-            // `f <@ expr @>` — a code quotation as an application ARGUMENT. Without
+            // `f <@ expr @>` - a code quotation as an application ARGUMENT. Without
             // this, `<@` after a value lexes as the `<@` symbolic_op (binary), so
             // `EvaluateQuotation <@ 42 @>` mis-parses. (Only the typed `<@ @>` form
             // is added here; `untyped_quotation`'s `<@@` ripples GLR states and
@@ -1615,13 +1584,13 @@ export default grammar({
         // Each alternative carries its own prec to resolve shift/reduce between operators.
         // Each alternative exposes `left` / `operator` / `right` fields so the
         // operands and the operator are queryable (e.g. `(binary_expression
-        // operator: _ @op)`). Fields are output metadata only — they don't
+        // operator: _ @op)`). Fields are output metadata only - they don't
         // change the parse table.
         binary_expression: $ => choice(
             prec.left(PREC.PIPE_EXPR,      seq(field('left', $._expression), field('operator', choice("|>", "<|", ">>", "<<")), field('right', $._expression))),
             prec.left(PREC.BOOL_OR,        seq(field('left', $._expression), field('operator', "||"), field('right', $._expression))),
             prec.left(PREC.BOOL_AND,       seq(field('left', $._expression), field('operator', "&&"), field('right', $._expression))),
-            // `a &&`⏎`    let x = …`⏎`    x > 1`: a right operand on its own deeper
+            // `a &&`\n`    let x = ...`\n`    x > 1`: a right operand on its own deeper
             // lines is a layout block (the scanner opens it only in that shape).
             prec.left(PREC.BOOL_OR,        seq(field('left', $._expression), field('operator', "||"), $._infix_block_open, field('right', $._expression), $._layout_end)),
             prec.left(PREC.BOOL_AND,       seq(field('left', $._expression), field('operator', "&&"), $._infix_block_open, field('right', $._expression), $._layout_end)),
@@ -1637,7 +1606,7 @@ export default grammar({
             // form `o?member` is `dynamic_expression`.)
             prec.left(PREC.INFIX_OP,       seq(field('left', $._expression), field('operator', alias("$", $.symbolic_op)), field('right', $._expression))),
             // Single-char `^` infix (Hopac's high-precedence apply, `f ^ x`).
-            // RIGHT-assoc per F#'s `^`-op rule. Spaced use only — `^ident` is a
+            // RIGHT-assoc per F#'s `^`-op rule. Spaced use only - `^ident` is a
             // typar token (longer match) and `^^^`/`^=` etc. are symbolic_op.
             prec.right(PREC.INFIX_OP,      seq(field('left', $._expression), field('operator', alias("^", $.symbolic_op)), field('right', $._expression))),
             prec.right(PREC.LARROW,        seq(field('left', $._expression), field('operator', "<-"), field('right', $._expression))),
@@ -1647,11 +1616,11 @@ export default grammar({
         ),
 
         // Two-branch form (like `if_expression`):
-        //   prec(2) — body present (`fun x -> body`)
-        //   prec(1) — body absent (`fun x ->`), mid-edit shape so Helix can still
+        //   prec(2) - body present (`fun x -> body`)
+        //   prec(1) - body absent (`fun x ->`), mid-edit shape so Helix can still
         //             anchor indent on the `lambda_expression` node.
         // Body uses `_indented_or_inline_body` so multi-line lambdas pick up the
-        // scanner's `_body_indent`/`_virtual_semi` machinery (sequence bodies).
+        // scanner's `_expr_open`/`_layout_semi` machinery (sequence bodies).
         lambda_expression: $ => prec.right(PREC.FUN_EXPR,
             choice(
                 prec(2, seq(
@@ -1678,9 +1647,9 @@ export default grammar({
         )),
 
         unary_expression: $ => prec(PREC.PREFIX_EXPR, seq(
-            // `%`/`%%` are the quotation splice (anti-quotation) prefixes —
-            // `<@ %e @>` — also reused by Fable for emit/splice.
-            // NOTE: `!` (ref-cell deref) is NOT here — it's a HIGH-precedence prefix
+            // `%`/`%%` are the quotation splice (anti-quotation) prefixes -
+            // `<@ %e @>` - also reused by Fable for emit/splice.
+            // NOTE: `!` (ref-cell deref) is NOT here - it's a HIGH-precedence prefix
             // (see `deref_expression`) so it can be an application argument; the ops
             // here are low-precedence (`f - x` must stay a subtraction, not `f (-x)`).
             // `~-x` / `~~127` (`~`-led prefix operators; the "~~~" string stays
@@ -1691,7 +1660,7 @@ export default grammar({
             $._expression,
         )),
 
-        // `!cell` — ref-cell dereference. Unlike `-`, it binds TIGHTER than
+        // `!cell` - ref-cell dereference. Unlike `-`, it binds TIGHTER than
         // application, so `f !cell` = `f (!cell)`. It's a `_simple_expression`
         // precisely so it can be an application ARGUMENT.
         deref_expression: $ => prec(PREC.PREFIX_EXPR, seq("!", $._prefix_operand)),
@@ -1705,7 +1674,7 @@ export default grammar({
             prec(1, alias(seq($.parenthesized_expression, repeat1(seq(".", $.identifier))), $.dot_expression)),
         ),
 
-        // `!!`, `!%`, `!^` … — a `!`-led symbolic operator (2+ chars) used as a
+        // `!!`, `!%`, `!^` ... - a `!`-led symbolic operator (2+ chars) used as a
         // custom PREFIX operator (e.g. FAKE's `(!!)` glob operator: `!! "*.fs"`,
         // `!! 1 m`). Distinct token from `symbolic_op` so it can LEAD an
         // expression; bare `!` (deref) stays its own token. Binds tighter than
@@ -1713,7 +1682,7 @@ export default grammar({
         prefix_bang_expression: $ => prec(PREC.PREFIX_EXPR, seq(field('operator', $.bang_op), $._prefix_operand)),
         bang_op: _ => token(/![!$%&*+\-.\/<=>?@^|~]+/),
 
-        // `not` used as a first-class function value — it's an ordinary
+        // `not` used as a first-class function value - it's an ordinary
         // FSharp.Core function, not a reserved operator: `not >> g`,
         // `xs |> List.map not`, `f not`. Low prec so `not x` still parses as
         // the prefix-application `unary_expression` above; this form only wins
@@ -1727,7 +1696,7 @@ export default grammar({
         // the full F# operator alphabet (op-char-first / op-char) so that
         // names like `(!//!)`, `(.//.)`, `(-//-)`, `(@//@)` parse as operators
         // rather than `//` being mis-tokenized as a line comment. Quotation
-        // delimiters `<@`/`@>`/`<@@`/`@@>` are explicit string tokens — they
+        // delimiters `<@`/`@>`/`<@@`/`@@>` are explicit string tokens - they
         // win over `symbolic_op` at the lexer.
         symbolic_op: _ => token(choice(
             "@",
@@ -1740,8 +1709,8 @@ export default grammar({
         list_expression: $ => seq(
             "[",
             optional(choice(
-                // Block form `[`⏎ elements ⏎`]`: `_bracket_open` captures the
-                // element column, `_bracket_sep` separates newline-aligned
+                // Block form `[`\n elements \n`]`: `_bracket_open` captures the
+                // element column, `_bracket_semi` separates newline-aligned
                 // elements (a dedicated token a nested sequence can't absorb, so
                 // elements never chain into one application), `_bracket_close`
                 // pops at `]`.
@@ -1760,7 +1729,7 @@ export default grammar({
         array_expression: $ => seq(
             "[|",
             optional(choice(
-                // Block form `[|`⏎ elements ⏎`|]` (see list_expression).
+                // Block form `[|`\n elements \n`|]` (see list_expression).
                 $._block_elements,
                 // Inline form `[| a; b; c |]` (see list_expression).
                 seq(
@@ -1773,11 +1742,11 @@ export default grammar({
         // {| Name = "Alice"; Age = 30 |}  or  {| r with Name = "Bob" |}
         // Copy-update base is _simple_expression so it can't be confused with the
         // record_field's `name = value` form. Like `record_type_defn`, we have
-        // two body forms: indented (uses `_body_indent` + `_virtual_semi` for
+        // two body forms: indented (uses `_record_open` + `_bracket_semi` for
         // field separation) and inline (explicit `;` only). The indented form
         // prevents a field's value expression from greedily absorbing the next
         // field's name across a newline.
-        // `struct {|C = 1|}` / `struct {|A: int|}` — struct anonymous records.
+        // `struct {|C = 1|}` / `struct {|A: int|}` - struct anonymous records.
         // Same prec as struct_tuple_expression so the shared `struct` keyword
         // resolves by the NEXT token (`{|` vs `(`).
         struct_anonymous_record_expression: $ => prec(PREC.PAREN_EXPR, seq("struct", $.anonymous_record_expression)),
@@ -1787,39 +1756,39 @@ export default grammar({
             "{|",
             choice(
                 seq(
-                    // Base may be an application (`{| routes.Create(n) with … |}`,
-                    // farmer style) — same shapes record_expression accepts.
+                    // Base may be an application (`{| routes.Create(n) with ... |}`,
+                    // farmer style) - same shapes record_expression accepts.
                     field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                 ),
-                // Block form: `= {|`⏎`  base with`⏎`    field = …`⏎`|}` —
+                // Block form: `= {|`\n`  base with`\n`    field = ...`\n`|}` -
                 // mirror of record_expression's own-line-base branch.
                 $._record_copy_block,
                 $._record_fields,
-                // `{| |}` — the EMPTY anonymous record (farmer `properties = {| |}`).
+                // `{| |}` - the EMPTY anonymous record (farmer `properties = {| |}`).
                 blank(),
             ),
             "|}",
         ),
 
-        // { x = 1; y = 2 } or { r with x = 1 } — see anonymous_record_expression for the
+        // { x = 1; y = 2 } or { r with x = 1 } - see anonymous_record_expression for the
         // disambiguation rationale, which is identical.
         record_expression: $ => seq(
             "{",
             choice(
                 seq(
                     // Base may be an application (`{ Foo.bar [] x with F = y }`)
-                    // or a generic call (`{ Default<_>() with … }`), not only a
-                    // simple value — disambiguated by `with` (the full
+                    // or a generic call (`{ Default<_>() with ... }`), not only a
+                    // simple value - disambiguated by `with` (the full
                     // expression is parsed before `with`).
                     field('base', choice($._simple_expression, $.application_expression, $.bracket_index_expression, $.index_expression, $.dot_expression)),
                     "with",
                     $._record_fields,
                 ),
                 // Block form with the base on its OWN line after `{`:
-                //   { ⏎ base with ⏎ field … ⏎ }
-                // The scanner emits `_body_indent` at the base's column (`{` had
+                //   { \n base with \n field ... \n }
+                // The scanner emits `_layout_open` at the base's column (`{` had
                 // no same-line content); without this branch only the no-base
                 // field list consumes that indent, and `base with` errors.
                 $._record_copy_block,
@@ -1834,7 +1803,7 @@ export default grammar({
 
         // prec(APP_EXPR) lets prec.dynamic in record_expression/anonymous_record_expression
         // prefer starting a new field over extending the value via application_expression.
-        // `parameters =`⏎`    let d = …`⏎`    for x in xs do …`⏎`    d`: a value on
+        // `parameters =`\n`    let d = ...`\n`    for x in xs do ...`\n`    d`: a value on
         // its own lines is a layout block so its statements sequence.
         record_field: $ => prec(PREC.APP_EXPR, seq(
             field('name', $.long_identifier),
@@ -1853,32 +1822,27 @@ export default grammar({
         )),
 
         // Two explicit branches (like `let_binding`):
-        //   prec(2) — bodies present (`if cond then expr [elif … then expr]* [else expr]`)
-        //   prec(1) — incomplete shape (`if cond then`) so mid-edit input still parses
+        //   prec(2) - bodies present (`if cond then expr [elif ... then expr]* [else expr]`)
+        //   prec(1) - incomplete shape (`if cond then`) so mid-edit input still parses
         //             as a real `if_expression` and Helix's indent walk has a node to
         //             anchor `@extend` against.
         // The previous unified `optional(body)` form made the parser prefer the shorter
         // parse, which broke `if a then "a" else if b then "b" elif c then "c" else "x"`
-        // — the inner `if b then "b" elif c then` ended early and `then "c"` was orphaned.
-        // `_indented_or_inline_body`: the body of if-then/elif/else/for/while/lambda.
-        // Wrapped with `_body_indent`/`_body_dedent` (scanner externals) when the body
-        // sits on its own line — that pushes the body column onto the scanner's indent
-        // stack, which is what `_virtual_semi` uses to recognise sibling expressions at the
-        // same indent (F#'s implicit sequence operator). When the body is inline (same
-        // line as `then`/`do`/`->`), no indent token fires and the body is a single
-        // _expression.
-        // Uniform model: every body is a layout (open at the body's first-token
-        // column, close on dedent / mid-line closer). The old bare-`_expression`
-        // alternative is gone — it created an ambiguity where an inline body could
-        // reduce WITHOUT a layout close, so e.g. `if a then b`⏎`else …` reduced the
-        // `if` before the `else` could attach.
+        // - the inner `if b then "b" elif c then` ended early and `then "c"` was orphaned.
+        // `_indented_or_inline_body`: the body of do/while/lambda/begin-end. Every
+        // body is a layout: `_expr_open` pushes the body's first-token column (own
+        // line or inline), `_layout_semi` separates sibling statements at that
+        // column and `_layout_end` closes on dedent or at a mid-line closer. A bare
+        // `_expression` alternative would let an inline body reduce WITHOUT a layout
+        // close, so `if a then b`\n`else ...` reduced the `if` before the `else`
+        // could attach.
         // `type_ascription_expression` is allowed here like in `_ascribable_body`:
         // a LAMBDA body may carry the FSharpPlus return-type suffix
-        // (`fun x -> let f' = f x in f' (g x) : 'U` — Control/Applicative style).
+        // (`fun x -> let f' = f x in f' (g x) : 'U` - Control/Applicative style).
         _indented_or_inline_body: $ => seq($._expr_open, choice($._expression, $.type_ascription_expression), $._layout_end),
 
         // then/elif bodies: same shape, but the scanner flags the context so a
-        // MID-LINE `else` may close it (`if c then a else b` — the else belongs
+        // MID-LINE `else` may close it (`if c then a else b` - the else belongs
         // to THIS if). Other inline S_EXPR bodies (do/lambda/while/else) must
         // NOT close there: in `do x <- if c then a else b` the else belongs to
         // the inner if, and closing the do-body orphaned it (fsi.fs).
@@ -1890,7 +1854,7 @@ export default grammar({
                 $._expression,
                 "then",
                 $._then_body,
-                // `else if c then …` ≡ `elif c then …` (F#). The scanner suppresses
+                // `else if c then ...` == `elif c then ...` (F#). The scanner suppresses
                 // `_else_open` before `if`, so the final-else branch below can't take
                 // `else if`; it flattens here, keeping the chain at one level (an
                 // else-body-nested if would over-close at a later dedented `elif`).
@@ -1898,9 +1862,9 @@ export default grammar({
                 // Final else: a non-`if` body (uses `_else_open`, which the scanner
                 // declines before `if`).
                 // The else body, like _indented_or_inline_body, accepts a
-                // trailing ascription: `… else None : 'a option` (the `:` binds
+                // trailing ascription: `... else None : 'a option` (the `:` binds
                 // the WHOLE if in F#, but the body-level ascription renders the
-                // same span — FSharpPlus Indexable style).
+                // same span - FSharpPlus Indexable style).
                 optional(seq("else", $._else_open, field('else', choice($._expression, $.type_ascription_expression)), $._layout_end)),
             )),
             prec(1, seq(
@@ -1910,20 +1874,20 @@ export default grammar({
             )),
         )),
 
-        // `(>>=)` `(+)` `(|>)` — operator name wrapper. The single-char alternatives
+        // `(>>=)` `(+)` `(|>)` - operator name wrapper. The single-char alternatives
         // (`+`, `-`, etc.) are listed explicitly because symbolic_op requires 2+ chars.
         operator_name: $ => seq(
             "(",
             choice(
                 $.symbolic_op,
-                $.bang_op,       // `!`-led prefix operators: `(!!)`, `(!%)`, …
+                $.bang_op,       // `!`-led prefix operators: `(!!)`, `(!%)`, ...
                 "+", "-", "*", "/", "%",
                 "=", "<", ">",
                 "&", "|", "^",
                 "$", "~", "!", "?",   // single-char custom operators (`($)`, `(?)`, `(!)`)
-                "~~~",   // shares unary_expression's STRING token — symbolic_op's
+                "~~~",   // shares unary_expression's STRING token - symbolic_op's
                          // regex loses the lex to it, so list it explicitly
-                "*",     // `( * )` — spaced to dodge the `(*` comment opener
+                "*",     // `( * )` - spaced to dodge the `(*` comment opener
                 seq("..", ".."),            // `(.. ..)` stepped range
                 seq(".", $.unit),           // `(.())` custom indexer
                 seq(".", $.unit, "<-"),     // `(.()<-)` custom indexed setter
@@ -1932,10 +1896,10 @@ export default grammar({
             ")",
         ),
 
-        // `(|Name|)` or `Module.Path.(|Name|)` — an active-pattern function used
+        // `(|Name|)` or `Module.Path.(|Name|)` - an active-pattern function used
         // as a first-class value (`Seq.sumBy (M.(|Foo|))`, `snd >> M.(|Foo|) >> g`).
         // The qualified tail `.(|Name|)` is ONE token (`active_pattern_member`) so
-        // the lexer munches it as a unit — it never competes with a
+        // the lexer munches it as a unit - it never competes with a
         // `long_identifier`'s own `.` (a plain `.Sub` has no `(|`), which keeps
         // ordinary dotted access (`obj.A.B`) conflict-free.
         active_pattern_expression: $ => choice(
@@ -1954,8 +1918,8 @@ export default grammar({
             "|)",
         )),
 
-        // `Module.(+)` / `Unchecked.(+)` — a QUALIFIED operator used as a value
-        // (`IntegerBinaryOp g Unchecked.(+) …`, FCS Optimizer style). Same
+        // `Module.(+)` / `Unchecked.(+)` - a QUALIFIED operator used as a value
+        // (`IntegerBinaryOp g Unchecked.(+) ...`, FCS Optimizer style). Same
         // single-token trick as `active_pattern_member`: the tail `.(+)` is ONE
         // token, so it never competes with a `long_identifier`'s own `.` (a
         // plain `.Sub` has no operator chars before `)`).
@@ -2015,7 +1979,7 @@ export default grammar({
 
         _accessor_rhs: $ => seq(optional($._return_type_annot), "=", $._layout_body),
 
-        // `(static member Name: T)` / `(new: T)` — the member signature of an SRTP
+        // `(static member Name: T)` / `(new: T)` - the member signature of an SRTP
         // constraint or call-site, shared by all four sites.
         _srtp_member_sig: $ => seq(
             "(",
@@ -2030,28 +1994,28 @@ export default grammar({
         _srtp_term: $ => choice($.type_parameter, $.long_identifier, $.generic_type),
 
         _for_binder: $ => choice($.identifier, $.wildcard_pattern, $.tuple_pattern, $.record_pattern,
-                        // `for struct(k, v) in elements do …` — struct-tuple binder.
+                        // `for struct(k, v) in elements do ...` - struct-tuple binder.
                         $.struct_tuple_pattern,
-                        // `for (a, _, _) as item in xs do …` — binder with an `as` alias.
+                        // `for (a, _, _) as item in xs do ...` - binder with an `as` alias.
                         $.as_pattern,
-                        // `for 1 in …`, `for [|a; b|] in …`, `for (k: string, r: string) in …`.
+                        // `for 1 in ...`, `for [|a; b|] in ...`, `for (k: string, r: string) in ...`.
                         // (An or-pattern binder is not accepted: via `pattern` it
                         // overlaps the constructor-application binder below.)
                         $.literal_pattern, $.array_pattern, $.list_pattern,
                         $.tuple_typed_first_pattern,
                         // Parenthesised / bare-single typed binder:
-                        //   `for (line: string) in …`  ·  `for s: string in …`.
+                        //   `for (line: string) in ...`, `for s: string in ...`.
                         $.typed_pattern,
                         $.tuple_typed_pattern,
-                        // Unparenthesised tuple binder — elements optionally TYPED:
-                        //   `for k, v in …`  ·  `for k: T, r in …`  ·  `for _, name: T, v in …`.
-                        // A trailing whole-tuple `as` alias (`for k, v as x in …`) is the
+                        // Unparenthesised tuple binder - elements optionally TYPED:
+                        //   `for k, v in ...`, `for k: T, r in ...`, `for _, name: T, v in ...`.
+                        // A trailing whole-tuple `as` alias (`for k, v as x in ...`) is the
                         // `as_pattern` branch above (its pattern is this tuple).
                         seq($._tuple_pattern_item, repeat1(seq(",", $._tuple_pattern_item))),
-                        // `for SynTypeDefnSig(typeRepr= trepr) in specs do …` —
+                        // `for SynTypeDefnSig(typeRepr= trepr) in specs do ...` -
                         // named-DU-field deconstruction binder (fantomas style).
                         $.named_field_pattern,
-                        // `for KeyValue(k, v) in dict do …` — union-case / active-pattern
+                        // `for KeyValue(k, v) in dict do ...` - union-case / active-pattern
                         // application binder (the bare `long_identifier` form is omitted:
                         // a no-arg binder is already covered by `$.identifier`).
                         prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern)))),
@@ -2060,42 +2024,42 @@ export default grammar({
         // let_and_binding, let_decl_indented, and let_expression Branch B.
         _let_name_pattern: $ => choice(
             $.identifier, $.operator_name, $.active_pattern_name,
-            // `tuple_typed_first_pattern` covers `let (a: int, b) = …` / `let! (r: T, line: string) = …`
+            // `tuple_typed_first_pattern` covers `let (a: int, b) = ...` / `let! (r: T, line: string) = ...`
             // (first tuple element type-annotated); `tuple_pattern` already handles
             // the untyped-first / later-typed cases.
             $.typed_pattern, $.tuple_pattern, $.tuple_typed_first_pattern, $.struct_tuple_pattern, $.unparenthesized_tuple_pattern, alias($.ctor_first_tuple_pattern, $.unparenthesized_tuple_pattern), $.record_pattern, $.list_pattern, $.array_pattern, $.wildcard_pattern,
-            // `let a :: b :: c = …`, `let _ :: x | x = …`, `let c1 | c2 = …`, `let a1 & a2 = …`.
+            // `let a :: b :: c = ...`, `let _ :: x | x = ...`, `let c1 | c2 = ...`, `let a1 & a2 = ...`.
             alias(prec.right(2, seq($._tuple_elem_pattern, "::", $.pattern)), $.cons_pattern),
             alias(prec.left(1, seq($._tuple_elem_pattern, "|", $.pattern)), $.or_pattern),
             alias(prec.left(1, seq($._tuple_elem_pattern, "&", $.pattern)), $.and_pattern),
-            $.type_check_pattern,   // `let :? T = …` (FS0025 is only a warning)
-            // `let () = init ()` / `let! () = start ()` — unit pattern, forces
+            $.type_check_pattern,   // `let :? T = ...` (FS0025 is only a warning)
+            // `let () = init ()` / `let! () = start ()` - unit pattern, forces
             // evaluation of a unit-returning expression (FsToolkit test style).
-            // (A general literal pattern here would let `let 0leaderingzero = …`
+            // (A general literal pattern here would let `let 0leaderingzero = ...`
             // parse as `let 0 leaderingzero`.)
             $.unit,
-            // `let NormalizedBinding(valSynData = v) [as bind] = …` named-field
+            // `let NormalizedBinding(valSynData = v) [as bind] = ...` named-field
             // deconstruction. GATED by the scanner (`name ( ident =` ahead): ungated,
             // the `(` after any `let name` shifted into this path and every
             // `let f (x: int)` died.
             seq($._ctor_tuple_gate, $.named_field_pattern),
             alias(seq($._ctor_tuple_gate, $.named_field_pattern, "as", $.identifier), $.as_pattern),
-            // `let PrelimValReprInfo(argsData, _) as info = …` (gate: `Ctor( … ) as`).
+            // `let PrelimValReprInfo(argsData, _) as info = ...` (gate: `Ctor( ... ) as`).
             alias(seq($._ctor_tuple_gate, $.long_identifier, $.tuple_pattern, "as", $.identifier), $.as_pattern),
-            // `let a as b = …` — bare as-pattern name (as_tuple_elem_pattern
+            // `let a as b = ...` - bare as-pattern name (as_tuple_elem_pattern
             // wins the lex-prec race over the pattern-route as_pattern, so it
             // must be a valid standalone name too).
             alias($.as_tuple_elem_pattern, $.as_pattern),
         ),
 
-        // `[inline/mutable] name [type-params] params [:return-type]` — the middle of a
+        // `[inline/mutable] name [type-params] params [:return-type]` - the middle of a
         // let-family binding. Leading `static`/`rec` and trailing `= body` stay at the
         // call sites since they differ per rule.
         _let_signature: $ => seq(
             optional(choice("inline", "mutable")),
             // `let private foo = ...` / `let public foo = ...` /
             // `let internal foo = ...`. Without this, `private` would be
-            // parsed as the binding name and `foo` as a parameter — which
+            // parsed as the binding name and `foo` as a parameter - which
             // already cascades into ERROR nodes downstream when the body
             // is a tuple or the name pattern uses comma-separated bindings.
             optional($.access_modifier),
@@ -2107,7 +2071,7 @@ export default grammar({
 
         // Two explicit branches so the body-present case has a static `prec` win
         // over the body-absent case. `optional(body)` + GLR exploration didn't
-        // bias correctly — tree-sitter ended up preferring the shorter "no body"
+        // bias correctly - tree-sitter ended up preferring the shorter "no body"
         // parse and turned `let x = 1` into `let_binding` + a sibling `int_literal`.
         // The body-absent branch lets mid-edit `let x =` parse as a real
         // `let_binding` node so Helix's indent walk has something to anchor on,
@@ -2119,7 +2083,7 @@ export default grammar({
         // When `///` docs precede the binding, the CODE part nests as an inner
         // let_binding node so Helix expand-selection stops at the code first,
         // then grows to include the docs (user-requested two-step expansion).
-        // Without docs the hidden core's children splice in flat — the tree
+        // Without docs the hidden core's children splice in flat - the tree
         // shape is unchanged.
         let_binding: ($) => prec.right(PREC.LET_DECL, choice(
             seq(repeat1($.xml_doc_comment), field('decl', alias($._let_binding_core, $.let_binding))),
@@ -2150,13 +2114,12 @@ export default grammar({
         )),
 
         // and name params [: type] = expr  (mutual recursion continuation)
-        // Body uses the SAME offside wrappers as `let_binding` (`_body_indent` /
-        // `_let_body_open`) — NOT a bare `_expression`. Without the wrapper a
-        // `function` / `match` body whose arms sit at the declaration column
+        // Body is a `_layout_body` like `let_binding`'s - NOT a bare `_expression`.
+        // Without the layout a `function` / `match` body whose arms sit at the declaration column
         // absorbs the FOLLOWING sibling `let` declaration into the and-binding's
         // body as a `let_expression` continuation (wrong, and an error when that
         // `let` has no continuation of its own).
-        // `and [<return: Struct>] (|BoolExpr|_|) = …` — attributes may sit
+        // `and [<return: Struct>] (|BoolExpr|_|) = ...` - attributes may sit
         // between `and` and the name (FCS IlxGen peephole actives).
         let_and_binding: ($) => prec.right(PREC.LET_DECL, choice(
             seq($._and_docs, field('decl', alias($._let_and_core, $.let_and_binding))),
@@ -2170,13 +2133,10 @@ export default grammar({
             prec(1, seq("and", optional(token.immediate("!")), repeat($.attribute), $._let_signature, "=")),
         )),
 
-        // A let binding inside let_expression. Two body forms, chosen by the scanner
-        // right after `=`:
-        //   Indented:  let x =\n    body         (scanner emits _indent/_dedent)
-        //   Inline:    let x = body              (scanner emits _inline_open/_close)
-        // For the inline form, _inline_open records the body's start column and
-        // _inline_close fires at the next line whose column is <= that — F#'s offside
-        // rule for sibling lets and continuation expressions.
+        // A let binding inside let_expression. The body is an
+        // `_indented_or_inline_body`: `_expr_open` records the body's first-token
+        // column (own line or inline) and `_layout_end` fires at the next line whose
+        // column is <= that, or at an inline `in`.
         let_decl_indented: ($) => seq(
             "let",
             optional(token.immediate("!")),
@@ -2185,16 +2145,16 @@ export default grammar({
             "=",
             // S_EXPR body (`_expr_open`) so a `let x = e in body` closes the value
             // `e` at the inline `in`. The ascription alternative covers the
-            // FSharpPlus `let s = sequence lst : '``Functor<…>``` suffix —
+            // FSharpPlus `let s = sequence lst : '``Functor<...>``` suffix -
             // without it the `:` breaks the let and poisons the next statement.
             field('body', $._indented_or_inline_body),
-            // `let rec f = … and g = … and h = …` — mutual recursion in a NESTED
+            // `let rec f = ... and g = ... and h = ...` - mutual recursion in a NESTED
             // (expression-position) let, same as the top-level `let_binding`.
             // Uses `_and_decl_indented` (NOT the top-level `let_and_binding`) so
-            // each `and` body carries the same `_indent`/`_inline` offside wrapper
-            // as the main body — otherwise the bare-`_expression` and-body absorbs
+            // each `and` body carries the same layout wrapper as the main body -
+            // otherwise the bare-`_expression` and-body absorbs
             // the let_expression's continuation line into a sequence. Without any
-            // of this the `and …` lines parse as a bogus application (`and` lexed
+            // of this the `and ...` lines parse as a bogus application (`and` lexed
             // as an identifier) and lose their keyword highlight.
             repeat(alias($._and_decl_indented, $.let_and_binding)),
         ),
@@ -2226,7 +2186,7 @@ export default grammar({
                 seq(
                     field('binding', $.let_decl_indented),
                     // The scanner CLOSES the binding's S_EXPR body at an inline
-                    // `in`, but the literal keyword still needs consuming here —
+                    // `in`, but the literal keyword still needs consuming here -
                     // without this slot it lexes as an IDENTIFIER and the
                     // continuation silently misparses (`in x * 2` became the
                     // application `(in x) * 2` with `in` as a plain variable).
@@ -2245,12 +2205,12 @@ export default grammar({
             ),
         ),
 
-        // `use r = resource` — auto-disposes r at end of enclosing scope.
+        // `use r = resource` - auto-disposes r at end of enclosing scope.
         use_expression: $ => prec.right(PREC.LET_EXPR,
             seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), $._use_rhs),
         ),
 
-        // `expr.Member` — member access ONLY when the LHS isn't a pure-identifier
+        // `expr.Member` - member access ONLY when the LHS isn't a pure-identifier
         // chain. Pure-identifier chains (`A.B.C.D`) are owned exclusively by
         // `long_identifier`, so the parser can't ambiguously pick
         // `dot_expression(long_identifier(A, B, C), D)` for them. The object
@@ -2263,7 +2223,7 @@ export default grammar({
             field('member', choice($.identifier, $.int_literal)),   // `.1`: tuple item of an operator value (`cons.( :: ).1`)
         )),
 
-        // `obj?member` / `obj?(expr)` — F#'s dynamic-lookup operator (`(?)`), used
+        // `obj?member` / `obj?(expr)` - F#'s dynamic-lookup operator (`(?)`), used
         // heavily in Fable JS interop (`el?style`, `path?join(a, b)`). The `?` is
         // `token.immediate` (no space before it) so it's distinct from an
         // `optional_named_arg` argument (`f ?name = x`, which has a space).
@@ -2271,7 +2231,7 @@ export default grammar({
             field('object', $._expression),
             choice(
                 token.immediate("?"),
-                // `x ? Member` — F# lexes `?` followed by whitespace as the binary
+                // `x ? Member` - F# lexes `?` followed by whitespace as the binary
                 // `(?)` operator; only `?ident` (no space after) is an optional arg.
                 alias(token(seq("?", /[ \t]+/)), "?"),
             ),
@@ -2288,12 +2248,12 @@ export default grammar({
             $.index_expression,
             $.bracket_index_expression,
             $.application_expression,
-            // `info?name.AsString()` / `el?style.color` — a member access on the result
-            // of a dynamic lookup (Fable JS interop), without needing `(info?name).…`.
+            // `info?name.AsString()` / `el?style.color` - a member access on the result
+            // of a dynamic lookup (Fable JS interop), without needing `(info?name)....`.
             $.dynamic_expression,
-            // `[1; 2].GetHashCode()` / `[|1; 2|].Length` — member access on a
+            // `[1; 2].GetHashCode()` / `[|1; 2|].Length` - member access on a
             // list / array / record literal.
-            // `{new Foo() with member _.Bar = 1}.Run()` — and on an object
+            // `{new Foo() with member _.Bar = 1}.Run()` - and on an object
             // expression (Hopac continuation style).
             $.object_expression,
             $.object_construction_expression,
@@ -2307,22 +2267,22 @@ export default grammar({
             $.typed_quotation,
             $.untyped_quotation,
             $.qualified_operator_expression,
-            // `Type<'T>.StaticMember` / `Type<int>.Member` — static-member (or
+            // `Type<'T>.StaticMember` / `Type<int>.Member` - static-member (or
             // nested-type) access on a generic type name. Without this, the
             // type_application_expression isn't a valid member-access object, so
             // the parser only limps through via a MISSING `not` recovery (no
             // clean tree) or errors outright inside a type augmentation body.
             $.type_application_expression,
-            // `typeof<int>.Name` / `typeof<_>.IsGenericType` — member access on a
+            // `typeof<int>.Name` / `typeof<_>.IsGenericType` - member access on a
             // type-level intrinsic (common in reflection code).
             $.type_keyword_expression,
             $.dot_expression,
             $.begin_end_expression,
-            // `'T.StaticMember` / `^T.StaticMember` — modern F# SRTP member access,
+            // `'T.StaticMember` / `^T.StaticMember` - modern F# SRTP member access,
             // where a (statically-resolved) type parameter is the root of a member
             // chain, e.g. `'a.suffixFormat.SuffixDelimStart`.
             $.type_parameter,
-            // `"abc".Length` / `'a'.ToString()` / `42 .ToString()` — member access on
+            // `"abc".Length` / `'a'.ToString()` / `42 .ToString()` - member access on
             // a literal (a `42.ToString()` with no space is a float by F#'s rule).
             $._literal,
         ),
@@ -2347,7 +2307,7 @@ export default grammar({
         )),
 
         _index_args: $ => seq(
-            choice($._index_arg, "*"),   // `m[*, 2]` — whole-dimension slice
+            choice($._index_arg, "*"),   // `m[*, 2]` - whole-dimension slice
             repeat(seq(",", choice($._index_arg, "*"))),
         ),
 
@@ -2367,27 +2327,27 @@ export default grammar({
             prec(PREC.TUPLE_EXPR + 1, $._expression),
         ),
 
-        // ── Type casts ────────────────────────────────────────────────────────
+        // --- Type casts ---
         // expr :> Type   upcast;  expr :?> Type   downcast;  expr :? Type   type test
         // (`o :?> byte[]` no-space works via array_type's prec'd immediate-`[`
-        // — the token-level tie-break; see array_type.)
+        // - the token-level tie-break; see array_type.)
         typecast_expression: $ => prec(PREC.TYPED_EXPR,
             seq($._expression, choice(":>", ":?>", ":?"), $.type_expression),
         ),
 
-        // `body : Type` — bare type ascription on a BINDING/MEMBER BODY tail. Pervasive
+        // `body : Type` - bare type ascription on a BINDING/MEMBER BODY tail. Pervasive
         // in FSharpPlus, where a function's return type is suffixed after the body:
         //   let map  (f: 'T->_) (Cont x) = Cont (fun c -> x (c << f)) : Cont<'R,'U>
         // SCOPED to body positions (reached via `_ascribable_body`, NOT `_expression`)
         // so it does NOT shadow `typed_expression` for `(e : t)` and doesn't turn a
         // trailing `T[]` into an index. `prec.right` so the `:` extends the body.
-        // The optional trailing when-constraint covers `… : 'T when 'T :
+        // The optional trailing when-constraint covers `... : 'T when 'T :
         // comparison` body ascriptions (FSharpPlus Foldable style).
         type_ascription_expression: $ => prec.right(seq($._expression, ":", $.type_expression, optional($._when_constraints))),
 
         // A binding/member body that may carry a trailing return-type ascription.
         // A trailing `;` after the body is a no-op statement terminator
-        // (`let getDir () = … directory;` — Paket style). Accept and discard it.
+        // (`let getDir () = ... directory;` - Paket style). Accept and discard it.
         _ascribable_body: $ => seq(
             choice(
                 seq(
@@ -2396,10 +2356,10 @@ export default grammar({
                     //   let inline GenericComparisonFast (x:'T) (y:'T) : int =
                     //        GenericComparisonIntrinsic x y
                     //        when 'T : bool = (# "cgt" x y : int #)
-                    //        when 'T : char = …
+                    //        when 'T : char = ...
                     repeat($.static_optimization),
                 ),
-                // …or ONLY equations (`let inline f (x: 'T) =`⏎`    when 'T : int32 = …`).
+                // ...or ONLY equations (`let inline f (x: 'T) =`\n`    when 'T : int32 = ...`).
                 repeat1($.static_optimization),
             ),
             optional(";"),
@@ -2410,13 +2370,13 @@ export default grammar({
             $.type_parameter,
             ":",
             $.type_expression,
-            // `when ^T : int32 and ^U : int32 = …` — multi-typar equations
+            // `when ^T : int32 and ^U : int32 = ...` - multi-typar equations
             repeat(seq("and", $.type_parameter, ":", $.type_expression)),
             "=",
             $._expression,
         ),
 
-        // upcast expr / downcast expr — keyword forms (type inferred by compiler)
+        // upcast expr / downcast expr - keyword forms (type inferred by compiler)
         keyword_cast_expression: $ => seq(choice("upcast", "downcast"), $._expression),
 
         // SRTP call-site:
@@ -2429,7 +2389,7 @@ export default grammar({
         // calls). prec(PAREN_EXPR) so it wins over `parenthesized_expression`
         // when the first child is a `^T`-shaped `type_parameter`.
         srtp_call_expression: $ => prec(PREC.PAREN_EXPR, choice(
-            // Single-parameter SRTP call: `(^T : (member …) arg)`
+            // Single-parameter SRTP call: `(^T : (member ...) arg)`
             seq(
                 "(",
                 $.type_parameter,
@@ -2438,13 +2398,13 @@ export default grammar({
                 field('argument', $._expression),
                 ")",
             ),
-            // Heterogeneous SRTP call: `((^a or ^b) : (member …) arg)`
+            // Heterogeneous SRTP call: `((^a or ^b) : (member ...) arg)`
             // The LHS is its own parenthesised list; each term is either a
             // type_parameter or a concrete type identifier, joined by `or`.
             seq(
                 "(",
                 "(",
-                // `((^A) : …)` may have no `or`; a parenthesised IDENTIFIER
+                // `((^A) : ...)` may have no `or`; a parenthesised IDENTIFIER
                 // must (`((float) x)` is an ordinary application).
                 choice(
                     seq($.type_parameter, repeat(seq("or", $._srtp_term))),
@@ -2458,10 +2418,10 @@ export default grammar({
             ),
         )),
 
-        // nameof expr  — returns the string name of the identifier/member at compile time
+        // nameof expr  - returns the string name of the identifier/member at compile time
         nameof_expression: $ => choice(
             seq("nameof", $._simple_expression),
-            // `nameof<MyGeneric>` — explicit type-argument form.
+            // `nameof<MyGeneric>` - explicit type-argument form.
             seq("nameof", token.immediate("<"), $.type_expression, ">"),
         ),
 
@@ -2471,7 +2431,7 @@ export default grammar({
         new_expression: $ => prec(PREC.NEW_OBJ,
             seq(
                 "new",
-                // `new 'T()` — construct a generic type parameter (used with a
+                // `new 'T()` - construct a generic type parameter (used with a
                 // `'T: (new: unit -> 'T)` constraint).
                 choice($.generic_type, $.long_identifier, $.type_parameter),
                 choice(
@@ -2506,10 +2466,10 @@ export default grammar({
         //
         // The `with`-body uses `_class_body_member` (the same rule that fills
         // `type_decl`/`type_extension` bodies). Object expressions don't allow
-        // every class-body form (e.g. `val mutable`, `new(…)`, `let`, `do` are
+        // every class-body form (e.g. `val mutable`, `new(...)`, `let`, `do` are
         // all invalid here), but accepting them at parse time and letting the
         // F# compiler reject the invalid combinations is fine for a syntax
-        // grammar — and keeping a single member-list rule avoids drift.
+        // grammar - and keeping a single member-list rule avoids drift.
         object_construction_expression: $ => seq(
             "{",
             $._record_open,
@@ -2533,10 +2493,10 @@ export default grammar({
         ),
 
 
-        // ── Exceptions ────────────────────────────────────────────────────────
+        // --- Exceptions ---
 
         // exception MyErr  or  exception MyErr of string * int
-        // P/Invoke: `[<DllImport("Kernel32")>]`⏎`extern bool private
+        // P/Invoke: `[<DllImport("Kernel32")>]`\n`extern bool private
         // GetConsoleMode(void* _h, int* _mode)` (expecto Logging style).
         // C-style types: name + `*` pointer / `[]` array suffixes.
         extern_decl: $ => seq(
@@ -2565,11 +2525,11 @@ export default grammar({
             field('name', $.identifier),
             optional(choice(
                 seq("of", $.type_expression),
-                // `exception E2 = OtherE` — exception abbreviation.
+                // `exception E2 = OtherE` - exception abbreviation.
                 seq("=", $.long_identifier),
             )),
-            // `exception WrappedError of exn * range with`⏎`  override this.Message = …`
-            // — member augmentation on the exception (FCS DiagnosticsLogger idiom).
+            // `exception WrappedError of exn * range with`\n`  override this.Message = ...`
+            // - member augmentation on the exception (FCS DiagnosticsLogger idiom).
             optional($._type_augmentation),
         )),
 
@@ -2585,11 +2545,11 @@ export default grammar({
             $._match_end,
         )),
 
-        // The try body uses a DEDICATED layout sort (`_try_open` → S_TRY) so a
-        // multi-statement body sequences (e.g. inside a CE: `async { try do! a⏎
-        // return! b with … }`) and closes at `with`/`finally`. A dedicated sort
+        // The try body uses a DEDICATED layout sort (`_try_open` -> S_TRY) so a
+        // multi-statement body sequences (e.g. inside a CE: `async { try do! a\n
+        // return! b with ... }`) and closes at `with`/`finally`. A dedicated sort
         // (not the generic S_EXPR) means the `with`-close is try-specific and does
-        // NOT fire for a `match … with` sitting inside an enclosing expr body.
+        // NOT fire for a `match ... with` sitting inside an enclosing expr body.
         try_expression: $ => prec.right(PREC.MATCH_EXPR, seq(
             "try",
             $._try_body,
@@ -2599,76 +2559,49 @@ export default grammar({
             ),
         )),
 
-        // lazy expr / assert expr — prefix keyword wrapping an expression.
+        // lazy expr / assert expr - prefix keyword wrapping an expression.
         // The layout-bounded alternative covers a MULTI-STATEMENT block body:
-        //   lazy⏎    assert not isInteractive⏎⏎    match … (FCS FxResolver) —
+        //   lazy\n    assert not isInteractive\n\n    match ... (FCS FxResolver) -
         // without a body context the statements have no separator.
         prefix_keyword_expression: $ => prec(PREC.PREFIX_EXPR, choice(
             seq(choice("lazy", "assert", "fixed"), $._expression),   // `use p = fixed arr`
-            // _block_open (NOT _expr_open): it only fires when the body sits on
-            // the NEXT line, so inline `lazy x` (e.g. as a match scrutinee:
-            // `match a, lazy b with`) always takes the plain branch above.
             // _lazy_open declines INLINE bodies, so `lazy x` (e.g. a match
             // scrutinee `match a, lazy b with`) always takes the plain branch.
             seq("lazy", $._lazy_open, choice($._expression, $.type_ascription_expression), $._layout_end),
         )),
 
-        // `do expr` — a unit-returning statement written explicitly inside a
+        // `do expr` - a unit-returning statement written explicitly inside a
         // sequence (`do v := 0`, `do obj.Mutate ()`). prec.right at 2 (just above
         // SEQ_EXPR=1) so it reduces as ONE statement and the enclosing sequence
-        // keeps the following lines as siblings — while the operand still grabs a
-        // full application / assignment (prec ≥ 4). (A `|>`/tuple operand, prec 1,
+        // keeps the following lines as siblings - while the operand still grabs a
+        // full application / assignment (prec >= 4). (A `|>`/tuple operand, prec 1,
         // would bind outside the `do`, but that form is degenerate for `do`.)
         do_expression: $ => prec.right(2, seq("do", $._indented_or_inline_body)),
 
-        // begin expr end  — sequenced block (equivalent to parenthesized).
-        // Layout body so the MULTI-LINE form works: `begin`⏎`  a ()`⏎`  b ()`⏎
-        // `end` — the body opens at the first statement's column and the
+        // begin expr end  - sequenced block (equivalent to parenthesized).
+        // Layout body so the MULTI-LINE form works: `begin`\n`  a ()`\n`  b ()`\n
+        // `end` - the body opens at the first statement's column and the
         // dedented `end` closes it (the scanner also closes an inline S_EXPR
         // body at a mid-line `end`, which is a reserved word).
         begin_end_expression: $ => prec(PREC.PAREN_EXPR,
             seq("begin", $._indented_or_inline_body, "end")),
 
-        // function | pat -> expr …  — shorthand for fun x -> match x with
+        // function | pat -> expr ...  - shorthand for fun x -> match x with
         function_expression: $ => prec.right(PREC.MATCH_EXPR,
             seq("function", $._match_arms),
         ),
 
-        // ── For / While ───────────────────────────────────────────────────────
+        // --- For / While ---
 
         // for x in xs do body   (foreach)  /  for i = start to/downto end do body  (range)
         //
-        // Body is `optional($._expression)` — NOT `_indented_or_inline_body` like
-        // `if_expression`/`while_expression`/`lambda_expression`. Reason: a bare
-        // `for x in xs do` can be followed by a query-CE custom operator
-        // (`query { for x in xs do where … select … }`). When the body uses
-        // `_indented_or_inline_body`, the scanner emits `_body_indent` for the
-        // next line and the parser commits to a body parse — but the reserved
-        // `query_ce` keyword set doesn't propagate through `_body_indent`'s
-        // state boundary, so `where` becomes a plain identifier and gets eaten
-        // as an application-expression body. Sticking with `$._expression`
-        // keeps `where`/`select` reserved at the body slot, so the parser
-        // correctly leaves the body empty and treats them as `query_operator`
-        // siblings in the CE.
-        //
-        // Trade-off documented in LIMITATIONS.md: a non-CE `for` with a
-        // multi-statement body parses as a single chained application instead
-        // of `sequence_expression`. Attempted fix via a separate
-        // `_ce_for_clause` rule (aliased to `for_expression`) didn't work —
-        // tree-sitter prefers the longest match, so even with high precedence
-        // on the body-less form, the body-present form wins when both can
-        // match. See the LIMITATIONS.md entry for the next thing to try.
-        // Body shape (`_for_body`): a real loop body uses `_for_body_open` /
-        // `_for_body_close` (scanner-emitted) so the body column is pushed onto
-        // the indent stack and `_virtual_semi` sequences multi-statement
-        // bodies. The scanner does NOT emit `_for_body_open` when the next
-        // significant token is a query-CE operator (`where`/`select`/… or a
-        // chained `for`), so the `query { for x in xs do where … select … }`
-        // form keeps the for body EMPTY and the operators stay `query_operator`
-        // siblings. The bare `optional($._expression)` fallback covers that
-        // empty-body CE case, inline single-line bodies, and mid-edit. Inlined
-        // (not a named rule) so the empty alternative only appears inside the
-        // non-empty `for … do` sequence.
+        // The body is `optional($._for_body)`: `_for_open` pushes the body column so
+        // `_layout_semi` sequences a multi-statement body and `_layout_end` closes
+        // it. The scanner does NOT emit `_for_open` when the next significant token
+        // sits at the enclosing CE column (a query-CE operator such as `where` /
+        // `select`, or a chained `for`), so `query { for x in xs do where ... }`
+        // keeps the for body EMPTY and the operators stay `query_operator`
+        // siblings; the optional also covers mid-edit `for x in xs do`.
         for_expression: $ => prec.right(PREC.IF_EXPR, seq(
             "for",
             choice(
@@ -2678,15 +2611,15 @@ export default grammar({
                     choice(
                         seq("do",
                             // `_for_open` is suppressed when the "body" sits at the
-                            // enclosing (CE) column rather than indented — i.e. a
-                            // query `for x in xs do`⏎`where …`/`select …` — so the
+                            // enclosing (CE) column rather than indented - i.e. a
+                            // query `for x in xs do`\n`where ...`/`select ...` - so the
                             // body stays empty and the operators are query_operator
                             // CE siblings. A real indented/inline loop body opens
                             // normally. (No bare `optional($._expression)` fallback:
                             // it would greedily eat the next query operator.)
                             optional($._for_body), optional("done"),
                         ),
-                        // `[ for x in xs -> expr ]` — list/seq/array comprehension
+                        // `[ for x in xs -> expr ]` - list/seq/array comprehension
                         // yield shorthand (sugar for `do yield expr`). The `->`
                         // belongs to the for, not the enumerable: `prec.dynamic`
                         // biases the parser to end the `in` expression and take
@@ -2696,7 +2629,7 @@ export default grammar({
                     ),
                 ),
                 seq(
-                    // `_` is a valid range-loop binder (`for _ = 0 to n do …`).
+                    // `_` is a valid range-loop binder (`for _ = 0 to n do ...`).
                     choice($.identifier, $.wildcard_pattern),
                     "=", $._expression, choice("to", "downto"), $._expression, "do",
                     optional($._for_body), optional("done"),
@@ -2716,27 +2649,27 @@ export default grammar({
             prec(1, seq("while", $._expression, "do")),
         )),
 
-        // `builder { ... }` — async, task, seq, promise, query, or any custom CE.
+        // `builder { ... }` - async, task, seq, promise, query, or any custom CE.
         // CE_EXPR < APP_EXPR so `f { field = val }` is parsed as application with a
         // record argument when both forms are viable.
-        // `reserved('query_ce', …)` activates the query-CE custom-operator names
-        // (`select`, `where`, `join`, …) as their own tokens inside the body — they
+        // `reserved('query_ce', ...)` activates the query-CE custom-operator names
+        // (`select`, `where`, `join`, ...) as their own tokens inside the body - they
         // remain plain identifiers in every other parse state.
         computation_expression: $ => prec(PREC.CE_EXPR,
             seq(
                 // The whole builder head is OPTIONAL: a bare `{1..3}` /
-                // `{e1..e2..e3}` is sequence-range sugar with no builder —
+                // `{e1..e2..e3}` is sequence-range sugar with no builder -
                 // the unquote test style. Safe because the CE fork is gated by
                 // the scanner's `_ce_brace_open` marker: record / object-expr /
                 // copy-update braces decline it and keep their literal `{`.
                 optional(choice(
                     field('builder', $.long_identifier),
-                    // Builder-is-an-APPLICATION CE: `div() { … }` / `div(attrs) { … }`
-                    // (Oxpecker element DSL) and `stage "x" { … }` / `pipeline "B" { … }`
+                    // Builder-is-an-APPLICATION CE: `div() { ... }` / `div(attrs) { ... }`
+                    // (Oxpecker element DSL) and `stage "x" { ... }` / `pipeline "B" { ... }`
                     // (Fun.Build-style, a string-named builder). The zero-width
                     // `_element_dsl_open` LEADS this alternative; the scanner emits
                     // it only when `ident <arg> {` is actually ahead, so a plain
-                    // `a()`⏎`b()` (no following `{`) never enters here and the
+                    // `a()`\n`b()` (no following `{`) never enters here and the
                     // offside layout is unaffected.
                     seq(
                         $._element_dsl_open,
@@ -2745,7 +2678,7 @@ export default grammar({
                                              $.string_literal, $.verbatim_string, $.triple_quoted_string,
                                              // Oxpecker.Solid component: `Component {| props |} { children }`
                                              $.anonymous_record_expression)),
-                        // Fluent method chain before the body: `div(attrs).hxTarget("#x").hxSwap("y") { … }`
+                        // Fluent method chain before the body: `div(attrs).hxTarget("#x").hxSwap("y") { ... }`
                         repeat(seq(
                             ".",
                             field('method', $.long_identifier),
@@ -2755,9 +2688,9 @@ export default grammar({
                 )),
                 // Zero-width `_ce_brace_open` LEADS the body `{`: the scanner emits it
                 // (then tree-sitter lexes the literal `{`) ONLY when the brace content
-                // is a CE body — not a record field / `new` object-expr / copy-update.
+                // is a CE body - not a record field / `new` object-expr / copy-update.
                 // When the scanner declines, the CE alternative can't start (it needs
-                // this marker), `head` reduces to `_expression`, and `head { … }` parses
+                // this marker), `head` reduces to `_expression`, and `head { ... }` parses
                 // as application(head, record/object_expression) with the literal `{`.
                 $._ce_brace_open,
                 $._ce_body,
@@ -2767,11 +2700,11 @@ export default grammar({
         _ce_body: $ => prec(PREC.CE_EXPR, seq(
                 "{",
                 optional(choice(
-                    // Multi-line `builder {`⏎ statements ⏎`}`. `reserved('query_ce')`
+                    // Multi-line `builder {`\n statements \n`}`. `reserved('query_ce')`
                     // wraps only the STATEMENTS (so query operators activate) and not
-                    // the external `_ce_body_*`/`_ce_sep` tokens. `_ce_sep` is the
-                    // dedicated separator (a binding's trailing expression can't steal
-                    // it); `_ce_body_close` pops at `}`.
+                    // the external bracket tokens. `_bracket_semi` is the dedicated
+                    // separator (a binding's trailing expression can't steal it);
+                    // `_bracket_close` pops at `}`.
                     seq(
                         $._bracket_open,
                         reserved('query_ce', $._ce_statement),
@@ -2793,7 +2726,7 @@ export default grammar({
         // return/yield/return!/yield!/do!/for/while/if/match/etc.
         // The query_* alternatives only match in CE bodies because their leading
         // keywords are in the `query_ce` reserved set, which is activated by the
-        // `reserved('query_ce', …)` wrap in `computation_expression`.
+        // `reserved('query_ce', ...)` wrap in `computation_expression`.
         _ce_statement: $ => choice(
             // SAFETY NET (see _token): docs before un-slotted CE statements.
             prec.dynamic(-1, $.xml_doc_comment),
@@ -2809,10 +2742,10 @@ export default grammar({
         ),
 
         // Query-CE custom operators that take a single expression argument:
-        //   `select expr`  `where expr`  `sortBy keyExpr`  `take n`  …
+        //   `select expr`  `where expr`  `sortBy keyExpr`  `take n`  ...
         // These names are reserved only inside `computation_expression` (see the
-        // `query_ce` reserved set + `reserved('query_ce', …)` wrap), so usages like
-        // `List.where`, `let take n = …` outside any CE keep their identifier shape.
+        // `query_ce` reserved set + `reserved('query_ce', ...)` wrap), so usages like
+        // `List.where`, `let take n = ...` outside any CE keep their identifier shape.
         query_operator: $ => prec.right(seq(
             field('op', alias($._query_op_word, $.query_op)),
             optional($._expression),
@@ -2835,7 +2768,7 @@ export default grammar({
             field('condition', $._expression),
         ),
 
-        // `groupBy keyExpr into groupName`  (also `groupValBy v k into g`, `groupJoin …`)
+        // `groupBy keyExpr into groupName`  (also `groupValBy v k into g`, `groupJoin ...`)
         query_group_by_operator: $ => seq(
             choice("groupBy", "groupValBy", "groupJoin"),
             field('key', $._expression),
@@ -2854,32 +2787,32 @@ export default grammar({
             field('into', $.identifier),
         ),
 
-        // Bindable names for `let!` / `and!` — narrower than _let_name_pattern
+        // Bindable names for `let!` / `and!` - narrower than _let_name_pattern
         // (no operator names, active patterns, lists, or arrays).
         // use x = disposable  (also used as a top-level _token outside CEs)
         use_binding: $ => prec.right(PREC.LET_DECL,
             seq("use", optional(token.immediate("!")), optional("mutable"), field('name', $._use_name), $._use_rhs),
         ),
 
-        // Layout body like a let's, so `use x =`⏎`    multi-line value` closes at
+        // Layout body like a let's, so `use x =`\n`    multi-line value` closes at
         // the dedent instead of gluing the following statements into the value.
 
         // `use x`, `use x : T`, `use (p: nativeptr<byte>)`, `use! (_)`, `use! (a, b)`.
         // `use (p: nativeptr<byte>) = fixed arr`. (Wider pattern sets here cost ~150 states.)
         _use_name: $ => choice($.identifier, $.typed_pattern),
 
-        // match! expr with | pat -> expr …
+        // match! expr with | pat -> expr ...
         ce_match_bang_expr: $ => prec.right(PREC.MATCH_EXPR,
             seq("match!", $._expression, "with", $._match_arms),
         ),
 
-        // return/yield/do! forms — in _expression so they're valid inside CE if/match branches.
-        // KNOWN GAP: `seq { yield x; }` — an INLINE trailing `;` before `}`.
+        // return/yield/do! forms - in _expression so they're valid inside CE if/match branches.
+        // KNOWN GAP: `seq { yield x; }` - an INLINE trailing `;` before `}`.
         // The `;` shift (sequence-extension inside the operand, prec SEQ_EXPR)
         // statically beats this rule's reduce; equalizing the precedence ties
-        // it with EVERY prec-1 operator (`|>`, `,`, …), and the GLR forks then
-        // need opposite outcomes per token (tried 2026-06-10, reverted). The
-        // multiline form and `seq { a; b }` without the trailing `;` parse.
+        // it with EVERY prec-1 operator (`|>`, `,`, ...), and the GLR forks then
+        // need opposite outcomes per token. The multiline form and
+        // `seq { a; b }` without the trailing `;` parse.
         ce_result_expr: $ => choice(
             seq("return", $._expression),
             seq("return!", $._expression),
@@ -2915,16 +2848,11 @@ export default grammar({
             field('body', $._layout_body),
         ),
 
-        // Body of a match/try/function arm. Three shapes:
-        //   1. Own line, indented: `_body_indent` pushes the body column so
-        //      `_virtual_semi` sequences multi-statement bodies and a
-        //      dedented trailing statement closes the arm.
-        //   2. Inline (`| pat -> body`): `_match_body_open` captures the
-        //      enclosing indent (≈ the `match` column) and `_match_body_close`
-        //      fires when the next line returns to or below it — keeps a
-        //      trailing dedented statement (e.g. a final `0` at the `match`
-        //      column) out of the last arm's body.
-        //   3. Plain `_expression` fallback (single-line arms, EOF, mid-edit).
+        // The body of a match/try/function arm is a `_layout_body`: `_layout_open`
+        // pushes the body's first-token column (own line or inline after `->`),
+        // `_layout_semi` sequences a multi-statement body, and `_layout_end` fires
+        // when a line returns to or below that column, so a trailing dedented
+        // statement (a final `0` at the `match` column) stays out of the last arm.
 
         pattern: $ => choice(
             $.wildcard_pattern,
@@ -2945,10 +2873,10 @@ export default grammar({
             $.named_field_pattern,
         ),
 
-        // struct (a, b)  — destructure a struct tuple in match/let
+        // struct (a, b)  - destructure a struct tuple in match/let
         // Elements are `_tuple_pattern_item` (not bare `pattern`) so they may be
-        // TYPED without per-element parens — `struct (a: int, b: int)`, the
-        // FSharp.Data.Adaptive `for struct(k, v) in …` / member-param idiom.
+        // TYPED without per-element parens - `struct (a: int, b: int)`, the
+        // FSharp.Data.Adaptive `for struct(k, v) in ...` / member-param idiom.
         struct_tuple_pattern: $ => seq(
             "struct",
             "(",
@@ -2957,14 +2885,14 @@ export default grammar({
             ")",
         ),
 
-        // Constructor(field = pat; field2 = pat2)  — named DU field pattern.
+        // Constructor(field = pat; field2 = pat2)  - named DU field pattern.
         // prec.dynamic prefers starting a new field over extending the previous
         // pattern via identifier_pattern's constructor-application form.
         named_field_pattern: $ => seq(
             field('constructor', $.long_identifier),
             "(",
             choice(
-                // Offside / newline-aligned form `Foo(`⏎`a = x`⏎`b = y)`. A
+                // Offside / newline-aligned form `Foo(`\n`a = x`\n`b = y)`. A
                 // dedicated `_paren_field_open` (NOT the shared record open, which
                 // rippled) pushes an S_BRACKET context at the field column so
                 // newline-aligned fields separate via `_bracket_semi`; pops at `)`.
@@ -2975,7 +2903,7 @@ export default grammar({
                     optional(choice(";", $._bracket_semi)),
                     $._bracket_close,
                 ),
-                // Inline form `Foo(a = x; b = y)` — explicit `;` separators.
+                // Inline form `Foo(a = x; b = y)` - explicit `;` separators.
                 seq(
                     $.named_field_pat,
                     repeat(prec.dynamic(2, seq(";", $.named_field_pat))),
@@ -2991,18 +2919,18 @@ export default grammar({
             field('value', $.pattern),
         ),
 
-        // pat1 | pat2  — alternative patterns. prec.left(1) binds tighter than `as`
+        // pat1 | pat2  - alternative patterns. prec.left(1) binds tighter than `as`
         // (0) and looser than `::` (2).
         or_pattern: $ => prec.left(1, seq($.pattern, "|", $.pattern)),
 
-        // pat1 & pat2  — conjunction (AND) pattern, e.g. `Foo x & Bar y` /
+        // pat1 & pat2  - conjunction (AND) pattern, e.g. `Foo x & Bar y` /
         // `ForFile f & HasEditIn r`. Both subpatterns must match.
         and_pattern: $ => prec.left(1, seq($.pattern, "&", $.pattern)),
 
-        // (pat : type)  — type annotation on a pattern, always parenthesised.
+        // (pat : type)  - type annotation on a pattern, always parenthesised.
         typed_pattern: $ => seq("(", $.pattern, ":", $.type_expression, repeat(seq(choice("&", "|"), $.pattern)), ")"),
 
-        // { Field = pat; Field2 = pat2 }  — destructure a record. prec.dynamic prefers
+        // { Field = pat; Field2 = pat2 }  - destructure a record. prec.dynamic prefers
         // starting a new field over extending the previous value via identifier_pattern.
         record_pattern: $ => seq(
             "{",
@@ -3031,7 +2959,7 @@ export default grammar({
             optional(seq("as", choice($.identifier, alias(prec.right(1, seq($.long_identifier, repeat1($._tuple_elem_pattern))), $.identifier_pattern)))),
         )),
 
-        // x :: rest  — right-assoc; prec 2 > or_pattern (1) > as_pattern (0).
+        // x :: rest  - right-assoc; prec 2 > or_pattern (1) > as_pattern (0).
         cons_pattern: $ => prec.right(2, seq($.pattern, "::", $.pattern)),
 
         cons_typed_head_pattern: $ => prec.right(2, seq(
@@ -3061,11 +2989,11 @@ export default grammar({
         negative_literal: $ => seq("-", choice($.int_literal, $.float_literal)),
 
         // `Some x` / `Foo.Bar x` (constructor) and `Contains keys value`
-        // (parameterised active pattern) — a long_identifier applied to one or
+        // (parameterised active pattern) - a long_identifier applied to one or
         // more ARGUMENT patterns. Arguments are `_tuple_elem_pattern` (atomic
-        // forms: `_`, literals, `[…]`, `[|…|]`, `{…}`, `(…)`, a bare
+        // forms: `_`, literals, `[...]`, `[|...|]`, `{...}`, `(...)`, a bare
         // long_identifier) rather than the full `$.pattern`, so multiple args
-        // stay siblings (`Contains [a] [b]` → two list args) instead of the
+        // stay siblings (`Contains [a] [b]` -> two list args) instead of the
         // first arg greedily swallowing the rest as a nested application.
         identifier_pattern: $ => choice(
             $.long_identifier,
@@ -3073,14 +3001,14 @@ export default grammar({
         ),
 
         // Inside a parenthesised tuple pattern, an element AFTER the first may
-        // carry a type annotation WITHOUT its own parens — the tuple's parens
+        // carry a type annotation WITHOUT its own parens - the tuple's parens
         // suffice:  (Key3(_, _, r: RevUtc), s: State)   (a, b: int).
         // The first element stays a plain pattern so the single-element forms
         // `(Some x)` / `(x: T)` keep matching tuple_pattern / typed_pattern
-        // unambiguously (no comma → no typed-item branch).
+        // unambiguously (no comma -> no typed-item branch).
         tuple_pattern: $ => seq(
             "(",
-            repeat($.attribute),           // `([<Attr>] x, …)` — attr on a param element
+            repeat($.attribute),           // `([<Attr>] x, ...)` - attr on a param element
             optional("?"),                 // OOP optional param: (msg, ?range)
             $.pattern,
             repeat(seq(",", $._tuple_pattern_item)),
@@ -3088,8 +3016,8 @@ export default grammar({
         ),
 
         // Like tuple_pattern but with a typed first element (`(x: T, y)`).
-        // Kept separate from tuple_pattern — and reachable only from $.pattern,
-        // never from `parameter` — so OOP-style `tuple_params` keeps owning the
+        // Kept separate from tuple_pattern - and reachable only from $.pattern,
+        // never from `parameter` - so OOP-style `tuple_params` keeps owning the
         // same shape in parameter position. The required comma (repeat1) means a
         // lone `(x: T)` still parses as typed_pattern, not a 1-tuple.
         tuple_typed_first_pattern: $ => seq(
@@ -3100,7 +3028,7 @@ export default grammar({
         ),
 
         _tuple_pattern_item: $ => seq(
-            repeat($.attribute),           // `(x, [<Attr>] y)` — attr on a param element
+            repeat($.attribute),           // `(x, [<Attr>] y)` - attr on a param element
             optional("?"),                 // OOP optional param: (msg, ?range)
             choice(
                 $.pattern,
@@ -3112,10 +3040,10 @@ export default grammar({
         // own parens stand in for the per-element parens `typed_pattern` needs).
         // The optional constraint clause covers a typed element inside a
         // PARENTHESIZED tuple pattern: `((x: '``M<'T>`` when '``M<'T>`` :
-        // (static member (>>=) : …), f: 'T->'U), _mthd)` — the FSharpPlus
+        // (static member (>>=) : ...), f: 'T->'U), _mthd)` - the FSharpPlus
         // Control/Functor overload idiom (tuple_param has the same clause).
         tuple_typed_pattern: $ => seq(
-            // `(g2, s2): Lens<'a,'b>` — a parenthesized tuple may itself carry
+            // `(g2, s2): Lens<'a,'b>` - a parenthesized tuple may itself carry
             // the ascription as ONE element (Aether lens compose style).
             field('pattern', choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern)),
             ":",
@@ -3140,23 +3068,23 @@ export default grammar({
             $.list_pattern,
             $.array_pattern,
             // `binfo as bindInfo` as ONE tuple element (`let bindR, binfo as
-            // bindInfo, env = …`, FCS Optimizer style): F# binds `as` tighter
+            // bindInfo, env = ...`, FCS Optimizer style): F# binds `as` tighter
             // than `,` here (a tuple element is a headBindingPattern).
             alias($.as_tuple_elem_pattern, $.as_pattern),
         ),
 
-        // `let CheckedBindingInfo(a, b, …), tpenv = …` (FCS) — a constructor
+        // `let CheckedBindingInfo(a, b, ...), tpenv = ...` (FCS) - a constructor
         // deconstruction as the FIRST element of a let-bound tuple. The comma
-        // lives INSIDE the rule so plain `let f(a, b) = …` function definitions
+        // lives INSIDE the rule so plain `let f(a, b) = ...` function definitions
         // (no comma after the parens) stay untouched.
         // Gated by a SCANNER token (the CTOR_ATTR trick): emitted only when
-        // `ident ( … ) ,` truly follows — a fn def can never have `,` after its
+        // `ident ( ... ) ,` truly follows - a fn def can never have `,` after its
         // params, so the gate is deterministic and the fn-def LR path is never
-        // disturbed (two ungated encodings silently starved it — see log).
+        // disturbed (two ungated encodings silently starved it).
         ctor_first_tuple_pattern: $ => seq(
             $._ctor_tuple_gate,
             $.long_identifier,
-            // `Ctor(a, b), …` / `AesKey key, …` (the gate only fires on bare identifier args).
+            // `Ctor(a, b), ...` / `AesKey key, ...` (the gate only fires on bare identifier args).
             choice($.tuple_pattern, repeat1(choice($.long_identifier, $.wildcard_pattern))),
             ",",
             $._tuple_elem_or_ctor,
@@ -3170,12 +3098,12 @@ export default grammar({
             $.identifier,
         )),
 
-        // `a, b` or `a, b, c` — bare tuple pattern without outer parens. Valid as the
+        // `a, b` or `a, b, c` - bare tuple pattern without outer parens. Valid as the
         // bound name in let/let!/and!. Deliberately NOT included in $.pattern: match
         // arms handle commas via their own repeat.
-        // Elements may carry an access modifier (`let private a, private b = …`).
+        // Elements may carry an access modifier (`let private a, private b = ...`).
         // After a `,` an element may be a constructor application (`let AesKey
-        // key, AesIV iv = …`): unambiguous there, unlike the first element.
+        // key, AesIV iv = ...`): unambiguous there, unlike the first element.
         unparenthesized_tuple_pattern: $ => seq(
             $._tuple_elem_pattern,   // a leading modifier belongs to the let signature
             ",",
@@ -3200,7 +3128,7 @@ export default grammar({
         // A `;`-separated element may itself be an unparenthesized tuple:
         // `[ a, b, c ]` is a one-element list holding the tuple `(a, b, c)`.
         // Unlike the param-context `unparenthesized_tuple_pattern`, the elements
-        // here are FULL patterns — inside `[ ]` a constructor application like
+        // here are FULL patterns - inside `[ ]` a constructor application like
         // `Ctor(x, y)` is unambiguous (`[ A.Tag, B.Coll(o, t) ]`).
         list_tuple_pattern: $ => prec.right(seq($.pattern, repeat1(seq(",", $.pattern)))),
         // `| [arg: Expr] ->` - the brackets stand in for the per-element parens
@@ -3209,7 +3137,7 @@ export default grammar({
         _list_pattern_item: $ => choice($.pattern, $.list_tuple_pattern, $.tuple_typed_pattern),
 
         // Both forms: inline `[ a; b ]` and block/newline-aligned
-        // (`| [ [| Target "T1" |]⏎     [| Target "T2" |] ]` — Fake.Core tests).
+        // (`| [ [| Target "T1" |]\n     [| Target "T2" |] ]` - Fake.Core tests).
         // The block form reuses the expression brackets' scanner machinery:
         // `_bracket_open` captures the first element's column, `_bracket_semi`
         // separates newline-aligned elements, `_bracket_close` pops at `]`.
@@ -3247,8 +3175,8 @@ export default grammar({
             $.identifier,
             $.unit,
             $.wildcard_pattern,
-            $.struct_tuple_pattern,   // `fun struct (depth, ty) -> …`
-            // `([<Attr>] x: int)` / `([<Attr>] x)` — attributes on curried params
+            $.struct_tuple_pattern,   // `fun struct (depth, ty) -> ...`
+            // `([<Attr>] x: int)` / `([<Attr>] x)` - attributes on curried params
             // (used for ParamArray, optional/caller-info attributes outside tuple
             // form, etc.).
             // The optional `when` clause covers an inline constraint on the
@@ -3258,15 +3186,15 @@ export default grammar({
             prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, optional(choice($._when_constraints, seq(":>", $.type_expression))), ")")),
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `let f ((|App|_|) : _ -> _) e` / `let f q (|Pat|_|)` - an active
-            // pattern as a parameter; `let f (<) = …` - an operator as a parameter.
+            // pattern as a parameter; `let f (<) = ...` - an operator as a parameter.
             $.active_pattern_name,
             prec(20, seq("(", $.active_pattern_name, ":", $.type_expression, ")")),
             $.operator_name,
-            // `?loc` — bare (un-parenthesized) curried optional param. A type
+            // `?loc` - bare (un-parenthesized) curried optional param. A type
             // annotation needs parens (`(?loc: int)`) so `?loc : T` reads `T` as
             // the return type, not the param type.
             prec(20, seq("?", $.identifier)),
-            $.tuple_params,                // (x: int, y: int) — OOP-style multi-param
+            $.tuple_params,                // (x: int, y: int) - OOP-style multi-param
             $.destructure_parameter,       // ((a,b): int*int)   ({X=x}: Point)
             $.tuple_pattern,               // (a, b)   (Some x)
             $.record_pattern,              // { X = x }
@@ -3281,7 +3209,7 @@ export default grammar({
                 $.struct_tuple_pattern,
                 $.record_pattern,
                 $.wildcard_pattern,
-                // `(Url url: Url)` — single-case union / active-pattern
+                // `(Url url: Url)` - single-case union / active-pattern
                 // deconstruction (the constructor-application form only; the bare
                 // `(x: T)` is handled inline in `parameter`).
                 prec.right(seq($.long_identifier, repeat1($._tuple_elem_pattern))),
@@ -3294,7 +3222,7 @@ export default grammar({
         // cm^3  m^-1  (measure type raised to a power)
         // prec(TYPE_PREC.APP + 1): after a bare type (`e :> cm`), a following
         // `^` extends into the measure power rather than ending the type for
-        // the expression-level infix `^` (Hopac apply) — the measure reading
+        // the expression-level infix `^` (Hopac apply) - the measure reading
         // wins deterministically in type positions.
         measure_power_type: $ => prec(TYPE_PREC.APP + 1, seq(
             $.long_identifier,
@@ -3303,11 +3231,11 @@ export default grammar({
         )),
 
         // Compound measure expressions: `m/s` `kg*m/s^2` `'u` `1`. Juxtaposition
-        // (`kg m`) is unsupported — write `kg*m` instead.
+        // (`kg m`) is unsupported - write `kg*m` instead.
         measure_expression: $ => choice(
             prec.left(1, seq($.measure_expression, "/", $.measure_expression)),
             prec.left(2, seq($.measure_expression, "*", $.measure_expression)),
-            // `m s^-2` — juxtaposition is a product (spec 9.5); binds tightest.
+            // `m s^-2` - juxtaposition is a product (spec 9.5); binds tightest.
             prec.left(3, seq($.measure_expression, $.measure_expression)),
             $.measure_power_type,
             $.int_literal,
@@ -3333,9 +3261,9 @@ export default grammar({
             $.anonymous_record_type,
             $.struct_anonymous_record_type,
             $.measure_power_type,
-            // `#IDisposable` / `#seq<'T>` — flexible type (this type or a subtype).
+            // `#IDisposable` / `#seq<'T>` - flexible type (this type or a subtype).
             $.flexible_type,
-            // `#A & #B` — flexible-type intersection (F# 7+ interface constraint).
+            // `#A & #B` - flexible-type intersection (F# 7+ interface constraint).
             $.type_intersection,
             // `name: T` / `?name: T` element of a member/abstract signature.
             $.labelled_type,
@@ -3350,7 +3278,7 @@ export default grammar({
             $._atomic_type,
         )),
 
-        // `#A & #B [& #C …]` — flexible-type intersection: a value that is a subtype
+        // `#A & #B [& #C ...]` - flexible-type intersection: a value that is a subtype
         // of every listed interface/type (F# 7+ interface intersection constraint),
         // e.g. `(env: #IReader & #ILogger)`.
         type_intersection: $ => prec.left(TYPE_PREC.TUPLE, seq(
@@ -3358,12 +3286,12 @@ export default grammar({
             repeat1(seq("&", $.flexible_type)),
         )),
 
-        // struct (int * string)  — value-type tuple type
+        // struct (int * string)  - value-type tuple type
         struct_tuple_type: $ => seq("struct", "(", $.tuple_type, ")"),
 
         // int -> string  (right-assoc: int -> string -> bool = int -> (string -> bool))
         // The RETURN may be a nullable `T | null` (F# 9): `int -> string | null`. (A
-        // nullable on the LEFT needs parens — `(string | null) -> int` — so `|` there
+        // nullable on the LEFT needs parens - `(string | null) -> int` - so `|` there
         // isn't ambiguous; only the return position accepts a bare nullable.)
         function_type: $ => prec.right(TYPE_PREC.FUNCTION, seq(
             $.type_expression, "->", $.type_expression,
@@ -3379,7 +3307,7 @@ export default grammar({
 
         // `string | null * IDep | null` (F# 9 nullness, FCS DependencyProvider):
         // a tuple type whose elements may be nullable. NOT part of the general
-        // type_expression — a bare `|` after a labelled union-field type means
+        // type_expression - a bare `|` after a labelled union-field type means
         // the NEXT DU case, so this shape is only reachable from annotation
         // slots that already accept nullable_type (returns, typed patterns).
 
@@ -3402,7 +3330,7 @@ export default grammar({
 
         // list<int>, Map<string, int>, ResizeArray<string | null>
         // A `nullable_type` (`string | null`) is allowed as a type argument: inside
-        // `<…>` the `|` is unambiguous (arguments are delimited by `,` and `>`, no
+        // `<...>` the `|` is unambiguous (arguments are delimited by `,` and `>`, no
         // union case can follow), the same reasoning that lets `parenthesized_type`
         // carry one.
         generic_type: $ => prec(TYPE_PREC.APP, seq(
@@ -3417,17 +3345,17 @@ export default grammar({
             prec.dynamic(1, $.type_expression),
             $.measure_expression,
             $.static_type_argument,
-            // `seq<'U :> seq<'T>>` — inline subtype constraint on a typar
+            // `seq<'U :> seq<'T>>` - inline subtype constraint on a typar
             // (FSharp.Core seqcore style).
             alias($.subtype_type_arg, $.type_constraint),
         ),
 
         subtype_type_arg: $ => seq($.type_parameter, ":>", $.type_expression),
 
-        // Type-provider STATIC arguments inside `<…>`: literal values
+        // Type-provider STATIC arguments inside `<...>`: literal values
         // (`JsonProvider<""" [1] """>`) and named constants
         // (`CsvProvider<"f.csv", Separators=";">`, `TypeNat<value = 4>`).
-        // Bare ints / identifiers in `<…>` already parse via measure_expression /
+        // Bare ints / identifiers in `<...>` already parse via measure_expression /
         // type_expression, so the positional branch lists only the OTHER literal
         // kinds; the named value additionally accepts int and `[<Literal>]`
         // constants referenced by (dotted) name.
@@ -3455,14 +3383,14 @@ export default grammar({
 
         // int[]
         // `repeat(",")` = multidimensional ranks (`int[,]`, `int[,,]`).
-        // The `token.immediate` alternative covers `o :?> byte[]` — with no
+        // The `token.immediate` alternative covers `o :?> byte[]` - with no
         // space the `[` would otherwise lex as the dotless-index immediate `[`
         // (which then dies on an empty index, leaving an error).
         // The immediate-`[` alternative carries token prec 1: in a CAST tail
         // (`box s :?> Cloner.State[]`, no space) BOTH this token and
-        // bracket_index_expression's immediate-`[` are valid and tie on length —
-        // the precedence makes the ARRAY reading win the lex (third attempt;
-        // adding competing parse paths alone never flipped the table).
+        // bracket_index_expression's immediate-`[` are valid and tie on length -
+        // the precedence makes the ARRAY reading win the lex (adding competing
+        // parse paths alone never flips the table).
         array_type: $ => prec(TYPE_PREC.APP, seq(
             $.type_expression,
             choice("[", token.immediate(prec(1, "["))),
@@ -3474,7 +3402,7 @@ export default grammar({
         // Also `(string | null * bool)` and `('R :> IDisposable)` inside the parens.
         parenthesized_type: $ => seq("(", $.type_expression, ")"),
 
-        // `string | null` — F# 9 nullable reference type. Deliberately NOT a
+        // `string | null` - F# 9 nullable reference type. Deliberately NOT a
         // member of the general `type_expression` choice: its `|` would clash with
         // the union-case separator. Instead it's allowed only in unambiguous
         // annotation positions (parenthesised types, parameter / return / field
@@ -3494,7 +3422,7 @@ export default grammar({
         // Backtick-quoted identifier form is also accepted so that type
         // parameters with spaces or other non-word chars parse.
         // `prec(-1)`: a `'a'` lexes as BOTH a type_parameter (ident `a'`) and a
-        // char literal — same length — and now that type_parameter is valid in
+        // char literal - same length - and now that type_parameter is valid in
         // expression position (SRTP `'T.Member`), they compete. Lower precedence
         // lets `char_literal` win for `'a'`; `'a` (no closing quote, e.g. `'a.X`)
         // still lexes as a type_parameter since char needs the closing `'`.
@@ -3513,9 +3441,9 @@ export default grammar({
             seq("(", $.type_parameter, repeat(seq(",", $.type_parameter)), ")"),
         ),
 
-        // `when 'T :> IFoo and 'U : comparison` — generic-constraint clause,
-        // shared by `type_parameter_list` (inside `<…>`) and `type_decl` /
-        // `type_and_decl` (outside, between `<…>` and `=`).
+        // `when 'T :> IFoo and 'U : comparison` - generic-constraint clause,
+        // shared by `type_parameter_list` (inside `<...>`) and `type_decl` /
+        // `type_and_decl` (outside, between `<...>` and `=`).
         _when_constraints: $ => prec.right(seq(
             "when",
             $.type_constraint,
@@ -3529,21 +3457,21 @@ export default grammar({
             "<",
             repeat($.attribute), $.type_parameter,
             repeat(seq(",", repeat($.attribute), $.type_parameter)),
-            optional(seq(",", "..")),   // `<'T, .. >` — "and any further typars"
+            optional(seq(",", "..")),   // `<'T, .. >` - "and any further typars"
             optional($._when_constraints),
             ">",
         ),
 
 
-        // 'T :> IFoo   'T : null   'T : comparison   …
+        // 'T :> IFoo   'T : null   'T : comparison   ...
         type_constraint: $ => choice(
-            // IWSAM / bare-interface constraint (F# 7+): `when IParsable<'T>` —
+            // IWSAM / bare-interface constraint (F# 7+): `when IParsable<'T>` -
             // the type parameter must implement the (usually generic) interface,
             // with no `'T :` prefix.
             $.generic_type,
             // The RHS may be nullable: `'Resource :> IDisposable | null` (F# 9).
             seq($.type_parameter, ":>", $.type_expression),
-            // `and default ^Value : float` — SRTP default-resolution constraint
+            // `and default ^Value : float` - SRTP default-resolution constraint
             // (FSharp.Core Query/averageBy style).
             seq("default", $.type_parameter, ":", $.type_expression),
             seq($.type_parameter, ":", "null"),
@@ -3575,8 +3503,8 @@ export default grammar({
             ),
         ),
 
-        // `(|Even|Odd|)` `(|Integer|_|)` `(|Single|)` — single terminal so the lexer
-        // never splits `(|` as `(` + `|`, which would break `let (|>) a b = …`.
+        // `(|Even|Odd|)` `(|Integer|_|)` `(|Single|)` - single terminal so the lexer
+        // never splits `(|` as `(` + `|`, which would break `let (|>) a b = ...`.
         active_pattern_name: _ => token(seq(
             "(|",
             choice(/[\p{L}_][\p{L}\p{Nd}_']*/, /``[^`\n\r\t]+``/),
@@ -3590,15 +3518,15 @@ export default grammar({
         //
         // Class-body-only declarations (member_defn, secondary_constructor,
         // abstract_member_defn, interface_impl, inherit_decl, val_field) are
-        // NOT listed here — they parse exclusively as `_class_body_member`
+        // NOT listed here - they parse exclusively as `_class_body_member`
         // children of `type_decl`/`type_extension`. That nesting is what makes
-        // expand-selection (member → type → file) work and lets indent rules
+        // expand-selection (member -> type -> file) work and lets indent rules
         // distinguish "inside a member's body" from "between members".
         _token: $ => choice(
             // Script-only header
             $.shebang,
 
-            // `#nowarn`/`#load`/`#r`/… non-conditional directives. The conditional
+            // `#nowarn`/`#load`/`#r`/... non-conditional directives. The conditional
             // ones (`#if`/`#elif`/`#else`/`#endif`) are `extras` now, so they're not
             // listed here.
             $.preproc_directive,
@@ -3612,7 +3540,7 @@ export default grammar({
             $.type_decl,
             $.type_extension,
             $.exception_decl,
-            $.extern_decl,         // P/Invoke `extern bool GetConsoleMode(…)`
+            $.extern_decl,         // P/Invoke `extern bool GetConsoleMode(...)`
 
             // Value-level declarations not shared with class bodies
             $.use_binding,
@@ -3624,9 +3552,9 @@ export default grammar({
 
             // Bare expression statements (last so all the above forms win
             // when their leading keyword/punctuation is unambiguous).
-            // prec(PREC.SEQ_EXPR) matches sequence_expression so the `expr • ;`
+            // prec(PREC.SEQ_EXPR) matches sequence_expression so the `expr - ;`
             // state is a genuine GLR fork (see the conflicts entry) instead of
-            // being statically resolved toward the sequence shift — which made
+            // being statically resolved toward the sequence shift - which made
             // a trailing `stmt;` unparseable.
             prec(PREC.SEQ_EXPR, $._expression),
 
@@ -3641,7 +3569,7 @@ export default grammar({
             ";",
 
             // SAFETY NET: a `///` doc in a position with no attachment slot
-            // (end of scope, before `open`, before a bare statement…) is its
+            // (end of scope, before `open`, before a bare statement...) is its
             // own statement instead of stranding in an ERROR. prec.dynamic(-1):
             // when an attachment reading also survives, attachment wins.
             prec.dynamic(-1, $.xml_doc_comment),
@@ -3655,19 +3583,19 @@ export default grammar({
         // chars add Unicode digits (Nd) and apostrophe. Using \p{L} / \p{Nd}
         // is a good practical approximation that covers `π`, `accentué`,
         // `café`, `数学`, etc. without enumerating script ranges by hand.
-        // The backtick form `` `…` `` accepts almost anything between the
+        // The backtick form `` `...` `` accepts almost anything between the
         // delimiters; the name ends at the next DOUBLE backtick, so SINGLE
         // backticks are allowed inside (``returns an error if `--flag` is
-        // missing`` — BDD-style test names).
+        // missing`` - BDD-style test names).
         identifier: _ => token(choice(
             /[\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\p{Cf}_']*/,
             /``([^`\n\r\t]|`[^`\n\r\t])+``/,
         )),
 
-        // Pure-identifier chains of 1–2 segments stay as one long_identifier.
+        // Pure-identifier chains of 1-2 segments stay as one long_identifier.
         // Chains of 3+ segments parse as nested `dot_expression(long_identifier(a,b),c)`,
         // which is irregular but currently unfixable with tree-sitter's LR
-        // generator — see LIMITATIONS.md. All highlight rules and textobjects
+        // generator - see LIMITATIONS.md. All highlight rules and textobjects
         // are written to handle both forms.
         long_identifier: $ =>
             prec.right(PREC.DOT,
@@ -3686,7 +3614,7 @@ export default grammar({
         // Number suffixes (immediate = no whitespace before suffix). `m`/`M`/`f`/`F`
         // are accepted as integer suffixes too so that `3f` and `42m` work as
         // dot-less float / decimal literals; themes rarely distinguish them anyway.
-        // `lf` (`0x…lf`, hex-bits-to-float32) and `LF` (`0x…LF`,
+        // `lf` (`0x...lf`, hex-bits-to-float32) and `LF` (`0x...LF`,
         // hex-bits-to-float64) are listed FIRST so tree-sitter's longest-match
         // wins over the single-char `l` / `L` alternatives.
         _int_suffix: _ => token.immediate(choice("lf", "LF", "uy", "us", "uL", "UL", "Ul", "ul", "un", "u", "y", "s", "l", "L", "n", "I", "m", "M", "f", "F", "Q", "R", "Z", "N", "G")),   // user-defined literal suffixes
@@ -3699,9 +3627,9 @@ export default grammar({
 
         // Three forms (must keep `1..10` lexing as `int + .. + int`, not
         // `float(1.) + . + int(10)`):
-        //   `digits . digits [exp]`   — `1.23`, `1.23e5`, `3.14f`
-        //   `digits . exp`            — `180.e5`, `180.e5f` (no digits after `.`)
-        //   `digits exp`              — `180e5`
+        //   `digits . digits [exp]`   - `1.23`, `1.23e5`, `3.14f`
+        //   `digits . exp`            - `180.e5`, `180.e5f` (no digits after `.`)
+        //   `digits exp`              - `180e5`
         // The `digits . exp` form lets the `[eE][+-]?[0-9]+` after the dot
         // disambiguate from `..` (which has no `e`/`E` next).
         float_literal: $ => seq(
@@ -3724,7 +3652,7 @@ export default grammar({
                 "'",
                 choice(
                     /[^'\\]/,
-                    "'",            // `'''` — an unescaped single-quote char literal
+                    "'",            // `'''` - an unescaped single-quote char literal
                     seq("\\", choice(
                         /[\\'"abfnrtv0]/,
                         /[0-9]{3}/,
@@ -3796,7 +3724,7 @@ export default grammar({
         // @"hello"  or  @"hello"B
         verbatim_string: $ => seq($._verbatim_string_content, optional($._string_byte_suffix)),
 
-        // """hello"""  — no byte variant in F#
+        // """hello"""  - no byte variant in F#
         triple_quoted_string: _ => token(
             seq(
                 '"""',
@@ -3807,7 +3735,7 @@ export default grammar({
 
         // {expr}, {expr:.NET-fmt}, or %printf-fmt{expr}
         interpolation: $ => choice(
-            // %fmt{expr}  — printf-style; _printf_format includes the opening {
+            // %fmt{expr}  - printf-style; _printf_format includes the opening {
             seq(
                 alias($._printf_format, $.printf_format_string),
                 $._expression,
@@ -3844,11 +3772,11 @@ export default grammar({
             '"',
         ),
 
-        // `$$"""…{{hole}}…"""` (and more dollars) — F# 8 extended string
+        // `$$"""...{{hole}}..."""` (and more dollars) - F# 8 extended string
         // interpolation. With N dollars the hole delimiters are N braces and
         // single braces are TEXT, so the plain-brace interpolation machinery
         // would mangle the content. Parsed as ONE opaque string token: correct
-        // string coloring, no per-hole highlighting (0 benchmark occurrences —
+        // string coloring, no per-hole highlighting (0 benchmark occurrences -
         // build a dedicated scanner text mode only if real demand appears).
         // The token out-lexes the `$$` symbolic_op via longest-match.
         multidollar_string: _ => token(seq(/\$\$+/, '"""', /([^"]|"[^"]|""[^"])*/, '"""')),
@@ -3866,11 +3794,11 @@ export default grammar({
 
         bool_literal: _ => choice("true", "false"),
 
-        // `()` or `( )` (any amount of horizontal whitespace) — F# treats
+        // `()` or `( )` (any amount of horizontal whitespace) - F# treats
         // both as the unit literal. token() with a regex so whitespace
         // INSIDE the literal is part of the token rather than being
         // absorbed as `extras`.
-        // Whitespace (incl. newlines: fsyacc emits `(`⏎`)`) and block comments
+        // Whitespace (incl. newlines: fsyacc emits `(`\n`)`) and block comments
         // (`((* c *))`) may sit between the parens.
         unit: _ => token(seq("(", repeat(choice(/\s/, /\(\*([^*]|\*+[^)*])*\*+\)/)), ")")),
 
@@ -3883,15 +3811,15 @@ export default grammar({
         null_literal: _ => token("null"),
 
         // token prec 1: `//&&` must lex as a COMMENT, not as symbolic_op
-        // (same length tie — F# forbids `//`-leading custom operators anyway).
+        // (same length tie - F# forbids `//`-leading custom operators anyway).
         // `[^/]` must EXCLUDE newline (a bare `//` line otherwise swallows the
-        // newline + the whole next line — `[^x]` classes match \n in regexes!).
+        // newline + the whole next line - `[^x]` classes match \n in regexes!).
         line_comment: _ => token(prec(1, seq("//", choice(/[^/\n\r].*/, "")))),
 
         // prec 2 > line_comment's 1 (lexical prec OVERRIDES match length!).
         xml_doc_comment: _ => token(prec(2, seq("///", /.*/))),
 
-        // Non-nesting block comment. Nested comments `(* (* … *) *)` aren't supported —
+        // Non-nesting block comment. Nested comments `(* (* ... *) *)` aren't supported -
         // the outer closes at the first `*)`. Keeping this as a single token() avoids a
         // recursive extras rule, which would inflate every parser state's item set.
         // block_comment / block_doc_comment are ALSO external tokens: the
@@ -3901,64 +3829,64 @@ export default grammar({
         //
         // The char immediately after `(*` must NOT be `)`: `(*)` is the
         // multiply OPERATOR value, never a comment. Without this guard the
-        // regex spans two operator members (`(*) … (*)`) — the first `(*`
-        // closes at the SECOND member's `*)` — swallowing a whole line as a
+        // regex spans two operator members (`(*) ... (*)`) - the first `(*`
+        // closes at the SECOND member's `*)` - swallowing a whole line as a
         // comment. The scanner already guards its own paths the same way; this
-        // mirrors it for the fallback. (`(**)` — empty comment — starts with
+        // mirrors it for the fallback. (`(**)` - empty comment - starts with
         // `*`, so it is still accepted.)
         block_comment: _ => token(seq("(*", choice(/\*+\)/, seq(/[^)*]|\*+[^)*]/, /([^*]|\*+[^)*])*\*+/, ")")))),
         block_doc_comment: _ => token(prec(1, seq("(**", /([^*]|\*+[^)*])*\*+/, ")"))),
 
 
-        // Non-structural directives: `#nowarn`, `#r`, `#load`, `#line`, … Structural
+        // Non-structural directives: `#nowarn`, `#r`, `#load`, `#line`, ... Structural
         // directives `#if/#elif/#else/#endif` use dedicated higher-priority tokens.
         preproc_keyword: _ => token(seq("#", /[ \t]*/, /[a-zA-Z_][a-zA-Z0-9_]*/, /[ \t]*/)),
 
-        // `# 14 "pars.fs"` — fsyacc/fslex LINE directives (also `#line 14 "f"`).
+        // `# 14 "pars.fs"` - fsyacc/fslex LINE directives (also `#line 14 "f"`).
         // Pure trivia: an EXTRA token, skipped by the scanner's geometry too.
         line_directive: _ => token(seq("#", /[ \t]*/, /[0-9]+/, optional(seq(/[ \t]+/, '"', /[^"\n]*/, '"')))),
 
         preproc_directive: $ => prec.right(seq(
             field('name', $.preproc_keyword),
-            // Argument is a string/int literal (`#r "…"`, `#load "…"`, `#nowarn "25"`).
+            // Argument is a string/int literal (`#r "..."`, `#load "..."`, `#nowarn "25"`).
             // A bare `long_identifier` is NOT accepted: no standard directive takes one,
             // and because whitespace/newlines are `extras`, it would greedily grab the
-            // next line's first identifier as the argument (`#time⏎ seq { … }` →
+            // next line's first identifier as the argument (`#time\n seq { ... }` ->
             // `#time(arg = seq)`, breaking the following statement).
-            // `#line 2 @"f.fs"` — an optional line number, then an optional file name.
-            // Not a repeat: a literal that starts the NEXT line (`#nowarn "9"` ⏎ `"s" |> f`)
+            // `#line 2 @"f.fs"` - an optional line number, then an optional file name.
+            // Not a repeat: a literal that starts the NEXT line (`#nowarn "9"` \n `"s" |> f`)
             // must stay a statement of its own.
             optional(field('argument', $.int_literal)),
             optional(field('argument', choice($.string_literal, $.verbatim_string))),
         )),
 
-        // Unix-style shebang at the top of an `.fsx` script — `#!/usr/bin/env -S dotnet fsi`.
+        // Unix-style shebang at the top of an `.fsx` script - `#!/usr/bin/env -S dotnet fsi`.
         // Matches `#!` followed by anything up to (but not including) the newline.
         // `#!` doesn't conflict with `preproc_keyword` (which requires an identifier
         // after `#`) or with `#if`/`#elif`/etc.
         shebang: _ => token(seq("#!", /[^\n\r]*/)),
 
-        // Structural directives — prec(1) > preproc_keyword's prec 0 when both match
+        // Structural directives - prec(1) > preproc_keyword's prec 0 when both match
         // the same string. Longer matches still win, so `#ifdef` falls to preproc_keyword.
         preproc_if_kw: _ => token(prec(1, seq("#if", /[ \t]*/))),
         preproc_elif_kw: _ => token(prec(1, seq("#elif", /[ \t]*/))),
         preproc_else_kw: _ => token(prec(1, seq("#else", /[ \t]*/))),
         preproc_endif_kw: _ => token(prec(1, seq("#endif", /[ \t]*/))),
 
-        // The `#if`/`#elif` condition — the rest of the directive line as a SINGLE
+        // The `#if`/`#elif` condition - the rest of the directive line as a SINGLE
         // token. It must be one atomic token: `preproc_if` is an `extra`, extras must
-        // have an unambiguous ending, and any structured (multi-token) condition —
-        // even a flat `A || B || …` — fails that check. So the operators/symbols
+        // have an unambiguous ending, and any structured (multi-token) condition -
+        // even a flat `A || B || ...` - fails that check. So the operators/symbols
         // inside the condition cannot be sub-coloured; the whole condition is neutral.
         preproc_expression: _ => token(/[^\n\r]+/),
 
         // Conditional-compilation directives. Modelled as standalone, body-LESS
         // nodes and added to `extras` (like comments) so they can appear in ANY
-        // context — between list/array elements, CE statements, record fields, or
-        // top-level decls — without breaking the surrounding parse. The content
+        // context - between list/array elements, CE statements, record fields, or
+        // top-level decls - without breaking the surrounding parse. The content
         // they guard is just parsed in place (both `#if` and `#else` branches as
         // siblings); for a highlighting grammar that's exactly what we want, and it
-        // avoids the cascade of errors a body-wrapping form caused inside `[ … ]`.
+        // avoids the cascade of errors a body-wrapping form caused inside `[ ... ]`.
         preproc_if: $ => seq($.preproc_if_kw, field('condition', $.preproc_expression)),
         preproc_elif: $ => seq($.preproc_elif_kw, field('condition', $.preproc_expression)),
     }
