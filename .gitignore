@@ -67,3 +67,9 @@ tmp/
 
 # Content hashes of the last generate/build (./build.sh)
 /.build-cache/
+
+# Documentation site (Nacara)
+/docs/output/
+/docs/bin/
+/docs/obj/
+/.nacara/

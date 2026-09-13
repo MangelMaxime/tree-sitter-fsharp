@@ -9,6 +9,7 @@ open EasyBuild.Commands.CheckQueries
 open EasyBuild.Commands.Highlight
 open EasyBuild.Commands.Grammar
 open EasyBuild.Commands.Dev
+open EasyBuild.Commands.Docs
 
 [<EntryPoint>]
 let main args =
@@ -70,6 +71,13 @@ let main args =
                     .WithExample("dev nvim path/to/file.fsx")
                 |> ignore
         )
+        |> ignore
+
+        config
+            .AddCommand<DocsCommand>("docs")
+            .WithDescription("Build the documentation site in docs/ (--watch to serve it, --check for CI)")
+            .WithExample("docs")
+            .WithExample("docs --watch")
         |> ignore
 
         config
