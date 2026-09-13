@@ -185,6 +185,20 @@ to a named node (`query_op`); drop them from the `reserved` list, since reserved
 be tokens. Measure every grammar change with the `STATE_COUNT` and `SYMBOL_COUNT` defines
 before and after.
 
+## Known gaps in the source grammar (2026-09-13 triage)
+
+Each seen in the pinned repositories; the file counts are from `task bench`.
+
+- An SRTP call as an application argument, `g (^T : (static member M: ^T -> ^T) x)` (3 files,
+  FSharpPlus TypeLevel). The lexer prefers the `^` operator name to the `^T` type parameter after
+  `(` in argument position; the same call parses as a binding body.
+- Both branches of `#if`/`#else` parse as real code, so a declaration or expression split across
+  branches leaves the second spelling as an error (about 10 files).
+- `(..)` as a whole-arguments wildcard pattern, the `-.` prefix operator, attributes on
+  unlabelled tuple elements in member signatures, and `//#` line directives inside fsyacc output.
+- Files whose first lines already fail keep accumulating errors down the file; their error
+  counts move with unrelated grammar changes (`ProvidedTypes.fs`).
+
 ## Signature files (`.fsi`)
 
 `signature/grammar.js` derives from the main grammar: it inherits the type language and the

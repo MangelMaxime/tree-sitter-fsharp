@@ -1,4 +1,4 @@
 # Parser benchmark baseline - regenerate with: task bench -- --update-baseline
-# 469 files swept; 2 with errors; 8 error nodes
+# 469 files swept; 2 with errors; 7 error nodes
 3	fparsec/FParsec/Primitives.fsi
-5	fsharp/src/FSharp.Core/prim-types.fsi
+4	fsharp/src/FSharp.Core/prim-types.fsi

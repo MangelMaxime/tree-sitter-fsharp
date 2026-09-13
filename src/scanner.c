@@ -97,7 +97,7 @@ typedef enum { S_LAYOUT, S_MATCH, S_BRACKET, S_TYPEBODY, S_EXPR, S_DECL, S_TRY }
 // True for the dedent-closing layout sorts (decl body, type body, expr body, module body, try body).
 static inline bool layoutish(uint8_t sort) { return sort == S_LAYOUT || sort == S_TYPEBODY || sort == S_EXPR || sort == S_DECL || sort == S_TRY; }
 
-typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with)
+typedef struct { uint16_t col; uint8_t sort; uint8_t inl:1, thn:1, par:1, inf:1, cases:1; } Ctx;  // inl: body opened INLINE; thn: then/elif body (closeable at mid-line else); par: `(` block body (only `)` closes it); inf: `&&`/`||` right-operand block (closes before `->`/then/do/with); cases: type body whose first line is a `|` case
 
 #define MAXD 512
 
@@ -281,7 +281,7 @@ static void scanner_deserialize(void *p, const char *buf, unsigned len) {
 }
 
 static void push(Scanner *s, uint8_t sort, uint32_t col) {
-    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = (uint16_t)col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->n++; }
+    if (s->n < MAXD) { s->stk[s->n].sort = sort; s->stk[s->n].col = (uint16_t)col; s->stk[s->n].inl = 0; s->stk[s->n].thn = 0; s->stk[s->n].par = 0; s->stk[s->n].inf = 0; s->stk[s->n].cases = 0; s->n++; }
 }
 
 // Skip the body of a block comment whose `(*` is already consumed, through
@@ -1056,10 +1056,13 @@ static bool ce_brace_content_is_ce_body(TSLexer *lexer) {
     for (int guard = 0; guard < 64; guard++) {
         skip_hspace(lexer);
         int32_t d = lexer->lookahead;
-        if (d == '=') return false;                 // record field `name = ...`
+        if (d == '=') {                             // record field `name = ...`, but `==?`-style operators are CE
+            lexer->advance(lexer, true);
+            return is_opchar(lexer->lookahead);
+        }
         if (d == ':') {                             // `:` field type, but `::` is cons (CE)
             lexer->advance(lexer, true);
-            return lexer->lookahead == ':';         // `::` -> CE ; `:` -> record field
+            return lexer->lookahead == ':' || lexer->lookahead == '=';   // `::` cons and `:=` assignment -> CE
         }
         if (d == '.') { lexer->advance(lexer, true); continue; }   // qualified name / member access
         // A bracketed/parenthesised APPLICATION ARGUMENT before a possible
@@ -1202,13 +1205,13 @@ static inline Step emit(TSLexer *lexer, Sym sym) { lexer->result_symbol = sym; r
 static inline Step close_top(Scanner *s, TSLexer *lexer, Sym sym) { s->n--; return emit(lexer, sym); }
 
 static Step scan_ctor_attr(TSLexer *lexer, const bool *valid) {
-// CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
-// a type name. Look ahead past one or more `[<...>]` attributes; emit ONLY when a
-// `(` (the constructor params) follows. This distinguishes a ctor attribute
-// (`type T [<ParamObject>] (...)`) from a standalone attribute on the NEXT
-// declaration (`[<Measure>] type cm`\n`[<Measure>] type kg`, where `[<Measure>]`
-// is followed by `type`). Zero-width, so the attributes/`(` are re-lexed after.
-if (valid[CTOR_ATTR]) {
+    // CTOR_ATTR (zero-width): valid only in the primary-constructor position, after
+    // a type name. Look ahead past one or more `[<...>]` attributes; emit ONLY when a
+    // `(` (the constructor params) follows. This distinguishes a ctor attribute
+    // (`type T [<ParamObject>] (...)`) from a standalone attribute on the NEXT
+    // declaration (`[<Measure>] type cm`\n`[<Measure>] type kg`, where `[<Measure>]`
+    // is followed by `type`). Zero-width, so the attributes/`(` are re-lexed after.
+    if (valid[CTOR_ATTR]) {
     // Any mix of `[<attr>]` rows, `///` doc lines and `//` comments may
     // precede a primary ctor's `(` (`type StringSyntaxAttribute\n ///<param
     // ...>\n (syntax: string, ...) =` - Feliz StringSyntax; `[<ParamObject>] //
@@ -1245,21 +1248,21 @@ if (valid[CTOR_ATTR]) {
     }
     if (lexer->lookahead == '(') { return emit(lexer, CTOR_ATTR); }
     return DECLINED;
-}
+    }
     return PASS;
 }
 
 static Step scan_body_opens(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top) {
-// ---- Grammar-driven OPENS (zero-width; push a context) --------------------
-// Checked BEFORE the float probe: these only peek (and restore position via
-// mark_end on return), whereas `scan_trailing_dot_float` advances over digits
-// DESTRUCTIVELY even on failure - running it first would corrupt the body
-// column for an inline body like `let a = 1` (peek would see the newline -> 0).
-// When RECORD_OPEN is also valid we're right after a `{`; the RECORD_OPEN
-// block below owns that decision (field -> record; own-line base -> layout;
-// same-line `new`/`x with` -> fall through to object-expr/copy-update). So the
-// generic LAYOUT_OPEN must NOT pre-empt it.
-if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
+    // ---- Grammar-driven OPENS (zero-width; push a context) --------------------
+    // Checked BEFORE the float probe: these only peek (and restore position via
+    // mark_end on return), whereas `scan_trailing_dot_float` advances over digits
+    // DESTRUCTIVELY even on failure - running it first would corrupt the body
+    // column for an inline body like `let a = 1` (peek would see the newline -> 0).
+    // When RECORD_OPEN is also valid we're right after a `{`; the RECORD_OPEN
+    // block below owns that decision (field -> record; own-line base -> layout;
+    // same-line `new`/`x with` -> fall through to object-expr/copy-update). So the
+    // generic LAYOUT_OPEN must NOT pre-empt it.
+    if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
     uint32_t bc;
     skip_hspace(lexer);
     bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
@@ -1280,15 +1283,15 @@ if (valid[LAYOUT_OPEN] && !valid[RECORD_OPEN]) {
     push(s, S_LAYOUT, bc);
     if (inl && s->n) s->stk[s->n - 1].inl = 1;
     return emit(lexer, LAYOUT_OPEN);
-}
-// FOR_OPEN: the body of a `for ... do`. Like LAYOUT_OPEN but SUPPRESSED when the
-// body would not indent past the enclosing context - that's a query-CE
-// `for x in xs do`\n`where ...`/`select ...`, where the operators sit at the CE
-// column, not in an indented loop body. Suppressing keeps the for body empty so
-// the operators stay `query_operator` CE siblings (a real loop body always
-// indents past the `for`, so this never suppresses a genuine body). Dedicated
-// (not LAYOUT_OPEN) so only for-do bodies get this rule.
-if (valid[FOR_OPEN]) {
+    }
+    // FOR_OPEN: the body of a `for ... do`. Like LAYOUT_OPEN but SUPPRESSED when the
+    // body would not indent past the enclosing context - that's a query-CE
+    // `for x in xs do`\n`where ...`/`select ...`, where the operators sit at the CE
+    // column, not in an indented loop body. Suppressing keeps the for body empty so
+    // the operators stay `query_operator` CE siblings (a real loop body always
+    // indents past the `for`, so this never suppresses a genuine body). Dedicated
+    // (not LAYOUT_OPEN) so only for-do bodies get this rule.
+    if (valid[FOR_OPEN]) {
     uint32_t bc = peek_body_col(s, lexer);
     if (top && bc <= top->col) {
         // No indented body - query-CE for-clause. Emit the enclosing
@@ -1301,16 +1304,16 @@ if (valid[FOR_OPEN]) {
         return DECLINED;
     }
     push(s, S_LAYOUT, bc); return emit(lexer, FOR_OPEN);
-}
-if (valid[EXPR_OPEN])   {
+    }
+    if (valid[EXPR_OPEN])   {
     skip_hspace(lexer);
     bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                lexer->lookahead != '/'  && lexer->lookahead != 0;
     push(s, S_EXPR, peek_body_col(s, lexer));
     if (inl && s->n) s->stk[s->n - 1].inl = 1;
     return emit(lexer, EXPR_OPEN);
-}
-if (valid[THEN_OPEN])   {
+    }
+    if (valid[THEN_OPEN])   {
     skip_hspace(lexer);
     bool inl = lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
                lexer->lookahead != '/'  && lexer->lookahead != 0;
@@ -1318,16 +1321,16 @@ if (valid[THEN_OPEN])   {
     if (s->n) { s->stk[s->n - 1].thn = 1; if (inl) s->stk[s->n - 1].inl = 1; }
     s->else_claim_col = -1;
     return emit(lexer, THEN_OPEN);
-}
-if (valid[LAZY_OPEN])   {
+    }
+    if (valid[LAZY_OPEN])   {
     skip_hspace(lexer);
     if (lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
         lexer->lookahead != '/'  && lexer->lookahead != 0) return DECLINED;   // inline body -> plain branch
     push(s, S_EXPR, peek_body_col(s, lexer));
     return emit(lexer, LAZY_OPEN);
-}
-if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(s, lexer)); return emit(lexer, TRY_OPEN); }
-if (valid[ELSE_OPEN]) {
+    }
+    if (valid[TRY_OPEN])    { push(s, S_TRY,    peek_body_col(s, lexer)); return emit(lexer, TRY_OPEN); }
+    if (valid[ELSE_OPEN]) {
     // Final-else body. An INLINE `else if` (same line) flattens to an elif clause -
     // DON'T open a nested else-body; return false so the grammar's flat elif matches
     // (its elif/else stay at the chain level instead of nesting an if whose layout
@@ -1353,56 +1356,60 @@ if (valid[ELSE_OPEN]) {
     if (!nl_before && s->n) s->stk[s->n - 1].inl = 1;
     s->else_claim_col = -1;
     return emit(lexer, ELSE_OPEN);
-}
-if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(s, lexer)); return emit(lexer, MATCH_OPEN); }
+    }
+    if (valid[MATCH_OPEN])  { push(s, S_MATCH,  peek_body_col(s, lexer)); return emit(lexer, MATCH_OPEN); }
     return PASS;
 }
 
 static Step scan_trailing_float(TSLexer *lexer, const bool *valid) {
-// Lexical trailing-dot float (`1.`, `20.`). Placed AFTER the peek_body_col
-// opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) - running it before them would
-// destructively advance over the digits of an inline body like `let a = 1` and
-// corrupt the body column. But it MUST come BEFORE the newline-gated opens
-// (BLOCK/TYPE/BRACKET) and RECORD_OPEN: those `return false` for an inline body,
-// which would otherwise short-circuit this probe and make a first array/list
-// element `[|1.|]` mis-lex as `1` + `.|`. A digit can never start one of those
-// (they fire on a newline / a field-shape peek), so checking float first is safe.
-if (valid[FLOAT_TRAILING_DOT]) {
+    // Lexical trailing-dot float (`1.`, `20.`). Placed AFTER the peek_body_col
+    // opens above (LAYOUT/FOR/EXPR/TRY/ELSE/MATCH) - running it before them would
+    // destructively advance over the digits of an inline body like `let a = 1` and
+    // corrupt the body column. But it MUST come BEFORE the newline-gated opens
+    // (BLOCK/TYPE/BRACKET) and RECORD_OPEN: those `return false` for an inline body,
+    // which would otherwise short-circuit this probe and make a first array/list
+    // element `[|1.|]` mis-lex as `1` + `.|`. A digit can never start one of those
+    // (they fire on a newline / a field-shape peek), so checking float first is safe.
+    if (valid[FLOAT_TRAILING_DOT]) {
     skip_hspace(lexer);
     if (is_digit(lexer->lookahead)) {
         if (scan_trailing_dot_float(lexer)) return EMITTED;
         return DECLINED;
     }
-}
+    }
     return PASS;
 }
 
 static Step scan_newline_opens(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top) {
-// BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
-// NEXT line (`type X =\n members`, `module M =\n decls`). For an inline body
-// (`type X = {...}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
-// so the grammar's inline alternative matches. Newline-gated like BRACKET_OPEN,
-// but pushes S_LAYOUT (dedent-close via LAYOUT_END).
-if (valid[BLOCK_OPEN]) {
+    // BLOCK_OPEN: a type/module body is a layout ONLY when its members are on the
+    // NEXT line (`type X =\n members`, `module M =\n decls`). For an inline body
+    // (`type X = {...}` / `type X = int` / `module L = Lib` abbrev) it must NOT fire,
+    // so the grammar's inline alternative matches. Newline-gated like BRACKET_OPEN,
+    // but pushes S_LAYOUT (dedent-close via LAYOUT_END).
+    if (valid[BLOCK_OPEN]) {
     skip_hspace(lexer);
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         uint32_t col;
         if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_DECL, col); return emit(lexer, BLOCK_OPEN); }
     }
     return DECLINED; // inline body - let the grammar's inline alternative match
-}
-// TYPE_OPEN: like BLOCK_OPEN but the context is S_TYPEBODY so a `with`
-// augmentation at the body column closes it (see the S_TYPEBODY boundary case).
-if (valid[TYPE_OPEN]) {
+    }
+    // TYPE_OPEN: like BLOCK_OPEN but the context is S_TYPEBODY so a `with`
+    // augmentation at the body column closes it (see the S_TYPEBODY boundary case).
+    if (valid[TYPE_OPEN]) {
     skip_hspace(lexer);
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
-        uint32_t col;
-        if (next_line_indent(s, lexer, &col, NULL)) { push(s, S_TYPEBODY, col); return emit(lexer, TYPE_OPEN); }
+        uint32_t col; int32_t bfirst = 0;
+        if (next_line_indent(s, lexer, &col, &bfirst)) {
+            push(s, S_TYPEBODY, col);
+            s->stk[s->n - 1].cases = (bfirst == '|');
+            return emit(lexer, TYPE_OPEN);
+        }
     }
     return DECLINED; // inline type body (record/alias/inline DU) - let it match
-}
-// FIELD_BLOCK_OPEN: a record field value that starts on the next line.
-if (valid[FIELD_BLOCK_OPEN]) {
+    }
+    // FIELD_BLOCK_OPEN: a record field value that starts on the next line.
+    if (valid[FIELD_BLOCK_OPEN]) {
     skip_hspace(lexer);
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         uint32_t col; int32_t bfirst = 0;
@@ -1411,10 +1418,10 @@ if (valid[FIELD_BLOCK_OPEN]) {
         }
     }
     return DECLINED;
-}
-// INFIX_BLOCK_OPEN: the right operand of a line-ending `&&`/`||` starts on
-// a deeper line.
-if (valid[INFIX_BLOCK_OPEN]) {
+    }
+    // INFIX_BLOCK_OPEN: the right operand of a line-ending `&&`/`||` starts on
+    // a deeper line.
+    if (valid[INFIX_BLOCK_OPEN]) {
     skip_hspace(lexer);
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         uint32_t col; int32_t bfirst = 0;
@@ -1428,10 +1435,10 @@ if (valid[INFIX_BLOCK_OPEN]) {
         }
     }
     return DECLINED;
-}
-// PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
-// for an empty `(`\n`)` (that is the `unit` token).
-if (valid[PAREN_BLOCK_OPEN]) {
+    }
+    // PAREN_BLOCK_OPEN: `(` with its content on the following line(s). Declined
+    // for an empty `(`\n`)` (that is the `unit` token).
+    if (valid[PAREN_BLOCK_OPEN]) {
     skip_hspace(lexer);
     int32_t c0 = lexer->lookahead;
     if (c0 == '\n' || c0 == '\r') {
@@ -1452,8 +1459,8 @@ if (valid[PAREN_BLOCK_OPEN]) {
         if (lexer->lookahead == '*' || lexer->lookahead == '^' || lexer->lookahead == '\'') return DECLINED;
     }
     push(s, S_EXPR, inline_col); s->stk[s->n - 1].par = 1; return emit(lexer, PAREN_BLOCK_OPEN);
-}
-if (valid[BRACKET_OPEN]) {
+    }
+    if (valid[BRACKET_OPEN]) {
     skip_hspace(lexer);
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
         // Block form: body on the next line(s). Decline when the next real
@@ -1516,17 +1523,17 @@ if (valid[BRACKET_OPEN]) {
     }
     push(s, S_BRACKET, inline_col);
     return emit(lexer, BRACKET_OPEN);
-}
+    }
     return PASS;
 }
 
 static Step scan_paren_field_open(Scanner *s, TSLexer *lexer, const bool *valid) {
-// PAREN_FIELD_OPEN: the body of a named-field pattern `Foo(ident = ...)` - a
-// dedicated open (valid ONLY in named_field_pattern) so newline-aligned fields
-// get an S_BRACKET separator. Peek `ident(.seg)* =` (the `=` distinguishes a
-// named field from a tuple-arg `Foo(a, b)`); capture the field column. Like
-// RECORD_OPEN but `=`-only and never reused outside the pattern.
-if (valid[PAREN_FIELD_OPEN]) {
+    // PAREN_FIELD_OPEN: the body of a named-field pattern `Foo(ident = ...)` - a
+    // dedicated open (valid ONLY in named_field_pattern) so newline-aligned fields
+    // get an S_BRACKET separator. Peek `ident(.seg)* =` (the `=` distinguishes a
+    // named field from a tuple-arg `Foo(a, b)`); capture the field column. Like
+    // RECORD_OPEN but `=`-only and never reused outside the pattern.
+    if (valid[PAREN_FIELD_OPEN]) {
     uint32_t col = lexer->get_column(lexer);
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1549,18 +1556,18 @@ if (valid[PAREN_FIELD_OPEN]) {
     }
     if (ok) { push(s, S_BRACKET, col); return emit(lexer, PAREN_FIELD_OPEN); }
     return DECLINED;
-}
+    }
     return PASS;
 }
 
 static Step scan_record_open(Scanner *s, TSLexer *lexer, const bool *valid) {
-// RECORD_OPEN: a `{` record body whose first field starts here (same line as
-// `{`, or the next line). Peeks to confirm a field shape (`ident =` for a
-// record_field, `ident :` for a record_type_field) and captures the field
-// column. SUPPRESSED (return false -> fall through) for `{ new ... }` (object
-// expression) and `{ base with ... }` (copy-update), whose first word is NOT
-// followed by `=`/`:` - letting the grammar's other `{`-branches match.
-if (valid[RECORD_OPEN]) {
+    // RECORD_OPEN: a `{` record body whose first field starts here (same line as
+    // `{`, or the next line). Peeks to confirm a field shape (`ident =` for a
+    // record_field, `ident :` for a record_type_field) and captures the field
+    // column. SUPPRESSED (return false -> fall through) for `{ new ... }` (object
+    // expression) and `{ base with ... }` (copy-update), whose first word is NOT
+    // followed by `=`/`:` - letting the grammar's other `{`-branches match.
+    if (valid[RECORD_OPEN]) {
     uint32_t col = lexer->get_column(lexer);
     bool nl = false;
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') { lexer->advance(lexer, true); col++; }
@@ -1640,7 +1647,7 @@ if (valid[RECORD_OPEN]) {
     // is `new`.
     if (nl && valid[LAYOUT_OPEN] && strcmp(w0, "new") != 0) { push(s, S_LAYOUT, col); return emit(lexer, LAYOUT_OPEN); }
     return DECLINED;
-}
+    }
     return PASS;
 }
 
@@ -1750,6 +1757,18 @@ static Step mid_word(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top, in
                 if (else_kw && top->thn) s->else_claim_col = MID_COL();
                 return close_top(s, lexer, LAYOUT_END);
             }
+            // `if c then match v with null -> "a" | x -> x.ToString() else "b"`: an
+            // inline arm body, then its arm-list, close before the `else` of the
+            // then-body they sit in.
+            if (else_kw && thn_below && top->inl && top->sort == S_LAYOUT &&
+                s->n >= 2 && s->stk[s->n - 2].sort == S_MATCH && s->else_claim_col != MID_COL()) {
+                return close_top(s, lexer, LAYOUT_END);
+            }
+            // `... with` after an inline lambda body ends the lambda (`Seq.tryFind ^ fun x -> p x with`):
+            // a `match ... with` or `{ r with` inside the body is incomplete at its `with`, so LAYOUT_END is not valid there.
+            if (!strcmp(w, "with") && top->sort == S_EXPR && top->inl) {
+                return close_top(s, lexer, LAYOUT_END);
+            }
             // `in` after an inline match-arm body (`let f t = match t with
             // | A -> 1 | B -> 2 in f 1`): the arm body is S_LAYOUT; it can
             // only end here (a `for x in` is incomplete, so LAYOUT_END is
@@ -1819,6 +1838,13 @@ static Step mid_word(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *top, in
         }
         // The arm list itself closes at a mid-line `in`/`end` once its
         // last arm body has closed (`... | B -> 2 in f 1`).
+        // The arm list also closes at an `else`/`elif` when a then-body below owns it.
+        if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "else") || !strcmp(w, "elif")) &&
+            s->else_claim_col != MID_COL()) {
+            bool thn_below = false;
+            for (int i = (int)s->n - 2; i >= 0 && !thn_below; i--) thn_below = s->stk[i].thn != 0;
+            if (thn_below) return close_top(s, lexer, MATCH_END);
+        }
         if (top && top->sort == S_MATCH && valid[MATCH_END] && (!strcmp(w, "in") || !strcmp(w, "end"))) {
             if (!strcmp(w, "in")) s->in_claim_col = MID_COL();
             return close_top(s, lexer, MATCH_END);
@@ -2098,33 +2124,33 @@ static Step scan_mid_line(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *to
 }
 
 static Step boundary_infix_continuation(TSLexer *lexer, Ctx *top, uint32_t col, int32_t first, int32_t bar_c1) {
-// A leading infix operator continues the previous expression (F#'s
-// leading-operator rule) - UNLESS it dedents below an EXPRESSION body
-// (S_EXPR: then/elif/else/lambda/let-in value) or below a match ARM column
-// (S_MATCH), in which case that body/arm-list must close first and
-// re-invocation continues the OUTER chain. This pipes the whole if in
-// `if c then a else b`\n` |> f`, and the whole match in `|> match ... with`\n
-// `| arm -> ...`\n`|> next` (Chocolatey pipeline style) - without the S_MATCH
-// case the dedented `|>` extended the LAST ARM's body, and continuation
-// ARGUMENT lines after it then mis-lexed as new arm patterns.
-// FSC grants an infix token an offside GRACE of its length + 1, so a mildly
-// dedented operator still continues the body (`let v =    a`\n`           ||| b`)
-// while one dedented WELL below (`|>` at the pipeline column under a match
-// arm body, `>> g` four columns left of a lambda body) is offside and closes
-// first. Measured inside the block below; the `+`/`-`/`@`/`.` leads keep the
-// strict rule (expr_strict).
-bool expr_strict = (top->sort == S_EXPR && col < top->col);
-bool infix_continues = 
+    // A leading infix operator continues the previous expression (F#'s
+    // leading-operator rule) - UNLESS it dedents below an EXPRESSION body
+    // (S_EXPR: then/elif/else/lambda/let-in value) or below a match ARM column
+    // (S_MATCH), in which case that body/arm-list must close first and
+    // re-invocation continues the OUTER chain. This pipes the whole if in
+    // `if c then a else b`\n` |> f`, and the whole match in `|> match ... with`\n
+    // `| arm -> ...`\n`|> next` (Chocolatey pipeline style) - without the S_MATCH
+    // case the dedented `|>` extended the LAST ARM's body, and continuation
+    // ARGUMENT lines after it then mis-lexed as new arm patterns.
+    // FSC grants an infix token an offside GRACE of its length + 1, so a mildly
+    // dedented operator still continues the body (`let v =    a`\n`           ||| b`)
+    // while one dedented WELL below (`|>` at the pipeline column under a match
+    // arm body, `>> g` four columns left of a lambda body) is offside and closes
+    // first. Measured inside the block below; the `+`/`-`/`@`/`.` leads keep the
+    // strict rule (expr_strict).
+    bool expr_strict = (top->sort == S_EXPR && col < top->col);
+    bool infix_continues = 
                        // <= for S_MATCH: an op AT the arm column can't be an
                        // arm - the arm-list must END so the op continues the
                        // whole match (`| false -> b\n|> g` at the arm col).
                        !(top->sort == S_MATCH && col <= top->col) &&
                        !(top->sort == S_LAYOUT && col + 4 < top->col);
 
-// `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/... arithmetic, `::` cons.
-// `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
-// only doubled. Other unary-capable leads (`!` `~`) are excluded.
-if (infix_continues) {
+    // `|>`/`<|`/`>>` pipe chains, `=`/`<`/`>`/`*`/... arithmetic, `::` cons.
+    // `|` alone is a match arm (not infix); only `|>`/`||` are. `&`/`:` count
+    // only doubled. Other unary-capable leads (`!` `~`) are excluded.
+    if (infix_continues) {
     int32_t c0 = first;
     if (c0 == '|' || c0 == '<' || c0 == '>' || c0 == '=' ||
         c0 == '*' || c0 == '/' || c0 == '%' || c0 == '^' || c0 == '&' || c0 == ':' || c0 == '?') {
@@ -2190,7 +2216,7 @@ if (infix_continues) {
     // own line (`builder\n .Method()`), a `.`-led custom operator (`.>>.`,
     // FParsec style), or a `..` range - no F# statement can START with `.`.
     if (!expr_strict && layoutish(top->sort) && first == '.') return DECLINED;
-}
+    }
     return PASS;
 }
 
@@ -2345,9 +2371,11 @@ static Step boundary_layout(Scanner *s, TSLexer *lexer, const bool *valid, Ctx *
             while (wn < 11 && is_lower(lk)) { w[wn++] = (char)lk; lexer->advance(lexer, true); lk = lexer->lookahead; }
             w[wn] = '\0';
             bool boundary = !(is_ident_char(lk));
+            // `and` too, for a union whose cases sit at the `and` column
+            // (`and U =`\n`| A`\n`and V =`); in a class body it continues `let rec`.
             if (boundary && (!strcmp(w, "open") || !strcmp(w, "module") ||
                              !strcmp(w, "namespace") || !strcmp(w, "exception") ||
-                             !strcmp(w, "type"))) {
+                             !strcmp(w, "type") || (!strcmp(w, "and") && top->cases))) {
                 return close_top(s, lexer, LAYOUT_END);
             }
         }

@@ -977,7 +977,7 @@
     "fields": {
       "left": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "_expression",
@@ -987,7 +987,7 @@
       },
       "operator": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "%",
@@ -1077,7 +1077,7 @@
       },
       "right": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "_expression",
@@ -1085,6 +1085,24 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "_expression",
+          "named": true
+        },
+        {
+          "type": "type_constraint",
+          "named": true
+        },
+        {
+          "type": "type_expression",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1264,6 +1282,16 @@
           }
         ]
       },
+      "left": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
       "method": {
         "multiple": true,
         "required": false,
@@ -1287,6 +1315,26 @@
             "named": true
           }
         ]
+      },
+      "operator": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -1303,6 +1351,10 @@
         },
         {
           "type": "do_stmt",
+          "named": true
+        },
+        {
+          "type": "identifier",
           "named": true
         },
         {
@@ -2184,6 +2236,10 @@
           "named": true
         },
         {
+          "type": "attribute",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -2193,6 +2249,10 @@
         },
         {
           "type": "literal_pattern",
+          "named": true
+        },
+        {
+          "type": "pattern",
           "named": true
         },
         {
@@ -2209,6 +2269,10 @@
         },
         {
           "type": "tuple_typed_first_pattern",
+          "named": true
+        },
+        {
+          "type": "tuple_typed_pattern",
           "named": true
         },
         {
@@ -2760,6 +2824,16 @@
           }
         ]
       },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": true,
         "required": false,
@@ -2842,6 +2916,16 @@
           }
         ]
       },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "parameters": {
         "multiple": true,
         "required": false,
@@ -2858,6 +2942,16 @@
         "types": [
           {
             "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -2926,6 +3020,16 @@
           }
         ]
       },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": true,
         "required": false,
@@ -3008,6 +3112,16 @@
           }
         ]
       },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "parameters": {
         "multiple": true,
         "required": false,
@@ -3024,6 +3138,16 @@
         "types": [
           {
             "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -3506,6 +3630,36 @@
             "named": true
           }
         ]
+      },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
@@ -3663,6 +3817,16 @@
           }
         ]
       },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": false,
@@ -3677,6 +3841,16 @@
           },
           {
             "type": "operator_name",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -3697,6 +3871,16 @@
         "types": [
           {
             "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -4402,9 +4586,13 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "type_constraint",
+          "named": true
+        },
         {
           "type": "type_expression",
           "named": true
@@ -4715,6 +4903,26 @@
           }
         ]
       },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "parameters": {
         "multiple": true,
         "required": false,
@@ -4731,6 +4939,16 @@
         "types": [
           {
             "type": "type_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -5138,6 +5356,26 @@
           }
         ]
       },
+      "left": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "parameters": {
         "multiple": false,
         "required": false,
@@ -5148,6 +5386,16 @@
           },
           {
             "type": "tuple_params",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]
@@ -5784,9 +6032,13 @@
     "named": true,
     "fields": {
       "pattern": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "identifier_pattern",
+            "named": true
+          },
           {
             "type": "long_identifier",
             "named": true
@@ -6091,10 +6343,30 @@
     },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
+          "type": "anonymous_record_type",
+          "named": true
+        },
+        {
+          "type": "array_type",
+          "named": true
+        },
+        {
+          "type": "flexible_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
           "type": "generic_type",
+          "named": true
+        },
+        {
+          "type": "labelled_type",
           "named": true
         },
         {
@@ -6102,7 +6374,39 @@
           "named": true
         },
         {
+          "type": "measure_power_type",
+          "named": true
+        },
+        {
+          "type": "nullable_type",
+          "named": true
+        },
+        {
+          "type": "parenthesized_type",
+          "named": true
+        },
+        {
+          "type": "postfix_type",
+          "named": true
+        },
+        {
+          "type": "struct_anonymous_record_type",
+          "named": true
+        },
+        {
+          "type": "struct_tuple_type",
+          "named": true
+        },
+        {
+          "type": "tuple_type",
+          "named": true
+        },
+        {
           "type": "type_expression",
+          "named": true
+        },
+        {
+          "type": "type_intersection",
           "named": true
         },
         {
@@ -6559,6 +6863,10 @@
         {
           "type": "_expression",
           "named": true
+        },
+        {
+          "type": "type_ascription_expression",
+          "named": true
         }
       ]
     }
@@ -6814,6 +7122,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "identifier_pattern",
           "named": true
         },
@@ -6863,6 +7175,10 @@
         {
           "type": "_expression",
           "named": true
+        },
+        {
+          "type": "type_ascription_expression",
+          "named": true
         }
       ]
     }
@@ -6893,6 +7209,16 @@
           }
         ]
       },
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -6903,6 +7229,26 @@
           },
           {
             "type": "typed_pattern",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "binary_expression",
             "named": true
           }
         ]

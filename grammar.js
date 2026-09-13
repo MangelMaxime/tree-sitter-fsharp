@@ -250,6 +250,8 @@ export default grammar({
     // Conflict declarations enable GLR exploration where LALR(1) is insufficient.
     // Without them, prec.dynamic is silently ignored.
     conflicts: $ => [
+        // `(f, Ctor(h, t): T)`: a constructor application that is or is not followed by a type.
+        [$.tuple_typed_pattern, $._tuple_elem_pattern],
         // `| A of x: int`: a labelled type in the anonymous field slot vs the
         // named-field list; the fork resolves to the named fields.
         [$.union_case_named_fields, $.type_expression],
@@ -726,6 +728,7 @@ export default grammar({
                 // tuple-param element, optionally type-annotated (handled by the
                 // trailing `: type` below).
                 $.tuple_pattern,
+                $.record_pattern,   // `member _.Combine (a, { Head = b; Tail = c })`
             ),
             // `value: string | null` - nullable is unambiguous here (params are
             // delimited by `,`/`)`), like generic args and record fields.
@@ -1392,12 +1395,12 @@ export default grammar({
         // The closers carry explicit LEXICAL precedence: `.` is an operator char,
         // so `@>.` / `@@>.` in `<@ e @>.Type` would otherwise out-lex the closer
         // as one longer `symbolic_op` and swallow the member access.
-        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", $._expression,
+        typed_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@", choice($._expression, $.type_ascription_expression),
             choice(alias(token(prec(1, "@>")), "@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@>")), "@>")))),
 
         // <@@ expr @@>  - untyped quotation (Expr)
-        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", $._expression,
+        untyped_quotation: $ => prec(PREC.PAREN_EXPR, seq("<@@", choice($._expression, $.type_ascription_expression),
             choice(alias(token(prec(1, "@@>")), "@@>"),
                    alias(token(seq(";", /[ \t\r\n]*/, "@@>")), "@@>")))),
 
@@ -2351,7 +2354,12 @@ export default grammar({
         _ascribable_body: $ => seq(
             choice(
                 seq(
-                    choice($._expression, $.type_ascription_expression),
+                    choice(
+                        $._expression,
+                        $.type_ascription_expression,
+                        // `x : decimal |> f`: F# pipes the annotated value.
+                        alias(seq(field('left', $.type_ascription_expression), field('operator', choice("|>", "||>", "|||>")), field('right', $._expression)), $.binary_expression),
+                    ),
                     // FSharp.Core-only "static optimization" equations (prim-types.fs):
                     //   let inline GenericComparisonFast (x:'T) (y:'T) : int =
                     //        GenericComparisonIntrinsic x y
@@ -2738,6 +2746,11 @@ export default grammar({
             $.query_join_operator,
             $.query_group_by_operator,
             $.query_left_outer_join_operator,
+            // A query word used as a variable at a statement start: `count <- count + 1`
+            // (the query_op token out-lexes the identifier there) and `join (fun ...)`
+            // (`join` is reserved in CE bodies).
+            alias(seq(field('left', alias($._query_op_word, $.identifier)), field('operator', "<-"), field('right', $._expression)), $.binary_expression),
+            alias(seq(alias("join", $.identifier), repeat1($._simple_expression)), $.application_expression),
             $._expression,
         ),
 
@@ -3045,7 +3058,10 @@ export default grammar({
         tuple_typed_pattern: $ => seq(
             // `(g2, s2): Lens<'a,'b>` - a parenthesized tuple may itself carry
             // the ascription as ONE element (Aether lens compose style).
-            field('pattern', choice($.long_identifier, $.wildcard_pattern, $.tuple_pattern)),
+            field('pattern', choice(
+                $.long_identifier, $.wildcard_pattern, $.tuple_pattern,
+                alias(seq($.long_identifier, $.tuple_pattern), $.identifier_pattern),   // `(f, NonEmptyList(h, t): NonEmptyList<'a>)`
+            )),
             ":",
             // nullable_type: `outputDir: string | null` (F# nullness syntax).
             field('type', $.type_expression),
@@ -3086,6 +3102,7 @@ export default grammar({
             $.long_identifier,
             // `Ctor(a, b), ...` / `AesKey key, ...` (the gate only fires on bare identifier args).
             choice($.tuple_pattern, repeat1(choice($.long_identifier, $.wildcard_pattern))),
+            optional(seq("as", $.identifier)),   // `let Key(a, b) as key, ok = ...`
             ",",
             $._tuple_elem_or_ctor,
             repeat(seq(",", $._tuple_elem_or_ctor)),
@@ -3184,6 +3201,7 @@ export default grammar({
             // The trailing constraint covers `(value: 'T when 'T: null)` and the
             // subtype form `(resource: 'T :> IDisposable)`.
             prec(20, seq("(", repeat($.attribute), $.identifier, ":", $.type_expression, optional(choice($._when_constraints, seq(":>", $.type_expression))), ")")),
+            prec(20, seq("(", "(", repeat1($.attribute), $.identifier, ":", $.type_expression, ")", ")")),   // `(([<InlineIfLambda>] f: 'a -> 'b))`
             prec(20, seq("(", repeat($.attribute), $.identifier, ")")),
             // `let f ((|App|_|) : _ -> _) e` / `let f q (|Pat|_|)` - an active
             // pattern as a parameter; `let f (<) = ...` - an operator as a parameter.
@@ -3333,12 +3351,14 @@ export default grammar({
         // `<...>` the `|` is unambiguous (arguments are delimited by `,` and `>`, no
         // union case can follow), the same reasoning that lets `parenthesized_type`
         // carry one.
+        // `ImmutableArray<'T>.Builder`: a nested type of a generic instantiation.
         generic_type: $ => prec(TYPE_PREC.APP, seq(
             $.long_identifier,
             "<",
             $._generic_type_arg,
             repeat(seq(",", $._generic_type_arg)),
             ">",
+            optional(seq(".", $.long_identifier)),
         )),
 
         _generic_type_arg: $ => choice(
@@ -3400,7 +3420,10 @@ export default grammar({
 
         // (int -> string)  /  (string | null)
         // Also `(string | null * bool)` and `('R :> IDisposable)` inside the parens.
-        parenthesized_type: $ => seq("(", $.type_expression, ")"),
+        parenthesized_type: $ => seq("(", choice(
+            $.type_expression,
+            alias(seq($.type_parameter, ":>", $.type_expression), $.type_constraint),   // `(resource: ('R :> IDisposable))`
+        ), ")"),
 
         // `string | null` - F# 9 nullable reference type. Deliberately NOT a
         // member of the general `type_expression` choice: its `|` would clash with

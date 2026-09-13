@@ -1,0 +1,537 @@
+================================================================================
+nested type of a generic instantiation
+================================================================================
+let create size : ImmutableArray<'T>.Builder = ImmutableArray.CreateBuilder(size)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (type_expression
+      (generic_type
+        (long_identifier
+          (identifier))
+        (type_expression
+          (type_parameter))
+        (long_identifier
+          (identifier))))
+    (application_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (parenthesized_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+parenthesised subtype constraint on a tuple parameter
+================================================================================
+type B() =
+    member inline _.Using(resource: ('R :> IDisposable), [<InlineIfLambda>] comp) = comp resource
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (parenthesized_type
+                (type_constraint)
+                (type_constraint)
+                (type_constraint
+                  (long_identifier
+                    (identifier))))))
+          (tuple_param
+            (attribute
+              (attribute_target
+                (long_identifier
+                  (identifier))))
+            (identifier))))
+      (application_expression
+        (long_identifier
+          (identifier))
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+record pattern as a tuple-parameter element
+================================================================================
+type B() =
+    member _.Combine (a: 'T, { Head = b; Tail = c }) = { Head = a; Tail = b :: c }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (primary_constructor
+      (unit))
+    (member_defn
+      (member_self_ident
+        (identifier))
+      (identifier)
+      (parameter
+        (tuple_params
+          (tuple_param
+            (identifier)
+            (type_expression
+              (type_parameter)))
+          (tuple_param
+            (record_pattern
+              (record_field_pattern
+                (long_identifier
+                  (identifier))
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier)))))
+              (record_field_pattern
+                (long_identifier
+                  (identifier))
+                (pattern
+                  (identifier_pattern
+                    (long_identifier
+                      (identifier)))))))))
+      (record_expression
+        (record_field
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (record_field
+          (long_identifier
+            (identifier))
+          (binary_expression
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+typed constructor pattern as a tuple-parameter element
+================================================================================
+type F =
+    static member inline map (Functor, f: 'a -> 'b, NonEmptyList(h, t): NonEmptyList<'a>) = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (member_defn
+      (identifier)
+      (parameter
+        (tuple_pattern
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (tuple_typed_pattern
+            (long_identifier
+              (identifier))
+            (type_expression
+              (function_type
+                (type_expression
+                  (type_parameter))
+                (type_expression
+                  (type_parameter)))))
+          (tuple_typed_pattern
+            (identifier_pattern
+              (identifier))
+            (identifier_pattern
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier))))
+              (pattern
+                (identifier_pattern
+                  (long_identifier
+                    (identifier)))))
+            (type_expression
+              (generic_type
+                (long_identifier
+                  (identifier))
+                (type_expression
+                  (type_parameter)))))))
+      (int_literal))))
+
+================================================================================
+doubly parenthesised attributed parameter
+================================================================================
+let inline (<!>)
+    (([<InlineIfLambda>] mapper: 'input -> 'output))
+    (input: Async<'input option>)
+    =
+    Async.map (Option.map mapper) input
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (operator_name
+      (symbolic_op))
+    (parameter
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (type_parameter))
+          (type_expression
+            (type_parameter)))))
+    (parameter
+      (identifier)
+      (type_expression
+        (generic_type
+          (long_identifier
+            (identifier))
+          (type_expression
+            (postfix_type
+              (type_expression
+                (type_parameter))
+              (long_identifier
+                (identifier)))))))
+    (application_expression
+      (application_expression
+        (long_identifier
+          (identifier)
+          (identifier))
+        (parenthesized_expression
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (long_identifier
+              (identifier)))))
+      (long_identifier
+        (identifier)))))
+
+================================================================================
+constructor deconstruction with an alias as the first tuple element
+================================================================================
+let ILModuleReaderCacheKey(fullPath, writeStamp, _, _, _) as key, keyOk = f ()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (unparenthesized_tuple_pattern
+      (long_identifier
+        (identifier))
+      (tuple_pattern
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (pattern
+          (wildcard_pattern))
+        (pattern
+          (wildcard_pattern))
+        (pattern
+          (wildcard_pattern)))
+      (identifier)
+      (long_identifier
+        (identifier)))
+    (application_expression
+      (long_identifier
+        (identifier))
+      (unit))))
+
+================================================================================
+query words as variables at a CE statement start
+================================================================================
+let comp = async {
+    let! a = async { count <- count + 1; return count }
+    return a }
+
+let c = channel {
+    join (fun ctx ci -> task { return 1 })
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (let_binding
+        (identifier)
+        (computation_expression
+          (long_identifier
+            (identifier))
+          (identifier)
+          (binary_expression)
+          (binary_expression
+            (sequence_expression
+              (binary_expression
+                (long_identifier
+                  (identifier))
+                (int_literal))
+              (ce_result_expr
+                (long_identifier
+                  (identifier)))))))
+      (ce_result_expr
+        (long_identifier
+          (identifier)))))
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (identifier)
+      (application_expression
+        (parenthesized_expression
+          (lambda_expression
+            (parameter
+              (identifier))
+            (parameter
+              (identifier))
+            (computation_expression
+              (long_identifier
+                (identifier))
+              (ce_result_expr
+                (int_literal)))))))))
+
+================================================================================
+type ascription inside a quotation and before a pipe
+================================================================================
+let q = <@@ None: string[] option @@>
+
+let t () = row.Column1 : decimal |> should equal 66.92M
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (untyped_quotation
+      (type_ascription_expression
+        (long_identifier
+          (identifier))
+        (type_expression
+          (postfix_type
+            (type_expression
+              (array_type
+                (type_expression
+                  (long_identifier
+                    (identifier)))))
+            (long_identifier
+              (identifier)))))))
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (binary_expression
+      (long_identifier
+        (identifier)
+        (identifier))
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (binary_expression)
+    (binary_expression
+      (application_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (float_literal)))))
+
+================================================================================
+union cases at the and column
+================================================================================
+type R = { A: int }
+
+and MyUnion =
+| NonRec of int
+| Rec of R
+
+and Other =
+| N of int
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_decl
+    (identifier)
+    (record_type_defn
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (type_and_decl
+      (identifier)
+      (union_type_defn
+        (union_case
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))
+        (union_case
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (type_and_decl
+      (identifier)
+      (union_type_defn
+        (union_case
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier))))))))
+
+================================================================================
+CE bodies starting with an assignment or a custom equality operator
+================================================================================
+let g () = async { res := true }
+
+let atest = test "parse" {
+  Single.Parse("123,33") ==? 123.33f
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (binary_expression
+        (long_identifier
+          (identifier))
+        (symbolic_op)
+        (bool_literal))))
+  (let_binding
+    (identifier)
+    (computation_expression
+      (long_identifier
+        (identifier))
+      (string_literal)
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (parenthesized_expression
+            (string_literal)))
+        (symbolic_op)
+        (float_literal)))))
+
+================================================================================
+else after an inline match in a then-branch
+================================================================================
+let f v = if hasValue then match box value with null -> "null" | x -> x.ToString() else "<none>"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (identifier))
+    (if_expression
+      (long_identifier
+        (identifier))
+      (match_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (match_arm
+          (pattern
+            (literal_pattern
+              (null_literal)))
+          (string_literal))
+        (match_arm
+          (pattern
+            (identifier_pattern
+              (long_identifier
+                (identifier))))
+          (application_expression
+            (long_identifier
+              (identifier)
+              (identifier))
+            (unit))))
+      (string_literal))))
+
+================================================================================
+with closes an inline lambda that is a match scrutinee
+================================================================================
+let f () =
+    match nodes msgs |> Seq.tryFind ^ fun x -> pred x.Value with
+    | None -> a
+    | Some m -> b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (let_binding
+    (identifier)
+    (parameter
+      (unit))
+    (match_expression
+      (binary_expression
+        (application_expression
+          (long_identifier
+            (identifier))
+          (long_identifier
+            (identifier)))
+        (binary_expression
+          (long_identifier
+            (identifier)
+            (identifier))
+          (symbolic_op)
+          (lambda_expression
+            (parameter
+              (identifier))
+            (application_expression
+              (long_identifier
+                (identifier))
+              (long_identifier
+                (identifier)
+                (identifier))))))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))))
+        (long_identifier
+          (identifier)))
+      (match_arm
+        (pattern
+          (identifier_pattern
+            (long_identifier
+              (identifier))
+            (long_identifier
+              (identifier))))
+        (long_identifier
+          (identifier))))))
