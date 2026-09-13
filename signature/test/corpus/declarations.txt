@@ -1,0 +1,660 @@
+================================================================================
+namespace, open and a module with values
+================================================================================
+namespace Foo.Bar
+
+open System
+open type System.Math
+
+[<AutoOpen>]
+module Helpers =
+    /// Adds one.
+    val inline addOne: x: int -> int
+
+    val mutable counter: int
+
+    [<Literal>]
+    val Name: string = "x"
+
+    val (+++): int -> int -> int
+
+    val (|Even|Odd|): int -> Choice<unit, unit>
+
+    val typeof<'T>: 'T -> string
+
+    val nonNull: value: 'T | null -> 'T when 'T: not null and 'T: not struct
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_decl
+    (long_identifier
+      (identifier)
+      (identifier)))
+  (import_decl
+    (long_identifier
+      (identifier)))
+  (import_decl
+    (long_identifier
+      (identifier)
+      (identifier)))
+  (module_decl
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))))
+    (long_identifier
+      (identifier))
+    (val_field
+      (xml_doc_comment)
+      (val_field
+        (identifier)
+        (type_expression
+          (function_type
+            (type_expression
+              (labelled_type
+                (identifier)
+                (long_identifier
+                  (identifier))))
+            (type_expression
+              (long_identifier
+                (identifier)))))))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (val_field
+      (attribute
+        (attribute_target
+          (long_identifier
+            (identifier))))
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (string_literal))
+    (val_field
+      (operator_name
+        (symbolic_op))
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (function_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    (val_field
+      (active_pattern_name)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (generic_type
+              (long_identifier
+                (identifier))
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier))))))))
+    (val_field
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (type_expression
+        (function_type
+          (type_expression
+            (type_parameter))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (val_field
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              (identifier)
+              (nullable_type
+                (type_parameter))))
+          (type_expression
+            (type_parameter))))
+      (type_constraint
+        (type_parameter))
+      (type_constraint
+        (type_parameter)))))
+
+================================================================================
+module abbreviation and begin/end module
+================================================================================
+module M
+
+module L = System.Linq
+
+module Verbose = begin
+    val a: int
+end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (module_decl
+    (long_identifier
+      (identifier)))
+  (module_decl
+    (long_identifier
+      (identifier))
+    (long_identifier
+      (identifier)
+      (identifier)))
+  (module_decl
+    (long_identifier
+      (identifier))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))))
+
+================================================================================
+record, union, enum, abbreviation and delegate
+================================================================================
+namespace N
+
+type Point =
+    {
+        /// Horizontal.
+        X: int
+        mutable Y: int
+    }
+
+    member Length: float
+
+type Shape =
+    | Circle of radius: float
+    /// A square.
+    | Square of float
+    | Empty
+
+type Color =
+    | Red = 0
+    | Green = 1
+
+type Name = string
+
+type Handler = delegate of int -> unit
+
+[<Measure>]
+type cm
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_decl
+    (long_identifier
+      (identifier)))
+  (type_decl
+    (identifier)
+    (record_type_defn
+      (record_type_field
+        (xml_doc_comment)
+        (record_type_field
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (record_type_field
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier)
+        (union_case_named_fields
+          (union_case_field
+            (identifier)
+            (long_identifier
+              (identifier)))))
+      (union_case
+        (xml_doc_comment)
+        (union_case
+          (identifier)
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (union_case
+        (identifier))))
+  (type_decl
+    (identifier)
+    (enum_type_defn
+      (enum_case
+        (identifier)
+        (int_literal))
+      (enum_case
+        (identifier)
+        (int_literal))))
+  (type_decl
+    (identifier)
+    (type_expression
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (delegate_type_defn
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (type_expression
+        (long_identifier
+          (identifier)))))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)))
+
+================================================================================
+class signature with members, constructors, abstract, interface and inherit
+================================================================================
+namespace N
+
+[<Sealed>]
+type Service =
+    inherit Base
+    interface IDisposable
+
+    new: unit -> Service
+    internal new: name: string -> Service
+
+    member Name: string
+    member Item: index: int -> string with get
+    member Count: int with get, set
+    member Run<'T>: input: 'T -> unit when 'T: comparison
+    static member Create: unit -> Service
+    static member inline Default: Service
+    abstract Process: x: int * ?y: string -> int
+    abstract Flag: bool with get, set
+    default Process: x: int * ?y: string -> int
+    override ToString: unit -> string
+    member private Secret: int
+    val mutable state: int
+    static member (+): Service * Service -> Service
+    member Value: int = 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_decl
+    (long_identifier
+      (identifier)))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))))
+  (type_decl
+    (identifier)
+    (inherit_decl
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (interface_impl
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (secondary_constructor
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (secondary_constructor
+      (access_modifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              (identifier)
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              (identifier)
+              (long_identifier
+                (identifier))))
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (auto_property_accessors))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))
+    (member_defn
+      (identifier)
+      (type_parameter_list
+        (type_parameter))
+      (type_expression
+        (function_type
+          (type_expression
+            (labelled_type
+              (identifier)
+              (type_parameter)))
+          (type_expression
+            (long_identifier
+              (identifier)))))
+      (type_constraint
+        (type_parameter)))
+    (member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (abstract_member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (auto_property_accessors))
+    (member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))
+              (type_expression
+                (labelled_type
+                  (identifier)
+                  (long_identifier
+                    (identifier))))))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      (access_modifier)
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (val_field
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier))))
+    (member_defn
+      (operator_name)
+      (type_expression
+        (function_type
+          (type_expression
+            (tuple_type
+              (type_expression
+                (long_identifier
+                  (identifier)))
+              (type_expression
+                (long_identifier
+                  (identifier)))))
+          (type_expression
+            (long_identifier
+              (identifier))))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal))))
+
+================================================================================
+verbose class, augmentation with end, and extension
+================================================================================
+namespace N
+
+type Old =
+    class
+        new: unit -> Old
+        member X: int
+    end
+
+type DU =
+    | A
+    | B of string
+    with
+        override ToString: unit -> string
+    end
+
+type System.String with
+    member Words: string list
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_decl
+    (long_identifier
+      (identifier)))
+  (type_decl
+    (identifier)
+    (class_type_defn
+      (secondary_constructor
+        (type_expression
+          (function_type
+            (type_expression
+              (long_identifier
+                (identifier)))
+            (type_expression
+              (long_identifier
+                (identifier))))))
+      (member_defn
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))
+      (union_case
+        (identifier)
+        (type_expression
+          (long_identifier
+            (identifier)))))
+    (member_defn
+      (identifier)
+      (type_expression
+        (function_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (type_expression
+            (long_identifier
+              (identifier)))))))
+  (type_extension
+    (type_extension_name
+      (identifier)
+      (identifier))
+    (member_defn
+      (identifier)
+      (type_expression
+        (postfix_type
+          (type_expression
+            (long_identifier
+              (identifier)))
+          (long_identifier
+            (identifier)))))))
+
+================================================================================
+exceptions, attributes with arguments and preprocessor
+================================================================================
+namespace N
+
+exception MyError of string * int
+
+exception Wrapped = System.Exception
+
+[<CompilerMessage("Deprecated", 1204, IsHidden=true)>]
+val old: unit -> unit
+
+[<CompilationRepresentation(enum<CompilationRepresentationFlags> (8))>]
+type Flagged = | A
+
+#if DEBUG
+val debug: unit -> unit
+#else
+val release: unit -> unit
+#endif
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (namespace_decl
+    (long_identifier
+      (identifier)))
+  (exception_decl
+    (identifier)
+    (type_expression
+      (tuple_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (exception_decl
+    (identifier)
+    (long_identifier
+      (identifier)
+      (identifier)))
+  (val_field
+    (attribute
+      (attribute_target
+        (long_identifier
+          (identifier))
+        (string_literal)
+        (int_literal)
+        (identifier)
+        (bool_literal)))
+    (identifier)
+    (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (attribute
+    (attribute_target
+      (long_identifier
+        (identifier))
+      (type_expression
+        (long_identifier
+          (identifier)))
+      (int_literal)))
+  (type_decl
+    (identifier)
+    (union_type_defn
+      (union_case
+        (identifier))))
+  (preproc_if
+    (preproc_if_kw)
+    (preproc_expression))
+  (val_field
+    (identifier)
+    (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (preproc_else_kw)
+  (val_field
+    (identifier)
+    (type_expression
+      (function_type
+        (type_expression
+          (long_identifier
+            (identifier)))
+        (type_expression
+          (long_identifier
+            (identifier))))))
+  (preproc_endif_kw))

@@ -25,3 +25,5 @@ Paket https://github.com/fsprojects/Paket.git 3b63da856fa6d6f441d43b9dc2aa64e6ad
 Saturn https://github.com/SaturnFramework/Saturn.git 4ae4d6126a6c7c0e91bded2ddbe1103030010c78
 Scriptorium https://github.com/fable-hub/Scriptorium.git 8802af5a56459733f1d5e61df501b3ebb07c3dc5
 Thoth.Json https://github.com/thoth-org/Thoth.Json.git a6358dd4a399f09abf22fb2b34cb38aaa0dfe35a
+telplin https://github.com/nojaf/telplin.git e60f2989c36e74f6a4085a0451c44b69ace93449
+vite-plugin-fable https://github.com/fable-compiler/vite-plugin-fable.git 777009026113cc32d0135b34f6359ab4b1572a87

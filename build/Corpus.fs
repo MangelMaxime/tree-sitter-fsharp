@@ -85,7 +85,7 @@ let private skipped =
             ".fable"
         ]
 
-let files (repos: Repo list) =
+let filesWith (extensions: string list) (repos: Repo list) =
     [|
         for repo in repos do
             let root =
@@ -94,9 +94,7 @@ let files (repos: Repo list) =
                 | None -> Path.Combine(directory, repo.Name)
 
             for path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories) |> Seq.sort do
-                let extension = Path.GetExtension path
-
-                if extension = ".fs" || extension = ".fsx" then
+                if List.contains (Path.GetExtension path) extensions then
                     let relative = Path.GetRelativePath(directory, path).Replace('\\', '/')
 
                     if not (relative.Split '/' |> Array.exists skipped.Contains) then
@@ -108,3 +106,11 @@ let files (repos: Repo list) =
     |]
 
 let read (path: string) = File.ReadAllText path
+
+let files (repos: Repo list) =
+    filesWith
+        [
+            ".fs"
+            ".fsx"
+        ]
+        repos

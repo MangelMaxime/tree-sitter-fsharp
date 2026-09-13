@@ -23,7 +23,7 @@ set -euo pipefail
 
 REPO="${TS_FSHARP_REPO:-MangelMaxime/tree-sitter-fsharp}"
 REF="${1:-main}"
-DEST="${HELIX_RUNTIME:-$HOME/.config/helix/runtime}/queries/fsharp"
+RUNTIME="${HELIX_RUNTIME:-$HOME/.config/helix/runtime}"
 
 # Every query file we ship — listed explicitly so we can also create
 # empty placeholders for any that aren't in the repo. Without the empty
@@ -37,12 +37,15 @@ if ! command -v curl >/dev/null 2>&1; then
     exit 1
 fi
 
-mkdir -p "$DEST"
-
-echo "Installing queries from $REPO@$REF → $DEST"
+# Helix language name -> query directory in the repo.
+install() {
+    local lang="$1" dir="$2"
+    local DEST="$RUNTIME/queries/$lang"
+    mkdir -p "$DEST"
+    echo "Installing queries from $REPO@$REF ($dir) -> $DEST"
 
 for q in "${QUERIES[@]}"; do
-    url="https://raw.githubusercontent.com/$REPO/$REF/queries/${q}.scm"
+    url="https://raw.githubusercontent.com/$REPO/$REF/$dir/${q}.scm"
     out="$DEST/${q}.scm"
     # Use -w to grab the HTTP status separately from the body so we can
     # tell "404 -> create empty placeholder" apart from a transport error.
@@ -59,6 +62,10 @@ for q in "${QUERIES[@]}"; do
         echo "  ${q}.scm  (missing in repo; wrote empty placeholder)"
     fi
 done
+}
+
+install fsharp queries
+install fsharp-signature queries/signature
 
 echo ""
-echo "Done. Reload any open .fs / .fsx buffers in Helix (:reload)."
+echo "Done. Reload any open .fs / .fsx / .fsi buffers in Helix (:reload)."

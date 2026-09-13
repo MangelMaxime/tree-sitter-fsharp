@@ -16,7 +16,10 @@ type Outcome =
 
 let private slowAfter = TimeSpan.FromSeconds 60.0
 
-let private baselinePath = Workspace.test.bench.``baseline.txt``
+let private baselinePath (grammar: Parser.Grammar) =
+    match grammar with
+    | Parser.Source -> Workspace.test.bench.``baseline.txt``
+    | Parser.Signature -> Path.Combine(Workspace.test.bench.``.``, "baseline-signature.txt")
 
 let private show (outcome: Outcome) =
     match outcome with
@@ -50,11 +53,11 @@ let private sweep (language: Language) (files: Corpus.SourceFile[]) =
     |> Array.filter (fun (_, outcome) -> outcome <> Errors 0)
     |> Map.ofArray
 
-let private readBaseline () =
-    if not (File.Exists baselinePath) then
+let private readBaseline (path: string) =
+    if not (File.Exists path) then
         None
     else
-        File.ReadLines baselinePath
+        File.ReadLines path
         |> Seq.filter (fun line -> line <> "" && not (line.StartsWith '#'))
         |> Seq.map (fun line ->
             match line.Split('\t', 2) with
@@ -65,7 +68,7 @@ let private readBaseline () =
         |> Map.ofSeq
         |> Some
 
-let private writeBaseline (results: Map<string, Outcome>) (total: int) =
+let private writeBaseline (path: string) (results: Map<string, Outcome>) (total: int) =
     let lines =
         [
             "# Parser benchmark baseline - regenerate with: task bench -- --update-baseline"
@@ -74,7 +77,7 @@ let private writeBaseline (results: Map<string, Outcome>) (total: int) =
                 $"%s{show outcome}\t%s{relative}"
         ]
 
-    File.WriteAllText(baselinePath, String.concat "\n" lines + "\n")
+    File.WriteAllText(path, String.concat "\n" lines + "\n")
 
 let private summarize (results: Map<string, Outcome>) (files: Corpus.SourceFile[]) =
     let table = Table().Border TableBorder.Minimal
@@ -184,18 +187,29 @@ type BenchSettings() =
     [<Description("Print the per-project table")>]
     member val Summary = false with get, set
 
+    [<CommandOption("--signature")>]
+    [<Description("Sweep the .fsi files with the signature grammar (baseline-signature.txt)")>]
+    member val Signature = false with get, set
+
 /// Sweeps the pinned repositories and fails on any file that parses worse than the baseline.
 type BenchCommand() =
     inherit Command<BenchSettings>()
     interface ICommandLimiter<BenchSettings>
 
     override _.Execute(_, settings, _) =
+        let grammar =
+            if settings.Signature then
+                Parser.Signature
+            else
+                Parser.Source
+
+        let baseline = baselinePath grammar
         let repos = Corpus.manifest ()
         Corpus.ensureClones repos
-        Parser.checkFreshness ()
-        use language = Parser.load Parser.defaultPath
-        Parser.selfTest language
-        let files = Corpus.files repos
+        Parser.checkFreshness grammar
+        use language = Parser.loadAs grammar grammar.ParserPath
+        Parser.selfTest grammar language
+        let files = Corpus.filesWith grammar.Extensions repos
         printfn $"sweeping %d{files.Length} files ..."
         let results = sweep language files
         let clean = float (files.Length - results.Count) / float files.Length * 100.0
@@ -207,10 +221,10 @@ type BenchCommand() =
             summarize results files
 
         if settings.UpdateBaseline then
-            writeBaseline results files.Length
-            printfn $"baseline written: %s{Path.GetRelativePath(Workspace.``.``, baselinePath)}"
+            writeBaseline baseline results files.Length
+            printfn $"baseline written: %s{Path.GetRelativePath(Workspace.``.``, baseline)}"
             0
         else
-            match readBaseline () with
+            match readBaseline baseline with
             | None -> failwith "No baseline. Run `task bench -- --update-baseline` first."
             | Some baseline -> compare baseline results

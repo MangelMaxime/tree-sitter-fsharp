@@ -184,3 +184,17 @@ A family of keywords used in one position may be one `token(prec(1, choice(...))
 to a named node (`query_op`); drop them from the `reserved` list, since reserved words must
 be tokens. Measure every grammar change with the `STATE_COUNT` and `SYMBOL_COUNT` defines
 before and after.
+
+## Signature files (`.fsi`)
+
+`signature/grammar.js` derives from the main grammar: it inherits the type language and the
+scanner, replaces member bodies with member signatures, and drops every expression rule. Measured
+with `task bench -- --signature` on the `.fsi` files of the pinned repositories.
+
+Known gaps, each seen in one file:
+
+- Operator union cases, `| ([]): 'T list` and `| (::): ...` (FSharp.Core `prim-types.fsi`).
+- A `static member` split across `#if`/`#else` branches before the member name (FParsec).
+- Attributes on unlabelled tuple elements, `member M: [<A>] a * [<B>] b -> int`.
+- A `val` whose constant is chosen by `#if` branches.
+- `#indent "off"` files.

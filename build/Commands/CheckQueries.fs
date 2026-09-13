@@ -16,13 +16,21 @@ type CheckQueriesCommand() =
     interface ICommandLimiter<CheckQueriesSettings>
 
     override _.Execute(_, _, _) =
-        use language = Parser.load Parser.defaultPath
+        use source = Parser.load Parser.defaultPath
+        use signature = Parser.loadAs Parser.Signature Parser.Signature.ParserPath
+
+        let signatureDirs =
+            [
+                Path.Combine(Workspace.queries.``.``, "signature")
+                Path.Combine(Workspace.queries.zed.``.``, "signature")
+            ]
 
         let files =
             [
                 Workspace.queries.``.``
                 Workspace.queries.zed.``.``
                 Workspace.queries.nvim.``.``
+                yield! signatureDirs
             ]
             |> List.collect (fun dir -> Directory.GetFiles(dir, "*.scm") |> List.ofArray)
             |> List.sort
@@ -30,17 +38,23 @@ type CheckQueriesCommand() =
         let failures =
             files
             |> List.choose (fun file ->
-                let source = File.ReadAllText file
+                let text = File.ReadAllText file
+
+                let language =
+                    if List.contains (Path.GetDirectoryName file) signatureDirs then
+                        signature
+                    else
+                        source
 
                 try
-                    use _ = language.CreateQuery source
+                    use _ = language.CreateQuery text
                     None
                 with ex ->
                     let line =
                         match Regex.Match(ex.Message, @"index (\d+)") with
                         | m when m.Success ->
                             let index = int m.Groups[1].Value
-                            source.Substring(0, min index source.Length).Split('\n').Length
+                            text.Substring(0, min index text.Length).Split('\n').Length
                         | _ -> 0
 
                     Some(Path.GetRelativePath(Workspace.``.``, file), line, ex.Message)

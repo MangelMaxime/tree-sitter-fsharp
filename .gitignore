@@ -61,6 +61,7 @@ tmp/
 /zed/languages/fsharp/overrides.scm
 /zed/languages/fsharp/brackets.scm
 /zed/languages/fsharp/outline.scm
+/zed/languages/fsharp-signature/*.scm
 /zed/Cargo.lock
 /zed/extension.wasm
 

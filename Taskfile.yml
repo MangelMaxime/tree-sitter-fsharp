@@ -21,14 +21,24 @@ tasks:
     generates: [src/parser.c]
     cmds:
       - tree-sitter generate grammar.js
+      - task: generate:signature
+
+  generate:signature:
+    desc: Regenerate signature/src/parser.c (the .fsi grammar derives from grammar.js)
+    dir: signature
+    sources: [grammar.js, ../grammar.js]
+    generates: [src/parser.c]
+    cmds:
+      - tree-sitter generate
 
   build:
-    desc: Compile parser.so
+    desc: Compile parser.so and signature/parser.so
     deps: [generate]
-    sources: [src/parser.c, src/scanner.c]
-    generates: [parser.so]
+    sources: [src/parser.c, src/scanner.c, signature/src/parser.c]
+    generates: [parser.so, signature/parser.so]
     cmds:
       - tree-sitter build --output parser.so
+      - tree-sitter build --output signature/parser.so signature
 
   dev:helix:
     desc: Build and deploy grammar + queries to Helix
@@ -38,16 +48,20 @@ tasks:
       # every other language's grammar too).
       - mkdir -p "{{.HELIX_RUNTIME}}/grammars"
       - cp parser.so "{{.HELIX_RUNTIME}}/grammars/fsharp.so"
+      - cp signature/parser.so "{{.HELIX_RUNTIME}}/grammars/fsharp-signature.so"
       - |
-        rm -rf "{{.HELIX_RUNTIME}}/queries/fsharp"
-        mkdir -p "{{.HELIX_RUNTIME}}/queries/fsharp"
-        for scm in queries/*.scm; do
-          cp "$scm" "{{.HELIX_RUNTIME}}/queries/fsharp/"
-        done
-        # Empty stubs for query types the repo doesn't define - they block
-        # Helix from falling back to built-in queries that break this grammar.
-        for q in highlights injections locals textobjects indents tags rainbows; do
-          [ -f "{{.HELIX_RUNTIME}}/queries/fsharp/$q.scm" ] || touch "{{.HELIX_RUNTIME}}/queries/fsharp/$q.scm"
+        for lang in fsharp fsharp-signature; do
+          case "$lang" in fsharp) src=queries;; *) src=queries/signature;; esac
+          rm -rf "{{.HELIX_RUNTIME}}/queries/$lang"
+          mkdir -p "{{.HELIX_RUNTIME}}/queries/$lang"
+          for scm in "$src"/*.scm; do
+            cp "$scm" "{{.HELIX_RUNTIME}}/queries/$lang/"
+          done
+          # Empty stubs for query types the repo doesn't define - they block
+          # Helix from falling back to built-in queries that break this grammar.
+          for q in highlights injections locals textobjects indents tags rainbows; do
+            [ -f "{{.HELIX_RUNTIME}}/queries/$lang/$q.scm" ] || touch "{{.HELIX_RUNTIME}}/queries/$lang/$q.scm"
+          done
         done
       - 'echo "Deployed to {{.HELIX_RUNTIME}} - restart Helix."'
 
@@ -60,12 +74,15 @@ tasks:
       # (Helix's @indent/@outdent/@extend mean different things in Zed).
       # locals is absent: Zed doesn't load locals.scm at all.
       - |
-        for q in highlights injections textobjects indents overrides brackets outline; do
-          if [ -f "queries/zed/$q.scm" ]; then
-            cp "queries/zed/$q.scm" "zed/languages/fsharp/$q.scm"
-          elif [ "$q" != indents ] && [ -f "queries/$q.scm" ]; then
-            cp "queries/$q.scm" "zed/languages/fsharp/$q.scm"
-          fi
+        for lang in fsharp fsharp-signature; do
+          case "$lang" in fsharp) zed=queries/zed; helix=queries;; *) zed=queries/zed/signature; helix=queries/signature;; esac
+          for q in highlights injections textobjects indents overrides brackets outline; do
+            if [ -f "$zed/$q.scm" ]; then
+              cp "$zed/$q.scm" "zed/languages/$lang/$q.scm"
+            elif [ "$q" != indents ] && [ -f "$helix/$q.scm" ]; then
+              cp "$helix/$q.scm" "zed/languages/$lang/$q.scm"
+            fi
+          done
         done
       # Zed only fetches grammars from a git repo at a pinned rev (it compiles
       # the WASM itself from src/), so auto-commit the current sources into a
@@ -77,8 +94,11 @@ tasks:
           git -C zed/.mirror config uploadpack.allowAnySHA1InWant true
         fi
         cp grammar.js zed/.mirror/grammar.js
-        rm -rf zed/.mirror/src
+        rm -rf zed/.mirror/src zed/.mirror/signature
         cp -r src zed/.mirror/src
+        mkdir -p zed/.mirror/signature
+        cp signature/grammar.js zed/.mirror/signature/grammar.js
+        cp -r signature/src zed/.mirror/signature/src
         git -C zed/.mirror add -A
         if ! git -C zed/.mirror rev-parse -q --verify HEAD >/dev/null || \
            ! git -C zed/.mirror diff --cached --quiet; then
@@ -96,21 +116,26 @@ tasks:
         description = "Local development build of tree-sitter-fsharp-helix"
         repository = "https://github.com/MangelMaxime/tree-sitter-fsharp-helix"
         authors = ["Maxime Mangel <me@mangelmaxime.fr>"]
-        languages = ["languages/fsharp"]
+        languages = ["languages/fsharp", "languages/fsharp-signature"]
 
         [grammars.fsharp]
         repository = "file://{{.ROOT_DIR}}/zed/.mirror"
         rev = "$SHA"
 
+        [grammars.fsharp_signature]
+        repository = "file://{{.ROOT_DIR}}/zed/.mirror"
+        rev = "$SHA"
+        path = "signature"
+
         [language_servers.fsautocomplete]
         name = "FsAutoComplete"
-        languages = ["FSharp"]
+        languages = ["FSharp", "F# Signature"]
 
         [debug_adapters.netcoredbg]
         EOF
         echo "extension.toml -> rev $SHA"
       # Drop the stale compiled grammar so Zed can't reuse it.
-      - rm -f zed/grammars/fsharp.wasm
+      - rm -f zed/grammars/fsharp.wasm zed/grammars/fsharp_signature.wasm
       # Zed compiles zed/src/lib.rs (the LSP glue) itself and needs this target.
       - |
         if command -v rustc >/dev/null 2>&1 && [ ! -d "$(rustc --print sysroot)/lib/rustlib/wasm32-wasip2" ]; then
@@ -128,7 +153,14 @@ tasks:
       - nvim -u nvim/init.lua {{.CLI_ARGS | default "examples/references.fsx"}}
 
   test:
-    desc: Run the corpus + highlight tests
+    desc: Run the corpus + highlight tests of both grammars
+    cmds:
+      - tree-sitter test {{.CLI_ARGS}}
+      - task: test:signature
+
+  test:signature:
+    desc: Run the signature grammar's corpus tests
+    dir: signature
     cmds:
       - tree-sitter test {{.CLI_ARGS}}
 
@@ -137,6 +169,7 @@ tasks:
     deps: [build]
     cmds:
       - tree-sitter test
+      - task: test:signature
       - dotnet run --project build -- expansion
       - dotnet run --project build -- check-queries
       - dotnet run --project build -- derive-queries --check
@@ -162,7 +195,7 @@ tasks:
       - dotnet run --project build -- derive-queries {{.CLI_ARGS}}
 
   bench:
-    desc: Real-world regression sweep (24 pinned repos, ~15 s once cloned)
+    desc: Real-world regression sweep (24 pinned repos, ~15 s once cloned). -- --signature sweeps the .fsi files
     deps: [build]
     cmds:
       - dotnet run --project build -- bench {{.CLI_ARGS}}

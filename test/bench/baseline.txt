@@ -1,5 +1,5 @@
 # Parser benchmark baseline - regenerate with: task bench -- --update-baseline
-# 3913 files swept; 73 with errors; 607 error nodes
+# 3966 files swept; 73 with errors; 607 error nodes
 218	EasyBuild.FileSystemProvider/src/ProvidedTypes.fs
 1	FAKE/src/app/Fake.Core.String/FakePrintf.fs
 2	FAKE/src/app/Fake.Core.Tasks/TaskRunner.fs

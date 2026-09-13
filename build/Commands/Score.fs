@@ -452,7 +452,7 @@ type ScoreCommand() =
                     |> set
 
             if settings.Parser = "" then
-                Parser.checkFreshness ()
+                Parser.checkFreshness Parser.Source
 
             let parserPath =
                 if settings.Parser = "" then
@@ -461,7 +461,7 @@ type ScoreCommand() =
                     settings.Parser
 
             use language = Parser.load parserPath
-            Parser.selfTest language
+            Parser.selfTest Parser.Source language
             let ours = score language axes
 
             // The highlight axis measures this repo's queries and tests, not a parser.

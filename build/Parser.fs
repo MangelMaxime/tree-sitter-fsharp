@@ -8,29 +8,59 @@ open System.IO
 open TreeSitter
 open EasyBuild.Workspace
 
-let defaultPath = Path.Combine(Workspace.``.``, "parser.so")
+/// The two grammars of this repository: F# source and F# signature files.
+type Grammar =
+    | Source
+    | Signature
 
-let load (path: string) =
+    member this.Name =
+        match this with
+        | Source -> "fsharp"
+        | Signature -> "fsharp_signature"
+
+    member this.Directory =
+        match this with
+        | Source -> Workspace.``.``
+        | Signature -> Workspace.signature.``.``
+
+    member this.Extensions =
+        match this with
+        | Source ->
+            [
+                ".fs"
+                ".fsx"
+            ]
+        | Signature -> [ ".fsi" ]
+
+    member this.ParserPath = Path.Combine(this.Directory, "parser.so")
+
+let defaultPath = Source.ParserPath
+
+let loadAs (grammar: Grammar) (path: string) =
     if not (File.Exists path) then
         failwith $"No parser at %s{path}. Run `task build` first."
 
-    new Language(Path.GetFullPath path, "tree_sitter_fsharp")
+    new Language(Path.GetFullPath path, $"tree_sitter_%s{grammar.Name}")
 
-/// Fails when parser.so is older than the sources it is compiled from.
-let checkFreshness () =
+let load (path: string) = loadAs Source path
+
+/// Fails when a grammar's parser.so is older than the sources it is compiled from.
+let checkFreshness (grammar: Grammar) =
     let modified (path: string) = File.GetLastWriteTimeUtc path
+    let grammarJs = Path.Combine(grammar.Directory, "grammar.js")
+    let parserC = Path.Combine(grammar.Directory, "src", "parser.c")
 
-    if modified Workspace.``grammar.js`` > modified Workspace.src.``parser.c`` then
-        failwith "grammar.js is newer than src/parser.c. Run `task generate` first."
+    if modified grammarJs > modified parserC then
+        failwith $"%s{grammarJs} is newer than its src/parser.c. Run `task generate` first."
 
-    if not (File.Exists defaultPath) then
-        failwith "No parser.so. Run `task build` first."
+    if not (File.Exists grammar.ParserPath) then
+        failwith $"No %s{grammar.ParserPath}. Run `task build` first."
 
     if
-        modified defaultPath < modified Workspace.src.``parser.c``
-        || modified defaultPath < modified Workspace.src.``scanner.c``
+        modified grammar.ParserPath < modified parserC
+        || modified grammar.ParserPath < modified Workspace.src.``scanner.c``
     then
-        failwith "parser.so is older than src/. Run `task build` first."
+        failwith $"%s{grammar.ParserPath} is older than its sources. Run `task build` first."
 
 let descendants (root: Node) =
     seq {
@@ -81,17 +111,22 @@ let identifiersAmong (language: Language) (words: Set<string>) (source: string) 
         |> List.ofSeq
         |> Some
 
-let selfTest (language: Language) =
+let selfTest (grammar: Grammar) (language: Language) =
     let rootType (source: string) =
         use parser = new Parser(language)
         use tree = parser.Parse source
         tree.RootNode.Type
 
+    let valid =
+        match grammar with
+        | Source -> "let x = 1\n"
+        | Signature -> "val x: int\n"
+
     let failures =
         [
-            if rootType "let x = 1\n" <> "source_file" then
+            if rootType valid <> "source_file" then
                 "a valid snippet did not yield a source_file root: is this the F# parser?"
-            if errorSites language "let x = 1\n" <> 0 then
+            if errorSites language valid <> 0 then
                 "a valid snippet reported error sites"
             if errorSites language "let = = ((( garbage\n" = 0 then
                 "a garbage snippet reported no error site: stale parser?"

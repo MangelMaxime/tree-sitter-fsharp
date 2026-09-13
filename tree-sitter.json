@@ -8,13 +8,29 @@
             "scope": "source.fsharp",
             "file-types": [
                 "fs",
-                "fsx",
-                "fsi"
+                "fsx"
             ],
             "highlights": "queries/highlights.scm",
             "locals": "queries/locals.scm",
             "injection-regex": "^fsharp$",
             "class-name": "TreeSitterFsharp",
+            "external-files": [
+                "src/scanner.c"
+            ]
+        },
+        {
+            "name": "fsharp_signature",
+            "camelcase": "FSharpSignature",
+            "title": "F# signature",
+            "scope": "source.fsharp.signature",
+            "path": "signature",
+            "file-types": [
+                "fsi"
+            ],
+            "highlights": "queries/highlights.scm",
+            "locals": "queries/locals.scm",
+            "injection-regex": "^fsharp_signature$",
+            "class-name": "TreeSitterFsharpSignature",
             "external-files": [
                 "src/scanner.c"
             ]

@@ -144,7 +144,13 @@ In `~/.config/helix/languages.toml`:
 [[grammar]]
 name = "fsharp"
 source = { git = "https://github.com/MangelMaxime/tree-sitter-fsharp", rev = "main" }
+
+[[grammar]]
+name = "fsharp-signature"
+source = { git = "https://github.com/MangelMaxime/tree-sitter-fsharp", rev = "main", subpath = "signature" }
 ```
+
+The second grammar parses signature files (`.fsi`); see the `fsharp-signature` language below.
 
 Then:
 
@@ -165,7 +171,7 @@ Or pin to a branch / commit (make sure to use the same rev as in `languages.toml
 curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-queries.sh | bash -s -- some-branch
 ```
 
-The script above copies the queries into `~/.config/helix/runtime/queries/fsharp/` or `$HELIX_RUNTIME/queries/fsharp/` if you have a custom runtime directory.
+The script above copies the queries into `~/.config/helix/runtime/queries/fsharp/` and `queries/fsharp-signature/`, or under `$HELIX_RUNTIME/queries/` if you have a custom runtime directory.
 
 ### Uninstall
 
@@ -235,6 +241,25 @@ comment-tokens = ["//", "///"] # Will be the default in next Helix release
 [[grammar]]
 name = "fsharp"
 source = { git = "https://github.com/MangelMaxime/tree-sitter-fsharp", rev = "main" }
+
+# Signature files get their own grammar. Helix's built-in `fsharp` entry claims
+# `.fsi`, so take it away from `fsharp` and give it to `fsharp-signature`.
+[[language]]
+name = "fsharp"
+file-types = ["fs", "fsx", "fsscript"]
+
+[[language]]
+name = "fsharp-signature"
+scope = "source.fsharp.signature"
+file-types = ["fsi"]
+roots = ["*.fsproj", "*.sln"]
+comment-tokens = ["//", "///"]
+language-servers = ["fsautocomplete"]
+indent = { tab-width = 4, unit = "    " }
+
+[[grammar]]
+name = "fsharp-signature"
+source = { git = "https://github.com/MangelMaxime/tree-sitter-fsharp", rev = "main", subpath = "signature" }
 ```
 
 If you also want rainbow brackets (the grammar ships `rainbows.scm`), add this to your `config.toml`:
@@ -351,7 +376,8 @@ test and benchmark tools are an F# project in [`build/`](build/), run through
 1. Edit `grammar.js` and/or `src/scanner.c`.
 2. `task generate`.
 3. `task test:all` to confirm the corpus (460+ tests), the expansion fixtures and
-   the queries still pass, then `task bench` for the real-world regression gate.
+   the queries still pass, then `task bench` for the real-world regression gate
+   (`task bench -- --signature` sweeps the `.fsi` files with the signature grammar).
 4. `task dev:helix` to deploy to Helix (`task dev:zed` for Zed).
 5. Restart Helix and check the highlights.
 
@@ -364,6 +390,16 @@ npx tree-sitter highlight path/to/your/file.fsx
 That shows you the ANSI-tinted output exactly as the queries would apply
 in Helix's default theme. It's the fastest way to sanity-check that a
 queries change does what you expect before reloading Helix.
+
+### Signature files
+
+`signature/grammar.js` is a second grammar, `fsharp_signature`, for `.fsi` files. It is
+derived from `grammar.js` the way tree-sitter-ocaml derives its interface grammar: it
+inherits the type language, the attributes and the scanner (`signature/src/scanner.c`
+includes `src/scanner.c`), replaces member bodies with member signatures and drops every
+expression rule, so its parser is about a third of the size. `queries/signature/` holds
+the patterns of the Helix queries that compile against it; `task queries:derive` regenerates
+them. `task generate`, `task build` and `task test` cover both grammars.
 
 ## Testing
 

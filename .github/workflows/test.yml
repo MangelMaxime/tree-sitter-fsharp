@@ -32,17 +32,21 @@ jobs:
         # checksum-based (not `git diff`) so it also works under `act`, whose
         # container doesn't get a usable git context
         run: |
-          before=$(cat src/parser.c src/grammar.json src/node-types.json | sha256sum)
+          before=$(cat src/parser.c src/grammar.json src/node-types.json signature/src/parser.c signature/src/grammar.json signature/src/node-types.json | sha256sum)
           npx tree-sitter generate grammar.js
-          after=$(cat src/parser.c src/grammar.json src/node-types.json | sha256sum)
+          (cd signature && npx tree-sitter generate)
+          after=$(cat src/parser.c src/grammar.json src/node-types.json signature/src/parser.c signature/src/grammar.json signature/src/node-types.json | sha256sum)
           if [ "$before" != "$after" ]; then
-            echo "::error::src/ is stale — run 'npx tree-sitter generate grammar.js' and commit the result"
+            echo "::error::src/ or signature/src/ is stale - run 'task generate' and commit the result"
             exit 1
           fi
 
       # Corpus (tree structure) + highlight assertions (query captures).
       - name: Corpus and highlight tests
         run: npx tree-sitter test
+
+      - name: Signature grammar corpus tests
+        run: cd signature && npx tree-sitter test
 
       # The living showcase must parse without a single error node. An empty
       # glob is itself a failure: this step silently checked nothing for months
@@ -65,9 +69,11 @@ jobs:
           done
           exit $status
 
-      # The .NET gates below load this library in-process.
-      - name: Build the parser
-        run: npx tree-sitter build --output parser.so
+      # The .NET gates below load these libraries in-process.
+      - name: Build the parsers
+        run: |
+          npx tree-sitter build --output parser.so
+          npx tree-sitter build --output signature/parser.so signature
 
       # Node extents / Helix expand-selection behavior.
       - name: Expansion tests
@@ -129,11 +135,15 @@ jobs:
           key: bench-${{ hashFiles('scripts/bench-manifest.txt') }}
       # git checkout does not preserve mtimes, and the tools refuse to run when
       # grammar.js looks newer than src/parser.c (a stale-parser guard).
-      - run: touch src/parser.c
-      - name: Build the parser
-        run: npx tree-sitter build --output parser.so
+      - run: touch src/parser.c signature/src/parser.c
+      - name: Build the parsers
+        run: |
+          npx tree-sitter build --output parser.so
+          npx tree-sitter build --output signature/parser.so signature
       - name: Sweep and compare against the baseline
         run: dotnet run --project build -- bench --summary
+      - name: Sweep the .fsi files with the signature grammar
+        run: dotnet run --project build -- bench --signature --summary
       - name: Score and compare against the baseline
         run: dotnet run --project build -- score --compare
 
@@ -151,4 +161,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Corpus and highlight tests
-        run: npx tree-sitter test
+        run: |
+          npx tree-sitter test
+          cd signature && npx tree-sitter test
