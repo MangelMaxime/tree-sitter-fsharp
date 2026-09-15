@@ -116,11 +116,13 @@ type ZedExtensionCommand() =
             let short = rev.Substring(0, 7)
             let title = $"chore: update tree-sitter-fsharp to %s{version}"
 
+            let pinned = grammars |> List.map (fun grammar -> $"`%s{grammar}`") |> String.concat " and "
+
             let body =
                 String.concat
                     "\n"
                     [
-                        $"Pins the grammar to [`%s{short}`](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/%s{rev}) (release [v%s{version}](https://github.com/MangelMaxime/tree-sitter-fsharp/releases/tag/v%s{version})) and copies its Zed queries."
+                        $"Pins %s{pinned} to [`%s{short}`](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/%s{rev}) (release [v%s{version}](https://github.com/MangelMaxime/tree-sitter-fsharp/releases/tag/v%s{version})) and copies their Zed queries."
                         ""
                         "Opened by the `zed-extension` workflow of tree-sitter-fsharp; every release updates this pull request until it is merged."
                     ]
@@ -129,7 +131,7 @@ type ZedExtensionCommand() =
             printfn "%s" (gitRead checkout [ "show"; "--stat"; "--format=%s"; "HEAD" ])
 
             if settings.DryRun then
-                printfn $"dry run: would push %s{branch} to %s{settings.Repo} and open or update the pull request \"%s{title}\""
+                printfn $"dry run: would push %s{branch} to %s{settings.Repo} and open or update the pull request \"%s{title}\":\n\n%s{body}\n"
                 printfn $"clone kept at %s{checkout}"
                 0
             else

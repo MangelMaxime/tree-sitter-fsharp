@@ -22,13 +22,6 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
-      # The grammar and queries come from the tag; the tool comes from main, so an older tag
-      # still runs the current fixes.
-      - name: Use the build tool from main
-        run: |
-          git fetch --depth 1 origin main
-          git checkout FETCH_HEAD -- build build.sh
-
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
