@@ -52,6 +52,8 @@ let add a b = a + b
 
 `test/HIGHLIGHTING.md` lists every colour decision and the file that pins it. [Highlighting](highlighting.md) explains how to change one.
 
+A `.fsi` file in `test/highlight/` is checked against the signature grammar and `queries/signature/highlights.scm`: `tree-sitter.json` maps each file extension to its grammar.
+
 ## Examples
 
 Every file in `examples/` must parse without an error.

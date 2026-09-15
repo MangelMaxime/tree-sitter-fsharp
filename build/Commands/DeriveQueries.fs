@@ -157,6 +157,28 @@ let private signatureHeader (name: string) =
 
 /// Writes queries/signature/*.scm and queries/zed/signature/*.scm: every pattern of the
 /// Helix and Zed query files whose node types exist in the signature grammar.
+let private literalList = Regex(@"(?<!"")\[(?:\s*""(?:[^""\\]|\\.)*"")+\s*\](?!"")")
+let private literal = Regex(@"""(?:[^""\\]|\\.)*""")
+
+/// Removes from every `[ "a" "b" ]` list the tokens the grammar does not have, so one missing
+/// keyword does not drop the whole list.
+let private pruneLiterals (exists: string -> bool) (chunk: string) =
+    literalList.Replace(
+        chunk,
+        fun list ->
+            let pruned =
+                literal.Replace(
+                    list.Value,
+                    fun token ->
+                        if exists token.Value then
+                            token.Value
+                        else
+                            ""
+                )
+
+            Regex.Replace(Regex.Replace(pruned, @"\n[ \t]*(?=\n)", ""), @"(?<=\S)[ \t]{2,}(?=\S)", " ")
+    )
+
 let private deriveSignature (check: bool) =
     use language = Parser.loadAs Parser.Signature Parser.Signature.ParserPath
     let mutable status = 0
@@ -185,6 +207,7 @@ let private deriveSignature (check: bool) =
 
         let kept =
             chunks (File.ReadAllText source)
+            |> List.map (pruneLiterals (fun literal -> compiles $"%s{literal} @_"))
             |> List.filter (fun chunk -> chunk.Trim() <> "" && compiles chunk)
 
         let output = signatureHeader name + (String.concat "" kept).Trim() + "\n"
