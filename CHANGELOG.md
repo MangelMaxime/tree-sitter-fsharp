@@ -1,5 +1,5 @@
 ---
-last_commit_released: 5dfc2042acebd5a0dcbf7a1b1516b65c87b90898
+last_commit_released: 73fcdcd729c98a2f411e7c8271787056baf5e295
 name: tree-sitter-fsharp
 updaters:
   - json:
@@ -19,6 +19,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 This changelog is generated using [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
 
 ⚠ Only edit the front matter metadata at the top of this file. All other changes will be overwritten when a new release is created.
+
+## 0.2.1 - 2026-09-15
+
+### 🐞 Bug Fixes
+
+* *(ci)* Open the Zed extension pull request on the fork, not its parent ([05d499c](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/05d499cec0d65fa4e7899def14babbe2620c2434))
+* *(ci)* Run the Zed extension update with the tool from main ([1035eaf](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/1035eaf5a88ba129aeb0209d6b44558112176960))
+* *(queries)* Keep keyword lists in the signature queries and test them like tree-sitter-ocaml ([90afa2b](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/90afa2b9633ab69050c4c114d7e01198b6a3cd8f))
+
+<strong><small>[View changes on Github](https://github.com/MangelMaxime/tree-sitter-fsharp/compare/5dfc2042acebd5a0dcbf7a1b1516b65c87b90898..73fcdcd729c98a2f411e7c8271787056baf5e295)</small></strong>
 
 ## 0.2.0 - 2026-09-15
 
