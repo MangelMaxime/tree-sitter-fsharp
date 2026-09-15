@@ -25,6 +25,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Lets the release job start the Zed extension workflow.
+  actions: write
 
 jobs:
   shipit-pr:
@@ -116,3 +118,11 @@ jobs:
             --title "v$VERSION" \
             --notes-file release-notes.md \
             --target "${{ github.event.workflow_run.head_sha || github.sha }}"
+
+      # A release created with GITHUB_TOKEN triggers no workflow, so the Zed extension
+      # update is started explicitly; workflow_dispatch is the exception to that rule.
+      - name: Update the Zed extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh workflow run zed-extension.yml --ref main -f tag="v$VERSION"

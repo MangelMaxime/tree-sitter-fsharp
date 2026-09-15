@@ -72,6 +72,29 @@ type DevHelixCommand() =
 let private zedQueryKinds =
     [ "highlights"; "injections"; "textobjects"; "indents"; "overrides"; "brackets"; "outline" ]
 
+/// The query files Zed loads for a language: the Zed file when it exists, else the Helix one.
+let zedQuerySources (language: string) =
+    let _, helix, zedQueries =
+        languages |> List.find (fun (name, _, _) -> name = language)
+
+    [
+        for kind in zedQueryKinds do
+            let file = kind + ".scm"
+            let zedFile = Path.Combine(zedQueries, file)
+            let helixFile = Path.Combine(helix, file)
+
+            if File.Exists zedFile then
+                file, zedFile
+            elif kind <> "indents" && File.Exists helixFile then
+                file, helixFile
+    ]
+
+let copyZedQueries (language: string) (target: string) =
+    Directory.CreateDirectory target |> ignore
+
+    for file, source in zedQuerySources language do
+        File.Copy(source, Path.Combine(target, file), true)
+
 let private zed = Path.Combine(root, "zed")
 let private mirror = Path.Combine(zed, ".mirror")
 
@@ -114,19 +137,8 @@ type DevZedCommand() =
     override _.Execute(_, _, _) =
         Steps.generate false false
 
-        for language, helix, zedQueries in languages do
-            let target = Path.Combine(zed, "languages", language)
-            Directory.CreateDirectory target |> ignore
-
-            for kind in zedQueryKinds do
-                let file = kind + ".scm"
-                let zedFile = Path.Combine(zedQueries, file)
-                let helixFile = Path.Combine(helix, file)
-
-                if File.Exists zedFile then
-                    File.Copy(zedFile, Path.Combine(target, file), true)
-                elif kind <> "indents" && File.Exists helixFile then
-                    File.Copy(helixFile, Path.Combine(target, file), true)
+        for language, _, _ in languages do
+            copyZedQueries language (Path.Combine(zed, "languages", language))
 
         if not (Directory.Exists(Path.Combine(mirror, ".git"))) then
             git root [ "init"; "-q"; mirror ]

@@ -10,6 +10,7 @@ open EasyBuild.Commands.Highlight
 open EasyBuild.Commands.Grammar
 open EasyBuild.Commands.Dev
 open EasyBuild.Commands.Docs
+open EasyBuild.Commands.ZedExtension
 
 [<EntryPoint>]
 let main args =
@@ -78,6 +79,13 @@ let main args =
             .WithDescription("Build the documentation site in docs/ (--watch to serve it, --check for CI)")
             .WithExample("docs")
             .WithExample("docs --watch")
+        |> ignore
+
+        config
+            .AddCommand<ZedExtensionCommand>("zed-extension")
+            .WithDescription("Open or update the pull request that pins a release in the Zed extension repository")
+            .WithExample("zed-extension --dry-run")
+            .WithExample("zed-extension --version 0.2.0 --rev <sha>")
         |> ignore
 
         config

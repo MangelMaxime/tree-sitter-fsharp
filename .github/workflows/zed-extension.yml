@@ -1,0 +1,37 @@
+name: Zed extension
+
+# Pins a released commit in MangelMaxime/zed-fsharp and copies the Zed queries there, through
+# one pull request from the `tree-sitter-fsharp/update` branch that later releases keep updating
+# until it is merged. Started by the release job of easybuild-shipit.yml, or by hand.
+# ZED_FSHARP_TOKEN is a fine-grained token with Contents and Pull requests write access on
+# that repository.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to pin, e.g. v0.2.0"
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Let git push with the token
+        run: gh auth setup-git
+        env:
+          GH_TOKEN: ${{ secrets.ZED_FSHARP_TOKEN }}
+
+      - name: Open or update the pull request
+        run: ./build.sh zed-extension --version "${{ inputs.tag }}" --rev "$(git rev-parse HEAD)"
+        env:
+          GH_TOKEN: ${{ secrets.ZED_FSHARP_TOKEN }}

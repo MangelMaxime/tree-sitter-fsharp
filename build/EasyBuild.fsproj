@@ -21,6 +21,7 @@
         <Compile Include="Commands/Grammar.fs" />
         <Compile Include="Commands/Dev.fs" />
         <Compile Include="Commands/Docs.fs" />
+        <Compile Include="Commands/ZedExtension.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
