@@ -16,6 +16,7 @@
         <PackageReference Include="Nacara.Plugin.Sitemap" Version="1.0.0-*" />
         <PackageReference Include="Nacara.Plugin.Assets.LightningCss" Version="1.0.0-*" />
         <PackageReference Include="Nacara.Plugin.Assets.Nuglify" Version="1.0.0-*" />
+        <PackageReference Include="Nacara.Plugin.Deploy.GitHubPages" Version="1.0.0-*" />
         <PackageReference Include="Nacara.Theme.Default" Version="1.0.0-*" />
     </ItemGroup>
 </Project>

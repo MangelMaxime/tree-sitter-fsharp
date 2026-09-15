@@ -76,9 +76,10 @@ let main args =
 
         config
             .AddCommand<DocsCommand>("docs")
-            .WithDescription("Build the documentation site in docs/ (--watch to serve it, --check for CI)")
+            .WithDescription("Build the documentation site in docs/ (--watch to serve it, --deploy to publish it)")
             .WithExample("docs")
             .WithExample("docs --watch")
+            .WithExample("docs --deploy --dry-run")
         |> ignore
 
         config

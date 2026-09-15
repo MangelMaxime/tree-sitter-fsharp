@@ -44,6 +44,7 @@ let site =
     |> LightningCss.register
     |> Nuglify.minifyHtml
     |> Nuglify.minifyJs
+    |> GitHubPages.register
     |> Theme.register theme
     |> Site.collection (Theme.docs theme "content")
 

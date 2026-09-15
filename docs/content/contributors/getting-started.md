@@ -57,7 +57,7 @@ The first run generates and compiles both parsers, then runs every gate. Later r
 | `highlight-coverage` | List the tokens that get no colour over a sample of the bench. `--files N` and `--top N` size it. |
 | `score` | The four quality axes. `--compare` fails on a regression, `--update-baseline` accepts the current scores. |
 | `generate`, `build` | Regenerate `src/` and compile the parsers. `--force` ignores the cache. Every command that loads a parser runs them first, so they are rarely typed. |
-| `docs` | Build this site. `--watch` serves it on `http://localhost:8080`, `--check` builds without writing. |
+| `docs` | Build this site. `--watch` serves it on `http://localhost:8080`, `--check` builds without writing, `--deploy` publishes it to the `gh-pages` branch (CI does this on every push to `main`). |
 | `zed-extension` | Open or update the pull request that pins a release in the Zed extension, see [Releasing](releasing.md). |
 
 ## Where things are

@@ -6,46 +6,37 @@ on:
   pull_request:
     branches: [main]
 
-# deploy-pages trades the run's OIDC token for a deployment, so the job needs
-# these permissions and the github-pages environment.
+# The deploy plugin pushes the site to the gh-pages branch, which Pages serves
+# (Settings -> Pages -> Deploy from a branch -> gh-pages).
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
+# Two deploys writing the branch at once would lose one of them.
 concurrency:
-  group: docs-${{ github.ref }}
-  cancel-in-progress: true
+  group: gh-pages-${{ github.event_name }}
+  cancel-in-progress: false
 
 jobs:
-  build:
+  docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - name: Cache the Nacara runtime (Pagefind, tree-sitter)
+
+      - name: Cache the Nacara runtime (Pagefind, tree-sitter toolchain)
         uses: actions/cache@v4
         with:
           path: ~/.cache/nacara
-          key: nacara-${{ hashFiles('docs/docs.fsproj') }}
-      - name: Build the site
-        run: ./build.sh docs
-      - uses: actions/upload-pages-artifact@v3
-        if: github.event_name == 'push'
-        with:
-          path: docs/output
+          key: nacara-${{ hashFiles('docs/Docs.fsproj') }}
 
-  # Pages must be set to "GitHub Actions" as the source (Settings -> Pages).
-  deploy:
-    if: github.event_name == 'push'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/deploy-pages@v4
-        id: deployment
+      - name: Build the site
+        if: github.event_name == 'pull_request'
+        run: ./build.sh docs
+
+      - name: Build and publish the site
+        if: github.event_name == 'push'
+        run: ./build.sh docs --deploy
