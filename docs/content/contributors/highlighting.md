@@ -3,40 +3,46 @@ title: Highlighting
 order: 3
 ---
 
-`queries/highlights.scm` is the Helix query. The Neovim, Zed and signature queries are generated from it. The highlight tests in `test/highlight/` are the specification: every colour decision is pinned by an assertion, and the query is adjusted until the tests pass.
+The highlight tests decide the colours, and the queries follow them. To change a colour, change a test first.
 
-## Decisions
+## Where a colour is decided
 
-Syntax alone cannot tell a union case from a type, or a module from a class. `test/HIGHLIGHTING.md` holds the conventions the tests pin, one row per situation, with a status:
+`queries/highlights.scm` is the Helix query. The Neovim, Zed and signature queries are generated from it, so it is the only highlight query to edit.
 
-- `confirmed`: pinned by a reviewed test file.
-- `trial`: agreed, not yet pinned by one.
+`test/HIGHLIGHTING.md` is the decision table. It has one row per situation that syntax alone cannot settle, such as whether `Error` is a union case or a type, with the colour chosen and a status:
 
-To change a decision, edit the assertion in the test file and adjust the query. The tests lead.
+- `confirmed`: checked by a reviewed test file in `test/highlight/`.
+- `trial`: agreed, not yet checked by one.
 
-## Capture names
+## Changing a colour
 
-The Helix names are the source. `build/Commands/DeriveQueries.fs` holds the two rename tables:
+1. Edit or add the assertion in `test/highlight/`.
+2. Adjust `queries/highlights.scm` until `./build.sh test` passes.
+3. Run `./build.sh derive-queries` and `./build.sh highlight-snapshot`, then read the snapshot diff: it lists every token whose colour moved.
+4. Update the row in `test/HIGHLIGHTING.md`.
+5. Run `./build.sh dev helix` and look at the result in a theme.
+
+To find tokens nobody coloured yet, `./build.sh highlight-coverage` lists the ones with no capture over a sample of the bench, grouped by where they appear.
+
+## Capture names per editor
+
+Captures are written with Helix names and renamed for the other editors by `build/Commands/DeriveQueries.fs`. The names that differ:
 
 | Helix | Neovim | Zed |
 |---|---|---|
-| `keyword.control.import` | `keyword.import` | `keyword.control.import` |
-| `keyword.storage.type` | `keyword.type` | `keyword.storage.type` |
-| `keyword.storage.modifier` | `keyword.modifier` | `keyword.storage.modifier` |
+| `keyword.control.import` | `keyword.import` | unchanged |
+| `keyword.storage.type` | `keyword.type` | unchanged |
+| `keyword.storage.modifier` | `keyword.modifier` | unchanged |
 | `namespace` | `module` | `type` |
 | `variable.other.member` | `variable.member` | `property` |
-| `function.method` | `function.method.call` | `function.method` |
+| `function.method` | `function.method.call` | unchanged |
 | `constant.numeric.integer` | `number` | `number` |
 
-Zed maps `namespace` to `type` because its bundled themes leave `namespace` at the text colour.
+Zed uses `type` for `namespace` because its bundled themes give `namespace` the plain text colour.
 
-## Reviewing a colour
+## Query pitfalls
 
-`./build.sh dev helix` deploys the current queries. Open the test file, or a throwaway `examples/scratch.fsx`, in Helix to see the colours in a theme. `./build.sh highlight-coverage` lists the tokens that get no capture at all over a sample of the bench, grouped by their syntactic context.
-
-## Query rules that matter
-
-- Editors resolve a token to the innermost capture that contains it; on equal ranges, the last pattern in the file wins. Order the file from general to specific.
-- A pattern with an unanchored middle (`. (a) (b) (c) .`) produces two matches on a four-segment path and the highlighter keeps only one, so the middle node loses its capture. Write one fully anchored pattern per length.
-- `([(a) (b)] (child))` is a sibling sequence, not "a or b with a child". Write `[(a (child)) (b (child))]`.
-- `tree-sitter test` treats a `_`-prefixed capture as a highlight. Reuse the visible capture name in predicates instead.
+- **Which capture wins.** A token takes the innermost capture that contains it. When two captures cover the same range, the pattern later in the file wins, so write general rules first and exceptions after.
+- **Unanchored middle segments.** A pattern such as `(long_identifier . (identifier) (identifier) (identifier) .)` can match a four-segment path in two ways, and the highlighter keeps only one match, so a middle segment loses its colour. Write one fully anchored pattern per length instead.
+- **Alternatives with a child.** `([(a) (b)] (child))` means "a or b, followed by a sibling child", not "a or b containing child". Write `[(a (child)) (b (child))]`.
+- **Private captures.** `tree-sitter test` reports a `_`-prefixed capture like any other. In a predicate, reuse the visible capture name instead of introducing `@_name`.

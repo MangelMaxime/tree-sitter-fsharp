@@ -5,8 +5,8 @@ in Helix, Zed and Neovim. A second grammar parses signature files (`.fsi`).
 
 ![Showcase of the grammar in action](./assets/showcase.png)
 
-- Validated against 23 popular F# projects and the F# compiler itself, about 840 000 lines.
-  Over 98% of the files parse without an error.
+- Tested against popular open-source F# projects and the F# compiler's own sources on every
+  change.
 - A construct the parser does not know loses its colours on that line, not for the rest of
   the file.
 - `///` comments attach to the declaration below, so expand-selection grows from value to
@@ -21,7 +21,7 @@ Everything is on the [documentation site](https://mangelmaxime.github.io/tree-si
 | Editor | Install |
 |---|---|
 | Helix | [users/helix](https://mangelmaxime.github.io/tree-sitter-fsharp/users/helix/) |
-| Zed | [users/zed](https://mangelmaxime.github.io/tree-sitter-fsharp/users/zed/) |
+| Zed | install the F# extension; [users/zed](https://mangelmaxime.github.io/tree-sitter-fsharp/users/zed/) |
 | Neovim | [users/neovim](https://mangelmaxime.github.io/tree-sitter-fsharp/users/neovim/) |
 
 Contributors start at

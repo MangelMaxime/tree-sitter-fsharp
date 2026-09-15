@@ -3,13 +3,41 @@ title: Zed
 order: 2
 ---
 
-The repository contains a Zed extension under `zed/`. It is installed as a dev extension.
+[Zed's F# extension](https://zed.dev/extensions/fsharp) ships this grammar. Nothing to build.
 
-## Requirements
+## Install
 
-- Node.js. `npm ci` installs the pinned tree-sitter CLI.
-- The .NET SDK version listed in `global.json`.
-- Rust with the `wasm32-wasip2` target. Zed compiles the extension's language server glue with it.
+1. Open the Extensions panel (`zed: extensions`).
+2. Search for **F#** and click **Install**.
+
+Open an `.fs` file: it is coloured.
+
+## Language server
+
+The extension downloads FsAutoComplete on first use and configures it. Its [README](https://github.com/nathanjcollins/zed-fsharp#configuration) documents the settings.
+
+## Companion extensions
+
+Two parts of the colouring are injected from other grammars, so they need their extension installed:
+
+| Extension | What it colours |
+|---|---|
+| [XML](https://zed.dev/extensions/xml) | `///` doc comments, which are XML. `(** *)` doc comments are Markdown and need nothing. |
+| [Comment](https://zed.dev/extensions/comment) | `TODO:` and `FIXME:` markers inside comments. |
+
+## Looking at the parse tree
+
+`debug: open syntax tree view` shows the live tree of the current file. It is the quickest way to see what the grammar makes of a line before reporting an issue.
+
+## Development extension
+
+The repository ships a second extension, for trying a grammar or query change before it reaches the F# extension. Installing it replaces the F# extension until you uninstall it: both use the id `fsharp`.
+
+It differs from the F# extension in two ways: it does not download FsAutoComplete, and it adds the [netcoredbg](https://github.com/Samsung/netcoredbg) debug adapter.
+
+### Install
+
+You need Node.js, the .NET SDK version in `global.json`, and Rust with the `wasm32-wasip2` target, which Zed uses to compile the extension:
 
 ```bash
 rustup target add wasm32-wasip2
@@ -17,7 +45,7 @@ rustup target add wasm32-wasip2
 sudo pacman -S rust-wasm
 ```
 
-## Install
+Then:
 
 ```bash
 git clone https://github.com/MangelMaxime/tree-sitter-fsharp
@@ -26,42 +54,36 @@ npm ci
 ./build.sh dev zed
 ```
 
-Then in Zed:
-
 1. Command palette, `zed: install dev extension`, select the `zed/` directory.
 2. After every change to the grammar or the queries: rerun `./build.sh dev zed`, then click **Rebuild** on the extension in the Extensions panel.
 
-The dev extension uses the id `fsharp`, so it replaces the marketplace F# extension while it is installed.
+To go back to the F# extension: `zed: extensions`, then **Uninstall** on `F# (local dev)`.
 
-## Language server
+### Language server
 
-The extension registers FsAutoComplete. Install it and keep it on `PATH`:
+FsAutoComplete must be on `PATH`, or named in the settings:
 
 ```bash
 dotnet tool install -g fsautocomplete
 ```
 
-The `lsp.fsautocomplete` settings (`binary`, `initialization_options`) apply to it.
+```json
+"lsp": { "fsautocomplete": { "binary": { "path": "/path/to/fsautocomplete" } } }
+```
 
-## Settings
+### Debugging
 
-- Rainbow brackets: `"colorize_brackets": true`, globally or under `"languages": { "FSharp": ... }`. Every pair the grammar declares is coloured, including `[| |]`, `{| |}` and `[< >]`.
-- `///` doc comments are XML. Their colouring needs the [XML extension](https://zed.dev/extensions/xml). `(** *)` doc comments are Markdown and work without it.
-- `TODO:` and `FIXME:` markers inside comments need the [comment extension](https://zed.dev/extensions/comment).
-- `debug: open syntax tree view` shows the live parse tree.
+netcoredbg must be on `PATH`, from a recent [release](https://github.com/Samsung/netcoredbg/releases) or a package manager (AUR on Arch Linux), or named in the settings:
 
-## Debugging
+```json
+"dap": { "netcoredbg": { "binary": { "path": "/path/to/netcoredbg" } } }
+```
 
-The extension registers [netcoredbg](https://github.com/Samsung/netcoredbg) as a debug adapter.
+:::note
+Old netcoredbg releases predate current .NET runtimes and fail to start.
+:::
 
-**Requirements**
-
-- `netcoredbg` on `PATH`, from a recent [release](https://github.com/Samsung/netcoredbg/releases) or a package manager (AUR on Arch Linux). Old releases predate current .NET runtimes.
-- Or point Zed at the binary: `"dap": { "netcoredbg": { "binary": "/path/to/netcoredbg" } }`.
-
-**Usage**
-
-Declare the scenarios in `.zed/debug.json` at the project root:
+Declare the scenarios in `.zed/debug.json` at the project root, then start one from the debug panel or with `debugger: start`:
 
 ```json
 [
@@ -82,12 +104,4 @@ Declare the scenarios in `.zed/debug.json` at the project root:
 ]
 ```
 
-Start a session from the debug panel or with `debugger: start`.
-
-- `program` is the built assembly, not the project. The `build` step runs `dotnet build` before each session.
-- `"processId": "$ZED_PICK_PID"` opens Zed's process picker when the session starts.
-- Launched processes start suspended, so breakpoints on the first line are hit.
-
-## Uninstall
-
-Command palette, `zed: extensions`, then **Uninstall** on `F# (local dev)`.
+`program` is the built assembly, not the project: the `build` step runs `dotnet build` before each session. `$ZED_PICK_PID` opens Zed's process picker. A launched process starts suspended, so a breakpoint on the first line is hit.

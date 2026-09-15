@@ -3,54 +3,74 @@ title: Getting started
 order: 1
 ---
 
+Everything runs through one script. This page takes you from a clone to a passing test run.
+
 ## Requirements
 
 - Node.js. `npm ci` installs the tree-sitter CLI pinned in `package-lock.json`.
 - The .NET SDK version listed in `global.json`.
-- A C compiler (gcc, clang or MSVC) for the tree-sitter CLI to compile the parser.
+- A C compiler (gcc, clang or MSVC). The tree-sitter CLI uses it to compile the parser.
 
-## The build script
+## First run
 
-Every command is a subcommand of the F# project in `build/`, run through `./build.sh` (`build.bat` on Windows). `./build.sh --help` lists them.
+```bash
+git clone https://github.com/MangelMaxime/tree-sitter-fsharp
+cd tree-sitter-fsharp
+npm ci
+./build.sh test-all
+```
+
+On Windows, use `build.bat` instead of `./build.sh`.
+
+The first run generates and compiles both parsers, then runs every gate. Later runs skip generating and compiling when `grammar.js` and `src/scanner.c` did not change.
+
+## A change, start to finish
+
+1. Edit `grammar.js`, `src/scanner.c` or a query in `queries/`.
+2. Add a corpus test or a highlight assertion that shows the change, see [Testing](testing.md).
+3. `./build.sh test-all`.
+4. `./build.sh bench`. A real-world file that parses worse than before fails it.
+5. `./build.sh dev <editor>`, with `helix`, `zed` or `nvim`, and look at the result in that editor.
+6. Commit with a Conventional Commit message, see [Releasing](releasing.md).
+
+## The commands
+
+`./build.sh --help` lists them, and `./build.sh <command> --help` shows the options of one.
+
+**Every day**
 
 | Command | What it does |
 |---|---|
-| `generate [--force]` | Regenerate `src/` and `signature/src/` from the two `grammar.js` files. |
-| `build [--force]` | Compile `parser.so` and `signature/parser.so`, regenerating first when needed. |
-| `test [--signature] [-i NAME] [-u]` | Corpus and highlight tests of both grammars. |
-| `test-all` | Every local gate. |
-| `dev helix` | Build and copy the parsers and queries into the Helix runtime. |
-| `dev zed` | Refresh the Zed dev extension in `zed/`. |
-| `dev nvim [FILE]` | Build the parser and open a file in the repo-local Neovim config. |
-| `bench [--signature] [--summary] [--update-baseline]` | Sweep the pinned real-world repositories and compare with the baseline. |
-| `score [--compare] [--update-baseline]` | Score the grammar on four quality axes. |
-| `expansion [-i NAME]` | Run the expand-selection fixtures. |
-| `check-queries` | Compile every query file against the current grammar. |
-| `derive-queries [--check]` | Regenerate the Neovim, Zed and signature queries from the Helix ones. |
-| `highlight-snapshot [--check]` | Write the resolved capture of every token of `examples/references.fsx`. |
-| `highlight-coverage` | List the tokens with no highlight capture over a sample of the bench. |
-| `docs [--watch] [--check]` | Build the documentation site in `docs/`. |
+| `test-all` | Every local gate: corpus, highlight assertions, examples, expansion fixtures, query checks, derived queries, snapshot. |
+| `test` | Corpus and highlight tests only. `-i NAME` runs the tests whose name matches, `-u` rewrites their expected trees, `--signature` runs the signature grammar alone. |
+| `bench` | Parse the 24 pinned repositories and compare with the baseline. `--summary` adds a per-project table, `--update-baseline` accepts improvements, `--signature` sweeps the `.fsi` files. |
+| `dev helix`, `dev zed`, `dev nvim [FILE]` | Put the current grammar and queries in an editor. |
 
-`generate` and `build` skip their work when the inputs did not change. The content hashes live in `.build-cache/`. Every command that loads a parser runs both first, so `build` is rarely typed by hand.
+**When needed**
 
-## Development loop
+| Command | What it does |
+|---|---|
+| `expansion` | The expand-selection fixtures alone, when a change moves where a node starts or ends (doc comments, attributes, declarations). `-i TEXT` runs the fixtures whose name contains it. |
+| `check-queries` | Compile every query file against the grammar. |
+| `derive-queries` | Regenerate the Neovim, Zed and signature queries from the Helix ones. `--check` only reports stale files. |
+| `highlight-snapshot` | Rewrite `test/highlight-snapshot.txt`. `--check` only reports a difference. |
+| `highlight-coverage` | List the tokens that get no colour over a sample of the bench. `--files N` and `--top N` size it. |
+| `score` | The four quality axes. `--compare` fails on a regression, `--update-baseline` accepts the current scores. |
+| `generate`, `build` | Regenerate `src/` and compile the parsers. `--force` ignores the cache. Every command that loads a parser runs them first, so they are rarely typed. |
+| `docs` | Build this site. `--watch` serves it on `http://localhost:8080`, `--check` builds without writing. |
+| `zed-extension` | Open or update the pull request that pins a release in the Zed extension, see [Releasing](releasing.md). |
 
-1. Edit `grammar.js`, `src/scanner.c` or a query in `queries/`.
-2. `./build.sh test-all`.
-3. `./build.sh bench` for the real-world regression gate. `--signature` sweeps the `.fsi` files with the signature grammar.
-4. `./build.sh dev helix` or `./build.sh dev zed`, then restart Helix or rebuild the Zed extension.
-
-## Repository layout
+## Where things are
 
 | Path | Content |
 |---|---|
 | `grammar.js`, `src/scanner.c` | The F# grammar and its external scanner. |
-| `signature/` | The `.fsi` grammar, derived from `grammar.js`. Its scanner includes `src/scanner.c`. |
-| `queries/` | Helix queries. `queries/nvim/`, `queries/zed/` and `queries/signature/` are derived or editor-specific. |
-| `test/` | Corpus tests, highlight tests, expansion fixtures, bench and score baselines, the highlight snapshot. |
-| `examples/` | `references.fsx` is the gallery every token of which is in the snapshot. `locals.fsx` exercises `locals.scm` in Helix. |
-| `build/` | The F# build project. |
-| `scripts/` | The end-user install scripts, the bench manifest and the Neovim-only highlight rules. |
-| `zed/`, `nvim/` | The Zed dev extension and the isolated Neovim config. |
-| `docs/` | The documentation site, built with [Nacara](https://mangelmaxime.github.io/Nacara/). Pages are Markdown files under `docs/content/`. |
+| `signature/` | The `.fsi` grammar, derived from `grammar.js`. |
+| `queries/` | The Helix queries, the source for every other editor. |
+| `test/` | Corpus tests, highlight tests, expansion fixtures, bench and score baselines, the highlight snapshot, `HIGHLIGHTING.md`. |
+| `examples/` | `references.fsx`, a gallery of F# constructs, and `locals.fsx`, for checking `locals.scm` in Helix. |
+| `build/` | The F# project behind `./build.sh`. |
+| `scripts/` | The install scripts for users, the bench manifest, the Neovim-only highlight rules. |
+| `zed/`, `nvim/` | The Zed development extension and the isolated Neovim config. |
+| `docs/` | This site, built with [Nacara](https://mangelmaxime.github.io/Nacara/). Pages are Markdown files under `docs/content/`. |
 | `LIMITATIONS.md` | Accepted trade-offs and known gaps, with the evidence behind each. |

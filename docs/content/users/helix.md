@@ -3,11 +3,11 @@ title: Helix
 order: 1
 ---
 
-Helix fetches and compiles the grammar itself. The queries are copied by a script.
+Helix compiles the grammar itself. The queries are copied by a script. Three steps.
 
-## Install the grammar
+## 1. Declare the grammars
 
-Add both grammars to `~/.config/helix/languages.toml`. The second one parses signature files (`.fsi`).
+Add both grammars to `~/.config/helix/languages.toml`. The second one is for signature files (`.fsi`).
 
 ```toml
 [[grammar]]
@@ -26,25 +26,29 @@ hx --grammar fetch
 hx --grammar build
 ```
 
-## Install the queries
+## 2. Install the queries
 
-Helix does not install queries for external grammars. The script copies them into `~/.config/helix/runtime/queries/fsharp/` and `queries/fsharp-signature/`, or under `$HELIX_RUNTIME/queries/` when that variable is set.
+Helix compiles external grammars but does not install their queries. This script (it needs `curl`) copies them into `~/.config/helix/runtime/queries/fsharp/` and `queries/fsharp-signature/`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-queries.sh | bash
 ```
 
-To pin a branch or commit, pass it as an argument. Use the same `rev` as in `languages.toml`.
+To pin a branch, a tag or a commit, pass it as the argument, and use the same `rev` in `languages.toml`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-queries.sh | bash -s -- some-branch
+curl -fsSL https://raw.githubusercontent.com/MangelMaxime/tree-sitter-fsharp/main/scripts/install-queries.sh | bash -s -- v0.1.0
 ```
 
-Rerun the script after every `hx --grammar fetch` that changes the revision.
+:::note
+Rerun the script after every `hx --grammar fetch` that changes the revision. The queries and the grammar must come from the same commit.
+:::
 
-## Language configuration
+When `HELIX_RUNTIME` is set, the script installs under `$HELIX_RUNTIME/queries/` instead. It writes an empty file for every query kind the repository does not ship, which keeps Helix from falling back to its built-in F# queries.
 
-Helix's built-in `fsharp` entry claims `.fsi`. Give that extension to `fsharp-signature` and configure both languages in `languages.toml`:
+## 3. Configure the languages
+
+Helix's built-in `fsharp` entry claims `fs`, `fsi` and `fsx`. Give `fsi` to `fsharp-signature`, and set the comment tokens and auto-pairs for both:
 
 ```toml
 [[language]]
@@ -69,11 +73,19 @@ language-servers = ["fsharp-ls"]
 indent = { tab-width = 4, unit = "    " }
 ```
 
-The single quote is left out of `auto-pairs` because it starts type parameters (`'T`).
+The single quote is left out of the auto-pairs: it starts type parameters such as `'T`.
+
+Restart Helix and open an `.fsx` file: it is coloured. Open buffers pick up a query change after `:reload`.
 
 ## Language server
 
-A `languages.toml` entry for FsAutoComplete with the options used by the maintainer:
+Helix already defines `fsharp-ls` as `fsautocomplete` with `AutomaticWorkspaceInit`. Install the tool:
+
+```bash
+dotnet tool install -g fsautocomplete
+```
+
+To tune it, redefine the server. This is the maintainer's configuration:
 
 ```toml
 [language-server.fsharp-ls]
@@ -102,22 +114,22 @@ FSharp.RecordStubGeneration = true
 FSharp.TooltipShowDocumentationLink = false
 ```
 
-Install the server with `dotnet tool install -g fsautocomplete`.
-
 ## Rainbow brackets
 
-The grammar ships `rainbows.scm`. Enable it in `config.toml`:
+The grammar ships `rainbows.scm`. Turn the feature on in `config.toml`:
 
 ```toml
 [editor]
 rainbow-brackets = true
 ```
 
-Rainbow brackets need a Helix built from source at the time of writing.
+:::note
+You need Helix built from the `master` branch: no release includes rainbow brackets yet.
+:::
 
 ## Uninstall
 
-The grammar and the queries both live under the runtime directory.
+The grammar and the queries both live under the runtime directory:
 
 ```bash
 RUNTIME="${HELIX_RUNTIME:-$HOME/.config/helix/runtime}"
@@ -126,4 +138,4 @@ rm -f  "$RUNTIME/grammars/fsharp.so" "$RUNTIME/grammars/fsharp-signature.so"
 rm -rf "$RUNTIME/grammars/sources/fsharp" "$RUNTIME/grammars/sources/fsharp-signature"
 ```
 
-Then remove the `[[grammar]]` and `[[language]]` entries from `languages.toml`. Helix falls back to its built-in F# grammar on the next launch.
+Then remove the `[[grammar]]` and `[[language]]` entries from `languages.toml`. Helix uses its built-in F# grammar again on the next launch.
