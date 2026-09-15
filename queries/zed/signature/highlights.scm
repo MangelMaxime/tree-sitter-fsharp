@@ -210,34 +210,21 @@
 (active_pattern_expression (active_pattern_member) @function)
 
 (let_binding
-  name: (identifier) @function
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
-
-(let_binding
-  name: (operator_name)
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
+  name: (identifier) @function)
+(let_binding (parameter (identifier) @variable.parameter))
 
 (let_decl_indented
   name: (active_pattern_name) @function)
 
 (let_decl_indented
-  name: (identifier) @function
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
-
-(let_decl_indented
-  name: (operator_name)
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
+  name: (identifier) @function)
+(let_decl_indented (parameter (identifier) @variable.parameter))
 
 ; `let x = … in …` (explicit-`in` form) puts the binding name directly on
 ; let_expression (not a let_decl_indented child), so it needs its own rule.
 (let_expression
-  name: (identifier) @function
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
+  name: (identifier) @function)
+(let_expression (parameter (identifier) @variable.parameter))
 
 ; A lowercase identifier in an `identifier_pattern` is a value BINDING — the
 ; names introduced by `match`/`function`/`fun`/`let` patterns (`Some v`,
@@ -301,16 +288,13 @@
   (#match? @function "^[a-z_]"))
 
 (let_and_binding
-  name: (identifier) @function
-  parameters: (parameter
-    (identifier) @variable.parameter)*)
+  name: (identifier) @function)
+(let_and_binding (parameter (identifier) @variable.parameter))
 
 (let_and_binding
   name: (active_pattern_name) @function)
 
-(lambda_expression
-  (parameter
-    (identifier) @variable.parameter)*)
+(lambda_expression (parameter (identifier) @variable.parameter))
 
 ; `tuple_param` is the per-element parameter shape inside `primary_constructor`
 ; and (via `tuple_params`) `secondary_constructor` — e.g. `type C(x: int, y: int)`
@@ -487,7 +471,7 @@
 ; Coloured like let-binding params (the let/lambda rules don't cover members, so
 ; without this a member's curried params render as plain text). Tuple-style
 ; member params `M(x, y)` are already handled by the `tuple_param` rule above.
-(member_defn parameters: (parameter (identifier) @variable.parameter))
+(member_defn (parameter (identifier) @variable.parameter))
 
 ; Tuple-destructured parameters: `let f (x, y)`, `member M(a, b: int)`. The
 ; UNTYPED `(x, y)` form is a `tuple_pattern` (not `tuple_params`), so the rules

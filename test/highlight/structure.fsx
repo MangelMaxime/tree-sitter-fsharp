@@ -28,6 +28,15 @@ type Box<'T> = { Value: 'T }
 //       ^ type.parameter
 
 type Counter() =
+    static member create
+        (value: int)
+//       ^ variable.parameter
+        (parser: int -> string)
+//       ^ variable.parameter
+        (attributes: string)
+//       ^ variable.parameter
+        =
+        value
     member this.Value = 1
 //         ^ variable.builtin
     member _.Other = 2

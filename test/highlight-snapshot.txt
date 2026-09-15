@@ -785,7 +785,7 @@
 156:20	>]	punctuation.bracket
 157:4	let	keyword
 157:8	(|Even|_|)	function
-157:19	n	-
+157:19	n	variable.parameter
 157:21	=	operator
 157:23	if	keyword.control
 157:26	n	-

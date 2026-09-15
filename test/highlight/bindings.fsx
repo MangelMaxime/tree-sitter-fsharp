@@ -62,6 +62,18 @@ let (+++) a b = a + b
 let ``quoted name`` = 1
 //  ^ function
 
+let many
+    (first: int)
+    (second: int -> string)
+//   ^ variable.parameter
+    (third: string)
+//   ^ variable.parameter
+    (fourth: bool)
+    (fifth: unit -> bool)
+//   ^ variable.parameter
+    =
+    first
+
 let pair: int * string = (1, "a")
 //  ^ function
 //      ^ punctuation.delimiter
