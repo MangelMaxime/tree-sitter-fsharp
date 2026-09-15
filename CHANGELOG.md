@@ -1,5 +1,5 @@
 ---
-last_commit_released: ebeef78821a64ed105d48cfaf198ffdfd833e92a
+last_commit_released: 5dfc2042acebd5a0dcbf7a1b1516b65c87b90898
 name: tree-sitter-fsharp
 updaters:
   - json:
@@ -7,8 +7,7 @@ updaters:
       pointer: /metadata/version
   - package.json:
       file: package.json
-  # tree-sitter generate embeds the version in src/parser.c; CI rejects a stale src/.
-  - command: "./build.sh generate --force"
+  - command: ./build.sh generate --force
 ---
 
 # Changelog
@@ -20,6 +19,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 This changelog is generated using [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
 
 ⚠ Only edit the front matter metadata at the top of this file. All other changes will be overwritten when a new release is created.
+
+## 0.2.0 - 2026-09-15
+
+### 🚀 Features
+
+* *(signature)* Add a derived grammar for .fsi files ([2868bc9](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/2868bc902959ebb3dcdda562dc731313364fbe21))
+
+### 🐞 Bug Fixes
+
+* *(build)* Pin FSharp.Core so runners with a newer SDK keep the lock file ([5dfc204](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/5dfc2042acebd5a0dcbf7a1b1516b65c87b90898))
+* *(grammar)* Close 23 real-world parse gaps found by the bench triage ([c4205b2](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/c4205b245bf9ed0c16de20eb53ab76e409564474))
+* *(grammar)* Keep attributes and module abbreviations attached after a line comment ([29a6489](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/29a6489ce91575ea6d7e4245173702a925d06560))
+* *(queries)* Colour bare union cases, optional-parameter markers, type-test aliases and .[ ([6279afd](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/6279afd20651c2e3d3a27d81a8033f410e3e45ac))
+* *(scanner)* Keep the scanner state per parser instead of in globals ([c94ddcf](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/c94ddcfe2e293820f863669d168fac48acb2c9ce))
+
+<strong><small>[View changes on Github](https://github.com/MangelMaxime/tree-sitter-fsharp/compare/ebeef78821a64ed105d48cfaf198ffdfd833e92a..5dfc2042acebd5a0dcbf7a1b1516b65c87b90898)</small></strong>
 
 ## 0.1.0 - 2026-09-12
 
