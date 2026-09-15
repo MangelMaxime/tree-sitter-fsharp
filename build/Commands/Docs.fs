@@ -1,5 +1,6 @@
 module EasyBuild.Commands.Docs
 
+open System
 open System.ComponentModel
 open System.IO
 open Spectre.Console.Cli
@@ -27,4 +28,12 @@ type DocsCommand() =
             elif settings.Check then "check"
             else "build"
 
+        // Nacara downloads the grammar at this commit from GitHub, so it must be pushed; otherwise
+        // the F# code blocks use the grammar bundled with the plugin.
+        let head = gitRead root [ "rev-parse"; "HEAD" ]
+
+        if gitRead root [ "branch"; "-r"; "--contains"; head ] <> "" then
+            Environment.SetEnvironmentVariable("TREE_SITTER_FSHARP_COMMIT", head)
+        else
+            printfn $"%s{head.Substring(0, 7)} is not pushed: code blocks use the bundled F# grammar"
         runCode "dotnet" (Path.Combine(root, "docs")) [ "run"; "--"; verb ]

@@ -20,6 +20,14 @@ let theme =
     |> Theme.editUrl "https://github.com/MangelMaxime/tree-sitter-fsharp/edit/main/docs"
     |> Theme.footer (Html.p [ Html.text "Apache 2.0" ])
 
+// The build script sets the commit so code blocks are coloured by this repository's grammar.
+let grammar =
+    match System.Environment.GetEnvironmentVariable "TREE_SITTER_FSHARP_COMMIT" with
+    | null
+    | "" -> []
+    | commit ->
+        [ TreeSitter.fromGitHub "fsharp" "https://github.com/MangelMaxime/tree-sitter-fsharp" commit ]
+
 let site =
     Site.create "Tree-sitter for F#"
     |> Site.description "An F# grammar for tree-sitter, for Helix, Zed and Neovim"
@@ -27,9 +35,10 @@ let site =
     |> Site.origin "https://mangelmaxime.github.io"
     |> Site.output "output"
     |> Site.staticFiles "static"
+    |> Site.stylesheet "assets/landing.css"
     |> Markdown.register
     |> TextMate.register
-    |> TreeSitter.register
+    |> TreeSitter.registerWith (fun options -> { options with Grammars = grammar })
     |> Search.register
     |> Sitemap.register
     |> LightningCss.register
