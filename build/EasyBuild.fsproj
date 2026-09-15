@@ -3,6 +3,9 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
+        <!-- The implicit FSharp.Core version follows the installed SDK, which differs between CI runners. -->
+        <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
         <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
@@ -26,6 +29,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="BlackFox.CommandLine" Version="1.0.0" />
+        <PackageReference Include="FSharp.Core" Version="10.1.300" />
         <PackageReference Include="EasyBuild.FileSystemProvider" Version="1.1.0" />
         <PackageReference Include="SimpleExec" Version="13.1.0" />
         <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
