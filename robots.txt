@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mangelmaxime.github.io/tree-sitter-fsharp/sitemap.xml

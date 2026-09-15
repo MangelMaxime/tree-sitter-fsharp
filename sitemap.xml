@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/getting-started/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/grammar/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/highlighting/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/queries/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/releasing/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/contributors/testing/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/users/helix/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/users/neovim/</loc>
+  </url>
+  <url>
+    <loc>https://mangelmaxime.github.io/tree-sitter-fsharp/users/zed/</loc>
+  </url>
+</urlset>
