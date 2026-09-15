@@ -20,9 +20,13 @@ type ZedExtensionSettings() =
     [<Description("Released version, used in the branch name and the pull request title (default: tree-sitter.json)")>]
     member val Version = "" with get, set
 
-    [<CommandOption("--repo <OWNER/NAME>")>]
-    [<Description("Zed extension repository (default MangelMaxime/zed-fsharp)")>]
-    member val Repo = "MangelMaxime/zed-fsharp" with get, set
+    [<CommandOption("--fork <OWNER/NAME>")>]
+    [<Description("Repository the update branch is pushed to (default MangelMaxime/zed-fsharp)")>]
+    member val Fork = "MangelMaxime/zed-fsharp" with get, set
+
+    [<CommandOption("--upstream <OWNER/NAME>")>]
+    [<Description("Repository the pull request targets (default nathanjcollins/zed-fsharp)")>]
+    member val Upstream = "nathanjcollins/zed-fsharp" with get, set
 
     [<CommandOption("--dry-run")>]
     [<Description("Clone, apply and commit locally; print the push and the pull request instead of doing them")>]
@@ -88,14 +92,15 @@ type ZedExtensionCommand() =
             else Regex.Match(File.ReadAllText(Path.Combine(root, "tree-sitter.json")), "\"version\"\\s*:\\s*\"([^\"]+)\"").Groups[1].Value
 
         let checkout = Path.Combine(Path.GetTempPath(), "zed-fsharp-" + Guid.NewGuid().ToString "N")
-        run "gh" root [ "repo"; "clone"; settings.Repo; checkout ]
-        git checkout [ "checkout"; "-q"; "-B"; branch; "origin/main" ]
+        run "gh" root [ "repo"; "clone"; settings.Fork; checkout ]
+        git checkout [ "fetch"; "-q"; $"https://github.com/%s{settings.Upstream}.git"; "main" ]
+        git checkout [ "checkout"; "-q"; "-B"; branch; "FETCH_HEAD" ]
 
         let manifestPath = Path.Combine(checkout, "extension.toml")
         let grammars, manifest = pinGrammars (File.ReadAllText manifestPath) rev
 
         if grammars.IsEmpty then
-            failwith $"no [grammars.*] section of %s{settings.Repo} points at tree-sitter-fsharp"
+            failwith $"no [grammars.*] section of %s{settings.Upstream} points at tree-sitter-fsharp"
 
         File.WriteAllText(manifestPath, manifest)
 
@@ -110,7 +115,7 @@ type ZedExtensionCommand() =
         git checkout [ "add"; "-A" ]
 
         if gitCode checkout [ "diff"; "--cached"; "--quiet" ] = 0 then
-            printfn $"%s{settings.Repo} already pins %s{rev} with the current queries"
+            printfn $"%s{settings.Upstream} already pins %s{rev} with the current queries"
             0
         else
             let short = rev.Substring(0, 7)
@@ -122,7 +127,7 @@ type ZedExtensionCommand() =
                 String.concat
                     "\n"
                     [
-                        $"Pins %s{pinned} to [`%s{short}`](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/%s{rev}) (release [v%s{version}](https://github.com/MangelMaxime/tree-sitter-fsharp/releases/tag/v%s{version})) and copies their Zed queries."
+                        $"Pins %s{pinned} to [`%s{short}`](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/%s{rev}) (release [v%s{version}](https://github.com/MangelMaxime/tree-sitter-fsharp/releases/tag/v%s{version})) and copies the matching Zed queries."
                         ""
                         "Opened by the `zed-extension` workflow of tree-sitter-fsharp; every release updates this pull request until it is merged."
                     ]
@@ -131,27 +136,42 @@ type ZedExtensionCommand() =
             printfn "%s" (gitRead checkout [ "show"; "--stat"; "--format=%s"; "HEAD" ])
 
             if settings.DryRun then
-                printfn $"dry run: would push %s{branch} to %s{settings.Repo} and open or update the pull request \"%s{title}\":\n\n%s{body}\n"
+                printfn $"dry run: would push %s{branch} to %s{settings.Fork} and open or update the pull request on %s{settings.Upstream} \"%s{title}\":\n\n%s{body}\n"
                 printfn $"clone kept at %s{checkout}"
                 0
             else
                 git checkout [ "push"; "--force"; "-u"; "origin"; branch ]
 
-                // The extension repository is a fork: without --repo, gh targets its parent.
-                let repo = [ "--repo"; settings.Repo ]
+                let upstream = [ "--repo"; settings.Upstream ]
+                let owner = settings.Fork.Split('/')[0]
 
                 let existing =
                     read
                         "gh"
                         checkout
-                        ([ "pr"; "list"; "--head"; branch; "--state"; "open"; "--json"; "number"; "--jq"; ".[0].number" ]
-                         @ repo)
+                        ([
+                            "pr"
+                            "list"
+                            "--head"
+                            branch
+                            "--state"
+                            "open"
+                            "--json"
+                            "number,headRepositoryOwner"
+                            "--jq"
+                            $".[] | select(.headRepositoryOwner.login == \"%s{owner}\") | .number"
+                         ]
+                         @ upstream)
 
                 if existing = "" then
-                    run "gh" checkout ([ "pr"; "create"; "--base"; "main"; "--head"; branch; "--title"; title; "--body"; body ] @ repo)
+                    run
+                        "gh"
+                        checkout
+                        ([ "pr"; "create"; "--base"; "main"; "--head"; $"%s{owner}:%s{branch}"; "--title"; title; "--body"; body ]
+                         @ upstream)
                 else
-                    run "gh" checkout ([ "pr"; "edit"; existing; "--title"; title; "--body"; body ] @ repo)
-                    printfn $"updated pull request #%s{existing}"
+                    run "gh" checkout ([ "pr"; "edit"; existing; "--title"; title; "--body"; body ] @ upstream)
+                    printfn $"updated pull request #%s{existing} on %s{settings.Upstream}"
 
                 Directory.Delete(checkout, true)
                 0

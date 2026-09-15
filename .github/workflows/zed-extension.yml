@@ -1,10 +1,11 @@
 name: Zed extension
 
-# Pins a released commit in MangelMaxime/zed-fsharp and copies the Zed queries there, through
-# one pull request from the `tree-sitter-fsharp/update` branch that later releases keep updating
-# until it is merged. Started by the release job of easybuild-shipit.yml, or by hand.
-# ZED_FSHARP_TOKEN is a fine-grained token with Contents and Pull requests write access on
-# that repository.
+# Pins a released commit in nathanjcollins/zed-fsharp and copies the Zed queries there. The
+# changes go on the `tree-sitter-fsharp/update` branch of the MangelMaxime/zed-fsharp fork, with one
+# pull request to the upstream repository that later releases keep updating until it is merged.
+# Started by the release job of easybuild-shipit.yml, or by hand.
+# ZED_FSHARP_TOKEN is a classic token with the `public_repo` scope: fine-grained tokens cannot
+# open pull requests on a public repository their owner does not belong to.
 
 on:
   workflow_dispatch:
