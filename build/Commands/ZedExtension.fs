@@ -135,13 +135,20 @@ type ZedExtensionCommand() =
             else
                 git checkout [ "push"; "--force"; "-u"; "origin"; branch ]
 
+                // The extension repository is a fork: without --repo, gh targets its parent.
+                let repo = [ "--repo"; settings.Repo ]
+
                 let existing =
-                    read "gh" checkout [ "pr"; "list"; "--head"; branch; "--state"; "open"; "--json"; "number"; "--jq"; ".[0].number" ]
+                    read
+                        "gh"
+                        checkout
+                        ([ "pr"; "list"; "--head"; branch; "--state"; "open"; "--json"; "number"; "--jq"; ".[0].number" ]
+                         @ repo)
 
                 if existing = "" then
-                    run "gh" checkout [ "pr"; "create"; "--base"; "main"; "--head"; branch; "--title"; title; "--body"; body ]
+                    run "gh" checkout ([ "pr"; "create"; "--base"; "main"; "--head"; branch; "--title"; title; "--body"; body ] @ repo)
                 else
-                    run "gh" checkout [ "pr"; "edit"; existing; "--title"; title; "--body"; body ]
+                    run "gh" checkout ([ "pr"; "edit"; existing; "--title"; title; "--body"; body ] @ repo)
                     printfn $"updated pull request #%s{existing}"
 
                 Directory.Delete(checkout, true)
