@@ -2,11 +2,13 @@
 # Install tree-sitter-fsharp-helix for Neovim's built-in tree-sitter.
 #
 # Unlike Helix, Neovim has no built-in command to fetch/build a grammar, so
-# this script builds the parser (parser.so) and installs it together with the
-# query files into your Neovim config:
+# this script builds both parsers and installs them together with the query
+# files into your Neovim config:
 #
-#   <config>/parser/fsharp.so
+#   <config>/parser/fsharp.so             .fs / .fsx
 #   <config>/queries/fsharp/*.scm
+#   <config>/parser/fsharp_signature.so   .fsi
+#   <config>/queries/fsharp_signature/*.scm
 #
 # where <config> defaults to ${XDG_CONFIG_HOME:-~/.config}/nvim.
 #
@@ -31,13 +33,13 @@ REPO="${TS_FSHARP_REPO:-MangelMaxime/tree-sitter-fsharp}"
 REF="${1:-main}"
 CONFIG_DIR="${NVIM_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/nvim}"
 PARSER_DEST="$CONFIG_DIR/parser"
-QUERY_DEST="$CONFIG_DIR/queries/fsharp"
 
 # Every query file we ship. Missing ones get empty placeholders so Neovim
 # doesn't fall back to a tree-sitter plugin's bundled F# queries (built for
 # the upstream Ionide grammar, whose node types don't exist here).
 # queries/nvim/<name>.scm (Neovim capture names and dialects) takes precedence
-# over the shared Helix file queries/<name>.scm.
+# over the shared Helix file queries/<name>.scm; the signature grammar uses
+# queries/nvim/signature/ and queries/signature/ the same way.
 QUERIES=(highlights indents injections locals rainbows tags textobjects folds)
 
 # --- Pick a tree-sitter CLI ---
@@ -73,41 +75,58 @@ else
     SRC="$TMP/src"
 fi
 
-# --- Build the parser ---
+# --- Build the parsers ---
 echo "Building parser ..."
 ( cd "$SRC" && "${TS[@]}" generate && "${TS[@]}" build --output "$SRC/fsharp.so" )
 
+echo "Building signature parser ..."
+( cd "$SRC/signature" && "${TS[@]}" generate )
+( cd "$SRC" && "${TS[@]}" build --output "$SRC/fsharp_signature.so" signature )
+
 # --- Install ---
-mkdir -p "$PARSER_DEST" "$QUERY_DEST"
+mkdir -p "$PARSER_DEST"
+
+# install_queries <language> <Neovim query dir> <shared query dir>
+install_queries() {
+    local lang="$1" nvim_dir="$2" shared_dir="$3"
+    local dest="$CONFIG_DIR/queries/$lang"
+    mkdir -p "$dest"
+    echo "Installing queries → $dest"
+    for q in "${QUERIES[@]}"; do
+        if [ -s "$SRC/$nvim_dir/${q}.scm" ]; then
+            cp "$SRC/$nvim_dir/${q}.scm" "$dest/${q}.scm"
+            echo "  ${q}.scm  (Neovim-specific)"
+        elif [ -s "$SRC/$shared_dir/${q}.scm" ]; then
+            cp "$SRC/$shared_dir/${q}.scm" "$dest/${q}.scm"
+            echo "  ${q}.scm"
+        else
+            : > "$dest/${q}.scm"
+            echo "  ${q}.scm  (empty placeholder)"
+        fi
+    done
+}
 
 cp "$SRC/fsharp.so" "$PARSER_DEST/fsharp.so"
 echo "Installed parser → $PARSER_DEST/fsharp.so"
+install_queries fsharp queries/nvim queries
 
-echo "Installing queries → $QUERY_DEST"
-for q in "${QUERIES[@]}"; do
-    if [ -s "$SRC/queries/nvim/${q}.scm" ]; then
-        cp "$SRC/queries/nvim/${q}.scm" "$QUERY_DEST/${q}.scm"
-        echo "  ${q}.scm  (Neovim-specific)"
-    elif [ -s "$SRC/queries/${q}.scm" ]; then
-        cp "$SRC/queries/${q}.scm" "$QUERY_DEST/${q}.scm"
-        echo "  ${q}.scm"
-    else
-        : > "$QUERY_DEST/${q}.scm"
-        echo "  ${q}.scm  (empty placeholder)"
-    fi
-done
+cp "$SRC/fsharp_signature.so" "$PARSER_DEST/fsharp_signature.so"
+echo "Installed parser → $PARSER_DEST/fsharp_signature.so"
+install_queries fsharp_signature queries/nvim/signature queries/signature
 
 cat <<EOF
 
-Done. One last step — add this to your init.lua so Neovim uses the grammar:
+Done. One last step - add this to your init.lua so Neovim uses the grammar:
 
     vim.filetype.add({ extension = { fs = "fsharp", fsx = "fsharp", fsi = "fsharp" } })
     vim.api.nvim_create_autocmd("FileType", {
         pattern = "fsharp",
-        callback = function()
-            vim.treesitter.start() -- highlighting
+        callback = function(args)
+            -- .fsi files are parsed by the signature grammar.
+            local lang = args.file:match("%.fsi$") and "fsharp_signature" or "fsharp"
+            vim.treesitter.start(args.buf, lang) -- highlighting
         end,
     })
 
-Then open a .fs / .fsx file (or :edit to reload one).
+Then open a .fs / .fsx / .fsi file (or :edit to reload one).
 EOF

@@ -1,5 +1,5 @@
 ; ----------------------------------------------------------------------------
-; Neovim-only refinements. scripts/derive-queries.py appends this file to the
+; Neovim-only refinements. `./build.sh derive-queries` appends this file to the
 ; mapped Helix rules; the last capture of a node wins, so these narrow the
 ; one-bucket Helix captures into the groups nvim-treesitter themes style.
 

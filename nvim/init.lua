@@ -18,27 +18,39 @@ if ok then
     pcall(vim.cmd.colorscheme, "catppuccin")
 end
 
--- Register the freshly-built parser directly from the repo (no copying).
+-- Register the freshly-built parsers directly from the repo (no copying).
 vim.treesitter.language.add("fsharp", { path = repo .. "/parser.so" })
+vim.treesitter.language.add("fsharp_signature", { path = repo .. "/signature/parser.so" })
 
 vim.filetype.add({ extension = { fs = "fsharp", fsx = "fsharp", fsi = "fsharp" } })
 
--- Load every query from queries/ in place. No nvim-treesitter, so there are no
--- bundled F# queries to fall back to or conflict with.
-for _, name in ipairs({ "highlights", "injections", "locals", "textobjects", "indents", "tags" }) do
-    local path = repo .. "/queries/" .. name .. ".scm"
-    if vim.fn.filereadable(path) == 1 then
-        local text = table.concat(vim.fn.readfile(path), "\n")
-        if text:match("%S") then -- skip empty stubs
-            pcall(vim.treesitter.query.set, "fsharp", name, text)
+-- Load every query from queries/ in place, the Neovim file of a kind winning over
+-- the shared Helix one. No nvim-treesitter, so there are no bundled F# queries to
+-- fall back to or conflict with.
+local kinds = { "highlights", "injections", "locals", "textobjects", "indents", "tags", "folds" }
+
+local function load_queries(lang, nvim_dir, shared_dir)
+    for _, name in ipairs(kinds) do
+        for _, dir in ipairs({ nvim_dir, shared_dir }) do
+            local path = repo .. dir .. name .. ".scm"
+            local text = vim.fn.filereadable(path) == 1 and table.concat(vim.fn.readfile(path), "\n") or ""
+            if text:match("%S") then -- skip empty stubs
+                pcall(vim.treesitter.query.set, lang, name, text)
+                break
+            end
         end
     end
 end
 
+load_queries("fsharp", "/queries/nvim/", "/queries/")
+load_queries("fsharp_signature", "/queries/nvim/signature/", "/queries/signature/")
+
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "fsharp",
-    callback = function()
-        vim.treesitter.start() -- highlighting
+    callback = function(args)
+        -- .fsi files are parsed by the signature grammar.
+        local lang = args.file:match("%.fsi$") and "fsharp_signature" or "fsharp"
+        vim.treesitter.start(args.buf, lang) -- highlighting
     end,
 })
 

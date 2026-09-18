@@ -10,7 +10,7 @@ Every query starts as a Helix query in `queries/`. Each other editor gets a gene
 | `queries/` | Helix: highlights, injections, locals, textobjects, indents, tags, rainbows. | Yes. |
 | `queries/nvim/` | `highlights.scm` is generated. `indents.scm`, `folds.scm` and `textobjects.scm` are written for Neovim. | Only those three. |
 | `queries/zed/` | `highlights.scm` is generated. `brackets`, `indents`, `injections`, `outline`, `overrides` and `textobjects` are written for Zed. | Only those six. |
-| `queries/signature/`, `queries/zed/signature/` | The F# patterns that also apply to the signature grammar. | No. |
+| `queries/signature/`, `queries/nvim/signature/`, `queries/zed/signature/` | The F# patterns that also apply to the signature grammar. | No. |
 
 `./build.sh derive-queries` regenerates every generated file. A generated file starts with a `GENERATED` header, which is the quickest way to tell.
 
@@ -19,6 +19,8 @@ Every query starts as a Helix query in `queries/`. Each other editor gets a gene
 The Neovim highlights are the Helix highlights with three changes: captures are renamed, `#match?` becomes `#lua-match?` or `#any-of?`, and the rules in `scripts/nvim-highlights-extra.scm` are appended. That file holds the groups Neovim themes style and Helix has no name for, such as `@keyword.conditional` and `@keyword.repeat`.
 
 For the other kinds, Neovim uses the file in `queries/nvim/` when there is one, and the Helix file otherwise.
+
+`.fsi` files are parsed by the signature grammar, under the language name `fsharp_signature`. Its queries are `queries/nvim/signature/`, derived from `queries/nvim/`, falling back to `queries/signature/` for the kinds `queries/nvim/` does not have.
 
 ## Zed
 

@@ -23,6 +23,7 @@ type CheckQueriesCommand() =
         let signatureDirs =
             [
                 Path.Combine(Workspace.queries.``.``, "signature")
+                Path.Combine(Workspace.queries.nvim.``.``, "signature")
                 Path.Combine(Workspace.queries.zed.``.``, "signature")
             ]
 
