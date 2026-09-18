@@ -1,5 +1,5 @@
 ---
-last_commit_released: 73fcdcd729c98a2f411e7c8271787056baf5e295
+last_commit_released: 3b7f8fd3896307dd020c0d416dbc485396293da8
 name: tree-sitter-fsharp
 updaters:
   - json:
@@ -19,6 +19,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 This changelog is generated using [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
 
 ⚠ Only edit the front matter metadata at the top of this file. All other changes will be overwritten when a new release is created.
+
+## 0.3.0 - 2026-09-18
+
+### 🚀 Features
+
+* *(queries)* Derive the Neovim signature queries ([3b7f8fd](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/3b7f8fd3896307dd020c0d416dbc485396293da8))
+
+### 🐞 Bug Fixes
+
+* *(queries)* Colour every parameter of a binding or member, not only the first ([77b822c](https://github.com/MangelMaxime/tree-sitter-fsharp/commit/77b822c9bf16a9ab28728395bbaff23b72c49ba6))
+
+<strong><small>[View changes on Github](https://github.com/MangelMaxime/tree-sitter-fsharp/compare/73fcdcd729c98a2f411e7c8271787056baf5e295..3b7f8fd3896307dd020c0d416dbc485396293da8)</small></strong>
 
 ## 0.2.1 - 2026-09-15
 
