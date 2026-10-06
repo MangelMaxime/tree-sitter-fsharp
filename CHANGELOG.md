@@ -7,6 +7,10 @@ updaters:
       pointer: /metadata/version
   - package.json:
       file: package.json
+  - regex:
+      file: Cargo.toml
+      pattern: (?m)(?<=^version = ")[^"]+(?=")
+  - command: cargo update --workspace
   - command: ./build.sh generate --force
 ---
 
