@@ -1,7 +1,7 @@
 [package]
 name = "tree-sitter-fsharp-mangel"
 description = "F# grammar for tree-sitter"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Mangel Maxime <me@mangelmaxime.fr>"]
 license = "MIT"
 readme = "README.md"
